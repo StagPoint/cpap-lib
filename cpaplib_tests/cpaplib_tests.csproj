@@ -14,10 +14,24 @@
         <PackageReference Include="MSTest.TestAdapter" Version="2.2.10"/>
         <PackageReference Include="MSTest.TestFramework" Version="2.2.10"/>
         <PackageReference Include="coverlet.collector" Version="3.2.0"/>
+        <PackageReference Include="StagPoint.EuropeanDataFormat.Net" Version="1.0.0" />
     </ItemGroup>
 
     <ItemGroup>
       <Folder Include="Files\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="Files\Identification.tgt">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\STR.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\cpaplib\cpaplib.csproj" />
     </ItemGroup>
 
 </Project>
