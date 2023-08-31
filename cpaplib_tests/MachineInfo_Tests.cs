@@ -8,7 +8,7 @@ namespace cpaplib_tests;
 public class MachineInfo_Tests
 {
 	[TestMethod]
-	public void TestMethod1()
+	public void ReadMachineIdentificationFile()
 	{
 		string filename = Path.Combine( Environment.CurrentDirectory, "Files", "Identification.tgt" );
 		Assert.IsTrue( File.Exists( filename ), "Test file does not exist" );
@@ -18,6 +18,6 @@ public class MachineInfo_Tests
 		Assert.IsNotNull( machineID );
 		Assert.IsTrue( machineID.ProductName.Contains( "AirSense", StringComparison.OrdinalIgnoreCase ) );
 		Assert.IsTrue( !string.IsNullOrEmpty( machineID.SerialNumber ) );
-		Assert.IsTrue( !string.IsNullOrEmpty( machineID.ProductCode ) );
+		Assert.IsTrue( !string.IsNullOrEmpty( machineID.ModelNumber ) );
 	}
 }

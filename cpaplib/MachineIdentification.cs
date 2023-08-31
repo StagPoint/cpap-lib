@@ -4,11 +4,54 @@ namespace cpaplib;
 
 public class MachineIdentification
 {
-	public string ProductName  { get; private set; } = "";
+	#region Static fields 
+	
+	/// <summary>
+	/// The list of known Model Numbers for the ResMed CPAP Line from 10 and up
+	/// </summary>
+	public static Dictionary<string, string> ModelNumbers = new()
+	{
+		{ "37201", "ResMed AirStart 10" },
+		{ "37202", "ResMed AirStart 10" },
+		{ "37203", "ResMed AirSense 10" },
+		{ "37028", "ResMed AirSense 10 AutoSet" },
+		{ "37209", "ResMed AirSense 10 AutoSet For Her" },
+		{ "37382", "ResMed AirSense 10 AutoSet (Card to Cloud)" },
+		{ "37205", "ResMed AirSense 10 Elite" },
+		{ "37213", "ResMed AirCurve 10 S BiLevel" },
+		{ "37211", "ResMed AirCurve 10 VAuto BiLevel" },
+		{ "37383", "ResMed AirCurve 10 VAuto BiLevel (Card to Cloud)" },
+		{ "39000", "ResMed AirSense 11 AutoSet" },
+	};
+	
+	#endregion 
+	
+	#region Public properties 
+
+	/// <summary>
+	/// The Product Name of the machine, as reported
+	/// </summary>
+	public string ProductName { get;  private set; } = "";
+	
+	/// <summary>
+	/// The machine's Serial Number, as reported
+	/// </summary>
 	public string SerialNumber { get; private set; } = "";
-	public string ProductCode  { get; private set; } = "";
+	
+	/// <summary>
+	/// The machine's Model Number, as reported 
+	/// </summary>
+	public string ModelNumber  { get; private set; } = "";
+	
+	#endregion 
+	
+	#region Private fields 
 
 	private Dictionary<string, string> _fields = new();
+	
+	#endregion 
+	
+	#region Static functions 
 
 	public static MachineIdentification ReadFrom( string filename )
 	{
@@ -20,6 +63,10 @@ public class MachineIdentification
 			return machine;
 		}
 	}
+	
+	#endregion 
+	
+	#region Public functions 
 
 	public void ReadFrom( Stream file )
 	{
@@ -44,9 +91,13 @@ public class MachineIdentification
 
 			ProductName  = _fields[ "PNA" ];
 			SerialNumber = _fields[ "SRN" ];
-			ProductCode  = _fields[ "PCD" ];
+			ModelNumber  = _fields[ "PCD" ];
 		}
 	}
+	
+	#endregion 
+	
+	#region Private functions 
 
 	private string getField( string key )
 	{
@@ -57,4 +108,6 @@ public class MachineIdentification
 
 		return "NOT FOUND";
 	}
+	
+	#endregion
 }
