@@ -14,7 +14,7 @@
         <PackageReference Include="MSTest.TestAdapter" Version="2.2.10"/>
         <PackageReference Include="MSTest.TestFramework" Version="2.2.10"/>
         <PackageReference Include="coverlet.collector" Version="3.2.0"/>
-        <PackageReference Include="StagPoint.EuropeanDataFormat.Net" Version="1.0.0" />
+        <PackageReference Include="StagPoint.EuropeanDataFormat.Net" Version="1.0.1" />
     </ItemGroup>
 
     <ItemGroup>
@@ -26,6 +26,513 @@
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
       <None Update="Files\STR.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230821\20230822_001107_CSL.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230821\20230822_001107_EVE.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230821\20230822_001118_BRP.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230821\20230822_001119_PLD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230821\20230822_001119_SAD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230821\20230822_010636_BRP.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230821\20230822_010636_PLD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230821\20230822_010636_SAD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230821\20230822_030644_BRP.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230821\20230822_030645_PLD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230821\20230822_030645_SAD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230821\20230822_051412_BRP.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230821\20230822_051413_PLD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230821\20230822_051413_SAD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230822\20230822_224916_CSL.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230822\20230822_224916_EVE.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230822\20230822_224924_BRP.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230822\20230822_224924_PLD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230822\20230822_224924_SAD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230822\20230822_225132_BRP.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230822\20230822_225132_PLD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230822\20230822_225132_SAD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230822\20230823_001346_BRP.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230822\20230823_001346_PLD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230822\20230823_001346_SAD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230822\20230823_020701_BRP.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230822\20230823_020701_PLD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230822\20230823_020701_SAD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230822\20230823_024117_BRP.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230822\20230823_024118_PLD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230822\20230823_024118_SAD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230822\20230823_042437_BRP.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230822\20230823_042437_PLD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230822\20230823_042437_SAD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230822\20230823_042832_BRP.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230822\20230823_042832_PLD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230822\20230823_042832_SAD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230830\20230830_223714_CSL.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230830\20230830_223714_EVE.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230830\20230830_223722_BRP.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230830\20230830_223722_PLD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230830\20230830_223722_SAD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230830\20230831_004327_BRP.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230830\20230831_004327_PLD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230830\20230831_004327_SAD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230829\20230829_232753_CSL.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230829\20230829_232753_EVE.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230829\20230829_232800_BRP.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230829\20230829_232801_PLD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230829\20230829_232801_SAD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230829\20230829_233222_BRP.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230829\20230829_233223_PLD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230829\20230829_233223_SAD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230829\20230829_234504_BRP.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230829\20230829_234504_PLD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230829\20230829_234504_SAD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230829\20230830_030704_BRP.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230829\20230830_030705_PLD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230829\20230830_030705_SAD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230828\20230828_231251_CSL.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230828\20230828_231251_EVE.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230828\20230828_231300_BRP.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230828\20230828_231300_PLD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230828\20230828_231300_SAD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230828\20230829_010549_BRP.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230828\20230829_010550_PLD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230828\20230829_010550_SAD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230828\20230829_042441_BRP.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230828\20230829_042441_PLD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230828\20230829_042441_SAD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230827\20230827_230644_CSL.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230827\20230827_230644_EVE.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230827\20230827_230651_BRP.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230827\20230827_230652_PLD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230827\20230827_230652_SAD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230827\20230828_014404_BRP.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230827\20230828_014405_PLD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230827\20230828_014405_SAD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230827\20230828_022229_BRP.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230827\20230828_022229_PLD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230827\20230828_022229_SAD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230826\20230826_235453_CSL.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230826\20230826_235453_EVE.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230826\20230826_235500_BRP.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230826\20230826_235501_PLD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230826\20230826_235501_SAD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230826\20230827_022013_BRP.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230826\20230827_022014_PLD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230826\20230827_022014_SAD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230826\20230827_030133_BRP.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230826\20230827_030134_PLD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230826\20230827_030134_SAD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230825\20230825_225630_CSL.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230825\20230825_225630_EVE.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230825\20230825_225637_BRP.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230825\20230825_225638_PLD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230825\20230825_225638_SAD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230825\20230826_020257_BRP.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230825\20230826_020257_PLD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230825\20230826_020257_SAD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230825\20230826_033408_BRP.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230825\20230826_033409_PLD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230825\20230826_033409_SAD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230825\20230826_054929_BRP.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230825\20230826_054930_PLD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230825\20230826_054930_SAD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230824\20230824_235351_CSL.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230824\20230824_235351_EVE.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230824\20230824_235406_BRP.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230824\20230824_235406_PLD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230824\20230824_235406_SAD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230824\20230825_010250_BRP.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230824\20230825_010250_PLD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230824\20230825_010250_SAD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230824\20230825_025555_BRP.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230824\20230825_025555_PLD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230824\20230825_025555_SAD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230824\20230825_032144_BRP.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230824\20230825_032144_PLD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230824\20230825_032144_SAD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230824\20230825_052235_BRP.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230824\20230825_052235_PLD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230824\20230825_052235_SAD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230823\20230823_233227_CSL.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230823\20230823_233227_EVE.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230823\20230823_233242_BRP.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230823\20230823_233242_PLD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230823\20230823_233242_SAD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230823\20230823_234225_BRP.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230823\20230823_234226_PLD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230823\20230823_234226_SAD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230823\20230824_013831_BRP.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230823\20230824_013831_PLD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230823\20230824_013831_SAD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230823\20230824_024035_BRP.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230823\20230824_024036_PLD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230823\20230824_024036_SAD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230823\20230824_035219_BRP.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230823\20230824_035220_PLD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230823\20230824_035220_SAD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230823\20230824_053002_BRP.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230823\20230824_053002_PLD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\DATALOG\20230823\20230824_053002_SAD.edf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\SETTINGS\ABR.log">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\SETTINGS\AGL.tgt">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\SETTINGS\BGL.tgt">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\SETTINGS\CGL.tgt">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\SETTINGS\DGL.tgt">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\SETTINGS\DLL.log">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\SETTINGS\EGL.tgt">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\SETTINGS\ELI.log">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\SETTINGS\ERR.log">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\SETTINGS\IGL.tgt">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\SETTINGS\MGL.tgt">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\SETTINGS\NGL.tgt">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\SETTINGS\PGL.tgt">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\SETTINGS\QXH.tgt">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\SETTINGS\QXJ.tgt">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\SETTINGS\RGL.tgt">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\SETTINGS\SGL.tgt">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\SETTINGS\TRR.log">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\SETTINGS\TXC.log">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\SETTINGS\TXE.log">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\SETTINGS\TXH.log">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\SETTINGS\TXW.log">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\SETTINGS\UGL.tgt">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\SETTINGS\VGL.tgt">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\SETTINGS\XGL.tgt">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Files\SETTINGS\ZRL.log">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
     </ItemGroup>

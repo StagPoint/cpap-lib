@@ -43,11 +43,10 @@ public class MachineIdentification
 	/// </summary>
 	public string ModelNumber  { get; private set; } = "";
 	
-	#endregion 
-	
-	#region Private fields 
-
-	private Dictionary<string, string> _fields = new();
+	/// <summary>
+	/// Contains all of the other fields included in the Identification.tgt file 
+	/// </summary>
+	public Dictionary<string, string> Fields { get; } = new();
 	
 	#endregion 
 	
@@ -86,12 +85,12 @@ public class MachineIdentification
 				var key   = line.Substring( 1, spaceIndex - 1 );
 				var value = line.Substring( spaceIndex + 1 ).Trim().Replace( '_', ' ' );
 
-				_fields[ key ] = value;
+				Fields[ key ] = value;
 			}
 
-			ProductName  = _fields[ "PNA" ];
-			SerialNumber = _fields[ "SRN" ];
-			ModelNumber  = _fields[ "PCD" ];
+			ProductName  = Fields[ "PNA" ];
+			SerialNumber = Fields[ "SRN" ];
+			ModelNumber  = Fields[ "PCD" ];
 		}
 	}
 	
@@ -101,7 +100,7 @@ public class MachineIdentification
 
 	private string getField( string key )
 	{
-		if( _fields.TryGetValue( key, out string value ) )
+		if( Fields.TryGetValue( key, out string value ) )
 		{
 			return value;
 		}
