@@ -17,7 +17,7 @@ public class MachineSettings_Tests
 		Assert.IsTrue( Directory.Exists( rootFolder ), "Test file does not exist" );
 
 		var loader = new CpapDataLoader();
-		loader.LoadFromFolder( rootFolder );
+		loader.LoadFromFolder( rootFolder, DateTime.Today.AddDays( -30 ) );
 
 		var days = loader.Days;
 
@@ -25,11 +25,6 @@ public class MachineSettings_Tests
 
 		foreach( var day in days )
 		{
-			if( day.Duration.TotalMinutes < 5 )
-			{
-				continue;
-			}
-
 			Debug.WriteLine( $"{day.Date.ToLongDateString()}   Events: {day.MaskEvents}, Duration: {day.Duration}, Mode: {day.Settings.Mode}" );
 
 			// for( int i = 0; i < day.MaskOn.Count; i++ )

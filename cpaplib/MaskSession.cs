@@ -1,16 +1,49 @@
-﻿namespace cpaplib;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
-public class MaskSession
+using StagPoint.EDF.Net;
+
+namespace cpaplib
 {
-	public DateTime StartTime { get; set; }
-	public DateTime EndTime   { get; set; }
-	
-	#region Base class overrides
-
-	public override string ToString()
+	public class MaskSession
 	{
-		return $"{StartTime.ToShortDateString()}    {StartTime.ToLongTimeString()} - {EndTime.ToLongTimeString()}";
-	}
+		public DateTime StartTime { get; internal set; }
+		public DateTime EndTime   { get; internal set; }
 
-	#endregion 
+		public List<Signal> Signals { get; } = new List<Signal>();
+
+		#region Public functions
+
+		internal void AddSignal( DateTime startTime, EdfStandardSignal fileSignal )
+		{
+			Signal signal = Signals.FirstOrDefault( x => x.Channel.Equals( fileSignal.Label.Value ) );
+
+			if( signal == null )
+			{
+				signal = new Signal
+				{
+					Channel        = fileSignal.Label.Value,
+					SampleInterval = 1.0 / fileSignal.FrequencyInHz,
+					MinValue       = fileSignal.PhysicalMaximum,
+					MaxValue       = fileSignal.PhysicalMinimum
+				};
+
+				signal.Samples.AddRange( fileSignal.Samples );
+
+				Signals.Add( signal );
+			}
+		}
+
+		#endregion
+
+		#region Base class overrides
+
+		public override string ToString()
+		{
+			return $"{StartTime.ToShortDateString()}    {StartTime.ToLongTimeString()} - {EndTime.ToLongTimeString()}";
+		}
+
+		#endregion
+	}
 }
