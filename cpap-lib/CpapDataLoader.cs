@@ -130,9 +130,9 @@ namespace cpaplib
 								continue;
 							}
 
-							// Not every signal within a Session will have the same end time (although they should all 
-							// have the same start time) because of differences in sampling rate, so we keep track of 
-							// the start time and end time of each Signal separately. 
+							// Not every signal within a Session will have the same start and end time as the others
+							// because of differences in sampling rate, so we keep track of the start time and end
+							// time of each Signal separately. 
 							var startTime = header.StartTime.Value;
 							var endTime   = startTime.AddSeconds( header.NumberOfDataRecords * header.DurationOfDataRecord );
 
@@ -188,7 +188,7 @@ namespace cpaplib
 						}
 
 						// Try to convert the annotation text into an Enum for easier processing. 
-						var eventFlag = EventFlag.FromEdfAnnotation( annotation );
+						var eventFlag = EventFlag.FromEdfAnnotation( day.RecordingStartTime, annotation );
 						
 						// We don't need the "Recording Starts" annotations either 
 						if( eventFlag.Type == EventType.RecordingStarts )

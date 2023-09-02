@@ -47,9 +47,9 @@ namespace cpaplib
 		#region Public properties 
 		
 		/// <summary>
-		/// The number of seconds since session start when this event occurred 
+		/// The time when the event occurred 
 		/// </summary>
-		public double Onset { get; internal set; }
+		public DateTime StartTime { get; internal set; }
 
 		/// <summary>
 		/// The duration of the event being flagged, in seconds
@@ -83,11 +83,11 @@ namespace cpaplib
 			{ "Unclassified", EventType.Unclassified },
 		};
 
-		internal static EventFlag FromEdfAnnotation( EdfAnnotation annotation )
+		internal static EventFlag FromEdfAnnotation( DateTime fileStartTime, EdfAnnotation annotation )
 		{
 			var flag = new EventFlag
 			{
-				Onset       = annotation.Onset,
+				StartTime   = fileStartTime.AddSeconds( annotation.Onset ),
 				Duration    = annotation.Duration ?? 0.0,
 				Description = annotation.Annotation
 			};
@@ -110,7 +110,7 @@ namespace cpaplib
 
 		public override string ToString()
 		{
-			return $"Onset: {new TimeSpan( 0, 0, 0, (int)Onset )}  Duration: {Duration:F2}  Description: {Description}";
+			return $"Onset: {StartTime:t}  Duration: {Duration:F2}  Description: {Description}";
 		}
 
 		#endregion 
