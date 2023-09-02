@@ -14,12 +14,19 @@ namespace cpaplib
 		/// The date on which this report was generated.
 		/// Note that this is the "ResMed Date", which begins at noon and continues until noon the following day. 
 		/// </summary>
-		public DateTime Date { get; private set; }
+		public DateTime ReportDate { get; private set; }
+		
+		/// <summary>
+		/// The specific time at which recording began
+		/// </summary>
+		public DateTime RecordingStartTime { get; internal set; }
 
 		/// <summary>
 		/// The list of sessions  for this day
 		/// </summary>
-		public List<MaskSession> Sessions { get; private set; } = new List<MaskSession>();
+		public List<MaskSession> Sessions { get; } = new List<MaskSession>();
+
+		public List<EventFlag> Events { get; } = new List<EventFlag>();
 
 		/// <summary>
 		/// Returns the number of "Mask Times" for the day
@@ -71,7 +78,7 @@ namespace cpaplib
 		{
 			_map = map;
 
-			Date = new DateTime( 1970, 1, 1 ).AddDays( map[ "Date" ] ).AddHours( 12 );
+			ReportDate = new DateTime( 1970, 1, 1 ).AddDays( map[ "Date" ] ).AddHours( 12 );
 
 			Settings.ReadFrom( map );
 			Statistics.ReadFrom( map );
@@ -110,10 +117,10 @@ namespace cpaplib
 		{
 			if( Sessions.Count > 0 )
 			{
-				return $"{Date.ToLongDateString()}   {Sessions.First().StartTime.ToShortTimeString()} - {Sessions.Last().EndTime.ToShortTimeString()}    ({Duration})";
+				return $"{ReportDate.ToLongDateString()}   {Sessions.First().StartTime.ToShortTimeString()} - {Sessions.Last().EndTime.ToShortTimeString()}    ({Duration})";
 			}
 
-			return $"{Date.ToLongDateString()}   ({Duration})";
+			return $"{ReportDate.ToLongDateString()}   ({Duration})";
 		}
 
 		#endregion

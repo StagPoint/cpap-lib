@@ -538,7 +538,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\cpaplib\cpaplib.csproj" />
+      <ProjectReference Include="..\cpap-lib\cpap-lib.csproj" />
     </ItemGroup>
 
 </Project>

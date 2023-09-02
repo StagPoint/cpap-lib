@@ -13,9 +13,11 @@ namespace cpaplib
 
 		public List<Signal> Signals { get; } = new List<Signal>();
 
+		public double duration;
+
 		#region Public functions
 
-		internal void AddSignal( DateTime startTime, EdfStandardSignal fileSignal )
+		internal void AddSignal( DateTime startTime, DateTime endTime, EdfStandardSignal fileSignal )
 		{
 			Signal signal = Signals.FirstOrDefault( x => x.Channel.Equals( fileSignal.Label.Value ) );
 
@@ -23,6 +25,8 @@ namespace cpaplib
 			{
 				signal = new Signal
 				{
+					StartTime      = startTime,
+					EndTime        = endTime,
 					Channel        = fileSignal.Label.Value,
 					SampleInterval = 1.0 / fileSignal.FrequencyInHz,
 					MinValue       = fileSignal.PhysicalMaximum,

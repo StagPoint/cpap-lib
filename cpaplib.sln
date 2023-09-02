@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cpaplib", "cpaplib\cpaplib.csproj", "{294FA5A7-7001-440D-A13B-9C2A66EB9918}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cpap-lib", "cpap-lib\cpap-lib.csproj", "{294FA5A7-7001-440D-A13B-9C2A66EB9918}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cpaplib_tests", "cpaplib_tests\cpaplib_tests.csproj", "{96CE979E-5DCE-4E8F-A336-046D29376DCF}"
 EndProject

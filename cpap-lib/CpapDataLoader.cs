@@ -13,13 +13,13 @@ namespace cpaplib
 
 		public List<DailyReport> Days { get; } = new List<DailyReport>();
 
-		private static string[] expectedFiles = 
+		private static string[] expectedFiles = new[]
 		{
 			"STR.edf",
 			"Identification.tgt",
 		};
 
-		private static string[] expectedFolders =
+		private static string[] expectedFolders = new[]
 		{
 			"SETTINGS",
 			"DATALOG",
@@ -35,7 +35,7 @@ namespace cpaplib
 
 			foreach( var day in Days )
 			{
-				LoadSessionData( folderPath, day );
+				LoadSessionsForDay( folderPath, day );
 			}
 		}
 
@@ -66,13 +66,15 @@ namespace cpaplib
 			}
 		}
 
-		private void LoadSessionData( string rootFolder, DailyReport day )
+		private void LoadSessionsForDay( string rootFolder, DailyReport day )
 		{
-			var logFolder = Path.Combine( rootFolder, $@"DATALOG\{day.Date:yyyyMMdd}" );
+			var logFolder = Path.Combine( rootFolder, $@"DATALOG\{day.ReportDate:yyyyMMdd}" );
 			if( !Directory.Exists( logFolder ) )
 			{
 				return;
 			}
+
+			LoadEventsAndAnnotations( logFolder, day );
 
 			var filenames = Directory.GetFiles( logFolder, "*.edf" );
 			foreach( var filename in filenames )
@@ -88,6 +90,8 @@ namespace cpaplib
 					continue;
 				}
 
+				// The file's date, extracted from the filename, will be used to search for the correct session.
+				// The date/time is incorrect for any other purpose (I think)
 				var fileDate = DateTime
 				               .ParseExact( baseFilename.Substring( 0, baseFilename.Length - 4 ), "yyyyMMdd_HHmmss", CultureInfo.InvariantCulture )
 				               .Trim( TimeSpan.TicksPerMinute );
@@ -110,30 +114,91 @@ namespace cpaplib
 						{
 							break;
 						}
-
-						// Now rewind the file, because there's currently no way to "continue reading the file"
+						
+						// Now rewind the file, because there's currently no way to "continue reading the file from here"
 						file.Position = 0;
 
 						// Read in the EDF file 
 						var edf = new EdfFile();
 						edf.ReadFrom( file );
 
-						Debug.WriteLine( $"Attach session: {session.StartTime}  - {baseFilename}" );
-
 						foreach( var signal in edf.Signals )
 						{
+							// We don't need to keep the CRC checksum signals 
 							if( signal.Label.Value.StartsWith( "crc", StringComparison.InvariantCultureIgnoreCase ) )
 							{
 								continue;
 							}
 
-							session.AddSignal( session.StartTime, signal );
+							// Not every signal within a Session will have the same end time (although they should all 
+							// have the same start time) because of differences in sampling rate, so we keep track of 
+							// the start time and end time of each Signal separately. 
+							var startTime = header.StartTime.Value;
+							var endTime   = startTime.AddSeconds( header.NumberOfDataRecords * header.DurationOfDataRecord );
 
-							Debug.WriteLine( $"        {signal.Label}" );
+							// Add the signal to the current session
+							session.AddSignal( startTime, endTime, signal );
 						}
 					}
 
 					break;
+				}
+			}
+			
+			// Now that each Session has all of its Signals added, each with correct StartTime and EndTime values, 
+			// we can update the StartTime and EndTime of the Sessions. These values were previously set by the 
+			// MaskOn/MaskOff values, which are convenience values used to match up session files and not accurate
+			// start and end times. 
+			foreach( var session in day.Sessions )
+			{
+				// Reset the session times to ensure that we don't keep artificial boundary times 
+				session.StartTime = DateTime.MaxValue;
+				session.EndTime   = DateTime.MinValue;
+				
+				// Session start and end times must bound all signal start and end times 
+				foreach( var signal in session.Signals )
+				{
+					session.StartTime = DateUtil.Min( session.StartTime, signal.StartTime );
+					session.EndTime   = DateUtil.Max( session.EndTime, signal.EndTime );
+				}
+			}
+		}
+		
+		private DateTime MaxDate( DateTime a, DateTime b )
+		{
+			return (a > b) ? a : b;
+		}
+
+		private void LoadEventsAndAnnotations( string logFolder, DailyReport day )
+		{
+			var filenames = Directory.GetFiles( logFolder, "*_EVE.edf" );
+			foreach( var filename in filenames )
+			{
+				var file = EdfFile.Open( filename );
+				day.RecordingStartTime = file.Header.StartTime;
+				
+				foreach( var annotationSignal in file.AnnotationSignals )
+				{
+					foreach( var annotation in annotationSignal.Annotations )
+					{
+						// Discard all timekeeping annotations, those aren't relevant to anything. 
+						if( annotation.IsTimeKeepingAnnotation )
+						{
+							continue;
+						}
+
+						// Try to convert the annotation text into an Enum for easier processing. 
+						var eventFlag = EventFlag.FromEdfAnnotation( annotation );
+						
+						// We don't need the "Recording Starts" annotations either 
+						if( eventFlag.Type == EventType.RecordingStarts )
+						{
+							continue;
+						}
+
+						// Add the event flags to the current day
+						day.Events.Add( eventFlag );
+					}
 				}
 			}
 		}
@@ -190,8 +255,9 @@ namespace cpaplib
 
 					// Mask times are stored as the number of seconds since the "day" started. Remember that
 					// the ResMed "day" starts at 12pm (noon) and continues until the next calendar day at 12pm.
-					var maskOn  = day.Date.AddMinutes( maskOnSignal.Samples[ sampleIndex ] );
-					var maskOff = day.Date.AddMinutes( maskOffSignal.Samples[ sampleIndex ] );
+					var maskOn   = day.ReportDate.AddMinutes( maskOnSignal.Samples[ sampleIndex ] );
+					var maskOff  = day.ReportDate.AddMinutes( maskOffSignal.Samples[ sampleIndex ] );
+					var duration = maskOffSignal.Samples[ sampleIndex ] - maskOnSignal.Samples[ sampleIndex ];
 
 					// Discard empty sessions
 					if( maskOn == maskOff )
@@ -203,6 +269,7 @@ namespace cpaplib
 					{
 						StartTime = maskOn,
 						EndTime   = maskOff,
+						duration  = duration
 					};
 
 					day.Sessions.Add( session );
@@ -225,7 +292,7 @@ namespace cpaplib
 			{
 				while( dayIndex < Days.Count )
 				{
-					var date = Days[ dayIndex ].Date;
+					var date = Days[ dayIndex ].ReportDate;
 
 					if( minDate.HasValue && date < minDate )
 					{

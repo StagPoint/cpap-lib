@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace cpaplib
 {
@@ -29,6 +30,16 @@ namespace cpaplib
 		/// The signal data for this session 
 		/// </summary>
 		public List<double> Samples { get; } = new List<double>();
+		
+		/// <summary>
+		/// The time when recording of this signal was started 
+		/// </summary>
+		public DateTime StartTime { get; internal set; }
+		
+		/// <summary>
+		/// The time when recording of this signal was stopped 
+		/// </summary>
+		public DateTime EndTime { get; internal set; }
 
 		#region Base class overrides
 
