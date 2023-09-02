@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 using StagPoint.EDF.Net;
@@ -19,15 +20,15 @@ namespace cpaplib
 
 		internal void AddSignal( DateTime startTime, DateTime endTime, EdfStandardSignal fileSignal )
 		{
-			Signal signal = Signals.FirstOrDefault( x => x.Channel.Equals( fileSignal.Label.Value ) );
+			Signal signal = Signals.FirstOrDefault( x => x.Name.Equals( fileSignal.Label.Value ) );
 
 			if( signal == null )
 			{
 				signal = new Signal
 				{
+					Name           = SignalNames.GetStandardName( fileSignal.Label.Value ),
 					StartTime      = startTime,
 					EndTime        = endTime,
-					Channel        = fileSignal.Label.Value,
 					SampleInterval = 1.0 / fileSignal.FrequencyInHz,
 					MinValue       = fileSignal.PhysicalMaximum,
 					MaxValue       = fileSignal.PhysicalMinimum

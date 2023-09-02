@@ -21,7 +21,7 @@ namespace cpaplib
 
 		private static string[] expectedFolders = new[]
 		{
-			"SETTINGS",
+			// "SETTINGS",
 			"DATALOG",
 		};
 
@@ -207,7 +207,9 @@ namespace cpaplib
 		{
 			var file = EdfFile.Open( filename );
 
-			// Copy all raw and single-value settings 
+			// The STR.edf file is essentially a vertical table containing the settings data for each
+			// recorded day. We need to transpose that data and use it to create a DailyReport for 
+			// each available day. 
 			for( int i = 0; i < file.Signals[ 0 ].Samples.Count; i++ )
 			{
 				// Gather a hash table of settings for a single day from across the signals 

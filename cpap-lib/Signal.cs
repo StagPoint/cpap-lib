@@ -8,7 +8,7 @@ namespace cpaplib
 		/// <summary>
 		/// The name of the channel, such as SaO2, Flow, Mask Pressure, etc.
 		/// </summary>
-		public string Channel { get; internal set; } = "";
+		public string Name { get; internal set; } = "";
 
 		/// <summary>
 		/// The interval, in seconds, between each sample. For instance if a signal is sampled at
@@ -45,7 +45,7 @@ namespace cpaplib
 
 		public override string ToString()
 		{
-			return Channel;
+			return Name;
 		}
 
 		#endregion

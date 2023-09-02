@@ -9,6 +9,26 @@ namespace cpaplib_tests;
 public class Scratchpad
 {
 	[TestMethod]
+	public void DocumentIndexFileSignals()
+	{
+		string filename = Path.Combine( Environment.CurrentDirectory, "Files\\STR.edf" );
+		if( !File.Exists( filename ) )
+		{
+			Assert.Fail( "Could not find test file in current directory" );
+		}
+
+		var edfFile = EdfFile.Open( filename );
+
+		Debug.WriteLine( "| Signal  | Description  |" );
+		Debug.WriteLine( "|---|---|" );
+
+		foreach( var signal in edfFile.Signals )
+		{
+			Debug.WriteLine( $"| {signal.Label} |      | " );
+		}
+	}
+	
+	[TestMethod]
 	public void AnonymizeFiles()
 	{
 		var allFilenames = Directory.GetFiles( Path.Combine( Environment.CurrentDirectory, "Files" ), "*.edf", SearchOption.AllDirectories );
