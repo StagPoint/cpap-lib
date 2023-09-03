@@ -47,7 +47,7 @@ namespace cpaplib
 
 		#region Public functions
 
-		internal void ReadFrom( Dictionary<string, double> map )
+		internal void ReadFrom( Dictionary<string, double> data )
 		{
 			BlowPress_95   = getValue( "BlowPress.95" );
 			BlowPress_5    = getValue( "BlowPress.5" );
@@ -90,7 +90,7 @@ namespace cpaplib
 			{
 				foreach( var key in keys )
 				{
-					if( map.TryGetValue( key, out double value ) )
+					if( data.TryGetValue( key, out double value ) )
 					{
 						return value;
 					}

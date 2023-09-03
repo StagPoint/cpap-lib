@@ -37,9 +37,9 @@ namespace cpaplib
 
 		#region Public functions
 
-		internal void ReadFrom( Dictionary<string, double> map )
+		internal void ReadFrom( Dictionary<string, double> data )
 		{
-			if( map.TryGetValue( "CPAP_MODE", out double legacyMode ) )
+			if( data.TryGetValue( "CPAP_MODE", out double legacyMode ) )
 			{
 				switch( (int)legacyMode )
 				{
@@ -57,7 +57,7 @@ namespace cpaplib
 			}
 			else
 			{
-				var mode = (int)map.GetValue( "Mode" );
+				var mode = (int)data.GetValue( "Mode" );
 				if( mode >= (int)OperatingMode.MAX_VALUE )
 				{
 					mode = -1;
@@ -66,40 +66,40 @@ namespace cpaplib
 				Mode = (OperatingMode)mode;
 			}
 
-			HeatedTube = map["HeatedTube"] > 0.5;
-			Humidifier = map["Humidifier"] > 0.5;
+			HeatedTube = data["HeatedTube"] > 0.5;
+			Humidifier = data["Humidifier"] > 0.5;
 
-			CPAP.StartPressure = map["S.C.StartPress"];
-			CPAP.Pressure = map["S.C.Press"];
+			CPAP.StartPressure = data["S.C.StartPress"];
+			CPAP.Pressure = data["S.C.Press"];
 
-			EPR.ClinicianEnabled = map["S.EPR.ClinEnable"] >= 0.5;
-			EPR.EprEnabled = map["S.EPR.EPREnable"] >= 0.5;
-			EPR.Level = (int)map["S.EPR.Level"];
-			EPR.Mode = (EprType)(int)(map["S.EPR.EPRType"] + 1);
+			EPR.ClinicianEnabled = data["S.EPR.ClinEnable"] >= 0.5;
+			EPR.EprEnabled = data["S.EPR.EPREnable"] >= 0.5;
+			EPR.Level = (int)data["S.EPR.Level"];
+			EPR.Mode = (EprType)(int)(data["S.EPR.EPRType"] + 1);
 
-			AutoSet.ResponseType = (AutoSetResponseType)(int)map["S.AS.Comfort"];
-			AutoSet.StartPressure = map["S.AS.StartPress"];
-			AutoSet.MaxPressure = map["S.AS.MaxPress"];
-			AutoSet.MinPressure = map["S.AS.MinPress"];
+			AutoSet.ResponseType = (AutoSetResponseType)(int)data["S.AS.Comfort"];
+			AutoSet.StartPressure = data["S.AS.StartPress"];
+			AutoSet.MaxPressure = data["S.AS.MaxPress"];
+			AutoSet.MinPressure = data["S.AS.MinPress"];
 
-			RampMode = (RampModeType)(int)map["S.RampEnable"];
-			RampTime = map["S.RampTime"];
+			RampMode = (RampModeType)(int)data["S.RampEnable"];
+			RampTime = data["S.RampTime"];
 
-			SmartStart = map["S.SmartStart"] > 0.5;
-			AntibacterialFilter = map["S.ABFilter"] >= 0.5;
+			SmartStart = data["S.SmartStart"] > 0.5;
+			AntibacterialFilter = data["S.ABFilter"] >= 0.5;
 
-			ClimateControl = (ClimateControlType)(int)map["S.ClimateControl"];
-			Tube = map["S.Tube"];
-			HumidityEnabled = map["S.HumEnable"] > 0.5;
-			HumidityLevel = map["S.HumLevel"];
-			TemperatureEnabled = map["S.TempEnable"] > 0.5;
-			Temperature = map["S.Temp"];
+			ClimateControl = (ClimateControlType)(int)data["S.ClimateControl"];
+			Tube = data["S.Tube"];
+			HumidityEnabled = data["S.HumEnable"] > 0.5;
+			HumidityLevel = data["S.HumLevel"];
+			TemperatureEnabled = data["S.TempEnable"] > 0.5;
+			Temperature = data["S.Temp"];
 
-			Mask = (MaskType)(int)map["S.Mask"];
+			Mask = (MaskType)(int)data["S.Mask"];
 
-			Essentials = map["S.PtAccess"] > 0.5 ? EssentialsMode.On : EssentialsMode.Plus;
+			Essentials = data["S.PtAccess"] > 0.5 ? EssentialsMode.On : EssentialsMode.Plus;
 
-			PtAccess = map["S.PtAccess"];
+			PtAccess = data["S.PtAccess"];
 		}
 
 		#endregion

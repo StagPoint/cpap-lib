@@ -51,7 +51,7 @@ namespace cpaplib
 		/// <summary>
 		/// The number of events of each type (Obstructive Apnea, Clear Airway, RERA, etc.) that occurred on this day.
 		/// </summary>
-		public RespiratoryEventCounts EventCountSummary { get; private set; } = new RespiratoryEventCounts();
+		public RespiratoryEventCounts EventSummary { get; private set; } = new RespiratoryEventCounts();
 
 		/// <summary>
 		/// The total amount of time the CPAP was used on the reported day 
@@ -62,31 +62,44 @@ namespace cpaplib
 
 		public double PatientHours { get; private set; }
 
-		private Dictionary<string, double> _map = new Dictionary<string, double>();
+		/// <summary>
+		/// Contains all of the raw data stored for each Day
+		/// </summary>
+		public Dictionary<string, double> RawData = new Dictionary<string, double>();
 
 		#region Public functions
 
-		public static DailyReport Read( Dictionary<string, double> map )
+		/// <summary>
+		/// Reads the statistics, settings, and other information from the stored data
+		/// </summary>
+		public static DailyReport Read( Dictionary<string, double> data )
 		{
 			var dialy = new DailyReport();
-			dialy.ReadFrom( map );
+			dialy.ReadFrom( data );
 
 			return dialy;
 		}
 
-		public void ReadFrom( Dictionary<string, double> map )
+		/// <summary>
+		/// Reads the statistics, settings, and other information from the stored data
+		/// </summary>
+		public void ReadFrom( Dictionary<string, double> data )
 		{
-			_map = map;
+			// I've tried my best to decode what all of the data means, and convert it to meaningful typed
+			// values exposed in a reasonable manner, but it's highly likely that there's something I didn't
+			// understand correctly, not to mention fields that are different for different models, so the
+			// raw data will be kept available for the consumer of this library to make use of if needs be.
+			RawData = data;
 
-			ReportDate = new DateTime( 1970, 1, 1 ).AddDays( map[ "Date" ] ).AddHours( 12 );
+			ReportDate = new DateTime( 1970, 1, 1 ).AddDays( data[ "Date" ] ).AddHours( 12 );
 
-			Settings.ReadFrom( map );
-			Statistics.ReadFrom( map );
-			EventCountSummary.ReadFrom( map );
+			Settings.ReadFrom( data );
+			Statistics.ReadFrom( data );
+			EventSummary.ReadFrom( data );
 
-			MaskEvents = (int)(map[ "MaskEvents" ] / 2);
-			Duration   = TimeSpan.FromMinutes( map[ "Duration" ] );
-			OnDuration = TimeSpan.FromMinutes( map[ "OnDuration" ] );
+			MaskEvents = (int)(data[ "MaskEvents" ] / 2);
+			Duration   = TimeSpan.FromMinutes( data[ "Duration" ] );
+			OnDuration = TimeSpan.FromMinutes( data[ "OnDuration" ] );
 
 			PatientHours = getValue( "PatientHours" );
 
@@ -99,7 +112,7 @@ namespace cpaplib
 			{
 				foreach( var key in keys )
 				{
-					if( map.TryGetValue( key, out double value ) )
+					if( data.TryGetValue( key, out double value ) )
 					{
 						return value;
 					}

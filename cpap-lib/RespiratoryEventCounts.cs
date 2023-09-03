@@ -44,16 +44,16 @@ namespace cpaplib
 		/// </summary>
 		public double CSR { get; private set; }
 
-		internal void ReadFrom( Dictionary<string, double> map )
+		internal void ReadFrom( Dictionary<string, double> data )
 		{
-			AHI = map[ "AHI" ];
-			HI  = map[ "HI" ];
-			AI  = map[ "AI" ];
-			OAI = map[ "OAI" ];
-			CAI = map[ "CAI" ];
-			UAI = map[ "UAI" ];
-			RIN = map[ "RIN" ];
-			CSR = map[ "CSR" ];
+			AHI = data[ "AHI" ];
+			HI  = data[ "HI" ];
+			AI  = data[ "AI" ];
+			OAI = data[ "OAI" ];
+			CAI = data[ "CAI" ];
+			UAI = data[ "UAI" ];
+			RIN = data[ "RIN" ];
+			CSR = data[ "CSR" ];
 		}
 	}
 }
