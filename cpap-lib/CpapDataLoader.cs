@@ -45,6 +45,29 @@ namespace cpaplib
 			MachineID = MachineIdentification.ReadFrom( filename );
 		}
 
+		public static bool HasCorrectFolderStructure( string rootFolder )
+		{
+			foreach( var folder in expectedFolders )
+			{
+				var directoryPath = Path.Combine( rootFolder, folder );
+				if( !Directory.Exists( directoryPath ) )
+				{
+					return false;
+				}
+			}
+
+			foreach( var filename in expectedFiles )
+			{
+				var filePath = Path.Combine( rootFolder, filename );
+				if( !File.Exists( filePath ) )
+				{
+					return false;
+				}
+			}
+
+			return true;
+		}
+
 		private void EnsureCorrectFolderStructure( string rootFolder )
 		{
 			foreach( var folder in expectedFolders )

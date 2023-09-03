@@ -1,7 +1,5 @@
 [![GitHub issues](https://img.shields.io/github/issues/StagPoint/cpap-lib.svg)](https://GitHub.com/StagPoint/cpap-lib/issues/)
-<a href="https://github.com/StagPoint/cpap-lib/blob/master/LICENSE">
-<img src="https://img.shields.io/github/license/StagPoint/cpap-lib" alt="License"/>
-</a>
+[![GitHub license](https://img.shields.io/github/license/StagPoint/cpap-lib.svg)](https://github.com/StagPoint/cpap-lib/blob/master/LICENSE)
 [![Nuget](https://img.shields.io/nuget/v/cpap-lib)](https://www.nuget.org/packages/cpap-lib/)
 [![Nuget](https://img.shields.io/nuget/dt/cpap-lib)](https://www.nuget.org/packages/cpap-lib/)
 ![GitHub release (with filter)](https://img.shields.io/github/v/release/StagPoint/cpap-lib)
@@ -84,7 +82,7 @@ This is a two-column text file with a number of machine-specific fields.
 The STR.edf file is a [European Data Format](https://en.wikipedia.org/wiki/European_Data_Format) file that contains 81 signals representing what is essentially a [vertical table](https://en.wikipedia.org/wiki/Partition_(database)#Vertical_partitioning) of values reflecting the settings
 and statistics for each recorded day.
 
-It is discussed in more detail [on this page](STR_file_format.md).
+It is discussed in more detail [on this page](docs/STR_file_format.md).
 
 ### DATALOG Folder
 
