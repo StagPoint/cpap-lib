@@ -110,7 +110,7 @@ namespace cpaplib
 
 		public override string ToString()
 		{
-			return $"Onset: {StartTime:t}  Duration: {Duration:F2}  Description: {Description}";
+			return $"Start: {StartTime:t}  Duration: {Duration:F2}  Description: {Description}";
 		}
 
 		#endregion 

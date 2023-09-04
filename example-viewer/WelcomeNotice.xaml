@@ -1,0 +1,19 @@
+﻿<ui:Page x:Class="example_viewer.WelcomeNotice"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:local="clr-namespace:example_viewer"
+      mc:Ignorable="d"
+      xmlns:ui="http://schemas.modernwpf.com/2019"
+      Title="Welcome Notice" Width="800" Height="450"
+      VerticalAlignment="Top">
+      <ui:SimpleStackPanel Name="Welcome" Margin="20" Spacing="24">
+            <TextBlock Text="Welcome to the CPAP Data Viewer" Margin="0 50 0 0" HorizontalAlignment="Center" Style="{StaticResource HeaderTextBlockStyle}" />
+            <TextBlock TextWrapping="Wrap" Width="600" HorizontalAlignment="Center" FontSize="16" Margin="20">
+                  To begin, please import your CPAP data (typically found on the SD Card in your CPAP machine) by clicking the 
+                  "Import" button below and selecting the STR.edf file in your CPAP data folder.
+            </TextBlock>
+            <Button Name="btnImport" Content="Import CPAP Data" HorizontalAlignment="Center" Style="{StaticResource AccentButtonStyle}" ClickMode="Press" Click="Import_Clicked"/>
+      </ui:SimpleStackPanel>
+</ui:Page>
