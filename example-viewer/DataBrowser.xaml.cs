@@ -44,6 +44,7 @@ public partial class DataBrowser
 			calendar.SelectedDate = selectedDay.ReportDate.Date;
 		}
 	}
+	
 	private void CalendarOnSelectedDateChanged( object sender, SelectionChangedEventArgs e )
 	{
 		foreach( var day in _data.Days )
@@ -57,7 +58,8 @@ public partial class DataBrowser
 
 		SelectedDay = null;
 		
-		scrollStatistics.Visibility = Visibility.Hidden;
+		scrollStatistics.Visibility   = Visibility.Hidden;
+		pnlNoDataAvailable.Visibility = Visibility.Visible;
 	}
 	
 	private void LoadDay( DailyReport day )
@@ -66,6 +68,7 @@ public partial class DataBrowser
 		calendar.SelectedDate = day.ReportDate.Date;
 		
 		scrollStatistics.Visibility         = Visibility.Visible;
+		pnlNoDataAvailable.Visibility       = Visibility.Hidden;
 		RespiratoryEventSummary.DataContext = day.EventSummary;
 		this.DataContext                    = day;
 	}

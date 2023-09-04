@@ -42,30 +42,44 @@
                             <RowDefinition />
                             <RowDefinition />
                             <RowDefinition />
+                            <RowDefinition />
                         </Grid.RowDefinitions>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Grid.Row="0" Text="Obstructive Apnea"></TextBlock>
-                        <TextBlock Grid.Column="1" Grid.Row="0" Text="{Binding AHI}" HorizontalAlignment="Right"></TextBlock>
-                        <TextBlock Grid.Column="0" Grid.Row="1" Text="Hypopnea"></TextBlock>
-                        <TextBlock Grid.Column="1" Grid.Row="1" Text="{Binding HI}" HorizontalAlignment="Right"></TextBlock>
-                        <TextBlock Grid.Column="0" Grid.Row="2" Text="Clear Airway"></TextBlock>
-                        <TextBlock Grid.Column="1" Grid.Row="2" Text="{Binding CAI}" HorizontalAlignment="Right"></TextBlock>
-                        <TextBlock Grid.Column="0" Grid.Row="3" Text="Unclassified"></TextBlock>
-                        <TextBlock Grid.Column="1" Grid.Row="3" Text="{Binding UAI}" HorizontalAlignment="Right"></TextBlock>
-                        <TextBlock Grid.Column="0" Grid.Row="4" Text="RERA"></TextBlock>
-                        <TextBlock Grid.Column="1" Grid.Row="4" Text="{Binding RIN}" HorizontalAlignment="Right"></TextBlock>
-                        <TextBlock Grid.Column="0" Grid.Row="5" Text="Cheyne-Stokes"></TextBlock>
-                        <TextBlock Grid.Column="1" Grid.Row="5" Text="{Binding CSR}" HorizontalAlignment="Right"></TextBlock>
+                        <Rectangle Grid.Row="0" Grid.ColumnSpan="2" Fill="Orange" />
+                        <TextBlock Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="0" FontWeight="Bold"
+                                   HorizontalAlignment="Center" Foreground="Black" FontSize="16" Padding="0 4"
+                                   VerticalAlignment="Center">
+                            <Run>AHI</Run>
+                            <Run Text="{Binding AHI, Mode=OneWay}"></Run>
+                        </TextBlock>
+                        <TextBlock Grid.Column="0" Grid.Row="1" Text="Obstructive Apnea" Margin="0 8 0 0" />
+                        <TextBlock Grid.Column="1" Grid.Row="1" Text="{Binding OAI}" HorizontalAlignment="Right"
+                                   Margin="0 8 0 0" />
+                        <TextBlock Grid.Column="0" Grid.Row="2" Text="Hypopnea" />
+                        <TextBlock Grid.Column="1" Grid.Row="2" Text="{Binding HI}" HorizontalAlignment="Right" />
+                        <TextBlock Grid.Column="0" Grid.Row="3" Text="Clear Airway" />
+                        <TextBlock Grid.Column="1" Grid.Row="3" Text="{Binding CAI}" HorizontalAlignment="Right" />
+                        <TextBlock Grid.Column="0" Grid.Row="4" Text="Unclassified" />
+                        <TextBlock Grid.Column="1" Grid.Row="4" Text="{Binding UAI}" HorizontalAlignment="Right" />
+                        <TextBlock Grid.Column="0" Grid.Row="5" Text="RERA" />
+                        <TextBlock Grid.Column="1" Grid.Row="5" Text="{Binding RIN}" HorizontalAlignment="Right" />
+                        <TextBlock Grid.Column="0" Grid.Row="6" Text="Cheyne-Stokes" />
+                        <TextBlock Grid.Column="1" Grid.Row="6" Text="{Binding CSR}" HorizontalAlignment="Right" />
                     </Grid>
                 </ui:SimpleStackPanel>
             </ScrollViewer>
         </ui:SimpleStackPanel>
-        <TextBlock Grid.Column="2" FontSize="55" HorizontalAlignment="Center" VerticalAlignment="Center"
-                   TextWrapping="Wrap">
-            Right side
-        </TextBlock>
+        <StackPanel Name="pnlNoDataAvailable" Grid.Column="2" Orientation="Vertical" VerticalAlignment="Top"
+                    Margin="0 50">
+            <TextBlock FontSize="24" HorizontalAlignment="Center" TextWrapping="Wrap">
+                There is no data available for the selected date.
+            </TextBlock>
+            <TextBlock FontSize="14" HorizontalAlignment="Center" TextWrapping="Wrap" Margin="100 20">
+                Please select a date with CPAP data available using the DatePicker control in the upper left corner.
+            </TextBlock>
+        </StackPanel>
     </Grid>
 </ui:Page>
