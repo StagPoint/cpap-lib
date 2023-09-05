@@ -9,24 +9,43 @@ namespace cpaplib
 		{
 			{ "Flow.40ms", "Flow Rate" },
 
-			{ "Press.40ms", "Mask Pressure (High)" },  // High-resolution mask pressure
-			{ "MaskPress.2s", "Mask Pressure (Low)" }, // Low-resolution mask pressure 
+			{ "Press.40ms", "Mask Pressure" }, // High-resolution mask pressure
+			{ "Press", "Mask Pressure" },      // High-resolution mask pressure
 
-			{ "Press.2s", "Therapy Pressure" },
+			{ "MaskPress.2s", "Mask Pressure (Low)" }, // Low-resolution mask pressure 
+			{ "MaskPress", "Mask Pressure (Low)" },    // Low-resolution mask pressure 
+
+			{ "Press.2s", "Therapy Pressure" }, // Could also be Inhalation Pressure if in Bilevel Mode 
 
 			{ "EprPress.2s", "Expiratory Pressure" },
 			{ "EPRPress.2s", "Expiratory Pressure" },
+			{ "EprPress", "Expiratory Pressure" },
 			{ "EPAP", "Expiratory Pressure" },
 			{ "S.BL.EPAP", "Expiratory Pressure" },
 
-			{ "Leak.2s", "Leak" },
+			{ "Leak.2s", "Leak Rate" },
+			{ "Leak", "Leak Rate" },
+
 			{ "RespRate.2s", "Respiration Rate" },
+			{ "RespRate", "Respiration Rate" },
+
 			{ "TidVol.2s", "Tidal Volume" },
+			{ "TidVol", "Tidal Volume" },
+
 			{ "MinVent.2s", "Minute Vent" },
+			{ "MinVent", "Minute Vent" },
+
 			{ "Snore.2s", "Snore" },
+			{ "Snore", "Snore" },
+
 			{ "FlowLim.2s", "Flow Limit" },
+			{ "FlowLim", "Flow Limit" },
+
 			{ "Pulse.1s", "Pulse" },
+			{ "Pulse", "Pulse" },
+
 			{ "SpO2.1s", "SpO2" },
+			{ "SpO2", "SpO2" },
 		};
 		
 		public static string GetStandardName( string key )

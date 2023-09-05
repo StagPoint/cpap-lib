@@ -14,6 +14,11 @@
                   To begin, please import your CPAP data (typically found on the SD Card in your CPAP machine) by clicking the 
                   "Import" button below and selecting the STR.edf file in your CPAP data folder.
             </TextBlock>
-            <Button Name="btnImport" Content="Import CPAP Data" HorizontalAlignment="Center" Style="{StaticResource AccentButtonStyle}" ClickMode="Press" Click="Import_Clicked"/>
+            <Button Name="btnImport" HorizontalAlignment="Center" Style="{StaticResource AccentButtonStyle}" ClickMode="Press" Click="Import_Clicked">
+                  <StackPanel Orientation="Horizontal">
+                        <ui:FontIcon Name="btnPrevDay" Glyph="&#xE7F1;" FontSize="14" Margin="0 0 10 0"/>
+                        <TextBlock>Import CPAP Data</TextBlock>
+                  </StackPanel>
+            </Button>
       </ui:SimpleStackPanel>
 </ui:Page>

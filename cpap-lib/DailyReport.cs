@@ -94,7 +94,6 @@ namespace cpaplib
 			ReportDate = new DateTime( 1970, 1, 1 ).AddDays( data[ "Date" ] ).AddHours( 12 );
 
 			Settings.ReadFrom( data );
-			Statistics.ReadFrom( data );
 			EventSummary.ReadFrom( data );
 
 			MaskEvents = (int)(data[ "MaskEvents" ] / 2);

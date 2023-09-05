@@ -20,7 +20,7 @@ public class MachineSettings_Tests
 		loader.LoadFromFolder( rootFolder, DateTime.Today.AddDays( -30 ) );
 
 		var days = loader.Days;
-
+		
 		Debug.WriteLine( $"Number of days: {days.Count}" );
 
 		foreach( var day in days )

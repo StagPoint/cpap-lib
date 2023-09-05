@@ -11,6 +11,7 @@ namespace example_viewer;
 public partial class DataBrowser
 {
 	private CpapDataLoader _data = null;
+	private string _dataPath = String.Empty;
 
 	private DailyReport SelectedDay = null;
 	
@@ -18,8 +19,24 @@ public partial class DataBrowser
 	{
 		InitializeComponent();
 
+		// Save the path for when the OnLoaded handler executes 
+		_dataPath = dataPath;
+
+		this.Loaded += OnLoaded;
+
+		calendar.SelectedDate       = DateTime.Today;
+		calendar.IsTodayHighlighted = false;
+		calendar.SelectedDateChanged += CalendarOnSelectedDateChanged;
+
+		scrollStatistics.Visibility = Visibility.Hidden;
+		
+		this.SizeChanged += OnSizeChanged;
+	}
+	
+	private void OnLoaded( object sender, RoutedEventArgs e )
+	{
 		_data = new CpapDataLoader();
-		_data.LoadFromFolder( dataPath );
+		_data.LoadFromFolder( _dataPath );
 
 		// It shouldn't be possible to load this page without a valid path, but if it happened anyways
 		// go back to the Welcome screen.
@@ -29,22 +46,14 @@ public partial class DataBrowser
 			NavigationService.RemoveBackEntry();
 			return;
 		}
-
-		calendar.SelectedDate       = DateTime.Today;
-		calendar.IsTodayHighlighted = false;
-		calendar.SelectedDateChanged += CalendarOnSelectedDateChanged;
-
-		scrollStatistics.Visibility = Visibility.Hidden;
-		
-		this.SizeChanged += OnSizeChanged;
-
+			
 		var selectedDay = _data.Days.LastOrDefault();
 		if( selectedDay != null )
 		{
 			calendar.SelectedDate = selectedDay.ReportDate.Date;
 		}
 	}
-	
+
 	private void CalendarOnSelectedDateChanged( object sender, SelectionChangedEventArgs e )
 	{
 		foreach( var day in _data.Days )
@@ -67,10 +76,13 @@ public partial class DataBrowser
 		SelectedDay           = day;
 		calendar.SelectedDate = day.ReportDate.Date;
 		
-		scrollStatistics.Visibility         = Visibility.Visible;
-		pnlNoDataAvailable.Visibility       = Visibility.Hidden;
-		RespiratoryEventSummary.DataContext = day.EventSummary;
+		scrollStatistics.Visibility   = Visibility.Visible;
+		pnlNoDataAvailable.Visibility = Visibility.Hidden;
+		
+		
 		this.DataContext                    = day;
+		RespiratoryEventSummary.DataContext = day.EventSummary;
+		StatisticsSummary.DataContext       = day.Statistics;
 	}
 
 	private void OnSizeChanged( object sender, SizeChangedEventArgs e )

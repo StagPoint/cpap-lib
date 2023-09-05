@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+
 using StagPoint.EDF.Net;
 
 namespace cpaplib
@@ -33,10 +36,18 @@ namespace cpaplib
 			var indexFilename = Path.Combine( folderPath, "STR.edf" );
 			LoadIndexFile( indexFilename, minDate, maxDate );
 
-			foreach( var day in Days )
+			Task[] tasks = new Task[ Days.Count ];
+
+			for( int i = 0; i < Days.Count; i++ )
 			{
-				LoadSessionsForDay( folderPath, day );
+				// Dereference the specific day because of closure capture below
+				var day = Days[ i ];
+				
+				// Run the task asynchronously when possible
+				tasks[ i ] = Task.Run( () => LoadSessionsForDay( folderPath, day ) );
 			}
+
+			Task.WaitAll( tasks );
 		}
 
 		private void LoadMachineIdentificationInfo( string rootFolder )
@@ -89,7 +100,7 @@ namespace cpaplib
 			}
 		}
 
-		private void LoadSessionsForDay( string rootFolder, DailyReport day )
+		private async Task LoadSessionsForDay( string rootFolder, DailyReport day )
 		{
 			var logFolder = Path.Combine( rootFolder, $@"DATALOG\{day.ReportDate:yyyyMMdd}" );
 			if( !Directory.Exists( logFolder ) )
@@ -185,8 +196,58 @@ namespace cpaplib
 					session.EndTime   = DateUtil.Max( session.EndTime, signal.EndTime );
 				}
 			}
+
+			await CalculateSignalStatistics( day );
 		}
 		
+		private Task CalculateSignalStatistics( DailyReport day )
+		{
+			List<double> samples = new List<double>();
+
+			day.Statistics.MaskPressure = calculateStatistics( "Mask Pressure" );
+			day.Statistics.TherapyPressure = calculateStatistics( "Therapy Pressure" );
+			day.Statistics.ExpiratoryPressure = calculateStatistics( "Expiratory Pressure" );
+			day.Statistics.Leak = calculateStatistics( "Leak Rate" );
+			day.Statistics.RespirationRate = calculateStatistics( "Respiration Rate" );
+			day.Statistics.TidalVolume = calculateStatistics( "Tidal Volume" );
+			day.Statistics.MinuteVent = calculateStatistics( "Minute Vent" );
+			day.Statistics.Snore = calculateStatistics( "Snore" );
+			day.Statistics.FlowLimit = calculateStatistics( "Flow Limit" );
+			day.Statistics.Pulse = calculateStatistics( "Pulse" );
+			day.Statistics.SpO2 = calculateStatistics( "SpO2" );
+			
+			SignalStatistics calculateStatistics( string signalName )
+			{
+				samples.Clear();
+				
+				// Signal index will be consistent for all sessions, so grab that to avoid having to look it up each time
+				var signalIndex = day.Sessions[ 0 ].Signals.FindIndex( x => x.Name.Equals( signalName, StringComparison.Ordinal ) );
+				
+				foreach( var session in day.Sessions )
+				{
+					samples.AddRange( session.Signals[ signalIndex ].Samples );
+				}
+
+				// I don't know why sorting lists (of doubles in particular) is so slow in C#, but this is likely
+				// to be frustrating to anyone (like me) trying to use a Debug build of this library. Sheesh. 
+				samples.Sort();
+
+				var stats = new SignalStatistics
+				{
+					Minimum      = samples[ (int)(samples.Count * 0.01) ],
+					Average      = samples.Average(),
+					Maximum      = samples.Max(),
+					Median       = samples[ samples.Count / 2 ],
+					Percentile95 = samples[ (int)( samples.Count * 0.95 ) ],
+					Percentile99 = samples[ (int)( samples.Count * 0.995 ) ],
+				};
+
+				return stats;
+			}
+
+			return Task.CompletedTask;
+		}
+
 		private DateTime MaxDate( DateTime a, DateTime b )
 		{
 			return (a > b) ? a : b;
@@ -285,7 +346,7 @@ namespace cpaplib
 					var duration = maskOffSignal.Samples[ sampleIndex ] - maskOnSignal.Samples[ sampleIndex ];
 
 					// Discard empty sessions
-					if( maskOn == maskOff )
+					if( maskOff.Subtract( maskOn ).TotalMinutes < 5 )
 					{
 						continue;
 					}

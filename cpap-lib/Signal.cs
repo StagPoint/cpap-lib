@@ -25,11 +25,16 @@ namespace cpaplib
 		/// The maximum value that any sample can potentially have for this type of Signal
 		/// </summary>
 		public double MaxValue { get; internal set; }
+		
+		/// <summary>
+		/// Gets or sets the unit of measurement used for this signal type (examples: mV, m/s^2, cmHO2, etc.)
+		/// </summary>
+		public string UnitOfMeasurement { get; internal set; }
 
 		/// <summary>
 		/// The signal data for this session 
 		/// </summary>
-		public List<double> Samples { get; } = new List<double>();
+		public List<double> Samples { get; internal set; } = new List<double>();
 		
 		/// <summary>
 		/// The time when recording of this signal was started 
