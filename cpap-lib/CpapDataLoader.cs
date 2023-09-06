@@ -36,18 +36,26 @@ namespace cpaplib
 			var indexFilename = Path.Combine( folderPath, "STR.edf" );
 			LoadIndexFile( indexFilename, minDate, maxDate );
 
-			Task[] tasks = new Task[ Days.Count ];
+#if ALLOW_ASYNC
+			var tasks = new Task[ Days.Count ];
 
 			for( int i = 0; i < Days.Count; i++ )
 			{
-				// Dereference the specific day because of closure capture below
 				var day = Days[ i ];
 				
-				// Run the task asynchronously when possible
-				tasks[ i ] = Task.Run( () => LoadSessionsForDay( folderPath, day ) );
+				tasks[i] = Task.Run( () =>
+				{
+					LoadSessionsForDay( folderPath, day );
+				} );
 			}
 
 			Task.WaitAll( tasks );
+#else
+			foreach( var day in Days )
+			{
+				LoadSessionsForDay( folderPath, day );
+			}
+#endif
 		}
 
 		private void LoadMachineIdentificationInfo( string rootFolder )
@@ -100,12 +108,12 @@ namespace cpaplib
 			}
 		}
 
-		private async Task LoadSessionsForDay( string rootFolder, DailyReport day )
+		private void LoadSessionsForDay( string rootFolder, DailyReport day )
 		{
 			var logFolder = Path.Combine( rootFolder, $@"DATALOG\{day.ReportDate:yyyyMMdd}" );
 			if( !Directory.Exists( logFolder ) )
 			{
-				return;
+				throw new DirectoryNotFoundException( $"Could not find the session directory for {logFolder}" );
 			}
 
 			LoadEventsAndAnnotations( logFolder, day );
@@ -132,10 +140,8 @@ namespace cpaplib
 
 				foreach( var session in day.Sessions )
 				{
-					// The start times will probably not match exactly, but also shouldn't differ by more than a minute.
-					// Typically the difference will be that the session starts on an even minute boundary, and the 
-					// file does not, so stripping the seconds from the file start time should make them match exactly. 
-					if( !session.StartTime.Equals( fileDate ) )
+					// If the file's extracted date does not intersect with the session, then it's not relevant to that session 
+					if( session.StartTime > fileDate || session.EndTime < fileDate )
 					{
 						continue;
 					}
@@ -197,40 +203,70 @@ namespace cpaplib
 				}
 			}
 
-			await CalculateSignalStatistics( day );
+			CalculateSignalStatistics( day );
 		}
 		
-		private Task CalculateSignalStatistics( DailyReport day )
+		private void CalculateSignalStatistics( DailyReport day )
 		{
-			List<double> samples = new List<double>();
+			// We don't actually need double precision for any of these signals (biomedical signals just
+			// don't need that kind of precision) and single-precision floats sort faster.
+			ListEx<float> samples = new ListEx<float>();
 
-			day.Statistics.MaskPressure = calculateStatistics( "Mask Pressure" );
-			day.Statistics.TherapyPressure = calculateStatistics( "Therapy Pressure" );
+			day.Statistics.MaskPressure       = calculateStatistics( "Mask Pressure" );
+			day.Statistics.TherapyPressure    = calculateStatistics( "Therapy Pressure" );
 			day.Statistics.ExpiratoryPressure = calculateStatistics( "Expiratory Pressure" );
-			day.Statistics.Leak = calculateStatistics( "Leak Rate" );
-			day.Statistics.RespirationRate = calculateStatistics( "Respiration Rate" );
-			day.Statistics.TidalVolume = calculateStatistics( "Tidal Volume" );
-			day.Statistics.MinuteVent = calculateStatistics( "Minute Vent" );
-			day.Statistics.Snore = calculateStatistics( "Snore" );
-			day.Statistics.FlowLimit = calculateStatistics( "Flow Limit" );
-			day.Statistics.Pulse = calculateStatistics( "Pulse" );
-			day.Statistics.SpO2 = calculateStatistics( "SpO2" );
-			
+			day.Statistics.Leak               = calculateStatistics( "Leak Rate" );
+			day.Statistics.RespirationRate    = calculateStatistics( "Respiration Rate" );
+			day.Statistics.TidalVolume        = calculateStatistics( "Tidal Volume" );
+			day.Statistics.MinuteVent         = calculateStatistics( "Minute Vent" );
+			day.Statistics.Snore              = calculateStatistics( "Snore" );
+			day.Statistics.FlowLimit          = calculateStatistics( "Flow Limit" );
+			day.Statistics.Pulse              = calculateStatistics( "Pulse" );
+			day.Statistics.SpO2               = calculateStatistics( "SpO2" );
+
 			SignalStatistics calculateStatistics( string signalName )
 			{
 				samples.Clear();
 				
 				// Signal index will be consistent for all sessions, so grab that to avoid having to look it up each time
 				var signalIndex = day.Sessions[ 0 ].Signals.FindIndex( x => x.Name.Equals( signalName, StringComparison.Ordinal ) );
+
+				// The signal wasn't found... Typically only happens when a session is essentially empty because the
+				// base session data wasn't found. Should never get to this point if that's the case, but worth checking.
+				if( signalIndex == -1 )
+				{
+					throw new IndexOutOfRangeException( $"Failed to find signal {signalName} for day {day.ReportDate.ToShortDateString()}" );
+				}
 				
+				// Copy all available samples from all sessions into a single array that can be sorted and
+				// used to calculate the statistics. 
 				foreach( var session in day.Sessions )
 				{
-					samples.AddRange( session.Signals[ signalIndex ].Samples );
-				}
+					var sourceSamples = session.Signals[ signalIndex ].Samples;
+					samples.GrowIfNeeded( sourceSamples.Count );
 
-				// I don't know why sorting lists (of doubles in particular) is so slow in C#, but this is likely
-				// to be frustrating to anyone (like me) trying to use a Debug build of this library. Sheesh. 
+					foreach( var sample in sourceSamples )
+					{
+						samples.Add( (float)sample );
+					}
+				}
+				
+#if ALLOW_UNSAFE
+				// The samples need to be sorted in order to determine things like 95th Percentile, etc.  
+				if( samples.Count <= 1000 )
+				{
+					samples.Sort();
+				}
+				else
+				{
+					// A radix sort is *blazing fast* on large arrays. Much faster than the built-in sort, 
+					// but uses twice the amount of memory in exchange. 
+					RadixSort.Sort( samples );
+				}
+#else
 				samples.Sort();
+#endif
+
 
 				var stats = new SignalStatistics
 				{
@@ -244,15 +280,8 @@ namespace cpaplib
 
 				return stats;
 			}
-
-			return Task.CompletedTask;
 		}
-
-		private DateTime MaxDate( DateTime a, DateTime b )
-		{
-			return (a > b) ? a : b;
-		}
-
+		
 		private void LoadEventsAndAnnotations( string logFolder, DailyReport day )
 		{
 			var filenames = Directory.GetFiles( logFolder, "*_EVE.edf" );
@@ -334,7 +363,7 @@ namespace cpaplib
 					var sampleIndex = dayIndex * numberOfEntriesPerDay + i;
 
 					// Stop processing MaskOn/MaskOff when we encounter a -1
-					if( maskOnSignal.Samples[ sampleIndex ] < 0 )
+					if( maskOnSignal.Samples[ sampleIndex ] < 0 || maskOffSignal.Samples[ sampleIndex ] < 0 )
 					{
 						break;
 					}

@@ -28,10 +28,11 @@ public partial class WelcomeNotice
 
 			if( CpapDataLoader.HasCorrectFolderStructure( drive.RootDirectory.FullName ) )
 			{
-				var messageBoxResult = MessageBox.Show( $"Found CPAP data on Drive {drive.Name}. Do you want to import it?", $"Import from {drive.Name}?", MessageBoxButton.YesNo );
+				var messageBoxResult = MessageBox.Show( $"Found CPAP data on Drive {drive.Name}\nDo you want to import it?", $"Import from {drive.Name}?", MessageBoxButton.YesNo );
 				if( messageBoxResult == MessageBoxResult.Yes )
 				{
-					importCpapDataFrom( drive.RootDirectory.FullName );
+					NavigationService.Navigate( new DataBrowser( drive.RootDirectory.FullName ) );
+					NavigationService.RemoveBackEntry();
 					return;
 				}
 			}

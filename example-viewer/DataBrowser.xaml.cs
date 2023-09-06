@@ -36,7 +36,13 @@ public partial class DataBrowser
 	private void OnLoaded( object sender, RoutedEventArgs e )
 	{
 		_data = new CpapDataLoader();
+
+		var startTime = Environment.TickCount;
+		
 		_data.LoadFromFolder( _dataPath );
+
+		var elapsed = Environment.TickCount - startTime;
+		Debug.WriteLine( $"Time to load CPAP data ({_data.Days.Count} days): {elapsed/1000.0f:F3} seconds" );
 
 		// It shouldn't be possible to load this page without a valid path, but if it happened anyways
 		// go back to the Welcome screen.

@@ -26,10 +26,12 @@ namespace example_viewer
 			
 			_mainFrame.Navigate( new WelcomeNotice() );
 		}
+		
 		private void Import_Click( object sender, RoutedEventArgs e )
 		{
 			throw new NotImplementedException();
 		}
+		
 		private void Exit_Click( object sender, RoutedEventArgs e )
 		{
 			Application.Current.Shutdown();

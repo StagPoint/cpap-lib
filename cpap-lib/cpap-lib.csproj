@@ -23,8 +23,19 @@
         <Product>cpap-lib</Product>
     </PropertyGroup>
 
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+      <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+      <DefineConstants>TRACE ALLOW_UNSAFE ALLOW_ASYNC</DefineConstants>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+      <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+      <DefineConstants>TRACE ALLOW_UNSAFE ALLOW_ASYNC</DefineConstants>
+    </PropertyGroup>
+
     <ItemGroup>
       <PackageReference Include="StagPoint.EuropeanDataFormat.Net" Version="1.0.1" />
     </ItemGroup>
+
 
 </Project>

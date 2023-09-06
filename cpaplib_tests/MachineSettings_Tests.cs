@@ -17,7 +17,7 @@ public class MachineSettings_Tests
 		Assert.IsTrue( Directory.Exists( rootFolder ), "Test file does not exist" );
 
 		var loader = new CpapDataLoader();
-		loader.LoadFromFolder( rootFolder, DateTime.Today.AddDays( -30 ) );
+		loader.LoadFromFolder( rootFolder, DateTime.Today.AddDays( -100 ) );
 
 		var days = loader.Days;
 		
