@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace cpaplib
 {
@@ -19,8 +20,30 @@ namespace cpaplib
 		public CpapSettings CPAP { get; set; } = new CpapSettings();
 		public AutoSetSettings AutoSet { get; set; } = new AutoSetSettings();
 
+		public AsvSettings ASV { get; set; } = null;
+
+		public AvapsSettings AVAP { get; set; } = null;
+
 		public RampModeType RampMode { get; set; }
 		public double RampTime { get; set; }
+
+		public double RampStartingPressure
+		{
+			get
+			{
+				switch( Mode )
+				{
+					case OperatingMode.CPAP:
+						return CPAP.StartPressure;
+					case OperatingMode.APAP:
+						return AutoSet.StartPressure;
+					default:
+						throw new ArgumentOutOfRangeException();
+				}
+			}
+		}
+		
+
 		public EssentialsMode Essentials { get; set; }
 		public bool AntibacterialFilter { get; set; }
 		public MaskType Mask { get; set; }
@@ -64,6 +87,62 @@ namespace cpaplib
 				}
 
 				Mode = (OperatingMode)mode;
+			}
+
+			if( Mode == OperatingMode.ASV )
+			{
+				ASV = new AsvSettings
+				{
+					StartPressure = data[ "S.AV.StartPress" ],
+					MinPressure   = data[ "S.AV.MinPS" ],
+					MaxPressure   = data[ "S.AV.MaxPS" ],
+					EPAP          = data[ "S.AV.EPAP" ],
+					EpapMin       = data[ "S.AV.EPAP" ],
+					EpapMax       = data[ "S.AV.EPAP" ],
+					IpapMin       = data[ "S.AV.EPAP" ] + data[ "S.AV.MinPS" ],
+					IpapMax       = data[ "S.AV.EPAP" ] + data[ "S.AV.MaxPS" ],
+				};
+			}
+			else if( Mode == OperatingMode.ASV_VARIABLE_EPAP )
+			{
+				ASV = new AsvSettings
+				{
+					StartPressure = data[ "S.AA.StartPress" ],
+					MinPressure   = data[ "S.AA.MinPS" ],
+					MaxPressure   = data[ "S.AA.MaxPS" ],
+					EPAP          = data[ "S.AA.MinEPAP" ],
+					EpapMin       = data[ "S.AA.MinEPAP" ],
+					EpapMax       = data[ "S.AA.MaxEPAP" ],
+				};
+			}
+			else if( Mode == OperatingMode.AVAPS )
+			{
+				AVAP = new AvapsSettings
+				{
+					StartPressure = data[ "S.i.StartPress" ],
+					MinPressure   = data[ "S.i.MinPS" ],
+					MaxPressure   = data[ "S.i.MaxPS" ],
+					EpapAuto      = data[ "S.i.EPAPAuto" ] > 0.5,
+					EPAP          = data[ "S.i.EPAP" ],
+					EpapMin       = data[ "S.i.EPAP" ],
+					EpapMax       = data[ "S.i.EPAP" ],
+				};
+
+				if( AVAP.EpapAuto )
+				{
+					AVAP.EpapMin = data[ "S.i.MinEPAP" ];
+					AVAP.EpapMax = data[ "S.i.MaxEPAP" ];
+					
+					AVAP.IPAP    = AVAP.EpapMin + AVAP.MinPressure;
+					AVAP.IpapMin = AVAP.EpapMin + AVAP.MinPressure;
+					AVAP.IpapMax = AVAP.EpapMax + AVAP.MaxPressure;
+				}
+				else 
+				{
+					AVAP.IPAP    = AVAP.EPAP + AVAP.MinPressure;
+					AVAP.IpapMin = AVAP.EPAP + AVAP.MinPressure;
+					AVAP.IpapMax = AVAP.EPAP + AVAP.MaxPressure;
+				}
 			}
 
 			HeatedTube = data["HeatedTube"] > 0.5;

@@ -86,9 +86,11 @@ public partial class DataBrowser
 		pnlNoDataAvailable.Visibility = Visibility.Hidden;
 		
 		
-		this.DataContext                    = day;
+		DataContext                         = day;
+		MachineID.DataContext               = _data.MachineID;
 		RespiratoryEventSummary.DataContext = day.EventSummary;
 		StatisticsSummary.DataContext       = day.Statistics;
+		MachineSettings.DataContext         = day.Settings;
 	}
 
 	private void OnSizeChanged( object sender, SizeChangedEventArgs e )

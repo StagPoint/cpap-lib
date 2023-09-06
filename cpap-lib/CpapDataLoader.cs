@@ -34,7 +34,7 @@ namespace cpaplib
 			LoadMachineIdentificationInfo( folderPath );
 
 			var indexFilename = Path.Combine( folderPath, "STR.edf" );
-			LoadIndexFile( indexFilename, minDate, maxDate );
+			LoadIndexAndSettings( indexFilename, minDate, maxDate );
 
 #if ALLOW_ASYNC
 			var tasks = new Task[ Days.Count ];
@@ -260,7 +260,7 @@ namespace cpaplib
 				else
 				{
 					// A radix sort is *blazing fast* on large arrays. Much faster than the built-in sort, 
-					// but uses twice the amount of memory in exchange. 
+					// but uses twice the amount of memory in exchange (because it's not an in-place sort). 
 					RadixSort.Sort( samples );
 				}
 #else
@@ -316,9 +316,14 @@ namespace cpaplib
 			}
 		}
 
-		private void LoadIndexFile( string filename, DateTime? minDate, DateTime? maxDate )
+		private void LoadIndexAndSettings( string filename, DateTime? minDate, DateTime? maxDate )
 		{
 			var file = EdfFile.Open( filename );
+
+			if( file.Signals.Count == 0 )
+			{
+				return;
+			}
 
 			// The STR.edf file is essentially a vertical table containing the settings data for each
 			// recorded day. We need to transpose that data and use it to create a DailyReport for 
@@ -329,7 +334,8 @@ namespace cpaplib
 				var lookup = new Dictionary<string, double>();
 				for( int j = 0; j < file.Signals.Count; j++ )
 				{
-					lookup[ file.Signals[ j ].Label ] = file.Signals[ j ].Samples[ i ];
+					var signalName = SignalNames.GetStandardName( file.Signals[ j ].Label );
+					lookup[ signalName ] = file.Signals[ j ].Samples[ i ];
 				}
 
 				// Read in and process the settings for a single day

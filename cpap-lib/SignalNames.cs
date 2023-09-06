@@ -22,6 +22,10 @@ namespace cpaplib
 			{ "EprPress", "Expiratory Pressure" },
 			{ "EPAP", "Expiratory Pressure" },
 			{ "S.BL.EPAP", "Expiratory Pressure" },
+			
+			{ "S.AFH.StartPress", "S.AS.StartPress" },
+			{ "S.AFH.MaxPress", "S.AS.MaxPress" },
+			{ "S.AFH.MinPress", "S.AS.MinPress" },
 
 			{ "Leak.2s", "Leak Rate" },
 			{ "Leak", "Leak Rate" },

@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System;
+using System.Runtime.CompilerServices;
 
 #if ALLOW_UNSAFE
 
@@ -6,11 +7,14 @@ namespace cpaplib
 {
 	public static unsafe class RadixSort
 	{
+		private const int KEY_SIZE       = sizeof( float );
+		private const int OFFSETS_LENGTH = KEY_SIZE * 256;
+
+		[ThreadStatic]
+		private static uint[] _offsets = new uint[ OFFSETS_LENGTH ];
+
 		public static void Sort( ListEx<float> samples )
 		{
-			const int KEY_SIZE       = sizeof( float );
-			const int OFFSETS_LENGTH = KEY_SIZE * 256;
-
 			int    length = samples.Count;
 			uint[] buffer = new uint[ length ];
 			

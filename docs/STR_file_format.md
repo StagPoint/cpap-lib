@@ -18,16 +18,16 @@ and statistics for each recorded day.
 
 ### Event Information
 
-| Signal           | Description                                                                                                                                                                                                                   |
-|------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| AHI              | [Apnea-Hypopnea Index](https://en.wikipedia.org/wiki/Apnea%E2%80%93hypopnea_index), the average number of [Apnea](https://en.wikipedia.org/wiki/Apnea) or [Hypopnea](https://en.wikipedia.org/wiki/Hypopnea) events per hour. | 
-| HI               | Hypopnea Index - The average number of [Hypopnea](https://en.wikipedia.org/wiki/Hypopnea) events that occurred per hour                                                                                                       | 
-| AI               | Apnea Index - The Average number of [Apnea](https://en.wikipedia.org/wiki/Apnea) events that occurred per hour.                                                                                                               | 
-| OAI              | Obstructive Apnea Index - The average number of Obstructive Apnea events that occurred per hour.                                                                                                                              | 
-| CAI              | Clear Airway Index - The number of Clear Airway (or [Central Apnea](https://en.wikipedia.org/wiki/Central_sleep_apnea)) events that occurred per hour.                                                                        | 
-| UAI              | Unclassified Apnea Index - The number of Apnea events that could not be classified that occurred per hour.                                                                                                                    | 
-| RIN              | Respiratory Disturbance Index - The number of [Respiratory Effort Related Arousal](https://en.wikipedia.org/wiki/Respiratory_disturbance_index) events that occurred per hour.                                                | 
-| CSR              | Cheyne–Stokes Respiration Index - The number of [Cheyne–Stokes Respiration](https://en.wikipedia.org/wiki/Cheyne%E2%80%93Stokes_respiration) events that occurred per hour.                                                   |
+| Signal | Description                                                                                                                                                                                                                   |
+|--------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| AHI    | [Apnea-Hypopnea Index](https://en.wikipedia.org/wiki/Apnea%E2%80%93hypopnea_index), the average number of [Apnea](https://en.wikipedia.org/wiki/Apnea) or [Hypopnea](https://en.wikipedia.org/wiki/Hypopnea) events per hour. | 
+| HI     | Hypopnea Index - The average number of [Hypopnea](https://en.wikipedia.org/wiki/Hypopnea) events that occurred per hour                                                                                                       | 
+| AI     | Apnea Index - The Average number of [Apnea](https://en.wikipedia.org/wiki/Apnea) events that occurred per hour.                                                                                                               | 
+| OAI    | Obstructive Apnea Index - The average number of Obstructive Apnea events that occurred per hour.                                                                                                                              | 
+| CAI    | Clear Airway Index - The number of Clear Airway (or [Central Apnea](https://en.wikipedia.org/wiki/Central_sleep_apnea)) events that occurred per hour.                                                                        | 
+| UAI    | Unclassified Apnea Index - The number of Apnea events that could not be classified that occurred per hour.                                                                                                                    | 
+| RIN    | Respiratory Disturbance Index - The number of [Respiratory Effort Related Arousal](https://en.wikipedia.org/wiki/Respiratory_disturbance_index) events that occurred per hour.                                                | 
+| CSR    | Cheyne–Stokes Respiration Index - The percent of time spent in [Cheyne–Stokes Respiration](https://en.wikipedia.org/wiki/Cheyne%E2%80%93Stokes_respiration)                                                                   |
 
 ## Machine Settings 
 
