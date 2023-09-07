@@ -53,7 +53,7 @@ public class MachineSettings_Tests
 	Ramp time				{day.Settings.RampTime} Minutes
 
 	Climate Control			{day.Settings.ClimateControl}
-	Humidity Enabled		{day.Settings.HumidityEnabled}
+	Humidity Enabled		{day.Settings.HumidifierStatus}
 	Humidifier Status		{(day.Settings.Humidifier ? "On" : "Off")}
 	Humidity Level			{day.Settings.HumidityLevel} 
 	Temperature				{day.Settings.Temperature} ºC

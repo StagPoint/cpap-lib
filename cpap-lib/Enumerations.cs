@@ -27,6 +27,12 @@
 		MAX_VALUE = AVAPS + 1
 	};
 
+	public enum OnOffType : int
+	{
+		Off,
+		On
+	}
+
 	public enum RampModeType
 	{
 		Off,

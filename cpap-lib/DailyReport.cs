@@ -20,6 +20,11 @@ namespace cpaplib
 		/// The specific time at which recording began
 		/// </summary>
 		public DateTime RecordingStartTime { get; internal set; }
+		
+		/// <summary>
+		/// The specific time at which recording ended
+		/// </summary>
+		public DateTime RecordingEndTime { get => RecordingStartTime + Duration; }
 
 		/// <summary>
 		/// The list of sessions  for this day

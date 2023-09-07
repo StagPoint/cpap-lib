@@ -10,6 +10,7 @@
     <ui:Page.Resources>
         <local:BoolToGridRowHeightConverter x:Key="BoolToGridRowHeightConverter" />
         <local:PropertyValueToGridRowVisibilityConverter x:Key="PropertyValueToGridRowVisibilityConverter" />
+        <local:NiceNameConverter x:Key="NiceNameConverter" />
     </ui:Page.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
@@ -50,6 +51,28 @@
                             <Run Text="{Binding SerialNumber, Mode=OneWay}" />
                         </TextBlock>
                     </ui:SimpleStackPanel>
+                    <Grid Margin="4 10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"></ColumnDefinition>
+                            <ColumnDefinition Width="20"></ColumnDefinition>
+                            <ColumnDefinition Width="Auto"></ColumnDefinition>
+                            <ColumnDefinition Width="*"></ColumnDefinition>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition />
+                            <RowDefinition />
+                            <RowDefinition />
+                            <RowDefinition />
+                        </Grid.RowDefinitions>
+                        <TextBlock Grid.Column="0" Grid.Row="0" Text="Date:" Style="{DynamicResource BaseTextBlockStyle}"/>
+                        <TextBlock Grid.Column="2" Grid.Row="0" Text="{Binding ReportDate, Mode=OneWay, StringFormat={}{0:D}}"/>
+                        <TextBlock Grid.Column="0" Grid.Row="1" Text="Start Time:" Style="{DynamicResource BaseTextBlockStyle}"/>
+                        <TextBlock Grid.Column="2" Grid.Row="1" Text="{Binding RecordingStartTime, Mode=OneWay, StringFormat={}{0:g}}"/>
+                        <TextBlock Grid.Column="0" Grid.Row="2" Text="End Time:" Style="{DynamicResource BaseTextBlockStyle}"/>
+                        <TextBlock Grid.Column="2" Grid.Row="2" Text="{Binding RecordingEndTime, Mode=OneWay, StringFormat={}{0:g}}"/>
+                        <TextBlock Grid.Column="0" Grid.Row="3" Text="Duration:" Style="{DynamicResource BaseTextBlockStyle}"/>
+                        <TextBlock Grid.Column="2" Grid.Row="3" Text="{Binding Duration, Mode=OneWay, StringFormat={}{0:T}}"/>
+                    </Grid>
                     <Expander
                         x:Name="expRespiratoryEvents"
                         ExpandDirection="Down"
@@ -187,6 +210,7 @@
                                 <RowDefinition Tag="CPAP.Pressure" Height="{Binding Mode, Converter={StaticResource PropertyValueToGridRowVisibilityConverter}, ConverterParameter=CPAP}" />
                                 <RowDefinition Tag="AutoSet.MinPressure" Height="{Binding Mode, Converter={StaticResource PropertyValueToGridRowVisibilityConverter}, ConverterParameter=APAP}" />
                                 <RowDefinition Tag="AutoSet.MaxPressure" Height="{Binding Mode, Converter={StaticResource PropertyValueToGridRowVisibilityConverter}, ConverterParameter=APAP}" />
+                                <RowDefinition Tag="AutoSet.ResponseType" Height="{Binding Mode, Converter={StaticResource PropertyValueToGridRowVisibilityConverter}, ConverterParameter=APAP}" />
                                 <RowDefinition Tag="RampMode" Height="Auto" />
                                 <RowDefinition Tag="RampMode" Height="{Binding RampMode, Converter={StaticResource PropertyValueToGridRowVisibilityConverter}, ConverterParameter=On}" />
                                 <RowDefinition Tag="RampMode" Height="{Binding RampMode, Converter={StaticResource PropertyValueToGridRowVisibilityConverter}, ConverterParameter=On}" />
@@ -194,6 +218,12 @@
                                 <RowDefinition Height="{Binding EPR.EprEnabled, Converter={StaticResource BoolToGridRowHeightConverter}}" />
                                 <RowDefinition Height="{Binding EPR.EprEnabled, Converter={StaticResource BoolToGridRowHeightConverter}}" />
                                 <RowDefinition Height="Auto" />
+                                <RowDefinition Tag="ClimateControl" Height="Auto" />
+                                <RowDefinition Tag="HumidifierStatus" Height="Auto" />
+                                <RowDefinition Tag="HumidityLevel" Height="Auto" />
+                                <RowDefinition Tag="TemperatureEnabled" Height="Auto" />
+                                <RowDefinition Tag="Temperature" Height="Auto" />
+                                <RowDefinition Tag="Mask" Height="Auto" />
                             </Grid.RowDefinitions>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
@@ -209,18 +239,34 @@
                             <TextBlock Grid.Column="2" Grid.Row="2" Text="{Binding AutoSet.MinPressure, Mode=OneWay, StringFormat={}{0:N2} cmH2O}"/>
                             <TextBlock Grid.Column="0" Grid.Row="3" Text="Max Pressure"/>
                             <TextBlock Grid.Column="2" Grid.Row="3" Text="{Binding AutoSet.MaxPressure, Mode=OneWay, StringFormat={}{0:N2} cmH2O}"/>
-                            <TextBlock Grid.Column="0" Grid.Row="4" Text="Ramp Mode"/>
-                            <TextBlock Grid.Column="2" Grid.Row="4" Text="{Binding RampMode, Mode=OneWay}" />
-                            <TextBlock Grid.Column="0" Grid.Row="5" Text="Ramp Time"/>
-                            <TextBlock Grid.Column="2" Grid.Row="5" Text="{Binding RampTime, Mode=OneWay, StringFormat={}{0} Minutes}" />
-                            <TextBlock Grid.Column="0" Grid.Row="6" Text="Starting Pressure"/>
-                            <TextBlock Grid.Column="2" Grid.Row="6" Text="{Binding RampStartingPressure, Mode=OneWay, StringFormat={}{0} cmH2O}" />
-                            <TextBlock Grid.Column="0" Grid.Row="7" Text="EPR Enabled"/>
-                            <TextBlock Grid.Column="2" Grid.Row="7" Text="{Binding EPR.EprEnabled, Mode=OneWay}" />
-                            <TextBlock Grid.Column="0" Grid.Row="8" Text="EPR Mode"/>
-                            <TextBlock Grid.Column="2" Grid.Row="8" Text="{Binding EPR.Mode, Mode=OneWay}" />
-                            <TextBlock Grid.Column="0" Grid.Row="9" Text="EPR Level"/>
-                            <TextBlock Grid.Column="2" Grid.Row="9" Text="{Binding EPR.Level, Mode=OneWay}" />
+                            <TextBlock Grid.Column="0" Grid.Row="4" Text="Response Type"/>
+                            <TextBlock Grid.Column="2" Grid.Row="4" Text="{Binding AutoSet.ResponseType, Mode=OneWay}" />
+                            <TextBlock Grid.Column="0" Grid.Row="5" Text="Ramp Mode"/>
+                            <TextBlock Grid.Column="2" Grid.Row="5" Text="{Binding RampMode, Mode=OneWay}" />
+                            <TextBlock Grid.Column="0" Grid.Row="6" Text="Ramp Time"/>
+                            <TextBlock Grid.Column="2" Grid.Row="6" Text="{Binding RampTime, Mode=OneWay, StringFormat={}{0} Minutes}" />
+                            <TextBlock Grid.Column="0" Grid.Row="7" Text="Starting Pressure"/>
+                            <TextBlock Grid.Column="2" Grid.Row="7" Text="{Binding RampStartingPressure, Mode=OneWay, StringFormat={}{0} cmH2O}" />
+                            <TextBlock Grid.Column="0" Grid.Row="8" Text="EPR Enabled"/>
+                            <TextBlock Grid.Column="2" Grid.Row="8" Text="{Binding EPR.EprEnabled, Mode=OneWay}" />
+                            <TextBlock Grid.Column="0" Grid.Row="9" Text="EPR Mode"/>
+                            <TextBlock Grid.Column="2" Grid.Row="9" Text="{Binding EPR.Mode, Mode=OneWay, Converter={StaticResource NiceNameConverter}}" />
+                            <TextBlock Grid.Column="0" Grid.Row="10" Text="EPR Level"/>
+                            <TextBlock Grid.Column="2" Grid.Row="10" Text="{Binding EPR.Level, Mode=OneWay}" />
+                            <TextBlock Grid.Column="0" Grid.Row="11" Text="Smart Start"/>
+                            <TextBlock Grid.Column="2" Grid.Row="11" Text="{Binding SmartStart, Mode=OneWay}" />
+                            <TextBlock Grid.Column="0" Grid.Row="12" Text="Climate Control"/>
+                            <TextBlock Grid.Column="2" Grid.Row="12" Text="{Binding ClimateControl, Mode=OneWay}" />
+                            <TextBlock Grid.Column="0" Grid.Row="13" Text="Humidifier Status"/>
+                            <TextBlock Grid.Column="2" Grid.Row="13" Text="{Binding HumidifierStatus, Mode=OneWay}" />
+                            <TextBlock Grid.Column="0" Grid.Row="14" Text="Humidity Level"/>
+                            <TextBlock Grid.Column="2" Grid.Row="14" Text="{Binding HumidityLevel, Mode=OneWay}" />
+                            <TextBlock Grid.Column="0" Grid.Row="15" Text="Temperature Enabled"/>
+                            <TextBlock Grid.Column="2" Grid.Row="15" Text="{Binding TemperatureEnabled, Mode=OneWay}" />
+                            <TextBlock Grid.Column="0" Grid.Row="16" Text="Temperature"/>
+                            <TextBlock Grid.Column="2" Grid.Row="16" Text="{Binding Temperature, Mode=OneWay, StringFormat={}{0:N1} °F}" />
+                            <TextBlock Grid.Column="0" Grid.Row="17" Text="Mask Type"/>
+                            <TextBlock Grid.Column="2" Grid.Row="17" Text="{Binding Mask, Mode=OneWay, Converter={StaticResource NiceNameConverter}}" />
                         </Grid>
                     </Expander>
                 </ui:SimpleStackPanel>

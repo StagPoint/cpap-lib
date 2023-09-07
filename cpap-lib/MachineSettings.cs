@@ -49,7 +49,7 @@ namespace cpaplib
 		public MaskType Mask { get; set; }
 		public double Tube { get; set; }
 		public ClimateControlType ClimateControl { get; set; }
-		public bool HumidityEnabled { get; set; }
+		public OnOffType HumidifierStatus { get; set; }
 		public double HumidityLevel { get; set; }
 		public bool TemperatureEnabled { get; set; }
 		public double Temperature { get; set; }
@@ -167,12 +167,12 @@ namespace cpaplib
 			SmartStart = data["S.SmartStart"] > 0.5;
 			AntibacterialFilter = data["S.ABFilter"] >= 0.5;
 
-			ClimateControl = (ClimateControlType)(int)data["S.ClimateControl"];
-			Tube = data["S.Tube"];
-			HumidityEnabled = data["S.HumEnable"] > 0.5;
-			HumidityLevel = data["S.HumLevel"];
+			ClimateControl     = (ClimateControlType)(int)data["S.ClimateControl"];
+			Tube               = data["S.Tube"];
+			HumidifierStatus   = data["S.HumEnable"] > 0.5 ? OnOffType.On : OnOffType.Off;
+			HumidityLevel      = data["S.HumLevel"];
 			TemperatureEnabled = data["S.TempEnable"] > 0.5;
-			Temperature = data["S.Temp"];
+			Temperature        = data["S.Temp"] * 1.8 + 32; // Converted from Celsius to Fahrenheit
 
 			Mask = (MaskType)(int)data["S.Mask"];
 
