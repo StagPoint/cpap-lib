@@ -10,7 +10,7 @@ using StagPoint.EDF.Net;
 
 namespace cpaplib
 {
-	public class CpapDataLoader
+	public class ResMedDataLoader
 	{
 		public MachineIdentification MachineID = new MachineIdentification();
 

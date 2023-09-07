@@ -6,19 +6,28 @@
       xmlns:local="clr-namespace:example_viewer"
       mc:Ignorable="d"
       xmlns:ui="http://schemas.modernwpf.com/2019"
-      Title="Welcome Notice" Width="800" Height="450"
+      Title="Welcome Notice"
       VerticalAlignment="Top">
-      <ui:SimpleStackPanel Name="Welcome" Margin="20" Spacing="24">
-            <TextBlock Text="Welcome to the CPAP Data Viewer" Margin="0 50 0 0" HorizontalAlignment="Center" Style="{StaticResource HeaderTextBlockStyle}" />
-            <TextBlock TextWrapping="Wrap" Width="600" HorizontalAlignment="Center" FontSize="16" Margin="20">
-                  To begin, please import your CPAP data (typically found on the SD Card in your CPAP machine) by clicking the 
-                  "Import" button below and selecting the STR.edf file in your CPAP data folder.
-            </TextBlock>
-            <Button Name="btnImport" HorizontalAlignment="Center" Style="{StaticResource AccentButtonStyle}" ClickMode="Press" Click="Import_Clicked">
-                  <StackPanel Orientation="Horizontal">
-                        <ui:FontIcon Name="btnPrevDay" Glyph="&#xE7F1;" FontSize="14" Margin="0 0 10 0"/>
-                        <TextBlock>Import CPAP Data</TextBlock>
-                  </StackPanel>
-            </Button>
+      <ui:SimpleStackPanel Name="Welcome" Spacing="24">
+            <ui:AppBarButton x:Name="ThemeButton" Click="OnThemeButtonClick" Label="Toggle Theme" HorizontalAlignment="Right">
+                  <ui:AppBarButton.Icon>
+                        <ui:FontIcon
+                              Glyph="&#xE771;"
+                              Margin="0,-2,0,0" />
+                  </ui:AppBarButton.Icon>
+            </ui:AppBarButton>
+            <StackPanel Width="800" Height="450" Orientation="Vertical">
+                  <TextBlock Text="Welcome to the CPAP Data Viewer" Margin="0 50 0 0" HorizontalAlignment="Center" Style="{StaticResource HeaderTextBlockStyle}" />
+                  <TextBlock TextWrapping="Wrap" Width="600" HorizontalAlignment="Center" FontSize="16" Margin="20">
+                        To begin, please import your CPAP data (typically found on the SD Card in your CPAP machine) by clicking the 
+                        "Import" button below and selecting the STR.edf file in your CPAP data folder.
+                  </TextBlock>
+                  <Button Name="btnImport" HorizontalAlignment="Center" Style="{StaticResource AccentButtonStyle}" ClickMode="Press" Click="Import_Clicked">
+                        <StackPanel Orientation="Horizontal">
+                              <ui:FontIcon Name="btnPrevDay" Glyph="&#xE7F1;" FontSize="14" Margin="0 0 10 0"/>
+                              <TextBlock>Import CPAP Data</TextBlock>
+                        </StackPanel>
+                  </Button>
+            </StackPanel>
       </ui:SimpleStackPanel>
 </ui:Page>

@@ -22,19 +22,20 @@
                       Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}" />
         <ui:SimpleStackPanel Grid.Column="0" Orientation="Vertical"
                              Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}">
-            <Grid HorizontalAlignment="Stretch" Margin="0 0 0 0" Background="{DynamicResource SystemControlBackgroundAccentBrush}">
+            <Grid HorizontalAlignment="Stretch" Margin="0 0 0 0"
+                  Background="{DynamicResource SystemControlBackgroundAccentBrush}">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="40"></ColumnDefinition>
                     <ColumnDefinition Width="*"></ColumnDefinition>
                     <ColumnDefinition Width="40"></ColumnDefinition>
                 </Grid.ColumnDefinitions>
-                <Button Grid.Column="0" Margin="8 0" VerticalAlignment="Center" Padding="0" Click="btnPrevDay_OnClick">
+                <Button Grid.Column="0" Margin="8 0" VerticalAlignment="Center" Padding="5" Click="btnPrevDay_OnClick">
                     <ui:FontIcon Name="btnPrevDay" Glyph="&#xF0B0;" FontSize="14" />
                 </Button>
                 <DatePicker Grid.Column="1" x:Name="calendar" HorizontalAlignment="Stretch" SelectedDateFormat="Long"
                             VerticalAlignment="Center">
                 </DatePicker>
-                <Button Grid.Column="2" Margin="8 0" VerticalAlignment="Center" Padding="0" Click="btnNextDay_OnClick">
+                <Button Grid.Column="2" Margin="8 0" VerticalAlignment="Center" Padding="5" Click="btnNextDay_OnClick">
                     <ui:FontIcon Name="btnNextDay" Glyph="&#xF0AF;" FontSize="14" />
                 </Button>
             </Grid>
@@ -64,14 +65,22 @@
                             <RowDefinition />
                             <RowDefinition />
                         </Grid.RowDefinitions>
-                        <TextBlock Grid.Column="0" Grid.Row="0" Text="Date:" Style="{DynamicResource BaseTextBlockStyle}"/>
-                        <TextBlock Grid.Column="2" Grid.Row="0" Text="{Binding ReportDate, Mode=OneWay, StringFormat={}{0:D}}"/>
-                        <TextBlock Grid.Column="0" Grid.Row="1" Text="Start Time:" Style="{DynamicResource BaseTextBlockStyle}"/>
-                        <TextBlock Grid.Column="2" Grid.Row="1" Text="{Binding RecordingStartTime, Mode=OneWay, StringFormat={}{0:g}}"/>
-                        <TextBlock Grid.Column="0" Grid.Row="2" Text="End Time:" Style="{DynamicResource BaseTextBlockStyle}"/>
-                        <TextBlock Grid.Column="2" Grid.Row="2" Text="{Binding RecordingEndTime, Mode=OneWay, StringFormat={}{0:g}}"/>
-                        <TextBlock Grid.Column="0" Grid.Row="3" Text="Duration:" Style="{DynamicResource BaseTextBlockStyle}"/>
-                        <TextBlock Grid.Column="2" Grid.Row="3" Text="{Binding Duration, Mode=OneWay, StringFormat={}{0:T}}"/>
+                        <TextBlock Grid.Column="0" Grid.Row="0" Text="Date:"
+                                   Style="{DynamicResource BaseTextBlockStyle}" />
+                        <TextBlock Grid.Column="2" Grid.Row="0"
+                                   Text="{Binding ReportDate, Mode=OneWay, StringFormat={}{0:D}}" />
+                        <TextBlock Grid.Column="0" Grid.Row="1" Text="Start Time:"
+                                   Style="{DynamicResource BaseTextBlockStyle}" />
+                        <TextBlock Grid.Column="2" Grid.Row="1"
+                                   Text="{Binding RecordingStartTime, Mode=OneWay, StringFormat={}{0:g}}" />
+                        <TextBlock Grid.Column="0" Grid.Row="2" Text="End Time:"
+                                   Style="{DynamicResource BaseTextBlockStyle}" />
+                        <TextBlock Grid.Column="2" Grid.Row="2"
+                                   Text="{Binding RecordingEndTime, Mode=OneWay, StringFormat={}{0:g}}" />
+                        <TextBlock Grid.Column="0" Grid.Row="3" Text="Duration:"
+                                   Style="{DynamicResource BaseTextBlockStyle}" />
+                        <TextBlock Grid.Column="2" Grid.Row="3"
+                                   Text="{Binding Duration, Mode=OneWay, StringFormat={}{0:T}}" />
                     </Grid>
                     <Expander
                         x:Name="expRespiratoryEvents"
@@ -80,7 +89,10 @@
                         VerticalAlignment="Top"
                         Margin="0 20">
                         <Expander.Header>
-                            <TextBlock Grid.Column="0" Text="Respiratory Indices" Style="{DynamicResource SubtitleTextBlockStyle}"/>
+                            <StackPanel Orientation="Horizontal">
+                                <ui:FontIcon Glyph="&#xEADF;" Margin="0 2 8 0" />
+                                <TextBlock Text="Respiratory Indices" Style="{DynamicResource SubtitleTextBlockStyle}" />
+                            </StackPanel>
                         </Expander.Header>
                         <Grid Name="RespiratoryEventSummary" Margin="5 4 5 0">
                             <Grid.RowDefinitions>
@@ -99,19 +111,27 @@
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Grid.Row="0" Text="Apnea-Hypopnea Index (AHI)" />
-                            <TextBlock Grid.Column="2" Grid.Row="0" Text="{Binding AHI, Mode=OneWay}" HorizontalAlignment="Center" />
-                            <TextBlock Grid.Column="0" Grid.Row="1" Text="Obstructive Apnea" Padding="10 0"/>
-                            <TextBlock Grid.Column="2" Grid.Row="1" Text="{Binding OAI, Mode=OneWay}" HorizontalAlignment="Center" />
-                            <TextBlock Grid.Column="0" Grid.Row="2" Text="Clear Airway" Padding="10 0"/>
-                            <TextBlock Grid.Column="2" Grid.Row="2" Text="{Binding CAI, Mode=OneWay}" HorizontalAlignment="Center" />
-                            <TextBlock Grid.Column="0" Grid.Row="3" Text="Unclassified" Padding="10 0"/>
-                            <TextBlock Grid.Column="2" Grid.Row="3" Text="{Binding UAI, Mode=OneWay}" HorizontalAlignment="Center" />
-                            <TextBlock Grid.Column="0" Grid.Row="4" Text="Hypopnea" Padding="10 0"/>
-                            <TextBlock Grid.Column="2" Grid.Row="4" Text="{Binding HI, Mode=OneWay}" HorizontalAlignment="Center" />
+                            <TextBlock Grid.Column="2" Grid.Row="0" Text="{Binding AHI, Mode=OneWay}"
+                                       HorizontalAlignment="Center" />
+                            <TextBlock Grid.Column="0" Grid.Row="1" Text="Obstructive Apnea" Padding="10 0" />
+                            <TextBlock Grid.Column="2" Grid.Row="1" Text="{Binding OAI, Mode=OneWay}"
+                                       HorizontalAlignment="Center" />
+                            <TextBlock Grid.Column="0" Grid.Row="2" Text="Clear Airway" Padding="10 0" />
+                            <TextBlock Grid.Column="2" Grid.Row="2" Text="{Binding CAI, Mode=OneWay}"
+                                       HorizontalAlignment="Center" />
+                            <TextBlock Grid.Column="0" Grid.Row="3" Text="Unclassified" Padding="10 0" />
+                            <TextBlock Grid.Column="2" Grid.Row="3" Text="{Binding UAI, Mode=OneWay}"
+                                       HorizontalAlignment="Center" />
+                            <TextBlock Grid.Column="0" Grid.Row="4" Text="Hypopnea" Padding="10 0" />
+                            <TextBlock Grid.Column="2" Grid.Row="4" Text="{Binding HI, Mode=OneWay}"
+                                       HorizontalAlignment="Center" />
                             <TextBlock Grid.Column="0" Grid.Row="5" Text="RERA" />
-                            <TextBlock Grid.Column="2" Grid.Row="5" Text="{Binding RIN, Mode=OneWay}" HorizontalAlignment="Center" />
-                            <TextBlock Grid.Column="0" Grid.Row="6" Text="Cheyne-Stokes" ToolTip="% Time spent in Cheyne-Stokes Respiration"/>
-                            <TextBlock Grid.Column="2" Grid.Row="6" HorizontalAlignment="Center" Text="{Binding CSR, Mode=OneWay, StringFormat={}{0:N2} %}" />
+                            <TextBlock Grid.Column="2" Grid.Row="5" Text="{Binding RIN, Mode=OneWay}"
+                                       HorizontalAlignment="Center" />
+                            <TextBlock Grid.Column="0" Grid.Row="6" Text="Cheyne-Stokes"
+                                       ToolTip="% Time spent in Cheyne-Stokes Respiration" />
+                            <TextBlock Grid.Column="2" Grid.Row="6" HorizontalAlignment="Center"
+                                       Text="{Binding CSR, Mode=OneWay, StringFormat={}{0:N2} %}" />
                         </Grid>
                     </Expander>
                     <Expander
@@ -121,7 +141,10 @@
                         VerticalAlignment="Top"
                         Margin="0 10">
                         <Expander.Header>
-                            <TextBlock Text="Statistics" Style="{DynamicResource SubtitleTextBlockStyle}"/>
+                            <StackPanel Orientation="Horizontal">
+                                <ui:FontIcon Glyph="&#xE8EF;" Margin="0 2 8 0" />
+                                <TextBlock Text="Statistics" Style="{DynamicResource SubtitleTextBlockStyle}" />
+                            </StackPanel>
                         </Expander.Header>
                         <Grid Name="StatisticsSummary" Margin="5 4 5 0">
                             <Grid.RowDefinitions>
@@ -140,59 +163,114 @@
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="10" />
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Grid.Row="0" Text="Statistic" FontWeight="Bold"/>
-                            <TextBlock Grid.Column="2" Grid.Row="0" Text="Min" FontWeight="Bold" HorizontalAlignment="Center" Padding="5 0"/>
-                            <TextBlock Grid.Column="3" Grid.Row="0" Text="Med" FontWeight="Bold" HorizontalAlignment="Center" Padding="5 0"/>
-                            <TextBlock Grid.Column="4" Grid.Row="0" Text="95%" FontWeight="Bold" HorizontalAlignment="Center" Padding="5 0"/>
-                            <TextBlock Grid.Column="5" Grid.Row="0" Text="99.5%" FontWeight="Bold" HorizontalAlignment="Center" Padding="5 0"/>
-                            
+                            <TextBlock Grid.Column="0" Grid.Row="0" Text="Statistic" FontWeight="Bold" />
+                            <TextBlock Grid.Column="2" Grid.Row="0" Text="Min" FontWeight="Bold"
+                                       HorizontalAlignment="Center" Padding="5 0" />
+                            <TextBlock Grid.Column="3" Grid.Row="0" Text="Med" FontWeight="Bold"
+                                       HorizontalAlignment="Center" Padding="5 0" />
+                            <TextBlock Grid.Column="4" Grid.Row="0" Text="95%" FontWeight="Bold"
+                                       HorizontalAlignment="Center" Padding="5 0" />
+                            <TextBlock Grid.Column="5" Grid.Row="0" Text="99.5%" FontWeight="Bold"
+                                       HorizontalAlignment="Center" Padding="5 0" />
+
                             <TextBlock Grid.Column="0" Grid.Row="1" Text="Flow Rate" />
-                            <TextBlock Grid.Column="2" Grid.Row="1" Text="{Binding FlowLimit.Minimum, StringFormat=N2}" HorizontalAlignment="Center" />
-                            <TextBlock Grid.Column="3" Grid.Row="1" Text="{Binding FlowLimit.Median, StringFormat=N2}" HorizontalAlignment="Center" />
-                            <TextBlock Grid.Column="4" Grid.Row="1" Text="{Binding FlowLimit.Percentile95, StringFormat=N2}" HorizontalAlignment="Center" />
-                            <TextBlock Grid.Column="5" Grid.Row="1" Text="{Binding FlowLimit.Percentile99, StringFormat=N2}" HorizontalAlignment="Center" />
-                            
+                            <TextBlock Grid.Column="2" Grid.Row="1" Text="{Binding FlowLimit.Minimum, StringFormat=N2}"
+                                       HorizontalAlignment="Center" />
+                            <TextBlock Grid.Column="3" Grid.Row="1" Text="{Binding FlowLimit.Median, StringFormat=N2}"
+                                       HorizontalAlignment="Center" />
+                            <TextBlock Grid.Column="4" Grid.Row="1"
+                                       Text="{Binding FlowLimit.Percentile95, StringFormat=N2}"
+                                       HorizontalAlignment="Center" />
+                            <TextBlock Grid.Column="5" Grid.Row="1"
+                                       Text="{Binding FlowLimit.Percentile99, StringFormat=N2}"
+                                       HorizontalAlignment="Center" />
+
                             <TextBlock Grid.Column="0" Grid.Row="2" Text="Mask Pressure" />
-                            <TextBlock Grid.Column="2" Grid.Row="2" Text="{Binding MaskPressure.Minimum, StringFormat=N2}" HorizontalAlignment="Center" />
-                            <TextBlock Grid.Column="3" Grid.Row="2" Text="{Binding MaskPressure.Median, StringFormat=N2}" HorizontalAlignment="Center" />
-                            <TextBlock Grid.Column="4" Grid.Row="2" Text="{Binding MaskPressure.Percentile95, StringFormat=N2}" HorizontalAlignment="Center" />
-                            <TextBlock Grid.Column="5" Grid.Row="2" Text="{Binding MaskPressure.Percentile99, StringFormat=N2}" HorizontalAlignment="Center" />
-                            
+                            <TextBlock Grid.Column="2" Grid.Row="2"
+                                       Text="{Binding MaskPressure.Minimum, StringFormat=N2}"
+                                       HorizontalAlignment="Center" />
+                            <TextBlock Grid.Column="3" Grid.Row="2"
+                                       Text="{Binding MaskPressure.Median, StringFormat=N2}"
+                                       HorizontalAlignment="Center" />
+                            <TextBlock Grid.Column="4" Grid.Row="2"
+                                       Text="{Binding MaskPressure.Percentile95, StringFormat=N2}"
+                                       HorizontalAlignment="Center" />
+                            <TextBlock Grid.Column="5" Grid.Row="2"
+                                       Text="{Binding MaskPressure.Percentile99, StringFormat=N2}"
+                                       HorizontalAlignment="Center" />
+
                             <TextBlock Grid.Column="0" Grid.Row="3" Text="Tidal Volume" />
-                            <TextBlock Grid.Column="2" Grid.Row="3" Text="{Binding TidalVolume.Minimum, StringFormat=N2}" HorizontalAlignment="Center" />
-                            <TextBlock Grid.Column="3" Grid.Row="3" Text="{Binding TidalVolume.Median, StringFormat=N2}" HorizontalAlignment="Center" />
-                            <TextBlock Grid.Column="4" Grid.Row="3" Text="{Binding TidalVolume.Percentile95, StringFormat=N2}" HorizontalAlignment="Center" />
-                            <TextBlock Grid.Column="5" Grid.Row="3" Text="{Binding TidalVolume.Percentile99, StringFormat=N2}" HorizontalAlignment="Center" />
-                            
+                            <TextBlock Grid.Column="2" Grid.Row="3"
+                                       Text="{Binding TidalVolume.Minimum, StringFormat=N2}"
+                                       HorizontalAlignment="Center" />
+                            <TextBlock Grid.Column="3" Grid.Row="3"
+                                       Text="{Binding TidalVolume.Median, StringFormat=N2}"
+                                       HorizontalAlignment="Center" />
+                            <TextBlock Grid.Column="4" Grid.Row="3"
+                                       Text="{Binding TidalVolume.Percentile95, StringFormat=N2}"
+                                       HorizontalAlignment="Center" />
+                            <TextBlock Grid.Column="5" Grid.Row="3"
+                                       Text="{Binding TidalVolume.Percentile99, StringFormat=N2}"
+                                       HorizontalAlignment="Center" />
+
                             <TextBlock Grid.Column="0" Grid.Row="4" Text="Minute Ventilation" />
-                            <TextBlock Grid.Column="2" Grid.Row="4" Text="{Binding MinuteVent.Minimum, StringFormat=N2}" HorizontalAlignment="Center" />
-                            <TextBlock Grid.Column="3" Grid.Row="4" Text="{Binding MinuteVent.Median, StringFormat=N2}" HorizontalAlignment="Center" />
-                            <TextBlock Grid.Column="4" Grid.Row="4" Text="{Binding MinuteVent.Percentile95, StringFormat=N2}" HorizontalAlignment="Center" />
-                            <TextBlock Grid.Column="5" Grid.Row="4" Text="{Binding MinuteVent.Percentile99, StringFormat=N2}" HorizontalAlignment="Center" />
-                            
+                            <TextBlock Grid.Column="2" Grid.Row="4"
+                                       Text="{Binding MinuteVent.Minimum, StringFormat=N2}"
+                                       HorizontalAlignment="Center" />
+                            <TextBlock Grid.Column="3" Grid.Row="4" Text="{Binding MinuteVent.Median, StringFormat=N2}"
+                                       HorizontalAlignment="Center" />
+                            <TextBlock Grid.Column="4" Grid.Row="4"
+                                       Text="{Binding MinuteVent.Percentile95, StringFormat=N2}"
+                                       HorizontalAlignment="Center" />
+                            <TextBlock Grid.Column="5" Grid.Row="4"
+                                       Text="{Binding MinuteVent.Percentile99, StringFormat=N2}"
+                                       HorizontalAlignment="Center" />
+
                             <TextBlock Grid.Column="0" Grid.Row="5" Text="Respiration Rate" />
-                            <TextBlock Grid.Column="2" Grid.Row="5" Text="{Binding RespirationRate.Minimum, StringFormat=N2}" HorizontalAlignment="Center" />
-                            <TextBlock Grid.Column="3" Grid.Row="5" Text="{Binding RespirationRate.Median, StringFormat=N2}" HorizontalAlignment="Center" />
-                            <TextBlock Grid.Column="4" Grid.Row="5" Text="{Binding RespirationRate.Percentile95, StringFormat=N2}" HorizontalAlignment="Center" />
-                            <TextBlock Grid.Column="5" Grid.Row="5" Text="{Binding RespirationRate.Percentile99, StringFormat=N2}" HorizontalAlignment="Center" />
-                            
+                            <TextBlock Grid.Column="2" Grid.Row="5"
+                                       Text="{Binding RespirationRate.Minimum, StringFormat=N2}"
+                                       HorizontalAlignment="Center" />
+                            <TextBlock Grid.Column="3" Grid.Row="5"
+                                       Text="{Binding RespirationRate.Median, StringFormat=N2}"
+                                       HorizontalAlignment="Center" />
+                            <TextBlock Grid.Column="4" Grid.Row="5"
+                                       Text="{Binding RespirationRate.Percentile95, StringFormat=N2}"
+                                       HorizontalAlignment="Center" />
+                            <TextBlock Grid.Column="5" Grid.Row="5"
+                                       Text="{Binding RespirationRate.Percentile99, StringFormat=N2}"
+                                       HorizontalAlignment="Center" />
+
                             <TextBlock Grid.Column="0" Grid.Row="6" Text="Flow Limit" />
-                            <TextBlock Grid.Column="2" Grid.Row="6" Text="{Binding FlowLimit.Minimum, StringFormat=N2}" HorizontalAlignment="Center" />
-                            <TextBlock Grid.Column="3" Grid.Row="6" Text="{Binding FlowLimit.Median, StringFormat=N2}" HorizontalAlignment="Center" />
-                            <TextBlock Grid.Column="4" Grid.Row="6" Text="{Binding FlowLimit.Percentile95, StringFormat=N2}" HorizontalAlignment="Center" />
-                            <TextBlock Grid.Column="5" Grid.Row="6" Text="{Binding FlowLimit.Percentile99, StringFormat=N2}" HorizontalAlignment="Center" />
-                            
+                            <TextBlock Grid.Column="2" Grid.Row="6" Text="{Binding FlowLimit.Minimum, StringFormat=N2}"
+                                       HorizontalAlignment="Center" />
+                            <TextBlock Grid.Column="3" Grid.Row="6" Text="{Binding FlowLimit.Median, StringFormat=N2}"
+                                       HorizontalAlignment="Center" />
+                            <TextBlock Grid.Column="4" Grid.Row="6"
+                                       Text="{Binding FlowLimit.Percentile95, StringFormat=N2}"
+                                       HorizontalAlignment="Center" />
+                            <TextBlock Grid.Column="5" Grid.Row="6"
+                                       Text="{Binding FlowLimit.Percentile99, StringFormat=N2}"
+                                       HorizontalAlignment="Center" />
+
                             <TextBlock Grid.Column="0" Grid.Row="7" Text="Pressure" />
-                            <TextBlock Grid.Column="2" Grid.Row="7" Text="{Binding TherapyPressure.Minimum, StringFormat=N2}" HorizontalAlignment="Center" />
-                            <TextBlock Grid.Column="3" Grid.Row="7" Text="{Binding TherapyPressure.Median, StringFormat=N2}" HorizontalAlignment="Center" />
-                            <TextBlock Grid.Column="4" Grid.Row="7" Text="{Binding TherapyPressure.Percentile95, StringFormat=N2}" HorizontalAlignment="Center" />
-                            <TextBlock Grid.Column="5" Grid.Row="7" Text="{Binding TherapyPressure.Percentile99, StringFormat=N2}" HorizontalAlignment="Center" />
+                            <TextBlock Grid.Column="2" Grid.Row="7"
+                                       Text="{Binding TherapyPressure.Minimum, StringFormat=N2}"
+                                       HorizontalAlignment="Center" />
+                            <TextBlock Grid.Column="3" Grid.Row="7"
+                                       Text="{Binding TherapyPressure.Median, StringFormat=N2}"
+                                       HorizontalAlignment="Center" />
+                            <TextBlock Grid.Column="4" Grid.Row="7"
+                                       Text="{Binding TherapyPressure.Percentile95, StringFormat=N2}"
+                                       HorizontalAlignment="Center" />
+                            <TextBlock Grid.Column="5" Grid.Row="7"
+                                       Text="{Binding TherapyPressure.Percentile99, StringFormat=N2}"
+                                       HorizontalAlignment="Center" />
                         </Grid>
                     </Expander>
                     <Expander
@@ -202,21 +280,32 @@
                         VerticalAlignment="Top"
                         Margin="0 10">
                         <Expander.Header>
-                            <TextBlock Text="Settings" Style="{DynamicResource SubtitleTextBlockStyle}"/>
+                            <StackPanel Orientation="Horizontal">
+                                <ui:FontIcon Glyph="&#xE95D;" Margin="0 2 8 0" />
+                                <TextBlock Text="Settings" Style="{DynamicResource SubtitleTextBlockStyle}" />
+                            </StackPanel>
                         </Expander.Header>
                         <Grid Name="MachineSettings" Margin="5 4 5 0">
                             <Grid.RowDefinitions>
                                 <RowDefinition Tag="Mode" Height="Auto" />
-                                <RowDefinition Tag="CPAP.Pressure" Height="{Binding Mode, Converter={StaticResource PropertyValueToGridRowVisibilityConverter}, ConverterParameter=CPAP}" />
-                                <RowDefinition Tag="AutoSet.MinPressure" Height="{Binding Mode, Converter={StaticResource PropertyValueToGridRowVisibilityConverter}, ConverterParameter=APAP}" />
-                                <RowDefinition Tag="AutoSet.MaxPressure" Height="{Binding Mode, Converter={StaticResource PropertyValueToGridRowVisibilityConverter}, ConverterParameter=APAP}" />
-                                <RowDefinition Tag="AutoSet.ResponseType" Height="{Binding Mode, Converter={StaticResource PropertyValueToGridRowVisibilityConverter}, ConverterParameter=APAP}" />
+                                <RowDefinition Tag="CPAP.Pressure"
+                                               Height="{Binding Mode, Converter={StaticResource PropertyValueToGridRowVisibilityConverter}, ConverterParameter=CPAP}" />
+                                <RowDefinition Tag="AutoSet.MinPressure"
+                                               Height="{Binding Mode, Converter={StaticResource PropertyValueToGridRowVisibilityConverter}, ConverterParameter=APAP}" />
+                                <RowDefinition Tag="AutoSet.MaxPressure"
+                                               Height="{Binding Mode, Converter={StaticResource PropertyValueToGridRowVisibilityConverter}, ConverterParameter=APAP}" />
+                                <RowDefinition Tag="AutoSet.ResponseType"
+                                               Height="{Binding Mode, Converter={StaticResource PropertyValueToGridRowVisibilityConverter}, ConverterParameter=APAP}" />
                                 <RowDefinition Tag="RampMode" Height="Auto" />
-                                <RowDefinition Tag="RampMode" Height="{Binding RampMode, Converter={StaticResource PropertyValueToGridRowVisibilityConverter}, ConverterParameter=On}" />
-                                <RowDefinition Tag="RampMode" Height="{Binding RampMode, Converter={StaticResource PropertyValueToGridRowVisibilityConverter}, ConverterParameter=On}" />
+                                <RowDefinition Tag="RampMode"
+                                               Height="{Binding RampMode, Converter={StaticResource PropertyValueToGridRowVisibilityConverter}, ConverterParameter=On}" />
+                                <RowDefinition Tag="RampMode"
+                                               Height="{Binding RampMode, Converter={StaticResource PropertyValueToGridRowVisibilityConverter}, ConverterParameter=On}" />
                                 <RowDefinition Tag="EPR.EprEnabled" Height="Auto" />
-                                <RowDefinition Height="{Binding EPR.EprEnabled, Converter={StaticResource BoolToGridRowHeightConverter}}" />
-                                <RowDefinition Height="{Binding EPR.EprEnabled, Converter={StaticResource BoolToGridRowHeightConverter}}" />
+                                <RowDefinition
+                                    Height="{Binding EPR.EprEnabled, Converter={StaticResource BoolToGridRowHeightConverter}}" />
+                                <RowDefinition
+                                    Height="{Binding EPR.EprEnabled, Converter={StaticResource BoolToGridRowHeightConverter}}" />
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Tag="ClimateControl" Height="Auto" />
                                 <RowDefinition Tag="HumidifierStatus" Height="Auto" />
@@ -232,47 +321,56 @@
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Grid.Row="0" Text="Mode" />
-                            <TextBlock Grid.Column="2" Grid.Row="0" Text="{Binding Mode, Mode=OneWay}"/>
-                            <TextBlock Grid.Column="0" Grid.Row="1" Text="Pressure"/>
-                            <TextBlock Grid.Column="2" Grid.Row="1" Text="{Binding CPAP.Pressure, Mode=OneWay, StringFormat={}{0:N2} cmH2O}" />
-                            <TextBlock Grid.Column="0" Grid.Row="2" Text="Min Pressure"/>
-                            <TextBlock Grid.Column="2" Grid.Row="2" Text="{Binding AutoSet.MinPressure, Mode=OneWay, StringFormat={}{0:N2} cmH2O}"/>
-                            <TextBlock Grid.Column="0" Grid.Row="3" Text="Max Pressure"/>
-                            <TextBlock Grid.Column="2" Grid.Row="3" Text="{Binding AutoSet.MaxPressure, Mode=OneWay, StringFormat={}{0:N2} cmH2O}"/>
-                            <TextBlock Grid.Column="0" Grid.Row="4" Text="Response Type"/>
+                            <TextBlock Grid.Column="2" Grid.Row="0" Text="{Binding Mode, Mode=OneWay}" />
+                            <TextBlock Grid.Column="0" Grid.Row="1" Text="Pressure" />
+                            <TextBlock Grid.Column="2" Grid.Row="1"
+                                       Text="{Binding CPAP.Pressure, Mode=OneWay, StringFormat={}{0:N2} cmH2O}" />
+                            <TextBlock Grid.Column="0" Grid.Row="2" Text="Min Pressure" />
+                            <TextBlock Grid.Column="2" Grid.Row="2"
+                                       Text="{Binding AutoSet.MinPressure, Mode=OneWay, StringFormat={}{0:N2} cmH2O}" />
+                            <TextBlock Grid.Column="0" Grid.Row="3" Text="Max Pressure" />
+                            <TextBlock Grid.Column="2" Grid.Row="3"
+                                       Text="{Binding AutoSet.MaxPressure, Mode=OneWay, StringFormat={}{0:N2} cmH2O}" />
+                            <TextBlock Grid.Column="0" Grid.Row="4" Text="Response Type" />
                             <TextBlock Grid.Column="2" Grid.Row="4" Text="{Binding AutoSet.ResponseType, Mode=OneWay}" />
-                            <TextBlock Grid.Column="0" Grid.Row="5" Text="Ramp Mode"/>
+                            <TextBlock Grid.Column="0" Grid.Row="5" Text="Ramp Mode" />
                             <TextBlock Grid.Column="2" Grid.Row="5" Text="{Binding RampMode, Mode=OneWay}" />
-                            <TextBlock Grid.Column="0" Grid.Row="6" Text="Ramp Time"/>
-                            <TextBlock Grid.Column="2" Grid.Row="6" Text="{Binding RampTime, Mode=OneWay, StringFormat={}{0} Minutes}" />
-                            <TextBlock Grid.Column="0" Grid.Row="7" Text="Starting Pressure"/>
-                            <TextBlock Grid.Column="2" Grid.Row="7" Text="{Binding RampStartingPressure, Mode=OneWay, StringFormat={}{0} cmH2O}" />
-                            <TextBlock Grid.Column="0" Grid.Row="8" Text="EPR Enabled"/>
+                            <TextBlock Grid.Column="0" Grid.Row="6" Text="Ramp Time" />
+                            <TextBlock Grid.Column="2" Grid.Row="6"
+                                       Text="{Binding RampTime, Mode=OneWay, StringFormat={}{0} Minutes}" />
+                            <TextBlock Grid.Column="0" Grid.Row="7" Text="Starting Pressure" />
+                            <TextBlock Grid.Column="2" Grid.Row="7"
+                                       Text="{Binding RampStartingPressure, Mode=OneWay, StringFormat={}{0} cmH2O}" />
+                            <TextBlock Grid.Column="0" Grid.Row="8" Text="EPR Enabled" />
                             <TextBlock Grid.Column="2" Grid.Row="8" Text="{Binding EPR.EprEnabled, Mode=OneWay}" />
-                            <TextBlock Grid.Column="0" Grid.Row="9" Text="EPR Mode"/>
-                            <TextBlock Grid.Column="2" Grid.Row="9" Text="{Binding EPR.Mode, Mode=OneWay, Converter={StaticResource NiceNameConverter}}" />
-                            <TextBlock Grid.Column="0" Grid.Row="10" Text="EPR Level"/>
+                            <TextBlock Grid.Column="0" Grid.Row="9" Text="EPR Mode" />
+                            <TextBlock Grid.Column="2" Grid.Row="9"
+                                       Text="{Binding EPR.Mode, Mode=OneWay, Converter={StaticResource NiceNameConverter}}" />
+                            <TextBlock Grid.Column="0" Grid.Row="10" Text="EPR Level" />
                             <TextBlock Grid.Column="2" Grid.Row="10" Text="{Binding EPR.Level, Mode=OneWay}" />
-                            <TextBlock Grid.Column="0" Grid.Row="11" Text="Smart Start"/>
+                            <TextBlock Grid.Column="0" Grid.Row="11" Text="Smart Start" />
                             <TextBlock Grid.Column="2" Grid.Row="11" Text="{Binding SmartStart, Mode=OneWay}" />
-                            <TextBlock Grid.Column="0" Grid.Row="12" Text="Climate Control"/>
+                            <TextBlock Grid.Column="0" Grid.Row="12" Text="Climate Control" />
                             <TextBlock Grid.Column="2" Grid.Row="12" Text="{Binding ClimateControl, Mode=OneWay}" />
-                            <TextBlock Grid.Column="0" Grid.Row="13" Text="Humidifier Status"/>
+                            <TextBlock Grid.Column="0" Grid.Row="13" Text="Humidifier Status" />
                             <TextBlock Grid.Column="2" Grid.Row="13" Text="{Binding HumidifierStatus, Mode=OneWay}" />
-                            <TextBlock Grid.Column="0" Grid.Row="14" Text="Humidity Level"/>
+                            <TextBlock Grid.Column="0" Grid.Row="14" Text="Humidity Level" />
                             <TextBlock Grid.Column="2" Grid.Row="14" Text="{Binding HumidityLevel, Mode=OneWay}" />
-                            <TextBlock Grid.Column="0" Grid.Row="15" Text="Temperature Enabled"/>
+                            <TextBlock Grid.Column="0" Grid.Row="15" Text="Temperature Enabled" />
                             <TextBlock Grid.Column="2" Grid.Row="15" Text="{Binding TemperatureEnabled, Mode=OneWay}" />
-                            <TextBlock Grid.Column="0" Grid.Row="16" Text="Temperature"/>
-                            <TextBlock Grid.Column="2" Grid.Row="16" Text="{Binding Temperature, Mode=OneWay, StringFormat={}{0:N1} °F}" />
-                            <TextBlock Grid.Column="0" Grid.Row="17" Text="Mask Type"/>
-                            <TextBlock Grid.Column="2" Grid.Row="17" Text="{Binding Mask, Mode=OneWay, Converter={StaticResource NiceNameConverter}}" />
+                            <TextBlock Grid.Column="0" Grid.Row="16" Text="Temperature" />
+                            <TextBlock Grid.Column="2" Grid.Row="16"
+                                       Text="{Binding Temperature, Mode=OneWay, StringFormat={}{0:N1} °F}" />
+                            <TextBlock Grid.Column="0" Grid.Row="17" Text="Mask Type" />
+                            <TextBlock Grid.Column="2" Grid.Row="17"
+                                       Text="{Binding Mask, Mode=OneWay, Converter={StaticResource NiceNameConverter}}" />
                         </Grid>
                     </Expander>
                 </ui:SimpleStackPanel>
             </ScrollViewer>
         </ui:SimpleStackPanel>
-        <StackPanel Name="pnlNoDataAvailable" Grid.Column="2" Orientation="Vertical" VerticalAlignment="Top"
+        <StackPanel Visibility="Hidden" Name="pnlNoDataAvailable" Grid.Column="2" Orientation="Vertical"
+                    VerticalAlignment="Top"
                     Margin="0 50">
             <TextBlock FontSize="24" HorizontalAlignment="Center" TextWrapping="Wrap">
                 There is no data available for the selected date.
@@ -281,5 +379,14 @@
                 Please select a date with CPAP data available using the DatePicker control in the upper left corner.
             </TextBlock>
         </StackPanel>
+        <ScrollViewer Name="scrollGraphss" Grid.Column="2" Padding="5" Margin="0 0 0 0"
+                      VerticalScrollBarVisibility="Visible" VerticalContentAlignment="Top" VerticalAlignment="Stretch">
+            <StackPanel Visibility="Visible" Name="pnlCharts" Orientation="Vertical"
+                        VerticalAlignment="Stretch">
+                <Border BorderThickness="0" BorderBrush="{DynamicResource GroupBox.Static.Border}" Margin="5">
+                    <WpfPlot x:Name="graphBreathing" HorizontalAlignment="Stretch" Height="250" />
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
     </Grid>
 </ui:Page>

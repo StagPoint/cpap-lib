@@ -3,14 +3,22 @@ using System.Diagnostics;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 
 using cpaplib;
+
+using ModernWpf;
+
+using ScottPlot;
+using ScottPlot.Plottable;
+
+using Color = System.Drawing.Color;
 
 namespace example_viewer;
 
 public partial class DataBrowser
 {
-	private CpapDataLoader _data = null;
+	private ResMedDataLoader _data = null;
 	private string _dataPath = String.Empty;
 
 	private DailyReport SelectedDay = null;
@@ -24,7 +32,7 @@ public partial class DataBrowser
 
 		this.Loaded += OnLoaded;
 
-		calendar.SelectedDate       = DateTime.Today;
+		calendar.SelectedDate       = DateTime.MinValue;
 		calendar.IsTodayHighlighted = false;
 		calendar.SelectedDateChanged += CalendarOnSelectedDateChanged;
 
@@ -35,7 +43,7 @@ public partial class DataBrowser
 	
 	private void OnLoaded( object sender, RoutedEventArgs e )
 	{
-		_data = new CpapDataLoader();
+		_data = new ResMedDataLoader();
 
 		var startTime = Environment.TickCount;
 		
@@ -58,6 +66,18 @@ public partial class DataBrowser
 		{
 			calendar.SelectedDate = selectedDay.ReportDate.Date;
 		}
+
+		var chartStyle = new CustomChartStyle( this );
+		graphBreathing.Plot.Style( chartStyle );
+
+		graphBreathing.Plot.LeftAxis.Label( "Breathing" );
+		graphBreathing.Plot.Layout( 0, 0, 0, 0 );
+		
+		graphBreathing.Padding                        = new Thickness( 0, 0, 0, 0 );
+		graphBreathing.Margin                         = new Thickness( 0, 0, 0, 0 );
+		graphBreathing.Configuration.LockVerticalAxis = true;
+		
+		graphBreathing.Refresh();
 	}
 
 	private void CalendarOnSelectedDateChanged( object sender, SelectionChangedEventArgs e )
@@ -74,6 +94,7 @@ public partial class DataBrowser
 		SelectedDay = null;
 		
 		scrollStatistics.Visibility   = Visibility.Hidden;
+		pnlCharts.Visibility          = Visibility.Hidden;
 		pnlNoDataAvailable.Visibility = Visibility.Visible;
 	}
 	
@@ -83,8 +104,8 @@ public partial class DataBrowser
 		calendar.SelectedDate = day.ReportDate.Date;
 		
 		scrollStatistics.Visibility   = Visibility.Visible;
+		pnlCharts.Visibility          = Visibility.Visible;
 		pnlNoDataAvailable.Visibility = Visibility.Hidden;
-		
 		
 		DataContext                         = day;
 		MachineID.DataContext               = _data.MachineID;
@@ -127,6 +148,48 @@ public partial class DataBrowser
 		}
 		
 		LoadDay( SelectedDay );
+	}
+	
+	public class CustomChartStyle : ScottPlot.Styles.Default
+	{
+		public override Color  FrameColor            { get; }
+		public override Color  AxisLabelColor        { get; }
+		public override Color  DataBackgroundColor   { get; }
+		public override Color  FigureBackgroundColor { get; }
+		public override Color  GridLineColor         { get; }
+		public override Color  TickLabelColor        { get; }
+		public override Color  TickMajorColor        { get; }
+		public override Color  TickMinorColor        { get; }
+		public override Color  TitleFontColor        { get; }
+		
+		public override string TickLabelFontName     { get; }
+		public override string AxisLabelFontName     { get; }
+		public override string TitleFontName         { get; }
+
+		public CustomChartStyle( FrameworkElement theme )
+		{
+			var foreColor       = ((SolidColorBrush)theme.FindResource( "SystemControlForegroundBaseHighBrush" )).Color.ToPlotColor();
+			var midColor       = ((SolidColorBrush)theme.FindResource( "SystemControlBackgroundBaseLowBrush" )).Color.ToPlotColor();
+			var backgroundColor = ((SolidColorBrush)theme.FindResource( "SystemControlBackgroundAltHighBrush" )).Color.ToPlotColor();
+			var fontName        = ((FontFamily)theme.FindResource( "ContentControlThemeFontFamily" )).FamilyNames.Values.First();
+
+			FigureBackgroundColor = Color.Transparent;
+			DataBackgroundColor   = backgroundColor;
+			
+			FrameColor     = foreColor;
+			AxisLabelColor = foreColor;
+			TitleFontColor = foreColor;
+			TickLabelColor = foreColor;
+
+			GridLineColor  = midColor;
+			TickMajorColor = midColor;
+			TickMinorColor = midColor;
+
+			TickLabelFontName = fontName;
+			AxisLabelFontName = fontName;
+			TitleFontName     = fontName;
+		}
+		
 	}
 }
 

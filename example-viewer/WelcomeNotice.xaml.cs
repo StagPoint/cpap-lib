@@ -7,6 +7,8 @@ using cpaplib;
 
 using Microsoft.Win32;
 
+using ModernWpf;
+
 namespace example_viewer;
 
 public partial class WelcomeNotice
@@ -26,9 +28,12 @@ public partial class WelcomeNotice
 				continue;
 			}
 
-			if( CpapDataLoader.HasCorrectFolderStructure( drive.RootDirectory.FullName ) )
+			if( ResMedDataLoader.HasCorrectFolderStructure( drive.RootDirectory.FullName ) )
 			{
-				var messageBoxResult = MessageBox.Show( $"Found CPAP data on Drive {drive.Name}\nDo you want to import it?", $"Import from {drive.Name}?", MessageBoxButton.YesNo );
+				var machineID = MachineIdentification.ReadFrom( Path.Combine( drive.RootDirectory.FullName, "Identification.tgt" ) );
+				
+
+				var messageBoxResult = MessageBox.Show( $"There appears to be a CPAP data folder structure on Drive {drive.Name}\nMachine: {machineID.ProductName}, Serial #: {machineID.SerialNumber}\n\nDo you want to import this data from {drive.Name}?", $"Import from {drive.Name}?", MessageBoxButton.YesNo );
 				if( messageBoxResult == MessageBoxResult.Yes )
 				{
 					NavigationService.Navigate( new DataBrowser( drive.RootDirectory.FullName ) );
@@ -52,7 +57,7 @@ public partial class WelcomeNotice
 		}
 
 		var path = Path.GetDirectoryName( ofd.FileName );
-		if( !CpapDataLoader.HasCorrectFolderStructure( path ) )
+		if( !ResMedDataLoader.HasCorrectFolderStructure( path ) )
 		{
 			MessageBox.Show( $"Folder {path} does not appear to contain CPAP data" );
 			return;
@@ -68,6 +73,21 @@ public partial class WelcomeNotice
 	private void importCpapDataFrom( string rootDirectoryFullName )
 	{
 		throw new System.NotImplementedException();
+	}
+	
+	private void OnThemeButtonClick( object sender, RoutedEventArgs e )
+	{
+		DispatcherHelper.RunOnMainThread(() =>
+		{
+			if (ThemeManager.Current.ActualApplicationTheme == ApplicationTheme.Dark)
+			{
+				ThemeManager.Current.ApplicationTheme = ApplicationTheme.Light;
+			}
+			else
+			{
+				ThemeManager.Current.ApplicationTheme = ApplicationTheme.Dark;
+			}
+		});	
 	}
 }
 
