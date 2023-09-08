@@ -59,10 +59,13 @@ namespace cpaplib
 		public RespiratoryEventCounts EventSummary { get; private set; } = new RespiratoryEventCounts();
 
 		/// <summary>
-		/// The total amount of time the CPAP was used on the reported day 
+		/// The total amount of time the CPAP was used on the reported day (calculated)
 		/// </summary>
-		public TimeSpan Duration { get; private set; }
+		public TimeSpan Duration { get; internal set; }
 
+		/// <summary>
+		/// The total amount of time the CPAP was used on the recorded day, as reported by the CPAP machine 
+		/// </summary>
 		public TimeSpan OnDuration { get; private set; }
 
 		public double PatientHours { get; private set; }

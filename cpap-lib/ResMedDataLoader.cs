@@ -184,6 +184,9 @@ namespace cpaplib
 					break;
 				}
 			}
+
+			var lastRecordedTime  = DateTime.MinValue;
+			var firstRecordedTime = DateTime.MaxValue;
 			
 			// Now that each Session has all of its Signals added, each with correct StartTime and EndTime values, 
 			// we can update the StartTime and EndTime of the Sessions. These values were previously set by the 
@@ -201,7 +204,13 @@ namespace cpaplib
 					session.StartTime = DateUtil.Min( session.StartTime, signal.StartTime );
 					session.EndTime   = DateUtil.Max( session.EndTime, signal.EndTime );
 				}
+				
+				lastRecordedTime  = DateUtil.Max( lastRecordedTime, session.EndTime );
+				firstRecordedTime = DateUtil.Min( firstRecordedTime, session.StartTime );
 			}
+
+			day.RecordingStartTime = firstRecordedTime;
+			day.Duration           = (lastRecordedTime - day.RecordingStartTime);
 
 			CalculateSignalStatistics( day );
 		}

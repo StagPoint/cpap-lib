@@ -72,26 +72,49 @@ public partial class DataBrowser
 		initializeChart( graphBreathing, "Flow Rate" );
 	}
 	
-	private void addSession( WpfPlot chart, Signal signal )
+	private void addSession( WpfPlot chart, DailyReport day )
 	{
 		chart.Plot.Clear();
 		
-		var timeline  = new double[ signal.Samples.Count ];
-		var startTime = signal.StartTime;
-		for( int i = 0; i < timeline.Length; i++ )
+		// var timeline  = new double[ signal.Samples.Count ];
+		// var startTime = signal.StartTime;
+		// for( int i = 0; i < timeline.Length; i++ )
+		// {
+		// 	timeline[ i ] = startTime.ToTimeCode();
+		// 	startTime     = startTime.AddSeconds( signal.SampleInterval * TimeSpan.NanosecondsPerTick );
+		// }
+
+		// var scatterValues = chart.Plot.AddScatter( timeline, signal.Samples.ToArray(), Color.DodgerBlue, 2, 0, MarkerShape.none, LineStyle.Solid, "Data" );
+		// scatterValues.OnNaN = ScatterPlot.NanBehavior.Gap;
+
+		var minValue = double.MaxValue;
+		var maxValue = double.MinValue;
+
+		double offset  = 0;
+		double endTime = 0;
+
+		foreach( var session in day.Sessions )
 		{
-			timeline[ i ] = startTime.ToTimeCode();
-			startTime     = startTime.AddSeconds( signal.SampleInterval * TimeSpan.NanosecondsPerTick );
+			var signal = session.Signals[ 0 ];
+
+			minValue = Math.Min( minValue, signal.MinValue );
+			maxValue = Math.Max( maxValue, signal.MaxValue );
+
+			offset  = (signal.StartTime - day.RecordingStartTime).TotalSeconds;
+			endTime = (signal.EndTime - day.RecordingStartTime).TotalSeconds;
+
+			var graph = chart.Plot.AddSignal( signal.Samples.ToArray(), 1.0 / signal.SampleInterval, Color.DodgerBlue, signal.Name );
+			
+			graph.OffsetX    = offset;
+			graph.MarkerSize = 0;
+			graph.ScaleY     = 60;
 		}
 
-		var scatterValues = chart.Plot.AddScatter( timeline, signal.Samples.ToArray(), Color.DodgerBlue, 2, 0, MarkerShape.none, LineStyle.Solid, "Data" );
-		scatterValues.OnNaN = ScatterPlot.NanBehavior.Gap;
-		
 		//chart.Plot.XAxis.TickLabelFormat( x => DateTime.FromFileTime( (long)x * TimeSpan.TicksPerSecond / TimeSpan.NanosecondsPerTick ).ToString( "hh:mm:ss tt" ) );
 
 		// Set zoom and boundary limits
-		chart.Plot.YAxis.SetBoundary( signal.MinValue, signal.MaxValue );
-		chart.Plot.XAxis.SetBoundary( timeline[ 0 ], timeline[ ^1 ] );
+		chart.Plot.YAxis.SetBoundary( minValue * 60, maxValue * 60 );
+		chart.Plot.XAxis.SetBoundary( -1, day.Duration.TotalSeconds + 1 );
 		chart.Plot.Margins( 0, 0.5 );
 		
 		// double[] positions = new[] { signal.MinValue, signal.MinValue + (signal.MaxValue - signal.MinValue) * 0.5, signal.MaxValue };
@@ -121,7 +144,7 @@ public partial class DataBrowser
 		const long TimeUnit = TimeSpan.TicksPerSecond / TimeSpan.NanosecondsPerTick * 100;
 		// plot.XAxis.TickLabelFormat( x => DateTime.FromFileTime( (long)x * TimeSpan.TicksPerSecond ).ToString( "hh:mm:ss tt" ) );
 
-		// plot.XAxis.MinimumTickSpacing( 0.00001f );
+		plot.XAxis.MinimumTickSpacing( 1f );
 		// plot.XAxis.SetZoomInLimit( (15f * 60f) * TimeUnit ); // Smallest zoom window is 10 minutes 
 		plot.XAxis.Layout( padding: 0 );
 		plot.XAxis.AxisTicks.MajorTickLength = 10;
@@ -134,12 +157,12 @@ public partial class DataBrowser
 		plot.YAxis.Layout( 0, maximumLabelWidth, maximumLabelWidth );
 		plot.YAxis2.Layout( 0, 5, 5 );
 
-		var legend = plot.Legend();
-		legend.Location     = Alignment.UpperRight;
-		legend.Orientation  = Orientation.Horizontal;
-		legend.OutlineColor = chartStyle.TickMajorColor;
-		legend.FillColor    = chartStyle.DataBackgroundColor;
-		legend.FontColor    = chartStyle.TitleFontColor;
+		// var legend = plot.Legend();
+		// legend.Location     = Alignment.UpperRight;
+		// legend.Orientation  = Orientation.Horizontal;
+		// legend.OutlineColor = chartStyle.TickMajorColor;
+		// legend.FillColor    = chartStyle.DataBackgroundColor;
+		// legend.FontColor    = chartStyle.TitleFontColor;
 
 		chart.Refresh();
 	}
@@ -192,7 +215,7 @@ public partial class DataBrowser
 		StatisticsSummary.DataContext       = day.Statistics;
 		MachineSettings.DataContext         = day.Settings;
 		
-		addSession( graphBreathing, day.Sessions[ 0 ].Signals[ 0 ] );
+		addSession( graphBreathing, day );
 	}
 
 	private void OnSizeChanged( object sender, SizeChangedEventArgs e )
