@@ -33,7 +33,7 @@ namespace cpaplib
 					Name              = SignalNames.GetStandardName( fileSignal.Label.Value ),
 					StartTime         = startTime,
 					EndTime           = endTime,
-					SampleInterval    = 1.0 / fileSignal.FrequencyInHz,
+					FrequencyInHz     = fileSignal.FrequencyInHz,
 					MinValue          = fileSignal.PhysicalMinimum,
 					MaxValue          = fileSignal.PhysicalMaximum,
 					UnitOfMeasurement = fileSignal.PhysicalDimension,

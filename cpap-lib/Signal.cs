@@ -11,10 +11,9 @@ namespace cpaplib
 		public string Name { get; internal set; } = "";
 
 		/// <summary>
-		/// The interval, in seconds, between each sample. For instance if a signal is sampled at
-		/// 25Hz, there will be a 40ms interval between each sample.
+		/// Returns the number of samples per second contained in this Signal.
 		/// </summary>
-		public double SampleInterval { get; internal set; }
+		public double FrequencyInHz { get; internal set; }
 
 		/// <summary>
 		/// The minimum value that any sample can potentially have for this type of Signal
