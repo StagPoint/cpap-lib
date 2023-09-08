@@ -45,6 +45,11 @@ namespace cpaplib
 		/// The time when recording of this signal was stopped 
 		/// </summary>
 		public DateTime EndTime { get; internal set; }
+		
+		/// <summary>
+		/// The duration of this recording session
+		/// </summary>
+		public TimeSpan Duration { get => EndTime - StartTime; }
 
 		#region Base class overrides
 

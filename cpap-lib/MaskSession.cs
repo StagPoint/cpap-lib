@@ -34,8 +34,8 @@ namespace cpaplib
 					StartTime         = startTime,
 					EndTime           = endTime,
 					SampleInterval    = 1.0 / fileSignal.FrequencyInHz,
-					MinValue          = fileSignal.PhysicalMaximum,
-					MaxValue          = fileSignal.PhysicalMinimum,
+					MinValue          = fileSignal.PhysicalMinimum,
+					MaxValue          = fileSignal.PhysicalMaximum,
 					UnitOfMeasurement = fileSignal.PhysicalDimension,
 				};
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -13,6 +14,7 @@ using ScottPlot;
 using ScottPlot.Plottable;
 
 using Color = System.Drawing.Color;
+using Orientation = ScottPlot.Orientation;
 
 namespace example_viewer;
 
@@ -67,17 +69,94 @@ public partial class DataBrowser
 			calendar.SelectedDate = selectedDay.ReportDate.Date;
 		}
 
-		var chartStyle = new CustomChartStyle( this );
-		graphBreathing.Plot.Style( chartStyle );
+		initializeChart( graphBreathing, "Flow Rate" );
+	}
+	
+	private void addSession( WpfPlot chart, Signal signal )
+	{
+		chart.Plot.Clear();
+		
+		var timeline  = new double[ signal.Samples.Count ];
+		var startTime = signal.StartTime;
+		for( int i = 0; i < timeline.Length; i++ )
+		{
+			timeline[ i ] = startTime.ToTimeCode();
+			startTime     = startTime.AddSeconds( signal.SampleInterval * TimeSpan.NanosecondsPerTick );
+		}
 
-		graphBreathing.Plot.LeftAxis.Label( "Breathing" );
-		graphBreathing.Plot.Layout( 0, 0, 0, 0 );
+		var scatterValues = chart.Plot.AddScatter( timeline, signal.Samples.ToArray(), Color.DodgerBlue, 2, 0, MarkerShape.none, LineStyle.Solid, "Data" );
+		scatterValues.OnNaN = ScatterPlot.NanBehavior.Gap;
 		
-		graphBreathing.Padding                        = new Thickness( 0, 0, 0, 0 );
-		graphBreathing.Margin                         = new Thickness( 0, 0, 0, 0 );
-		graphBreathing.Configuration.LockVerticalAxis = true;
+		//chart.Plot.XAxis.TickLabelFormat( x => DateTime.FromFileTime( (long)x * TimeSpan.TicksPerSecond / TimeSpan.NanosecondsPerTick ).ToString( "hh:mm:ss tt" ) );
+
+		// Set zoom and boundary limits
+		chart.Plot.YAxis.SetBoundary( signal.MinValue, signal.MaxValue );
+		chart.Plot.XAxis.SetBoundary( timeline[ 0 ], timeline[ ^1 ] );
+		chart.Plot.Margins( 0, 0.5 );
 		
-		graphBreathing.Refresh();
+		// double[] positions = new[] { signal.MinValue, signal.MinValue + (signal.MaxValue - signal.MinValue) * 0.5, signal.MaxValue };
+		// string[] labels    = new[] { $"{signal.MinValue}", "MED", $"{signal.MaxValue}" };
+		// chart.Plot.YAxis.AutomaticTickPositions(positions, labels);
+
+		chart.Refresh();
+	}
+
+	private void initializeChart( WpfPlot chart, string label )
+	{
+		var chartStyle        = new CustomChartStyle( this );
+		var plot              = chart.Plot;
+		var maximumLabelWidth = MeasureText( "8888.8", chartStyle.TickLabelFontName, (float)12 );
+		
+		chart.RightClicked -= chart.DefaultRightClickEvent;
+
+		plot.Style( chartStyle );
+		plot.LeftAxis.Label( label );
+		plot.Layout( 0, 0, 0, 0 );
+		
+		chart.Padding                        = new Thickness( 0, 0, 0, 0 );
+		chart.Margin                         = new Thickness( 0, 0, 0, 0 );
+		chart.Configuration.LockVerticalAxis = true;
+
+		// A Windows file time is a 64-bit value that represents the number of 100-nanosecond intervals
+		const long TimeUnit = TimeSpan.TicksPerSecond / TimeSpan.NanosecondsPerTick * 100;
+		// plot.XAxis.TickLabelFormat( x => DateTime.FromFileTime( (long)x * TimeSpan.TicksPerSecond ).ToString( "hh:mm:ss tt" ) );
+
+		// plot.XAxis.MinimumTickSpacing( 0.00001f );
+		// plot.XAxis.SetZoomInLimit( (15f * 60f) * TimeUnit ); // Smallest zoom window is 10 minutes 
+		plot.XAxis.Layout( padding: 0 );
+		plot.XAxis.AxisTicks.MajorTickLength = 10;
+		plot.XAxis.AxisTicks.MinorTickLength = 5;
+		plot.XAxis.TickMarkDirection( outward: false );
+		plot.XAxis2.Layout( 0, 1, 1 );
+
+		//plot.YAxis.MinimumTickSpacing( 5f );
+		plot.YAxis.TickDensity( 1f );
+		plot.YAxis.Layout( 0, maximumLabelWidth, maximumLabelWidth );
+		plot.YAxis2.Layout( 0, 5, 5 );
+
+		var legend = plot.Legend();
+		legend.Location     = Alignment.UpperRight;
+		legend.Orientation  = Orientation.Horizontal;
+		legend.OutlineColor = chartStyle.TickMajorColor;
+		legend.FillColor    = chartStyle.DataBackgroundColor;
+		legend.FontColor    = chartStyle.TitleFontColor;
+
+		chart.Refresh();
+	}
+
+	private float MeasureText( string text, string fontFamily, float emSize )
+	{
+		FormattedText formatted = new FormattedText(
+			text,
+			CultureInfo.CurrentCulture,
+			FlowDirection.LeftToRight,
+			new Typeface( fontFamily ),
+			emSize,
+			Brushes.Black,
+			VisualTreeHelper.GetDpi( this ).PixelsPerDip
+		);
+
+		return (float)Math.Ceiling( formatted.Width );
 	}
 
 	private void CalendarOnSelectedDateChanged( object sender, SelectionChangedEventArgs e )
@@ -112,6 +191,8 @@ public partial class DataBrowser
 		RespiratoryEventSummary.DataContext = day.EventSummary;
 		StatisticsSummary.DataContext       = day.Statistics;
 		MachineSettings.DataContext         = day.Settings;
+		
+		addSession( graphBreathing, day.Sessions[ 0 ].Signals[ 0 ] );
 	}
 
 	private void OnSizeChanged( object sender, SizeChangedEventArgs e )
