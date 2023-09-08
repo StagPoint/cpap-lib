@@ -209,6 +209,9 @@ namespace cpaplib
 				firstRecordedTime = DateUtil.Min( firstRecordedTime, session.StartTime );
 			}
 
+			// There is probably *some* value in keeping the "reported" start times and durations, but if so I cannot
+			// think of what it is and doing so makes working with and displaying the data a lot more frustrating, so
+			// we'll use the *actual* recorded session times instead. 
 			day.RecordingStartTime = firstRecordedTime;
 			day.Duration           = (lastRecordedTime - day.RecordingStartTime);
 
@@ -217,26 +220,43 @@ namespace cpaplib
 		
 		private void CalculateSignalStatistics( DailyReport day )
 		{
-			// We don't actually need double precision for any of these signals (biomedical signals just
-			// don't need that kind of precision) and single-precision floats sort faster.
-			ListEx<float> samples = new ListEx<float>();
+			// Determine the maximum sort buffer size we'll need so that we only need to allocate and reuse one buffer.
+			var maxBufferSize = 0;
 
-			day.Statistics.MaskPressure       = calculateStatistics( "Mask Pressure" );
-			day.Statistics.TherapyPressure    = calculateStatistics( "Therapy Pressure" );
-			day.Statistics.ExpiratoryPressure = calculateStatistics( "Expiratory Pressure" );
-			day.Statistics.Leak               = calculateStatistics( "Leak Rate" );
-			day.Statistics.RespirationRate    = calculateStatistics( "Respiration Rate" );
-			day.Statistics.TidalVolume        = calculateStatistics( "Tidal Volume" );
-			day.Statistics.MinuteVent         = calculateStatistics( "Minute Vent" );
-			day.Statistics.Snore              = calculateStatistics( "Snore" );
-			day.Statistics.FlowLimit          = calculateStatistics( "Flow Limit" );
-			day.Statistics.Pulse              = calculateStatistics( "Pulse" );
-			day.Statistics.SpO2               = calculateStatistics( "SpO2" );
-
-			SignalStatistics calculateStatistics( string signalName )
+			// Note that when this was written, every session was guaranteed to have the same number of signals,
+			// which appeared in the same order in each session. Since this is by design, that is not expected to
+			// ever change, but it is worth noting here.
+			for( int i = 0; i < day.Sessions[ 0 ].Signals.Count; i++ )
 			{
-				samples.Clear();
-				
+				var signalSize = 0;
+				foreach( var session in day.Sessions )
+				{
+					signalSize += session.Signals[ i ].Samples.Count;
+				}
+
+				maxBufferSize = Math.Max( maxBufferSize, signalSize );
+			}
+
+			// Allocate the buffer that we'll sort signal data in. 
+			var sortBuffer = new Sorter( maxBufferSize );
+
+			day.Statistics.MaskPressure       = calculateStatistics( "Mask Pressure",       sortBuffer );
+			day.Statistics.TherapyPressure    = calculateStatistics( "Therapy Pressure",    sortBuffer );
+			day.Statistics.ExpiratoryPressure = calculateStatistics( "Expiratory Pressure", sortBuffer );
+			day.Statistics.Leak               = calculateStatistics( "Leak Rate",           sortBuffer );
+			day.Statistics.RespirationRate    = calculateStatistics( "Respiration Rate",    sortBuffer );
+			day.Statistics.TidalVolume        = calculateStatistics( "Tidal Volume",        sortBuffer );
+			day.Statistics.MinuteVent         = calculateStatistics( "Minute Vent",         sortBuffer );
+			day.Statistics.Snore              = calculateStatistics( "Snore",               sortBuffer );
+			day.Statistics.FlowLimit          = calculateStatistics( "Flow Limit",          sortBuffer );
+			day.Statistics.Pulse              = calculateStatistics( "Pulse",               sortBuffer );
+			day.Statistics.SpO2               = calculateStatistics( "SpO2",                sortBuffer );
+
+			SignalStatistics calculateStatistics( string signalName, Sorter sorter )
+			{
+				// Reset the sorter for the next iteration 
+				sorter.Clear();
+
 				// Signal index will be consistent for all sessions, so grab that to avoid having to look it up each time
 				var signalIndex = day.Sessions[ 0 ].Signals.FindIndex( x => x.Name.Equals( signalName, StringComparison.Ordinal ) );
 
@@ -252,41 +272,23 @@ namespace cpaplib
 				foreach( var session in day.Sessions )
 				{
 					var sourceSamples = session.Signals[ signalIndex ].Samples;
-					samples.GrowIfNeeded( sourceSamples.Count );
+					sorter.AddRange( sourceSamples );
+				}
 
-					foreach( var sample in sourceSamples )
-					{
-						samples.Add( (float)sample );
-					}
-				}
-				
-#if ALLOW_UNSAFE
-				// The samples need to be sorted in order to determine things like 95th Percentile, etc.  
-				if( samples.Count <= 1000 )
-				{
-					samples.Sort();
-				}
-				else
-				{
-					// A radix sort is *blazing fast* on large arrays. Much faster than the built-in sort, 
-					// but uses twice the amount of memory in exchange (because it's not an in-place sort). 
-					RadixSort.Sort( samples );
-				}
-#else
-				samples.Sort();
-#endif
-
+				// Sort the aggregated samples and calculate statistics on the results 
+				var sortedSamples = sorter.Sort();
+				var bufferLength  = sortedSamples.Count;
 
 				var stats = new SignalStatistics
 				{
-					Minimum      = samples[ (int)(samples.Count * 0.01) ],
-					Average      = samples.Average(),
-					Maximum      = samples.Max(),
-					Median       = samples[ samples.Count / 2 ],
-					Percentile95 = samples[ (int)( samples.Count * 0.95 ) ],
-					Percentile99 = samples[ (int)( samples.Count * 0.995 ) ],
+					Minimum      = sortedSamples[ (int)(bufferLength * 0.01) ],
+					Average      = sortedSamples.Average(),
+					Maximum      = sortedSamples.Max(),
+					Median       = sortedSamples[ bufferLength / 2 ],
+					Percentile95 = sortedSamples[ (int)(bufferLength * 0.95) ],
+					Percentile99 = sortedSamples[ (int)(bufferLength * 0.995) ],
 				};
-
+				
 				return stats;
 			}
 		}

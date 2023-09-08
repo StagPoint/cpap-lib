@@ -141,7 +141,7 @@ public partial class DataBrowser
 		chart.Configuration.LockVerticalAxis = true;
 
 		// A Windows file time is a 64-bit value that represents the number of 100-nanosecond intervals
-		const long TimeUnit = TimeSpan.TicksPerSecond / TimeSpan.NanosecondsPerTick * 100;
+		// const long TimeUnit = TimeSpan.TicksPerSecond / TimeSpan.NanosecondsPerTick * 100;
 		// plot.XAxis.TickLabelFormat( x => DateTime.FromFileTime( (long)x * TimeSpan.TicksPerSecond ).ToString( "hh:mm:ss tt" ) );
 
 		plot.XAxis.MinimumTickSpacing( 1f );

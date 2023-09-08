@@ -155,7 +155,7 @@ namespace cpaplib
 				return;
 			}
 
-			if( _items.Length <= Size )
+			if( _items.Length < Size )
 			{
 				var newSize = ( Size / DEFAULT_CAPACITY ) * DEFAULT_CAPACITY + DEFAULT_CAPACITY;
 				Array.Resize<T>( ref _items, newSize );

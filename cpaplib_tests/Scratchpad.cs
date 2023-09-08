@@ -10,54 +10,58 @@ namespace cpaplib_tests;
 [TestClass]
 public class Scratchpad
 {
-	// [TestMethod]
-	// public void RadixSortIsActuallySorting()
-	// {
-	// 	const int NUMBER_OF_SAMPLES = 100000;
-	//
-	// 	var list = new ListEx<float>( NUMBER_OF_SAMPLES * 2 );
-	// 	
-	// 	for( int i = 0; i < NUMBER_OF_SAMPLES; i++ )
-	// 	{
-	// 		list.Add( Random.Shared.Next( int.MinValue, int.MaxValue ) * 0.001f );
-	// 	}
-	//
-	// 	var copy = new ListEx<float>( NUMBER_OF_SAMPLES );
-	// 	copy.AddRange( list );
-	//
-	// 	var startTime = Environment.TickCount;
-	// 	
-	// 	RadixSort.Sort( list );
-	//
-	// 	var elapsedRadix = Environment.TickCount - startTime;
-	//
-	// 	var last = float.MinValue;
-	// 	for( int i = 0; i < NUMBER_OF_SAMPLES; i++ )
-	// 	{
-	// 		var value = list[ i ];
-	// 		Assert.IsTrue( last <= value );
-	//
-	// 		last = value;
-	// 	}
-	//
-	// 	startTime = Environment.TickCount;
-	//
-	// 	// Now use the built-in Sort() function for comparison
-	// 	copy.Sort();
-	//
-	// 	var elapsedBuiltIn = Environment.TickCount - startTime;
-	//
-	// 	// Ensure that the results are identical
-	// 	for( int i = 0; i < copy.Count; i++ )
-	// 	{
-	// 		Assert.AreEqual( copy[ i ], list[ i ] );
-	// 	}
-	//
-	// 	Debug.WriteLine( $"Radix: {elapsedRadix}ms    Built-In: {elapsedBuiltIn}ms" );
-	// 	
-	// 	// Radix sort should be faster, or in any case not slower
-	// 	Assert.IsTrue( elapsedRadix <= elapsedBuiltIn );
-	// }
+	[TestMethod]
+	public void RadixSortIsActuallySorting()
+	{
+		const int NUMBER_OF_SAMPLES = 100000;
+
+		var sorter = new Sorter( NUMBER_OF_SAMPLES );
+	
+		var list = new ListEx<double>( NUMBER_OF_SAMPLES * 2 );
+		var copy = new ListEx<float>( NUMBER_OF_SAMPLES );
+
+		for( int i = 0; i < NUMBER_OF_SAMPLES; i++ )
+		{
+			var randomValue = Random.Shared.Next( int.MinValue, int.MaxValue ) * 0.001f;
+			
+			list.Add( randomValue );
+			copy.Add( randomValue );
+		}
+	
+		var startTime = Environment.TickCount;
+
+		sorter.AddRange( list );
+		var sortedList = sorter.Sort();
+	
+		var elapsedRadix = Environment.TickCount - startTime;
+	
+		var last = float.MinValue;
+		for( int i = 0; i < NUMBER_OF_SAMPLES; i++ )
+		{
+			var value = sortedList[ i ];
+			Assert.IsTrue( last <= value );
+	
+			last = value;
+		}
+	
+		startTime = Environment.TickCount;
+	
+		// Now use the built-in Sort() function for comparison
+		copy.Sort();
+	
+		var elapsedBuiltIn = Environment.TickCount - startTime;
+	
+		// Ensure that the results are identical
+		for( int i = 0; i < copy.Count; i++ )
+		{
+			Assert.AreEqual( copy[ i ], sortedList[ i ] );
+		}
+	
+		Debug.WriteLine( $"Radix: {elapsedRadix}ms    Built-In: {elapsedBuiltIn}ms" );
+		
+		// Radix sort should be faster, or in any case not slower
+		Assert.IsTrue( elapsedRadix <= elapsedBuiltIn );
+	}
 	
 	[TestMethod]
 	public void AnonymizeFiles()
