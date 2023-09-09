@@ -44,6 +44,31 @@ namespace cpaplib
 		/// </summary>
 		public double CSR { get; private set; }
 
+		/// <summary>
+		/// The total number of Obstructive Apnea events that occurred
+		/// </summary>
+		public int ObstructiveApneaCount { get; internal set; }
+
+		/// <summary>
+		/// The total number of Hypopnea events that occurred
+		/// </summary>
+		public int HypopneaCount { get; internal set; }
+
+		/// <summary>
+		/// The total number of Open Airway events that occurred
+		/// </summary>
+		public int ClearAirwayCount { get; internal set; }
+
+		/// <summary>
+		/// The total number of Unclassified Apnea events that occurred
+		/// </summary>
+		public int UnclassifiedApneaCount { get; internal set; }
+
+		/// <summary>
+		/// The total number of RERA events that occurred
+		/// </summary>
+		public int RespiratoryEffortCount { get; internal set; }
+
 		internal void ReadFrom( Dictionary<string, double> data )
 		{
 			AHI = data[ "AHI" ];

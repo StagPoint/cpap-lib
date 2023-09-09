@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 
 using cpaplib;
@@ -17,6 +18,7 @@ using ScottPlot.Plottable;
 
 using Color = System.Drawing.Color;
 using Orientation = ScottPlot.Orientation;
+using VerticalAlignment = System.Windows.VerticalAlignment;
 
 namespace example_viewer;
 
@@ -25,7 +27,7 @@ public partial class DataBrowser
 	private ResMedDataLoader _data = null;
 	private string _dataPath = String.Empty;
 
-	private DailyReport SelectedDay = null;
+	private DailyReport _selectedDay = null;
 	
 	public DataBrowser( string dataPath )
 	{
@@ -71,10 +73,51 @@ public partial class DataBrowser
 			calendar.SelectedDate = selectedDay.ReportDate.Date;
 		}
 
-		initializeChart( graphBreathing, "Flow Rate" );
+		InitializeChartProperties( graphBreathing, "Flow Rate" );
 	}
 
-	private void addSession( WpfPlot chart, DailyReport day, string signalName, float signalScale = 1f, float? axisMinValue = null, float? axisMaxValue = null, double[] manualLabels = null )
+	private void AddToSessionList( MaskSession session )
+	{
+		var row = new RowDefinition();
+		SessionList.RowDefinitions.Add( row );
+		int rowIndex = SessionList.RowDefinitions.Count - 1;
+
+		var text = new TextBlock() { Text = $"{session.StartTime:d}" };
+		text.MouseDown += SessionsList_RowOnMouseDown;
+		text.Tag       =  session;
+		
+		SessionList.Children.Add( text );
+		Grid.SetRow( text, rowIndex );
+		Grid.SetColumn( text, 0 );
+
+		text           =  new TextBlock() { Text = $"{session.StartTime:t} - {session.EndTime:t}" };
+		text.MouseDown += SessionsList_RowOnMouseDown;
+		text.Tag       =  session;
+		
+		SessionList.Children.Add( text );
+		Grid.SetRow( text, rowIndex );
+		Grid.SetColumn( text, 2 );
+
+		text           =  new TextBlock() { Text = $"{session.Duration:g}" };
+		text.MouseDown += SessionsList_RowOnMouseDown;
+		text.Tag       =  session;
+		
+		SessionList.Children.Add( text );
+		Grid.SetRow( text, rowIndex );
+		Grid.SetColumn( text, 4 );
+	}
+	
+	private void SessionsList_RowOnMouseDown( object sender, MouseButtonEventArgs e )
+	{
+		var session   = (MaskSession)((TextBlock)sender).Tag;
+		var startTime = (session.StartTime - _selectedDay.RecordingStartTime).TotalSeconds;
+		var endTime   = (session.EndTime - _selectedDay.RecordingStartTime).TotalSeconds;
+			
+		graphBreathing.Plot.SetAxisLimitsX( startTime, endTime);
+		graphBreathing.Refresh();
+	}
+
+	private void ChartSignal( WpfPlot chart, DailyReport day, string signalName, float signalScale = 1f, float? axisMinValue = null, float? axisMaxValue = null, double[] manualLabels = null )
 	{
 		chart.Plot.Clear();
 
@@ -114,15 +157,16 @@ public partial class DataBrowser
 			firstSessionAdded = false;
 		}
 
-		chart.Plot.XAxis.TickLabelFormat( x => day.RecordingStartTime.AddSeconds( x ).ToShortTimeString() );
+		chart.Plot.XAxis.TickLabelFormat( x => $"{day.RecordingStartTime.AddSeconds( x ):hh:mm:ss tt}" );
 
 		// Set zoom and boundary limits
 		chart.Plot.YAxis.SetBoundary( minValue, maxValue );
 		chart.Plot.XAxis.SetBoundary( -1, day.Duration.TotalSeconds + 1 );
 		chart.Plot.Margins( 0, 0.5 );
-
 		chart.Plot.SetAxisLimits( -1, day.Duration.TotalSeconds + 1, minValue, maxValue );
 
+		// If manual vertical axis tick positions were provided, set up the labels for them and force the chart
+		// to show those instead of the automatically-generated tick positions. 
 		if( manualLabels != null && manualLabels.Length > 0 )
 		{
 			var labels = new string[ manualLabels.Length ];
@@ -137,7 +181,7 @@ public partial class DataBrowser
 		chart.Refresh();
 	}
 
-	private void initializeChart( WpfPlot chart, string label )
+	private void InitializeChartProperties( WpfPlot chart, string label )
 	{
 		var chartStyle = new CustomChartStyle( this );
 		var plot       = chart.Plot;
@@ -162,7 +206,7 @@ public partial class DataBrowser
 		plot.XAxis.MinimumTickSpacing( 1f );
 		plot.XAxis.SetZoomInLimit( 60 ); // Make smallest zoom window possible be 1 minute 
 		plot.XAxis.Layout( padding: 0 );
-		plot.XAxis.AxisTicks.MajorTickLength = 10;
+		plot.XAxis.AxisTicks.MajorTickLength = 15;
 		plot.XAxis.AxisTicks.MinorTickLength = 5;
 		plot.XAxis.TickMarkDirection( outward: false );
 		plot.XAxis2.Layout( 0, 1, 1 );
@@ -211,7 +255,7 @@ public partial class DataBrowser
 			}
 		}
 
-		SelectedDay = null;
+		_selectedDay = null;
 		
 		scrollStatistics.Visibility   = Visibility.Hidden;
 		pnlCharts.Visibility          = Visibility.Hidden;
@@ -220,7 +264,7 @@ public partial class DataBrowser
 	
 	private void LoadDay( DailyReport day )
 	{
-		SelectedDay           = day;
+		_selectedDay           = day;
 		calendar.SelectedDate = day.ReportDate.Date;
 		
 		scrollStatistics.Visibility   = Visibility.Visible;
@@ -233,7 +277,14 @@ public partial class DataBrowser
 		StatisticsSummary.DataContext       = day.Statistics;
 		MachineSettings.DataContext         = day.Settings;
 		
-		addSession( graphBreathing, day, "Flow Rate", 60, -120, 200, new double[] { -120, -60, 0, 60, 120, 180 } );
+		SessionList.Children.Clear();
+		SessionList.RowDefinitions.Clear();
+		foreach( var session in day.Sessions )
+		{
+			AddToSessionList( session );
+		}
+		
+		ChartSignal( graphBreathing, day, "Flow Rate", 60, -120, 200, new double[] { -120, -60, 0, 60, 120, 180 } );
 		
 		var eventColor    = ((SolidColorBrush)FindResource( "SystemControlErrorTextForegroundBrush" )).Color.ToPlotColor();
 		var durationColor = ((SolidColorBrush)FindResource( "SystemControlBackgroundBaseLowBrush" )).Color;
@@ -244,7 +295,7 @@ public partial class DataBrowser
 			var x = (annotation.StartTime - day.RecordingStartTime).TotalSeconds;
 
 			graphBreathing.Plot.AddVerticalLine( x, eventColor, 1, LineStyle.Solid );
-			graphBreathing.Plot.AddTooltip( annotation.Description, x, -100 );
+			// graphBreathing.Plot.AddTooltip( annotation.Description, x, -100 );
 
 			if( annotation.Duration > 0 )
 			{
@@ -263,32 +314,32 @@ public partial class DataBrowser
 	
 	private void btnPrevDay_OnClick( object sender, RoutedEventArgs e )
 	{
-		if( SelectedDay != null )
+		if( _selectedDay != null )
 		{
-			SelectedDay = _data.Days.LastOrDefault( x => x.ReportDate < SelectedDay.ReportDate );
+			_selectedDay = _data.Days.LastOrDefault( x => x.ReportDate < _selectedDay.ReportDate );
 		}
 
-		if( SelectedDay == null )
+		if( _selectedDay == null )
 		{
-			SelectedDay = _data.Days.First();
+			_selectedDay = _data.Days.First();
 		}
 
-		LoadDay( SelectedDay );
+		LoadDay( _selectedDay );
 	}
 	
 	private void btnNextDay_OnClick( object sender, RoutedEventArgs e )
 	{
-		if( SelectedDay != null )
+		if( _selectedDay != null )
 		{
-			SelectedDay = _data.Days.FirstOrDefault( x => x.ReportDate > SelectedDay.ReportDate );
+			_selectedDay = _data.Days.FirstOrDefault( x => x.ReportDate > _selectedDay.ReportDate );
 		}
 
-		if( SelectedDay == null )
+		if( _selectedDay == null )
 		{
-			SelectedDay = _data.Days.Last();
+			_selectedDay = _data.Days.Last();
 		}
 		
-		LoadDay( SelectedDay );
+		LoadDay( _selectedDay );
 	}
 	
 	public class CustomChartStyle : ScottPlot.Styles.Default

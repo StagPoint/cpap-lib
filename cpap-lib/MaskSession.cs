@@ -14,9 +14,22 @@ namespace cpaplib
 
 		public List<Signal> Signals { get; } = new List<Signal>();
 
-		public double duration;
+		public TimeSpan Duration { get => EndTime - StartTime; }
 
 		#region Public functions
+
+		public Signal GetSignalByName( string name, StringComparison comparison = StringComparison.OrdinalIgnoreCase )
+		{
+			for( int i = 0; i < Signals.Count; i++ )
+			{
+				if( Signals[ i ].Name.Equals( name, comparison ) )
+				{
+					return Signals[ i ];
+				}
+			}
+
+			return null;
+		}
 
 		internal void AddSignal( DateTime startTime, DateTime endTime, EdfStandardSignal fileSignal )
 		{
@@ -24,25 +37,27 @@ namespace cpaplib
 			// data even when there might be slight differences in signal names among various machine models.
 			var signalName = SignalNames.GetStandardName( fileSignal.Label.Value );
 
-			Signal signal = Signals.FirstOrDefault( x => x.Name.Equals( signalName, StringComparison.Ordinal ) );
+			Signal signal = GetSignalByName( signalName, StringComparison.Ordinal );
 
-			if( signal == null )
+			if( signal != null )
 			{
-				signal = new Signal
-				{
-					Name              = SignalNames.GetStandardName( fileSignal.Label.Value ),
-					StartTime         = startTime,
-					EndTime           = endTime,
-					FrequencyInHz     = fileSignal.FrequencyInHz,
-					MinValue          = fileSignal.PhysicalMinimum,
-					MaxValue          = fileSignal.PhysicalMaximum,
-					UnitOfMeasurement = fileSignal.PhysicalDimension,
-				};
-
-				signal.Samples.AddRange( fileSignal.Samples );
-
-				Signals.Add( signal );
+				throw new Exception( $"The session starting at {StartTime:g} already contains a Signal named '{signalName}'" );
 			}
+			
+			signal = new Signal
+			{
+				Name              = signalName,
+				StartTime         = startTime,
+				EndTime           = endTime,
+				FrequencyInHz     = fileSignal.FrequencyInHz,
+				MinValue          = fileSignal.PhysicalMinimum,
+				MaxValue          = fileSignal.PhysicalMaximum,
+				UnitOfMeasurement = fileSignal.PhysicalDimension,
+			};
+
+			signal.Samples.AddRange( fileSignal.Samples );
+
+			Signals.Add( signal );
 		}
 
 		#endregion

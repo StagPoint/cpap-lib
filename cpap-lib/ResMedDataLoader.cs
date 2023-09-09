@@ -119,6 +119,11 @@ namespace cpaplib
 			LoadEventsAndAnnotations( logFolder, day );
 
 			var filenames = Directory.GetFiles( logFolder, "*.edf" );
+			
+			// I believe the filenames are already sorted, but since it's important that they are sorted by date
+			// and time, we'll explicitly sort them. 
+			Array.Sort( filenames );
+			
 			foreach( var filename in filenames )
 			{
 				var baseFilename = Path.GetFileNameWithoutExtension( filename );
@@ -138,8 +143,11 @@ namespace cpaplib
 				               .ParseExact( baseFilename.Substring( 0, baseFilename.Length - 4 ), "yyyyMMdd_HHmmss", CultureInfo.InvariantCulture )
 				               .Trim( TimeSpan.TicksPerMinute );
 
-				foreach( var session in day.Sessions )
+				int sessionIndex = 0;
+				while( sessionIndex < day.Sessions.Count )
 				{
+					var session = day.Sessions[ sessionIndex++];
+					
 					// If the file's extracted date does not intersect with the session, then it's not relevant to that session 
 					if( session.StartTime > fileDate || session.EndTime < fileDate )
 					{
@@ -173,11 +181,53 @@ namespace cpaplib
 							// Not every signal within a Session will have the same start and end time as the others
 							// because of differences in sampling rate, so we keep track of the start time and end
 							// time of each Signal separately. 
-							var startTime = header.StartTime.Value;
-							var endTime   = startTime.AddSeconds( header.NumberOfDataRecords * header.DurationOfDataRecord );
+							var startTime  = header.StartTime.Value;
+							var endTime    = startTime.AddSeconds( header.NumberOfDataRecords * header.DurationOfDataRecord );
+							var signalName = SignalNames.GetStandardName( signal.Label.Value );
 
-							// Add the signal to the current session
-							session.AddSignal( startTime, endTime, signal );
+							// We need to see if the session already contains a signal by this name, so we know what to do with it. 
+							if( session.GetSignalByName( signalName ) == null )
+							{
+								// Add the signal to the current session
+								session.AddSignal( startTime, endTime, signal );
+							}
+							else
+							{
+								// If a session already contains a signal by this name, it means that the ResMed machine has
+								// given us MaskOn/MaskOff times that do not match the stored files. This happens when there
+								// is a brief interruption in recording such as turning the machine off then back on again 
+								// within a short enough time period that it doesn't start a new session, which ends up creating
+								// a discontinuous session.
+								//
+								// We don't allow discontinuous sessions, so when this occurs the simplest thing to do is split
+								// the session by creating another one with the same start and end times and adding the signal to
+								// that session instead. We don't need to worry about the overlapping times because those will
+								// be trimmed to match the stored signals below.
+								
+								// Check to see if there is an in-progress session that does not yet have this signal.
+								var splitSession = day.Sessions.FirstOrDefault( x => session.StartTime <= fileDate && session.EndTime >= fileDate && x.GetSignalByName( signalName ) == null );
+								
+								// If there is, add it. 
+								if( splitSession != null )
+								{
+									splitSession.AddSignal( startTime, endTime, signal );
+								}
+								else
+								{
+									// Create a new Session based on the current session's time period, which will contain all of
+									// the discontinuous signals (or at least the next set, as there may be more than one).
+									var newSession = new MaskSession()
+									{
+										StartTime = session.StartTime,
+										EndTime   = session.EndTime
+									};
+									
+									newSession.AddSignal( startTime, endTime, signal );
+									
+									// Add the session to the DailyReport. We'll need to sort sessions afterward because of this. 
+									day.Sessions.Add( newSession );
+								}
+							}
 						}
 					}
 
@@ -185,6 +235,14 @@ namespace cpaplib
 				}
 			}
 
+			// Remove all sessions that did not have signal data. This happens when the ResMed machine reports a 
+			// MaskOn/MaskOff session that is too short for any data to be recorded. 
+			day.Sessions.RemoveAll( x => x.Signals.Count == 0 );
+			
+			// Sort the sessions by start time. This is only actually needed when we split a session above during
+			// signal matching, but doesn't hurt anything when no sessions are split. 
+			day.Sessions.Sort( ( lhs, rhs ) => lhs.StartTime.CompareTo( rhs.StartTime ) );
+			
 			var lastRecordedTime  = DateTime.MinValue;
 			var firstRecordedTime = DateTime.MaxValue;
 			
@@ -325,6 +383,12 @@ namespace cpaplib
 					}
 				}
 			}
+
+			day.EventSummary.ObstructiveApneaCount = day.Events.Count( x => x.Type == EventType.ObstructiveApnea );
+			day.EventSummary.HypopneaCount = day.Events.Count( x => x.Type == EventType.Hypopnea );
+			day.EventSummary.UnclassifiedApneaCount = day.Events.Count( x => x.Type == EventType.Unclassified );
+			day.EventSummary.ClearAirwayCount = day.Events.Count( x => x.Type == EventType.ClearAirway );
+			day.EventSummary.RespiratoryEffortCount = day.Events.Count( x => x.Type == EventType.RERA );
 		}
 
 		private void LoadIndexAndSettings( string filename, DateTime? minDate, DateTime? maxDate )
@@ -392,7 +456,7 @@ namespace cpaplib
 					var duration = maskOffSignal.Samples[ sampleIndex ] - maskOnSignal.Samples[ sampleIndex ];
 
 					// Discard empty sessions
-					if( maskOff.Subtract( maskOn ).TotalMinutes < 5 )
+					if( maskOff.Subtract( maskOn ).TotalMinutes < 1 )
 					{
 						continue;
 					}
@@ -401,7 +465,6 @@ namespace cpaplib
 					{
 						StartTime = maskOn,
 						EndTime   = maskOff,
-						duration  = duration
 					};
 
 					day.Sessions.Add( session );
@@ -424,7 +487,7 @@ namespace cpaplib
 			{
 				while( dayIndex < Days.Count )
 				{
-					var date = Days[ dayIndex ].ReportDate;
+					var date = Days[ dayIndex ].ReportDate.Date;
 
 					if( minDate.HasValue && date < minDate )
 					{

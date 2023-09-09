@@ -53,7 +53,7 @@ namespace cpaplib
 		public double HumidityLevel { get; set; }
 		public bool TemperatureEnabled { get; set; }
 		public double Temperature { get; set; }
-		public bool SmartStart { get; set; }
+		public OnOffType SmartStart { get; set; }
 		public double PtAccess { get; set; }
 
 		#endregion
@@ -164,7 +164,7 @@ namespace cpaplib
 			RampMode = (RampModeType)(int)data["S.RampEnable"];
 			RampTime = data["S.RampTime"];
 
-			SmartStart = data["S.SmartStart"] > 0.5;
+			SmartStart          = data["S.SmartStart"] > 0.5 ? OnOffType.On : OnOffType.Off;
 			AntibacterialFilter = data["S.ABFilter"] >= 0.5;
 
 			ClimateControl     = (ClimateControlType)(int)data["S.ClimateControl"];
