@@ -23,6 +23,8 @@ namespace example_viewer
 		public MainWindow()
 		{
 			InitializeComponent();
+
+			DataContext = this;
 			
 			_mainFrame.Navigate( new WelcomeNotice() );
 		}

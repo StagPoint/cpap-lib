@@ -18,7 +18,6 @@ using ScottPlot.Plottable;
 
 using Color = System.Drawing.Color;
 using Orientation = ScottPlot.Orientation;
-using VerticalAlignment = System.Windows.VerticalAlignment;
 
 namespace example_viewer;
 
@@ -28,6 +27,8 @@ public partial class DataBrowser
 	private string _dataPath = String.Empty;
 
 	private DailyReport _selectedDay = null;
+
+	private List<WpfPlot> _charts = new();
 	
 	public DataBrowser( string dataPath )
 	{
@@ -72,8 +73,36 @@ public partial class DataBrowser
 		{
 			calendar.SelectedDate = selectedDay.ReportDate.Date;
 		}
+		
+		scrollGraphs.PreviewMouseWheel += ScrollGraphsOnPreviewMouseWheel;
 
-		InitializeChartProperties( graphBreathing, "Flow Rate" );
+		InitializeChartProperties( graphBreathing );
+		InitializeChartProperties( graphMaskPressure );
+		InitializeChartProperties( graphMinuteVent );
+		InitializeChartProperties( graphTidalVolume );
+		InitializeChartProperties( graphFlowLimit );
+	}
+	
+	private void ScrollGraphsOnPreviewMouseWheel( object sender, MouseWheelEventArgs e )
+	{
+		ScrollViewer scrollViewer = (ScrollViewer)sender;
+		
+		if( btnMouseWheelZoom.IsChecked == true )
+		{
+			scrollViewer.ScrollToVerticalOffset( scrollViewer.VerticalOffset );
+		}
+		else if( btnMouseWheelScroll.IsChecked == true )
+		{
+			// manually scroll the window then mark the event as handled so it does not zoom
+			double scrollOffset = scrollViewer.VerticalOffset - (e.Delta * .2);
+			scrollViewer.ScrollToVerticalOffset(scrollOffset);
+			e.Handled = true;
+		}
+		else if( btnMouseWheelPan.IsChecked == true )
+		{
+			// TODO: Finish "Mouse Wheel Pans the charts" mode 
+			e.Handled = true;
+		}
 	}
 
 	private void AddToSessionList( MaskSession session )
@@ -149,7 +178,9 @@ public partial class DataBrowser
 			offset  = (signal.StartTime - day.RecordingStartTime).TotalSeconds;
 			endTime = (signal.EndTime - day.RecordingStartTime).TotalSeconds;
 
-			var graph = chart.Plot.AddSignal( signal.Samples.ToArray(), signal.FrequencyInHz, Color.DodgerBlue, firstSessionAdded ? signal.Name : null );
+			var chartColor = DataColors.GetDataColor( signalIndex );
+
+			var graph = chart.Plot.AddSignal( signal.Samples.ToArray(), signal.FrequencyInHz, chartColor, firstSessionAdded ? signal.Name : null );
 			graph.OffsetX    = offset;
 			graph.MarkerSize = 0;
 			graph.ScaleY     = signalScale;
@@ -162,7 +193,6 @@ public partial class DataBrowser
 		// Set zoom and boundary limits
 		chart.Plot.YAxis.SetBoundary( minValue, maxValue );
 		chart.Plot.XAxis.SetBoundary( -1, day.Duration.TotalSeconds + 1 );
-		chart.Plot.Margins( 0, 0.5 );
 		chart.Plot.SetAxisLimits( -1, day.Duration.TotalSeconds + 1, minValue, maxValue );
 
 		// If manual vertical axis tick positions were provided, set up the labels for them and force the chart
@@ -181,15 +211,18 @@ public partial class DataBrowser
 		chart.Refresh();
 	}
 
-	private void InitializeChartProperties( WpfPlot chart, string label )
+	private void InitializeChartProperties( WpfPlot chart )
 	{
+		_charts.Add( chart );
+		
 		var chartStyle = new CustomChartStyle( this );
 		var plot       = chart.Plot;
 		
 		// Measure enough space for a vertical axis label, padding, and the longest anticipated tick label 
-		var maximumLabelWidth = MeasureText( "XX 8888.8", chartStyle.TickLabelFontName, (float)12 );
+		var maximumLabelWidth = MeasureText( "8888.8", chartStyle.TickLabelFontName, (float)12 );
 
 		chart.RightClicked -= chart.DefaultRightClickEvent;
+		chart.AxesChanged += ChartOnAxesChanged;
 		//chart.Configuration.ScrollWheelZoom =  false;
 
 		chart.Configuration.Quality                                      = QualityMode.High;
@@ -200,7 +233,7 @@ public partial class DataBrowser
 		chart.Configuration.QualityConfiguration.MouseWheelScrolled      = RenderType.HighQuality;
 
 		plot.Style( chartStyle );
-		plot.LeftAxis.Label( label );
+		//plot.LeftAxis.Label( label );
 		plot.Layout( 0, 0, 0, 0 );
 		
 		plot.XAxis.MinimumTickSpacing( 1f );
@@ -208,7 +241,6 @@ public partial class DataBrowser
 		plot.XAxis.Layout( padding: 0 );
 		plot.XAxis.AxisTicks.MajorTickLength = 15;
 		plot.XAxis.AxisTicks.MinorTickLength = 5;
-		plot.XAxis.TickMarkDirection( outward: false );
 		plot.XAxis2.Layout( 0, 1, 1 );
 
 		plot.YAxis.TickDensity( 1f );
@@ -222,11 +254,31 @@ public partial class DataBrowser
 		legend.FillColor    = chartStyle.DataBackgroundColor;
 		legend.FontColor    = chartStyle.TitleFontColor;
 
-		chart.Padding                        = new Thickness( 0, 0, 0, 0 );
-		chart.Margin                         = new Thickness( 0, 0, 0, 0 );
 		chart.Configuration.LockVerticalAxis = true;
-
+		
 		chart.Refresh();
+	}
+	
+	private void ChartOnAxesChanged( object sender, RoutedEventArgs e )
+	{
+		WpfPlot changedPlot = (WpfPlot)sender;
+
+		var newAxisLimits = changedPlot.Plot.GetAxisLimits();
+
+		foreach( var chart in _charts )
+		{
+			// disable events briefly to avoid an infinite loop
+			chart.Configuration.AxesChangedEventEnabled = false;
+			{
+				var currentAxisLimits  = chart.Plot.GetAxisLimits();
+				var modifiedAxisLimits = new AxisLimits( newAxisLimits.XMin, newAxisLimits.XMax, currentAxisLimits.YMin, currentAxisLimits.YMax );
+
+				chart.Plot.SetAxisLimits( modifiedAxisLimits );
+				chart.Render();
+			}
+			
+			chart.Configuration.AxesChangedEventEnabled = true;
+		}
 	}
 
 	private float MeasureText( string text, string fontFamily, float emSize )
@@ -284,22 +336,31 @@ public partial class DataBrowser
 			AddToSessionList( session );
 		}
 		
-		ChartSignal( graphBreathing, day, "Flow Rate", 60, -120, 200, new double[] { -120, -60, 0, 60, 120, 180 } );
-		
-		var eventColor    = ((SolidColorBrush)FindResource( "SystemControlErrorTextForegroundBrush" )).Color.ToPlotColor();
-		var durationColor = ((SolidColorBrush)FindResource( "SystemControlBackgroundBaseLowBrush" )).Color;
-		durationColor.ScA = 0.18f;
+		ChartSignal( graphBreathing,    day, "Flow Rate", 60, -120, 200, new double[] { -120, -60, 0, 60, 120, 180 } );
+		ChartSignal( graphMaskPressure, day, "Mask Pressure" );
+		ChartSignal( graphMinuteVent,   day, "Minute Vent" );
+		ChartSignal( graphTidalVolume,  day, "Tidal Volume" );
+		ChartSignal( graphFlowLimit,    day, "Flow Limit" );
+
+		int[] annotationTypesSeen = new int[ 256 ];
 
 		foreach( var annotation in day.Events )
 		{
 			var x = (annotation.StartTime - day.RecordingStartTime).TotalSeconds;
+			
+			var annotationType = (int)annotation.Type;
+			var eventColor     = DataColors.GetMarkerColor( 9 + annotationType );
+			var durationColor  = eventColor.SetAlpha( 64 );
 
-			graphBreathing.Plot.AddVerticalLine( x, eventColor, 1, LineStyle.Solid );
+			string label = annotationTypesSeen[ annotationType ] == 0 ? annotation.Description : null;
+			annotationTypesSeen[ annotationType ] = 1;
+
+			graphBreathing.Plot.AddVerticalLine( x, eventColor, 1, LineStyle.Solid, label );
 			// graphBreathing.Plot.AddTooltip( annotation.Description, x, -100 );
 
 			if( annotation.Duration > 0 )
 			{
-				graphBreathing.Plot.AddHorizontalSpan( x - annotation.Duration, x, durationColor.ToPlotColor() );
+				graphBreathing.Plot.AddHorizontalSpan( x - annotation.Duration, x, durationColor );
 			}
 		}
 		

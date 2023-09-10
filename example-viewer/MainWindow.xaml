@@ -7,14 +7,51 @@
         mc:Ignorable="d"
         Title="CPAP Data Viewer" Width="1024" Height="800"
         WindowStartupLocation="CenterScreen"
+        WindowState="Maximized"
         xmlns:ui="http://schemas.modernwpf.com/2019"
-        ui:WindowHelper.UseModernWindowStyle="True">
-    <DockPanel>
-        <Frame x:Name="_mainFrame" NavigationUIVisibility="Hidden" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" />
-    </DockPanel>
-    <!--<ui:SimpleStackPanel Name="Welcome" Margin="12" Spacing="24">
-        <TextBlock Text="Welcome to the example CPAP Data Viewer" Margin="0 50 0 0" HorizontalAlignment="Center" Style="{StaticResource HeaderTextBlockStyle}" />
-        <TextBlock TextWrapping="Wrap" Width="600" HorizontalAlignment="Center" FontSize="16" Margin="20">To begin, please import your CPAP data (typically found on the SD Card in your CPAP machine) selecting "File/Import" from the main menu above or clicking the "Import" button below.</TextBlock>
-        <Button Content="Import CPAP Data" HorizontalAlignment="Center" Style="{StaticResource AccentButtonStyle}" />
-    </ui:SimpleStackPanel>-->
+        ui:WindowHelper.UseModernWindowStyle="True"
+        ui:TitleBar.ExtendViewIntoTitleBar="True">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition />
+        </Grid.RowDefinitions>
+        <Grid
+            x:Name="AppTitleBar"
+            Background="{DynamicResource SystemControlBackgroundAccentBrush}"
+            Height="{Binding Path=(ui:TitleBar.Height)}"
+            ui:ThemeManager.RequestedTheme="Dark">
+
+            <Grid.Style>
+                <Style TargetType="Grid">
+                    <Setter Property="TextElement.Foreground"
+                            Value="{DynamicResource SystemControlForegroundBaseHighBrush}" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsActive}" Value="False">
+                            <Setter Property="TextElement.Foreground"
+                                    Value="{DynamicResource SystemControlDisabledBaseMediumLowBrush}" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Grid.Style>
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            
+            <ui:FontIcon Grid.Column="0" Glyph="&#xE95D;" Margin="8 0" />
+
+            <TextBlock
+                Grid.Column="1"
+                FontSize="13"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Text="{Binding Title}" />
+        </Grid>
+        <DockPanel Grid.Row="1">
+            <Frame x:Name="_mainFrame" NavigationUIVisibility="Hidden" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" />
+        </DockPanel>
+    </Grid>
 </Window>

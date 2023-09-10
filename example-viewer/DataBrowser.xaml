@@ -413,13 +413,139 @@
                 Please select a date with CPAP data available using the DatePicker control in the upper left corner.
             </TextBlock>
         </StackPanel>
-        <ScrollViewer Name="scrollGraphss" Grid.Column="2" Padding="5" Margin="0 0 0 0"
+        <StackPanel Grid.Column="2" Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="50 8">
+            <StackPanel.Resources>
+                <Style TargetType="{x:Type RadioButton}" BasedOn="{StaticResource {x:Type ToggleButton}}">
+                    <Setter Property="Padding" Value="8 8 8 3" />
+                    <Setter Property="GroupName" Value="MouseWheelAction" />
+                </Style>
+            </StackPanel.Resources>
+            <TextBlock Text="Mouse Action: " Style="{DynamicResource BodyTextBlockStyle}" VerticalAlignment="Center"></TextBlock>
+            <RadioButton Name="btnMouseWheelZoom" IsChecked="True" ToolTip="Zoom">
+                <ui:FontIcon Glyph="&#xECE8;" FontSize="14" />
+            </RadioButton>
+            <RadioButton Name="btnMouseWheelScroll" ToolTip="Scroll">
+                <ui:FontIcon Glyph="&#xECE7;" FontSize="14" />
+            </RadioButton>
+            <RadioButton Name="btnMouseWheelPan" ToolTip="Pan">
+                <ui:FontIcon Glyph="&#xECE9;" FontSize="14" />
+            </RadioButton>
+        </StackPanel>
+        <ScrollViewer Name="scrollGraphs" Grid.Column="2" Padding="5 5 20 5" Margin="0 60 0 0"
                       VerticalScrollBarVisibility="Visible" VerticalContentAlignment="Top" VerticalAlignment="Stretch">
             <StackPanel Visibility="Visible" Name="pnlCharts" Orientation="Vertical"
                         VerticalAlignment="Stretch">
-                <Border BorderThickness="0" BorderBrush="{DynamicResource GroupBox.Static.Border}" Margin="5">
-                    <WpfPlot x:Name="graphBreathing" HorizontalAlignment="Stretch" Height="250" />
-                </Border>
+                
+                <!-- Flow Rate chart -->
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="25"></ColumnDefinition>
+                        <ColumnDefinition Width="*"></ColumnDefinition>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="250" />
+                    </Grid.RowDefinitions>
+                    <Label Grid.Column="0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" VerticalAlignment="Center">
+                        <TextBlock Text="Flow Rate"  Style="{DynamicResource SubtitleTextBlockStyle}">
+                            <TextBlock.LayoutTransform>
+                                <RotateTransform Angle="-90" />
+                            </TextBlock.LayoutTransform>
+                            <TextBlock.RenderTransform>
+                                <TranslateTransform Y="-20" />
+                            </TextBlock.RenderTransform>
+                        </TextBlock>
+                    </Label>
+                    <WpfPlot Grid.Column="1" x:Name="graphBreathing" HorizontalAlignment="Stretch" Height="250" />
+                </Grid>
+                
+                <!-- Mask Pressure chart -->
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="25"></ColumnDefinition>
+                        <ColumnDefinition Width="*"></ColumnDefinition>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="250" />
+                    </Grid.RowDefinitions>
+                    <Label Grid.Column="0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" VerticalAlignment="Center">
+                        <TextBlock Text="Mask Pressure"  Style="{DynamicResource SubtitleTextBlockStyle}">
+                            <TextBlock.LayoutTransform>
+                                <RotateTransform Angle="-90" />
+                            </TextBlock.LayoutTransform>
+                            <TextBlock.RenderTransform>
+                                <TranslateTransform Y="-20" />
+                            </TextBlock.RenderTransform>
+                        </TextBlock>
+                    </Label>
+                    <WpfPlot Grid.Column="1" x:Name="graphMaskPressure" HorizontalAlignment="Stretch" Height="250" />
+                </Grid>
+                
+                <!-- Minute Ventilation chart -->
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="25"></ColumnDefinition>
+                        <ColumnDefinition Width="*"></ColumnDefinition>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="250" />
+                    </Grid.RowDefinitions>
+                    <Label Grid.Column="0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" VerticalAlignment="Center">
+                        <TextBlock Text="Minute Vent."  Style="{DynamicResource SubtitleTextBlockStyle}">
+                            <TextBlock.LayoutTransform>
+                                <RotateTransform Angle="-90" />
+                            </TextBlock.LayoutTransform>
+                            <TextBlock.RenderTransform>
+                                <TranslateTransform Y="-20" />
+                            </TextBlock.RenderTransform>
+                        </TextBlock>
+                    </Label>
+                    <WpfPlot Grid.Column="1" x:Name="graphMinuteVent" HorizontalAlignment="Stretch" Height="250" />
+                </Grid>
+                
+                <!-- Minute Ventilation chart -->
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="25"></ColumnDefinition>
+                        <ColumnDefinition Width="*"></ColumnDefinition>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="250" />
+                    </Grid.RowDefinitions>
+                    <Label Grid.Column="0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" VerticalAlignment="Center">
+                        <TextBlock Text="Tidal Volume"  Style="{DynamicResource SubtitleTextBlockStyle}">
+                            <TextBlock.LayoutTransform>
+                                <RotateTransform Angle="-90" />
+                            </TextBlock.LayoutTransform>
+                            <TextBlock.RenderTransform>
+                                <TranslateTransform Y="-20" />
+                            </TextBlock.RenderTransform>
+                        </TextBlock>
+                    </Label>
+                    <WpfPlot Grid.Column="1" x:Name="graphTidalVolume" HorizontalAlignment="Stretch" Height="250" />
+                </Grid>
+                
+                <!-- Flow Limit chart -->
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="25"></ColumnDefinition>
+                        <ColumnDefinition Width="*"></ColumnDefinition>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="250" />
+                    </Grid.RowDefinitions>
+                    <Label Grid.Column="0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" VerticalAlignment="Center">
+                        <TextBlock Text="Flow Limit"  Style="{DynamicResource SubtitleTextBlockStyle}">
+                            <TextBlock.LayoutTransform>
+                                <RotateTransform Angle="-90" />
+                            </TextBlock.LayoutTransform>
+                            <TextBlock.RenderTransform>
+                                <TranslateTransform Y="-20" />
+                            </TextBlock.RenderTransform>
+                        </TextBlock>
+                    </Label>
+                    <WpfPlot Grid.Column="1" x:Name="graphFlowLimit" HorizontalAlignment="Stretch" Height="250" />
+                </Grid>
+                
             </StackPanel>
         </ScrollViewer>
     </Grid>
