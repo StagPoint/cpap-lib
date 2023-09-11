@@ -10,13 +10,11 @@ using System.Windows.Media;
 
 using cpaplib;
 
-using ModernWpf;
+using example_viewer.Controls;
 
 using ScottPlot;
 using ScottPlot.Control;
-using ScottPlot.Plottable;
 
-using Color = System.Drawing.Color;
 using Orientation = ScottPlot.Orientation;
 
 namespace example_viewer;
@@ -29,7 +27,7 @@ public partial class DataBrowser
 	private DailyReport _selectedDay = null;
 
 	private List<WpfPlot> _charts = new();
-	
+
 	public DataBrowser( string dataPath )
 	{
 		InitializeComponent();
@@ -50,10 +48,9 @@ public partial class DataBrowser
 	
 	private void OnPageLoaded( object sender, RoutedEventArgs e )
 	{
-		_data = new ResMedDataLoader();
-
 		var startTime = Environment.TickCount;
 		
+		_data = new ResMedDataLoader();
 		_data.LoadFromFolder( _dataPath );
 
 		var elapsed = Environment.TickCount - startTime;
@@ -63,7 +60,7 @@ public partial class DataBrowser
 		// go back to the Welcome screen.
 		if( _data.Days.Count == 0 )
 		{
-			NavigationService.Navigate( new WelcomeNotice() );
+			NavigationService!.Navigate( new WelcomeNotice() );
 			NavigationService.RemoveBackEntry();
 			return;
 		}
@@ -83,24 +80,98 @@ public partial class DataBrowser
 		InitializeChartProperties( graphFlowLimit );
 	}
 	
+	private void CalendarOnSelectedDateChanged( object sender, SelectionChangedEventArgs e )
+	{
+		foreach( var day in _data.Days )
+		{
+			if( day.ReportDate.Date == calendar.SelectedDate )
+			{
+				LoadDay( day );
+				return;
+			}
+		}
+
+		_selectedDay = null;
+		
+		scrollStatistics.Visibility   = Visibility.Hidden;
+		pnlCharts.Visibility          = Visibility.Hidden;
+		pnlNoDataAvailable.Visibility = Visibility.Visible;
+	}
+	
+	private void LoadDay( DailyReport day )
+	{
+		_selectedDay           = day;
+		calendar.SelectedDate = day.ReportDate.Date;
+		
+		scrollStatistics.Visibility   = Visibility.Visible;
+		pnlCharts.Visibility          = Visibility.Visible;
+		pnlNoDataAvailable.Visibility = Visibility.Hidden;
+		
+		DataContext                         = day;
+		MachineID.DataContext               = _data.MachineID;
+		RespiratoryEventSummary.DataContext = day.EventSummary;
+		StatisticsSummary.DataContext       = day.Statistics;
+		MachineSettings.DataContext         = day.Settings;
+
+		MyTestChart.DataContext = day;
+		MyTestChart2.DataContext = day;
+		
+		SessionList.Children.Clear();
+		SessionList.RowDefinitions.Clear();
+		foreach( var session in day.Sessions )
+		{
+			AddToSessionList( session );
+		}
+		
+		ChartSignal( graphBreathing,    day, "Flow Rate", 60, -120, 200, new double[] { -120, -60, 0, 60, 120, 180 } );
+		ChartSignal( graphMaskPressure, day, "Mask Pressure" );
+		ChartSignal( graphMinuteVent,   day, "Minute Vent" );
+		ChartSignal( graphTidalVolume,  day, "Tidal Volume" );
+		ChartSignal( graphFlowLimit,    day, "Flow Limit" );
+
+		int[] annotationTypesSeen = new int[ 256 ];
+
+		foreach( var annotation in day.Events )
+		{
+			var x = (annotation.StartTime - day.RecordingStartTime).TotalSeconds;
+			
+			var annotationType = (int)annotation.Type;
+			var eventColor     = DataColors.GetMarkerColor( 9 + annotationType );
+			var durationColor  = eventColor.SetAlpha( 64 );
+
+			string label = annotationTypesSeen[ annotationType ] == 0 ? annotation.Description : null;
+			annotationTypesSeen[ annotationType ] = 1;
+
+			graphBreathing.Plot.AddVerticalLine( x, eventColor, 1, LineStyle.Solid, label );
+			// graphBreathing.Plot.AddTooltip( annotation.Description, x, -100 );
+
+			if( annotation.Duration > 0 )
+			{
+				graphBreathing.Plot.AddHorizontalSpan( x - annotation.Duration, x, durationColor );
+			}
+		}
+		
+		graphBreathing.Refresh();
+	}
+
 	private void ScrollGraphsOnPreviewMouseWheel( object sender, MouseWheelEventArgs e )
 	{
 		ScrollViewer scrollViewer = (ScrollViewer)sender;
-		
-		if( btnMouseWheelZoom.IsChecked == true )
+		bool         isShiftDown  = Keyboard.IsKeyDown( Key.LeftShift ) || Keyboard.IsKeyDown( Key.RightShift );
+		bool         isControlDown  = Keyboard.IsKeyDown( Key.LeftCtrl ) || Keyboard.IsKeyDown( Key.RightCtrl );
+
+		if( isShiftDown )
 		{
+			// Apparently scrolling to the current vertical offset causes the scroll panel to consider the job done,
+			// and the event gets passed down to the chart which will then zoom in or out. 
 			scrollViewer.ScrollToVerticalOffset( scrollViewer.VerticalOffset );
 		}
-		else if( btnMouseWheelScroll.IsChecked == true )
+		else 
 		{
-			// manually scroll the window then mark the event as handled so it does not zoom
-			double scrollOffset = scrollViewer.VerticalOffset - (e.Delta * .2);
+			// manually scroll the window then mark the event as handled so any chart under the mouse does not zoom
+			double scrollOffset = scrollViewer.VerticalOffset - (e.Delta * .25);
 			scrollViewer.ScrollToVerticalOffset(scrollOffset);
-			e.Handled = true;
-		}
-		else if( btnMouseWheelPan.IsChecked == true )
-		{
-			// TODO: Finish "Mouse Wheel Pans the charts" mode 
+			
 			e.Handled = true;
 		}
 	}
@@ -296,77 +367,6 @@ public partial class DataBrowser
 		return (float)Math.Ceiling( formatted.Width );
 	}
 
-	private void CalendarOnSelectedDateChanged( object sender, SelectionChangedEventArgs e )
-	{
-		foreach( var day in _data.Days )
-		{
-			if( day.ReportDate.Date == calendar.SelectedDate )
-			{
-				LoadDay( day );
-				return;
-			}
-		}
-
-		_selectedDay = null;
-		
-		scrollStatistics.Visibility   = Visibility.Hidden;
-		pnlCharts.Visibility          = Visibility.Hidden;
-		pnlNoDataAvailable.Visibility = Visibility.Visible;
-	}
-	
-	private void LoadDay( DailyReport day )
-	{
-		_selectedDay           = day;
-		calendar.SelectedDate = day.ReportDate.Date;
-		
-		scrollStatistics.Visibility   = Visibility.Visible;
-		pnlCharts.Visibility          = Visibility.Visible;
-		pnlNoDataAvailable.Visibility = Visibility.Hidden;
-		
-		DataContext                         = day;
-		MachineID.DataContext               = _data.MachineID;
-		RespiratoryEventSummary.DataContext = day.EventSummary;
-		StatisticsSummary.DataContext       = day.Statistics;
-		MachineSettings.DataContext         = day.Settings;
-		
-		SessionList.Children.Clear();
-		SessionList.RowDefinitions.Clear();
-		foreach( var session in day.Sessions )
-		{
-			AddToSessionList( session );
-		}
-		
-		ChartSignal( graphBreathing,    day, "Flow Rate", 60, -120, 200, new double[] { -120, -60, 0, 60, 120, 180 } );
-		ChartSignal( graphMaskPressure, day, "Mask Pressure" );
-		ChartSignal( graphMinuteVent,   day, "Minute Vent" );
-		ChartSignal( graphTidalVolume,  day, "Tidal Volume" );
-		ChartSignal( graphFlowLimit,    day, "Flow Limit" );
-
-		int[] annotationTypesSeen = new int[ 256 ];
-
-		foreach( var annotation in day.Events )
-		{
-			var x = (annotation.StartTime - day.RecordingStartTime).TotalSeconds;
-			
-			var annotationType = (int)annotation.Type;
-			var eventColor     = DataColors.GetMarkerColor( 9 + annotationType );
-			var durationColor  = eventColor.SetAlpha( 64 );
-
-			string label = annotationTypesSeen[ annotationType ] == 0 ? annotation.Description : null;
-			annotationTypesSeen[ annotationType ] = 1;
-
-			graphBreathing.Plot.AddVerticalLine( x, eventColor, 1, LineStyle.Solid, label );
-			// graphBreathing.Plot.AddTooltip( annotation.Description, x, -100 );
-
-			if( annotation.Duration > 0 )
-			{
-				graphBreathing.Plot.AddHorizontalSpan( x - annotation.Duration, x, durationColor );
-			}
-		}
-		
-		graphBreathing.Refresh();
-	}
-
 	private void OnSizeChanged( object sender, SizeChangedEventArgs e )
 	{
 		var position = scrollStatistics.TransformToAncestor( this ).Transform( new Point( 0, 0 ) );
@@ -401,48 +401,6 @@ public partial class DataBrowser
 		}
 		
 		LoadDay( _selectedDay );
-	}
-	
-	public class CustomChartStyle : ScottPlot.Styles.Default
-	{
-		public override Color  FrameColor            { get; }
-		public override Color  AxisLabelColor        { get; }
-		public override Color  DataBackgroundColor   { get; }
-		public override Color  FigureBackgroundColor { get; }
-		public override Color  GridLineColor         { get; }
-		public override Color  TickLabelColor        { get; }
-		public override Color  TickMajorColor        { get; }
-		public override Color  TickMinorColor        { get; }
-		public override Color  TitleFontColor        { get; }
-		
-		public override string TickLabelFontName     { get; }
-		public override string AxisLabelFontName     { get; }
-		public override string TitleFontName         { get; }
-
-		public CustomChartStyle( FrameworkElement theme )
-		{
-			var foreColor       = ((SolidColorBrush)theme.FindResource( "SystemControlForegroundBaseHighBrush" )).Color.ToPlotColor();
-			var midColor       = ((SolidColorBrush)theme.FindResource( "SystemControlBackgroundBaseLowBrush" )).Color.ToPlotColor();
-			var backgroundColor = ((SolidColorBrush)theme.FindResource( "SystemControlBackgroundAltHighBrush" )).Color.ToPlotColor();
-			var fontName        = ((FontFamily)theme.FindResource( "ContentControlThemeFontFamily" )).FamilyNames.Values!.First();
-
-			FigureBackgroundColor = Color.Transparent;
-			DataBackgroundColor   = backgroundColor;
-			
-			FrameColor     = foreColor;
-			AxisLabelColor = foreColor;
-			TitleFontColor = foreColor;
-			TickLabelColor = foreColor;
-
-			GridLineColor  = midColor;
-			TickMajorColor = midColor;
-			TickMinorColor = midColor;
-
-			TickLabelFontName = fontName;
-			AxisLabelFontName = fontName;
-			TitleFontName     = fontName;
-		}
-		
 	}
 }
 

@@ -1,28 +1,28 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>WinExe</OutputType>
-    <TargetFramework>net7.0-windows</TargetFramework>
-    <RootNamespace>example_viewer</RootNamespace>
-    <Nullable>disable</Nullable>
-    <UseWPF>true</UseWPF>
-    <ApplicationManifest>app.manifest</ApplicationManifest>
-  </PropertyGroup>
+    <PropertyGroup>
+        <OutputType>WinExe</OutputType>
+        <TargetFramework>net7.0-windows</TargetFramework>
+        <RootNamespace>example_viewer</RootNamespace>
+        <Nullable>disable</Nullable>
+        <UseWPF>true</UseWPF>
+        <ApplicationManifest>app.manifest</ApplicationManifest>
+    </PropertyGroup>
 
+    <ItemGroup>
+        <PackageReference Include="ModernWpf.Toolkit.UI.Controls" Version="0.1.0"/>
+        <PackageReference Include="ModernWpfUI" Version="0.9.7-preview.2"/>
+        <PackageReference Include="ScottPlot.WPF" Version="4.1.65"/>
+    </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="ModernWpf.Toolkit.UI.Controls" Version="0.1.0" />
-    <PackageReference Include="ModernWpfUI" Version="0.9.7-preview.2" />
-    <PackageReference Include="ScottPlot.WPF" Version="4.1.65" />
-  </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\cpap-lib\cpap-lib.csproj"/>
+    </ItemGroup>
 
-
-  <ItemGroup>
-    <ProjectReference Include="..\cpap-lib\cpap-lib.csproj" />
-  </ItemGroup>
-
-
-
-
-
+    <ItemGroup>
+      <Page Update="Controls\SignalChartResources.xaml">
+        <Generator>MSBuild:Compile</Generator>
+        <DependentUpon>SignalChart.xaml</DependentUpon>
+      </Page>
+    </ItemGroup>
 </Project>

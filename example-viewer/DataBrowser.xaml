@@ -6,6 +6,7 @@
          xmlns:local="clr-namespace:example_viewer"
          mc:Ignorable="d"
          xmlns:ui="http://schemas.modernwpf.com/2019"
+         xmlns:controls="clr-namespace:example_viewer.Controls"
          Title="DataBrowser">
     <ui:Page.Resources>
         <local:BoolToGridRowHeightConverter x:Key="BoolToGridRowHeightConverter" />
@@ -413,29 +414,14 @@
                 Please select a date with CPAP data available using the DatePicker control in the upper left corner.
             </TextBlock>
         </StackPanel>
-        <StackPanel Grid.Column="2" Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="50 8">
-            <StackPanel.Resources>
-                <Style TargetType="{x:Type RadioButton}" BasedOn="{StaticResource {x:Type ToggleButton}}">
-                    <Setter Property="Padding" Value="8 8 8 3" />
-                    <Setter Property="GroupName" Value="MouseWheelAction" />
-                </Style>
-            </StackPanel.Resources>
-            <TextBlock Text="Mouse Action: " Style="{DynamicResource BodyTextBlockStyle}" VerticalAlignment="Center"></TextBlock>
-            <RadioButton Name="btnMouseWheelZoom" IsChecked="True" ToolTip="Zoom">
-                <ui:FontIcon Glyph="&#xECE8;" FontSize="14" />
-            </RadioButton>
-            <RadioButton Name="btnMouseWheelScroll" ToolTip="Scroll">
-                <ui:FontIcon Glyph="&#xECE7;" FontSize="14" />
-            </RadioButton>
-            <RadioButton Name="btnMouseWheelPan" ToolTip="Pan">
-                <ui:FontIcon Glyph="&#xECE9;" FontSize="14" />
-            </RadioButton>
-        </StackPanel>
-        <ScrollViewer Name="scrollGraphs" Grid.Column="2" Padding="5 5 20 5" Margin="0 60 0 0"
+        <ScrollViewer Name="scrollGraphs" Grid.Column="2" Padding="5 5 20 5" Margin="0 40 0 0"
                       VerticalScrollBarVisibility="Visible" VerticalContentAlignment="Top" VerticalAlignment="Stretch">
             <StackPanel Visibility="Visible" Name="pnlCharts" Orientation="Vertical"
                         VerticalAlignment="Stretch">
                 
+                <controls:SignalChart x:Name="MyTestChart" SignalName="Flow Rate" Label="Breathing" PlotColor="Lime" LabelStyle="{DynamicResource SubtitleTextBlockStyle}"/>
+                <controls:SignalChart x:Name="MyTestChart2" SignalName="Minute Vent" Label="Minute Vent" PlotColor="Orange" LabelStyle="{DynamicResource SubtitleTextBlockStyle}"/>
+
                 <!-- Flow Rate chart -->
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -446,7 +432,7 @@
                         <RowDefinition Height="250" />
                     </Grid.RowDefinitions>
                     <Label Grid.Column="0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" VerticalAlignment="Center">
-                        <TextBlock Text="Flow Rate"  Style="{DynamicResource SubtitleTextBlockStyle}">
+                        <TextBlock Text="Flow Rate" Style="{DynamicResource SubtitleTextBlockStyle}">
                             <TextBlock.LayoutTransform>
                                 <RotateTransform Angle="-90" />
                             </TextBlock.LayoutTransform>
