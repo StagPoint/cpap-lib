@@ -42,7 +42,7 @@ namespace cpaplib
 		/// <summary>
 		/// Cheyne-Stokes Respiration
 		/// </summary>
-		public double CSR { get; private set; }
+		public double CSR { get; internal set; }
 
 		/// <summary>
 		/// The total number of Obstructive Apnea events that occurred

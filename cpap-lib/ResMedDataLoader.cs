@@ -117,6 +117,7 @@ namespace cpaplib
 			}
 
 			LoadEventsAndAnnotations( logFolder, day );
+			LoadCheyneStokesEvents( logFolder, day );
 
 			var filenames = Directory.GetFiles( logFolder, "*.edf" );
 			
@@ -172,10 +173,26 @@ namespace cpaplib
 
 						foreach( var signal in edf.Signals )
 						{
+							var signalName = SignalNames.GetStandardName( signal.Label.Value );
+							
 							// We don't need to keep the CRC checksum signals 
-							if( signal.Label.Value.StartsWith( "crc", StringComparison.InvariantCultureIgnoreCase ) )
+							if( signalName.StartsWith( "crc", StringComparison.InvariantCultureIgnoreCase ) )
 							{
 								continue;
+							}
+							
+							// Some signals should be scaled to match the other signals 
+							if( signalName.Equals( "Flow Rate", StringComparison.Ordinal ) )
+							{
+								// Convert from L/s to L/m
+								signal.PhysicalDimension.Value =  "L/m";
+								signal.PhysicalMaximum.Value   *= 60;
+								signal.PhysicalMinimum.Value   *= 60;
+								
+								for( int i = 0; i < signal.Samples.Count; i++ )
+								{
+									signal.Samples[ i ] *= 60;
+								}
 							}
 
 							// Not every signal within a Session will have the same start and end time as the others
@@ -183,7 +200,6 @@ namespace cpaplib
 							// time of each Signal separately. 
 							var startTime  = header.StartTime.Value;
 							var endTime    = startTime.AddSeconds( header.NumberOfDataRecords * header.DurationOfDataRecord );
-							var signalName = SignalNames.GetStandardName( signal.Label.Value );
 
 							// We need to see if the session already contains a signal by this name, so we know what to do with it. 
 							if( session.GetSignalByName( signalName ) == null )
@@ -349,6 +365,74 @@ namespace cpaplib
 				
 				return stats;
 			}
+		}
+
+		private void LoadCheyneStokesEvents( string logFolder, DailyReport day )
+		{
+			// Need to keep track of the total time spent in CSR
+			double totalTimeInCSR = 0;
+
+			var filenames = Directory.GetFiles( logFolder, "*_CSL.edf" );
+			foreach( var filename in filenames )
+			{
+				var file = EdfFile.Open( filename );
+				day.RecordingStartTime = file.Header.StartTime;
+				
+				foreach( var annotationSignal in file.AnnotationSignals )
+				{
+					double csrStartTime = double.MinValue;
+					
+					foreach( var annotation in annotationSignal.Annotations )
+					{
+						// Discard all timekeeping annotations, those aren't relevant to anything. 
+						if( annotation.IsTimeKeepingAnnotation )
+						{
+							continue;
+						}
+
+						// Try to convert the annotation text into an Enum for easier processing. 
+						var eventFlag = EventFlag.FromEdfAnnotation( day.RecordingStartTime, annotation );
+						
+						// We don't need the "Recording Starts" annotations either 
+						if( eventFlag.Type == EventType.RecordingStarts )
+						{
+							continue;
+						}
+
+						if( annotation.Annotation.Equals( "CSR Start", StringComparison.OrdinalIgnoreCase ) )
+						{
+							csrStartTime = annotation.Onset;
+						}
+						else if( annotation.Annotation.Equals( "CSR End", StringComparison.OrdinalIgnoreCase ) )
+						{
+							// We're trusting the CPAP machine not to have overlapping CSR events
+							Debug.Assert( csrStartTime >= 0, "CSR Start/End pair mismatch found" );
+							
+							var newEvent = new EventFlag
+							{
+								StartTime   = day.RecordingStartTime.AddSeconds( csrStartTime ),
+								Duration    = annotation.Onset - csrStartTime,
+								Type        = EventType.CSR,
+								Description = "CSR"
+							};
+
+							totalTimeInCSR += newEvent.Duration;
+
+							day.Events.Add( newEvent );
+
+							// Resetting the csrStartTime to an invalid value allows us to detect when Start/End pairs are mismatched
+							csrStartTime = double.MinValue;
+						}
+						else
+						{
+							Debug.Assert( false, $"Unhandled Event Type in {filename}: {annotation.Annotation}" );
+						}
+					}
+				}
+			}
+
+			// "Time spent in CSR" is given as a percentage of the total time 
+			day.EventSummary.CSR = totalTimeInCSR / day.OnDuration.TotalSeconds;
 		}
 		
 		private void LoadEventsAndAnnotations( string logFolder, DailyReport day )

@@ -11,6 +11,7 @@ using System.Windows.Media;
 using cpaplib;
 
 using example_viewer.Controls;
+using example_viewer.Helpers;
 
 using ScottPlot;
 using ScottPlot.Control;
@@ -72,12 +73,6 @@ public partial class DataBrowser
 		}
 		
 		scrollGraphs.PreviewMouseWheel += ScrollGraphsOnPreviewMouseWheel;
-
-		InitializeChartProperties( graphBreathing );
-		InitializeChartProperties( graphMaskPressure );
-		InitializeChartProperties( graphMinuteVent );
-		InitializeChartProperties( graphTidalVolume );
-		InitializeChartProperties( graphFlowLimit );
 	}
 	
 	private void CalendarOnSelectedDateChanged( object sender, SelectionChangedEventArgs e )
@@ -100,8 +95,7 @@ public partial class DataBrowser
 	
 	private void LoadDay( DailyReport day )
 	{
-		_selectedDay           = day;
-		calendar.SelectedDate = day.ReportDate.Date;
+		_selectedDay = day;
 		
 		scrollStatistics.Visibility   = Visibility.Visible;
 		pnlCharts.Visibility          = Visibility.Visible;
@@ -113,9 +107,6 @@ public partial class DataBrowser
 		StatisticsSummary.DataContext       = day.Statistics;
 		MachineSettings.DataContext         = day.Settings;
 
-		MyTestChart.DataContext = day;
-		MyTestChart2.DataContext = day;
-		
 		SessionList.Children.Clear();
 		SessionList.RowDefinitions.Clear();
 		foreach( var session in day.Sessions )
@@ -123,12 +114,6 @@ public partial class DataBrowser
 			AddToSessionList( session );
 		}
 		
-		ChartSignal( graphBreathing,    day, "Flow Rate", 60, -120, 200, new double[] { -120, -60, 0, 60, 120, 180 } );
-		ChartSignal( graphMaskPressure, day, "Mask Pressure" );
-		ChartSignal( graphMinuteVent,   day, "Minute Vent" );
-		ChartSignal( graphTidalVolume,  day, "Tidal Volume" );
-		ChartSignal( graphFlowLimit,    day, "Flow Limit" );
-
 		int[] annotationTypesSeen = new int[ 256 ];
 
 		foreach( var annotation in day.Events )
@@ -138,20 +123,28 @@ public partial class DataBrowser
 			var annotationType = (int)annotation.Type;
 			var eventColor     = DataColors.GetMarkerColor( 9 + annotationType );
 			var durationColor  = eventColor.SetAlpha( 64 );
-
+		
 			string label = annotationTypesSeen[ annotationType ] == 0 ? annotation.Description : null;
 			annotationTypesSeen[ annotationType ] = 1;
 
-			graphBreathing.Plot.AddVerticalLine( x, eventColor, 1, LineStyle.Solid, label );
-			// graphBreathing.Plot.AddTooltip( annotation.Description, x, -100 );
-
-			if( annotation.Duration > 0 )
+			var children = this.FindVisualChildren<SignalChart>();
+			foreach( var child in children )
 			{
-				graphBreathing.Plot.AddHorizontalSpan( x - annotation.Duration, x, durationColor );
+				if( child.FlagTypes == null || !child.FlagTypes.Contains( annotation.Type ) )
+				{
+					continue;
+				}
+				
+				child.Chart.Plot.AddVerticalLine( x, eventColor, 1, LineStyle.Solid );
+				// graphBreathing.Plot.AddTooltip( annotation.Description, x, -100 );
+
+				if( annotation.Duration > 0 )
+				{
+					child.Chart.Plot.AddHorizontalSpan( x - annotation.Duration, x, durationColor );
+				}
 			}
 		}
 		
-		graphBreathing.Refresh();
 	}
 
 	private void ScrollGraphsOnPreviewMouseWheel( object sender, MouseWheelEventArgs e )
@@ -206,15 +199,21 @@ public partial class DataBrowser
 		Grid.SetRow( text, rowIndex );
 		Grid.SetColumn( text, 4 );
 	}
-	
+
 	private void SessionsList_RowOnMouseDown( object sender, MouseButtonEventArgs e )
 	{
 		var session   = (MaskSession)((TextBlock)sender).Tag;
 		var startTime = (session.StartTime - _selectedDay.RecordingStartTime).TotalSeconds;
 		var endTime   = (session.EndTime - _selectedDay.RecordingStartTime).TotalSeconds;
-			
-		graphBreathing.Plot.SetAxisLimitsX( startTime, endTime);
-		graphBreathing.Refresh();
+
+		// TODO: Shouldn't be accessing the SignalChart.Chart property directly
+		// Note: Only need to zoom the first chart found, any chart, and it will handle synchronization with the rest. 
+		var graph = this.FindVisualChildren<SignalChart>().FirstOrDefault();
+		if( graph != null )
+		{
+			graph.Chart.Plot.SetAxisLimitsX( startTime, endTime);
+			graph.Chart.Refresh();
+		}
 	}
 
 	private void ChartSignal( WpfPlot chart, DailyReport day, string signalName, float signalScale = 1f, float? axisMinValue = null, float? axisMaxValue = null, double[] manualLabels = null )

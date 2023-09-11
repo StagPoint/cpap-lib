@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Input;
@@ -20,24 +21,33 @@ public partial class SignalChart
 {
 	public static readonly DependencyProperty SignalNameProperty = DependencyProperty.Register( nameof( SignalName ), typeof( string ),               typeof( SignalChart ) );
 	public static readonly DependencyProperty GroupNameProperty  = DependencyProperty.Register( nameof( GroupName ),  typeof( string ),               typeof( SignalChart ) );
-	public static readonly DependencyProperty LabelProperty      = DependencyProperty.Register( nameof( Label ),      typeof( string ),               typeof( SignalChart ) );
-	public static readonly DependencyProperty LabelStyleProperty = DependencyProperty.Register( nameof( LabelStyle ), typeof( System.Windows.Style ), typeof( SignalChart ) );
-	public static readonly DependencyProperty PlotColorProperty  = DependencyProperty.Register( nameof( PlotColor ),  typeof( SolidColorBrush ),           typeof( SignalChart ) );
+	public static readonly DependencyProperty TitleProperty      = DependencyProperty.Register( nameof( Title ),      typeof( string ),               typeof( SignalChart ) );
+	public static readonly DependencyProperty TitleStyleProperty = DependencyProperty.Register( nameof( TitleStyle ), typeof( System.Windows.Style ), typeof( SignalChart ) );
+	public static readonly DependencyProperty PlotColorProperty  = DependencyProperty.Register( nameof( PlotColor ),  typeof( Brush ),                typeof( SignalChart ) );
+	public static readonly DependencyProperty FlagTypesProperty  = DependencyProperty.Register( nameof( FlagTypes ),  typeof( EventType[] ),          typeof( SignalChart ) );
 
-	private VLine _mouseTrackLine = null;
+	private VLine       _mouseTrackLine     = null;
+	private MarkerPlot  _currentValueMarker = null;
+	private DailyReport _day                = null;
 
 	private static Dictionary<string, List<SignalChart>> _chartGroups = new();
+
+	public EventType[] FlagTypes
+	{
+		get => (EventType[])GetValue( FlagTypesProperty );
+		set => SetValue( FlagTypesProperty, value );
+	}
 
 	public string GroupName
 	{
 		get => (string)GetValue( GroupNameProperty );
 		set => SetValue( GroupNameProperty, value );
 	}
-	
-	public SolidColorBrush PlotColor
+
+	public Brush PlotColor
 	{
-		get => (SolidColorBrush)GetValue( PlotColorProperty );
-		set => SetValue( PlotColorProperty, value );
+		get => (Brush) GetValue(PlotColorProperty);
+		set => SetValue(PlotColorProperty, value);
 	}
 
 	/// <summary>
@@ -52,19 +62,19 @@ public partial class SignalChart
 	/// <summary>
 	/// Gets or sets the text that will be displayed in the chart's label
 	/// </summary>
-	public string Label
+	public string Title
 	{
-		get => (string)GetValue( LabelProperty );
-		set => SetValue( LabelProperty, value );
+		get => (string)GetValue( TitleProperty );
+		set => SetValue( TitleProperty, value );
 	}
 
 	/// <summary>
 	/// Gets or sets the Style used to render the chart's label
 	/// </summary>
-	public Style LabelStyle
+	public Style TitleStyle
 	{
-		get => (Style)GetValue( LabelStyleProperty );
-		set => SetValue( LabelStyleProperty, value );
+		get => (Style)GetValue( TitleStyleProperty );
+		set => SetValue( TitleStyleProperty, value );
 	}
 
 	public SignalChart()
@@ -73,13 +83,13 @@ public partial class SignalChart
 
 		this.Unloaded += OnUnloaded;
 	}
-	
+
 	public override void OnApplyTemplate()
 	{
 		base.OnApplyTemplate();
 
-		ChartLabel.Text  = Label;
-		ChartLabel.Style = LabelStyle;
+		ChartLabel.Text  = Title;
+		ChartLabel.Style = TitleStyle;
 
 		InitializeChartProperties( Chart );
 	}
@@ -89,49 +99,136 @@ public partial class SignalChart
 		base.OnInitialized( e );
 
 		CurrentValue.Text = "";
-		
-		Chart.MouseMove += ChartOnMouseMove;
 
-		if( !_chartGroups.TryGetValue( this.GroupName, out var groupList ) )
-		{
-			groupList                 = new List<SignalChart>();
-			_chartGroups[ GroupName ] = groupList;
-		}
+		Chart.MouseMove    += ChartOnMouseMove;
+		Chart.RightClicked -= Chart.DefaultRightClickEvent;
+		Chart.AxesChanged  += ChartOnAxesChanged;
 
-		groupList.Add( this );
+		AddToGroupList();
 	}
 	
 	private void OnUnloaded( object sender, RoutedEventArgs e )
 	{
-		if( _chartGroups.TryGetValue( this.GroupName, out List<SignalChart> groupList ) )
+		RemoveFromGroupList();
+	}
+
+	private void AddToGroupList()
+	{
+		var list = GetGroupList();
+		if( list == null )
 		{
-			groupList.Remove( this );
+			list = new List<SignalChart>();
+			_chartGroups.Add( GroupName, list );
+		}
+
+		list.Add( this );
+	}
+
+	private void RemoveFromGroupList()
+	{
+		var list = GetGroupList();
+		if( list != null )
+		{
+			list.Remove( this );
+
+			if( list.Count == 0 )
+			{
+				_chartGroups.Remove( GroupName );
+			}
+		}
+	}
+
+	private List<SignalChart> GetGroupList()
+	{
+		if( _chartGroups.TryGetValue( GroupName, out List<SignalChart> groupList ) )
+		{
+			return groupList;
+		}
+
+		return null;
+	}
+
+	private void ChartOnAxesChanged( object sender, RoutedEventArgs e )
+	{
+		var newAxisLimits = Chart.Plot.GetAxisLimits();
+
+		foreach( var loop in GetGroupList() )
+		{
+			if( loop == this )
+			{
+				continue;
+			}
+
+			var chart = loop.Chart;
+
+			// disable events briefly to avoid an infinite loop
+			chart.Configuration.AxesChangedEventEnabled = false;
+			{
+				var currentAxisLimits  = chart.Plot.GetAxisLimits();
+				var modifiedAxisLimits = new AxisLimits( newAxisLimits.XMin, newAxisLimits.XMax, currentAxisLimits.YMin, currentAxisLimits.YMax );
+
+				chart.Plot.SetAxisLimits( modifiedAxisLimits );
+				chart.Render();
+			}
+			chart.Configuration.AxesChangedEventEnabled = true;
 		}
 	}
 
 	private void ChartOnMouseMove( object sender, MouseEventArgs e )
 	{
-		var chart = sender as WpfPlot;
-		if( chart == null )
-		{
-			return;
-		}
-
 		// Returns mouse coordinates as grid coordinates, taking pan and zoom into account
-		(double mouseCoordX, double mouseCoordY) = chart.GetMouseCoordinates();
+		(double mouseCoordX, double mouseCoordY) = Chart.GetMouseCoordinates();
 
 		// Synchronize the update of the vertical indicator in all charts in the group
-		if( _chartGroups.TryGetValue( GroupName, out List<SignalChart> groupList ) )
+		foreach( var chart in GetGroupList() )
 		{
-			foreach( var loop in groupList )
+			chart.UpdateSelectedTime( mouseCoordX );
+		}
+	}
+
+	private void UpdateSelectedTime( double time )
+	{
+		_mouseTrackLine.X     = time;
+		_currentValueMarker.X = time;
+		CurrentValue.Text     = "";
+
+		// Converting the "Number of seconds offset from the start of the chart" back to a DateTime makes it 
+		// much easier to locate which Session this time refers to, and to then calculate an offset into that
+		// session.
+		var asDateTime = _day.RecordingStartTime.AddSeconds( time );
+
+		foreach( var session in _day.Sessions )
+		{
+			// Check to see if the time overlaps with a session
+			if( session.StartTime <= asDateTime && session.EndTime >= asDateTime )
 			{
-				if( loop._mouseTrackLine != null )
+				var signal = session.GetSignalByName( SignalName );
+				if( signal == null )
 				{
-					loop._mouseTrackLine.X = mouseCoordX;
-					loop.Chart.Refresh();
+					continue;
+				}
+
+                // Signal start times may be slightly different than session start times, so need to check 
+                // the signal itself also 
+                if ( signal.StartTime <= asDateTime && signal.EndTime >= asDateTime )
+				{
+					// The offset calculation can still result in an "off by one", so need to ensure that it's 
+					// within limits also
+					var offset = (int)(asDateTime.Subtract( session.StartTime ).TotalSeconds * signal.FrequencyInHz);
+					if( offset < signal.Samples.Count )
+					{
+						var value  = signal.Samples[ offset ];
+
+						CurrentValue.Text = $"{asDateTime:T}        {Title}: {value:N2} {signal.UnitOfMeasurement}";
+						_currentValueMarker.Y = value;
+
+						break;
+					}
 				}
 			}
 		}
+		
+		Chart.Refresh();
 	}
 
 	protected override void OnPropertyChanged( DependencyPropertyChangedEventArgs e )
@@ -147,6 +244,8 @@ public partial class SignalChart
 					throw new NullReferenceException( "No Signal name was provided" );
 				}
 
+				_day = day;
+
 				ChartSignal( Chart, day, SignalName );
 				
 				_mouseTrackLine = Chart.Plot.AddVerticalLine( 0, Color.Silver, 2f, LineStyle.Dot );
@@ -156,12 +255,12 @@ public partial class SignalChart
 				_mouseTrackLine.PositionLabel           = false;
 				_mouseTrackLine.PositionLabelBackground = Color.FromArgb( 32, 32, 32 );
 				_mouseTrackLine.PositionFormatter       = x => DateTime.FromFileTime( (long)x ).ToString( "hh:mm:ss tt" );
+
+				// TODO: The "Current Value" marker dot is currently not visible. 
+				_currentValueMarker           = Chart.Plot.AddMarker( -1, -1, MarkerShape.filledCircle, 8, Color.White, null );
+				_currentValueMarker.IsVisible = false;
 			}
 		}
-	}
-
-	private void ChartOnAxesChanged( object sender, RoutedEventArgs e )
-	{
 	}
 
 	private void InitializeChartProperties( WpfPlot chart )
@@ -171,10 +270,6 @@ public partial class SignalChart
 		
 		// Measure enough space for a vertical axis label, padding, and the longest anticipated tick label 
 		var maximumLabelWidth = MeasureText( "8888.8", chartStyle.TickLabelFontName, 12 );
-
-		chart.RightClicked -= chart.DefaultRightClickEvent;
-		chart.AxesChanged += ChartOnAxesChanged;
-		//chart.Configuration.ScrollWheelZoom =  false;
 
 		chart.Configuration.Quality                                      = ScottPlot.Control.QualityMode.High;
 		chart.Configuration.QualityConfiguration.BenchmarkToggle         = RenderType.HighQuality;
@@ -192,7 +287,7 @@ public partial class SignalChart
 		plot.XAxis.Layout( padding: 0 );
 		plot.XAxis.AxisTicks.MajorTickLength = 15;
 		plot.XAxis.AxisTicks.MinorTickLength = 5;
-		plot.XAxis2.Layout( 0, 1, 1 );
+		plot.XAxis2.Layout( 8, 1, 1 );
 
 		plot.YAxis.TickDensity( 1f );
 		plot.YAxis.Layout( 0, maximumLabelWidth, maximumLabelWidth );
@@ -220,21 +315,18 @@ public partial class SignalChart
 		double offset  = 0;
 		double endTime = 0;
 
-		int  signalIndex       = -1;
+		// Need to keep track of the first session added to the chart so that we can set that 
+		// section's Label (for the chart legend). Otherwise, it will be duplicated for each 
+		// session. 
 		bool firstSessionAdded = true;
+
+		// Keeping track of the chart's index in the group is an easy way to assign automatic
+		// chart colors. 
+		var chartIndex = GetGroupList().IndexOf( this );
 
 		foreach( var session in day.Sessions )
 		{
-			if( signalIndex == -1 )
-			{
-				signalIndex = session.Signals.FindIndex( x => x.Name.Equals( signalName, StringComparison.OrdinalIgnoreCase ) );
-				if( signalIndex == -1 )
-				{
-					throw new KeyNotFoundException( $"Could not find a Signal named {signalName}" );
-				}
-			}
-
-			var signal = session.Signals[ signalIndex ];
+			var signal = session.GetSignalByName( signalName );
 
 			minValue = Math.Min( minValue, signal.MinValue * signalScale );
 			maxValue = Math.Max( maxValue, signal.MaxValue * signalScale );
@@ -242,13 +334,13 @@ public partial class SignalChart
 			offset  = (signal.StartTime - day.RecordingStartTime).TotalSeconds;
 			endTime = (signal.EndTime - day.RecordingStartTime).TotalSeconds;
 
-			var chartColor = DataColors.GetDataColor( signalIndex );
+			var chartColor = DataColors.GetDataColor( chartIndex );
 
 			// If a custom color has been chosen, use that instead
 			var plotColorSource = DependencyPropertyHelper.GetValueSource( this, PlotColorProperty );
-			if( plotColorSource.BaseValueSource != BaseValueSource.Default )
+			if( PlotColor is SolidColorBrush && plotColorSource.BaseValueSource != BaseValueSource.Default )
 			{
-				chartColor = PlotColor.Color.ToDrawingColor();
+				chartColor = ((SolidColorBrush)PlotColor).Color.ToDrawingColor();
 			}
 
 			var graph = chart.Plot.AddSignal( signal.Samples.ToArray(), signal.FrequencyInHz, chartColor, firstSessionAdded ? signal.Name : null );
@@ -277,6 +369,19 @@ public partial class SignalChart
 			}
 			
 			chart.Plot.YAxis.ManualTickPositions( manualLabels, labels );
+		}
+		else
+		{
+			var range           = maxValue - minValue;
+			var automaticLabels = new double[] { minValue, minValue + range * 0.25, minValue + range * 0.5, minValue + range * 0.75, maxValue };
+			var labels          = new string[ 5 ];
+			
+			for( int i = 0; i < labels.Length; i++ )
+			{
+				labels[ i ] = automaticLabels[ i ].ToString( "F1" );
+			}
+			
+			chart.Plot.YAxis.ManualTickPositions( automaticLabels, labels );
 		}
 
 		chart.Refresh();

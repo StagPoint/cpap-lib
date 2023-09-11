@@ -7,6 +7,7 @@
          mc:Ignorable="d"
          xmlns:ui="http://schemas.modernwpf.com/2019"
          xmlns:controls="clr-namespace:example_viewer.Controls"
+         xmlns:cpap="clr-namespace:cpaplib;assembly=cpap-lib"
          Title="DataBrowser">
     <ui:Page.Resources>
         <local:BoolToGridRowHeightConverter x:Key="BoolToGridRowHeightConverter" />
@@ -15,9 +16,9 @@
     </ui:Page.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition MinWidth="300" Width="*" />
+            <ColumnDefinition MinWidth="300" Width="Auto" />
             <ColumnDefinition Width="5" />
-            <ColumnDefinition MinWidth="300" Width="3*" />
+            <ColumnDefinition MinWidth="300" Width="*" />
         </Grid.ColumnDefinitions>
         <GridSplitter Grid.Column="1" Width="4" HorizontalAlignment="Stretch"
                       Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}" />
@@ -171,7 +172,6 @@
                                 <RowDefinition />
                                 <RowDefinition />
                                 <RowDefinition />
-                                <RowDefinition />
                             </Grid.RowDefinitions>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
@@ -192,7 +192,7 @@
                             <TextBlock Grid.Column="5" Grid.Row="0" Text="99.5%" FontWeight="Bold"
                                        HorizontalAlignment="Center" Padding="5 0" />
 
-                            <TextBlock Grid.Column="0" Grid.Row="1" Text="Flow Rate" />
+                            <TextBlock Grid.Column="0" Grid.Row="1" Text="Flow Limit" />
                             <TextBlock Grid.Column="2" Grid.Row="1" Text="{Binding FlowLimit.Minimum, StringFormat=N2}"
                                        HorizontalAlignment="Center" />
                             <TextBlock Grid.Column="3" Grid.Row="1" Text="{Binding FlowLimit.Median, StringFormat=N2}"
@@ -259,29 +259,17 @@
                                        Text="{Binding RespirationRate.Percentile99, StringFormat=N2}"
                                        HorizontalAlignment="Center" />
 
-                            <TextBlock Grid.Column="0" Grid.Row="6" Text="Flow Limit" />
-                            <TextBlock Grid.Column="2" Grid.Row="6" Text="{Binding FlowLimit.Minimum, StringFormat=N2}"
-                                       HorizontalAlignment="Center" />
-                            <TextBlock Grid.Column="3" Grid.Row="6" Text="{Binding FlowLimit.Median, StringFormat=N2}"
-                                       HorizontalAlignment="Center" />
-                            <TextBlock Grid.Column="4" Grid.Row="6"
-                                       Text="{Binding FlowLimit.Percentile95, StringFormat=N2}"
-                                       HorizontalAlignment="Center" />
-                            <TextBlock Grid.Column="5" Grid.Row="6"
-                                       Text="{Binding FlowLimit.Percentile99, StringFormat=N2}"
-                                       HorizontalAlignment="Center" />
-
-                            <TextBlock Grid.Column="0" Grid.Row="7" Text="Pressure" />
-                            <TextBlock Grid.Column="2" Grid.Row="7"
+                            <TextBlock Grid.Column="0" Grid.Row="6" Text="Pressure" />
+                            <TextBlock Grid.Column="2" Grid.Row="6"
                                        Text="{Binding TherapyPressure.Minimum, StringFormat=N2}"
                                        HorizontalAlignment="Center" />
-                            <TextBlock Grid.Column="3" Grid.Row="7"
+                            <TextBlock Grid.Column="3" Grid.Row="6"
                                        Text="{Binding TherapyPressure.Median, StringFormat=N2}"
                                        HorizontalAlignment="Center" />
-                            <TextBlock Grid.Column="4" Grid.Row="7"
+                            <TextBlock Grid.Column="4" Grid.Row="6"
                                        Text="{Binding TherapyPressure.Percentile95, StringFormat=N2}"
                                        HorizontalAlignment="Center" />
-                            <TextBlock Grid.Column="5" Grid.Row="7"
+                            <TextBlock Grid.Column="5" Grid.Row="6"
                                        Text="{Binding TherapyPressure.Percentile99, StringFormat=N2}"
                                        HorizontalAlignment="Center" />
                         </Grid>
@@ -418,120 +406,39 @@
                       VerticalScrollBarVisibility="Visible" VerticalContentAlignment="Top" VerticalAlignment="Stretch">
             <StackPanel Visibility="Visible" Name="pnlCharts" Orientation="Vertical"
                         VerticalAlignment="Stretch">
-                
-                <controls:SignalChart x:Name="MyTestChart" SignalName="Flow Rate" Label="Breathing" PlotColor="Lime" LabelStyle="{DynamicResource SubtitleTextBlockStyle}"/>
-                <controls:SignalChart x:Name="MyTestChart2" SignalName="Minute Vent" Label="Minute Vent" PlotColor="Orange" LabelStyle="{DynamicResource SubtitleTextBlockStyle}"/>
-
-                <!-- Flow Rate chart -->
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="25"></ColumnDefinition>
-                        <ColumnDefinition Width="*"></ColumnDefinition>
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="250" />
-                    </Grid.RowDefinitions>
-                    <Label Grid.Column="0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" VerticalAlignment="Center">
-                        <TextBlock Text="Flow Rate" Style="{DynamicResource SubtitleTextBlockStyle}">
-                            <TextBlock.LayoutTransform>
-                                <RotateTransform Angle="-90" />
-                            </TextBlock.LayoutTransform>
-                            <TextBlock.RenderTransform>
-                                <TranslateTransform Y="-20" />
-                            </TextBlock.RenderTransform>
-                        </TextBlock>
-                    </Label>
-                    <WpfPlot Grid.Column="1" x:Name="graphBreathing" HorizontalAlignment="Stretch" Height="250" />
-                </Grid>
-                
-                <!-- Mask Pressure chart -->
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="25"></ColumnDefinition>
-                        <ColumnDefinition Width="*"></ColumnDefinition>
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="250" />
-                    </Grid.RowDefinitions>
-                    <Label Grid.Column="0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" VerticalAlignment="Center">
-                        <TextBlock Text="Mask Pressure"  Style="{DynamicResource SubtitleTextBlockStyle}">
-                            <TextBlock.LayoutTransform>
-                                <RotateTransform Angle="-90" />
-                            </TextBlock.LayoutTransform>
-                            <TextBlock.RenderTransform>
-                                <TranslateTransform Y="-20" />
-                            </TextBlock.RenderTransform>
-                        </TextBlock>
-                    </Label>
-                    <WpfPlot Grid.Column="1" x:Name="graphMaskPressure" HorizontalAlignment="Stretch" Height="250" />
-                </Grid>
-                
-                <!-- Minute Ventilation chart -->
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="25"></ColumnDefinition>
-                        <ColumnDefinition Width="*"></ColumnDefinition>
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="250" />
-                    </Grid.RowDefinitions>
-                    <Label Grid.Column="0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" VerticalAlignment="Center">
-                        <TextBlock Text="Minute Vent."  Style="{DynamicResource SubtitleTextBlockStyle}">
-                            <TextBlock.LayoutTransform>
-                                <RotateTransform Angle="-90" />
-                            </TextBlock.LayoutTransform>
-                            <TextBlock.RenderTransform>
-                                <TranslateTransform Y="-20" />
-                            </TextBlock.RenderTransform>
-                        </TextBlock>
-                    </Label>
-                    <WpfPlot Grid.Column="1" x:Name="graphMinuteVent" HorizontalAlignment="Stretch" Height="250" />
-                </Grid>
-                
-                <!-- Minute Ventilation chart -->
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="25"></ColumnDefinition>
-                        <ColumnDefinition Width="*"></ColumnDefinition>
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="250" />
-                    </Grid.RowDefinitions>
-                    <Label Grid.Column="0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" VerticalAlignment="Center">
-                        <TextBlock Text="Tidal Volume"  Style="{DynamicResource SubtitleTextBlockStyle}">
-                            <TextBlock.LayoutTransform>
-                                <RotateTransform Angle="-90" />
-                            </TextBlock.LayoutTransform>
-                            <TextBlock.RenderTransform>
-                                <TranslateTransform Y="-20" />
-                            </TextBlock.RenderTransform>
-                        </TextBlock>
-                    </Label>
-                    <WpfPlot Grid.Column="1" x:Name="graphTidalVolume" HorizontalAlignment="Stretch" Height="250" />
-                </Grid>
-                
-                <!-- Flow Limit chart -->
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="25"></ColumnDefinition>
-                        <ColumnDefinition Width="*"></ColumnDefinition>
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="250" />
-                    </Grid.RowDefinitions>
-                    <Label Grid.Column="0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" VerticalAlignment="Center">
-                        <TextBlock Text="Flow Limit"  Style="{DynamicResource SubtitleTextBlockStyle}">
-                            <TextBlock.LayoutTransform>
-                                <RotateTransform Angle="-90" />
-                            </TextBlock.LayoutTransform>
-                            <TextBlock.RenderTransform>
-                                <TranslateTransform Y="-20" />
-                            </TextBlock.RenderTransform>
-                        </TextBlock>
-                    </Label>
-                    <WpfPlot Grid.Column="1" x:Name="graphFlowLimit" HorizontalAlignment="Stretch" Height="250" />
-                </Grid>
-                
+                <controls:SignalChart SignalName="Flow Rate" Title="Flow Rate" TitleStyle="{DynamicResource SubtitleTextBlockStyle}">
+                    <controls:SignalChart.FlagTypes>
+                        <x:Array Type="cpap:EventType">
+                           <cpap:EventType>ObstructiveApnea</cpap:EventType>
+                           <cpap:EventType>Unclassified</cpap:EventType>
+                           <cpap:EventType>Arousal</cpap:EventType>
+                           <cpap:EventType>Hypopnea</cpap:EventType>
+                           <cpap:EventType>ClearAirway</cpap:EventType>
+                           <cpap:EventType>RERA</cpap:EventType>
+                        </x:Array>
+                    </controls:SignalChart.FlagTypes>
+                </controls:SignalChart>
+                <controls:SignalChart SignalName="Mask Pressure" Title="Mask Pressure" TitleStyle="{DynamicResource SubtitleTextBlockStyle}"/>
+                <controls:SignalChart SignalName="Minute Vent" Title="Minute Vent" TitleStyle="{DynamicResource SubtitleTextBlockStyle}">
+                    <controls:SignalChart.FlagTypes>
+                        <x:Array Type="cpap:EventType">
+                            <cpap:EventType>ObstructiveApnea</cpap:EventType>
+                            <cpap:EventType>Hypopnea</cpap:EventType>
+                            <cpap:EventType>RERA</cpap:EventType>
+                        </x:Array>
+                    </controls:SignalChart.FlagTypes>
+                </controls:SignalChart>
+                <controls:SignalChart SignalName="Tidal Volume" Title="Tidal Volume" TitleStyle="{DynamicResource SubtitleTextBlockStyle}"/>
+                <controls:SignalChart SignalName="Flow Limit" Title="Flow Limit" TitleStyle="{DynamicResource SubtitleTextBlockStyle}">
+                    <controls:SignalChart.FlagTypes>
+                        <x:Array Type="cpap:EventType">
+                            <cpap:EventType>ObstructiveApnea</cpap:EventType>
+                            <cpap:EventType>Hypopnea</cpap:EventType>
+                            <cpap:EventType>RERA</cpap:EventType>
+                            <cpap:EventType>Unclassified</cpap:EventType>
+                        </x:Array>
+                    </controls:SignalChart.FlagTypes>
+                </controls:SignalChart>
             </StackPanel>
         </ScrollViewer>
     </Grid>

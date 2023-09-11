@@ -40,6 +40,10 @@ namespace cpaplib
 		/// Respiratory Effort Related Arousal (RERA) is a period of increased respiratory effort leading to an arousal.
 		/// </summary>
 		RERA,
+		/// <summary>
+		/// A period of Cheyne-Stokes Respiration
+		/// </summary>
+		CSR,
 	}
 
 	public class EventFlag

@@ -18,13 +18,13 @@
             <RowDefinition Height="Auto" />
             <RowDefinition />
         </Grid.RowDefinitions>
-        <TextBlock Grid.Row="0" Grid.Column="1" Name="CurrentValue" Padding="50 0"
+        <TextBlock Grid.Row="0" Grid.Column="1" Name="CurrentValue" Padding="50 0" Margin="0 0 0 -12"
                    Text="Current value information goes here">
         </TextBlock>
         <Label Grid.Row="1" Grid.Column="0" HorizontalContentAlignment="Center"
                VerticalContentAlignment="Center" VerticalAlignment="Center">
-            <TextBlock Name="ChartLabel" Text="{TemplateBinding local:SignalChart.Label}"
-                       Style="{TemplateBinding local:SignalChart.LabelStyle}">
+            <TextBlock Name="ChartLabel" Text="{TemplateBinding local:SignalChart.Title}"
+                       Style="{TemplateBinding local:SignalChart.TitleStyle}">
                 <TextBlock.LayoutTransform>
                     <RotateTransform Angle="-90" />
                 </TextBlock.LayoutTransform>
