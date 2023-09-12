@@ -15,7 +15,7 @@ namespace cpaplib
 			{ "MaskPress.2s", "Mask Pressure (Low)" }, // Low-resolution mask pressure 
 			{ "MaskPress", "Mask Pressure (Low)" },    // Low-resolution mask pressure 
 
-			{ "Press.2s", "Therapy Pressure" }, // Could also be Inhalation Pressure if in Bilevel Mode 
+			{ "Press.2s", "Pressure" }, // Could also be Inhalation Pressure if in Bilevel or APAP Mode 
 
 			{ "EprPress.2s", "Expiratory Pressure" },
 			{ "EPRPress.2s", "Expiratory Pressure" },

@@ -181,8 +181,10 @@ namespace cpaplib
 								continue;
 							}
 							
-							// Some signals should be scaled to match the other signals 
-							if( signalName.Equals( "Flow Rate", StringComparison.Ordinal ) )
+							// Some signals should be scaled to match the other signals
+							var scaleToLitersPerMinute = signalName.Equals( "Flow Rate", StringComparison.Ordinal ) ||
+							                             signalName.Equals( "Leak Rate", StringComparison.Ordinal );
+							if( scaleToLitersPerMinute )
 							{
 								// Convert from L/s to L/m
 								signal.PhysicalDimension.Value =  "L/m";
@@ -254,6 +256,13 @@ namespace cpaplib
 			// Remove all sessions that did not have signal data. This happens when the ResMed machine reports a 
 			// MaskOn/MaskOff session that is too short for any data to be recorded. 
 			day.Sessions.RemoveAll( x => x.Signals.Count == 0 );
+			foreach( var maskSession in day.Sessions )
+			{
+				// Remove all signals whose values are all out of range. This is how the AirSense indicates that 
+				// there is no SpO2 or Pulse information when a pulse oximeter is not attached, and there may 
+				// be other similar situations I haven't encountered yet (and in any case such signals are not valid). 
+				maskSession.Signals.RemoveAll( x => !x.Samples.Any( value => value >= x.MinValue ) );
+			}
 			
 			// Sort the sessions by start time. This is only actually needed when we split a session above during
 			// signal matching, but doesn't hurt anything when no sessions are split. 
@@ -315,7 +324,7 @@ namespace cpaplib
 			var sortBuffer = new Sorter( maxBufferSize );
 
 			day.Statistics.MaskPressure       = calculateStatistics( "Mask Pressure",       sortBuffer );
-			day.Statistics.TherapyPressure    = calculateStatistics( "Therapy Pressure",    sortBuffer );
+			day.Statistics.TherapyPressure    = calculateStatistics( "Pressure",            sortBuffer );
 			day.Statistics.ExpiratoryPressure = calculateStatistics( "Expiratory Pressure", sortBuffer );
 			day.Statistics.Leak               = calculateStatistics( "Leak Rate",           sortBuffer );
 			day.Statistics.RespirationRate    = calculateStatistics( "Respiration Rate",    sortBuffer );
@@ -323,15 +332,21 @@ namespace cpaplib
 			day.Statistics.MinuteVent         = calculateStatistics( "Minute Vent",         sortBuffer );
 			day.Statistics.Snore              = calculateStatistics( "Snore",               sortBuffer );
 			day.Statistics.FlowLimit          = calculateStatistics( "Flow Limit",          sortBuffer );
-			day.Statistics.Pulse              = calculateStatistics( "Pulse",               sortBuffer );
-			day.Statistics.SpO2               = calculateStatistics( "SpO2",                sortBuffer );
+
+			// In most cases, there will be no SpO2 or Pulse data available 
+			if( day.Sessions.Any( x => x.GetSignalByName( "SpO2" ) != null ) )
+			{
+				day.Statistics.Pulse = calculateStatistics( "Pulse", sortBuffer );
+				day.Statistics.SpO2  = calculateStatistics( "SpO2",  sortBuffer );
+			}
 
 			SignalStatistics calculateStatistics( string signalName, Sorter sorter )
 			{
 				// Reset the sorter for the next iteration 
 				sorter.Clear();
 
-				// Signal index will be consistent for all sessions, so grab that to avoid having to look it up each time
+				// Signal index will be consistent for all sessions (at this stage in the loading process), so grab that
+				// to avoid having to look it up each time
 				var signalIndex = day.Sessions[ 0 ].Signals.FindIndex( x => x.Name.Equals( signalName, StringComparison.Ordinal ) );
 
 				// The signal wasn't found... Typically only happens when a session is essentially empty because the

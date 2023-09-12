@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+// ReSharper disable UseIndexFromEndExpression
 
 namespace cpaplib
 {
@@ -49,6 +52,33 @@ namespace cpaplib
 		/// The duration of this recording session
 		/// </summary>
 		public TimeSpan Duration { get => EndTime - StartTime; }
+		
+		#region Public functions
+
+		/// <summary>
+		/// Returns the value of the signal at the given time
+		/// </summary>
+		public double GetValueAtTime( DateTime time )
+		{
+			if( time <= StartTime )
+				return Samples[ 0 ];
+			else if( time >= EndTime )
+				return Samples[ Samples.Count - 1 ];
+
+			double offset     = (time - StartTime).TotalSeconds;
+			int    leftIndex  = (int)Math.Floor( offset * FrequencyInHz );
+			int    rightIndex = leftIndex + 1;
+			
+			double a     = Samples[ leftIndex ];
+			double b     = Samples[ rightIndex ];
+			double timeA = leftIndex / FrequencyInHz;
+			double timeB = rightIndex / FrequencyInHz;
+			double t     = (offset - timeA) / (timeB - timeA);
+			
+			return (1.0 - t) * a + b * t;
+		}
+		
+		#endregion 
 
 		#region Base class overrides
 

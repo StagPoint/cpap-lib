@@ -424,21 +424,25 @@
                         <x:Array Type="cpap:EventType">
                             <cpap:EventType>ObstructiveApnea</cpap:EventType>
                             <cpap:EventType>Hypopnea</cpap:EventType>
+                            <cpap:EventType>ClearAirway</cpap:EventType>
                             <cpap:EventType>RERA</cpap:EventType>
                         </x:Array>
                     </controls:SignalChart.FlagTypes>
                 </controls:SignalChart>
                 <controls:SignalChart SignalName="Tidal Volume" Title="Tidal Volume" TitleStyle="{DynamicResource SubtitleTextBlockStyle}"/>
+                <controls:SignalChart SignalName="Respiration Rate" Title="Respiration Rate" TitleStyle="{DynamicResource SubtitleTextBlockStyle}"/>
                 <controls:SignalChart SignalName="Flow Limit" Title="Flow Limit" TitleStyle="{DynamicResource SubtitleTextBlockStyle}">
                     <controls:SignalChart.FlagTypes>
                         <x:Array Type="cpap:EventType">
                             <cpap:EventType>ObstructiveApnea</cpap:EventType>
-                            <cpap:EventType>Hypopnea</cpap:EventType>
                             <cpap:EventType>RERA</cpap:EventType>
-                            <cpap:EventType>Unclassified</cpap:EventType>
                         </x:Array>
                     </controls:SignalChart.FlagTypes>
                 </controls:SignalChart>
+                <controls:SignalChart SignalName="Leak Rate" Title="Leak Rate" TitleStyle="{DynamicResource SubtitleTextBlockStyle}"/>
+                <controls:SignalChart SignalName="Pressure" Title="Pressure" TitleStyle="{DynamicResource SubtitleTextBlockStyle}"/>
+                <controls:SignalChart SignalName="SpO2" Title="SpO2" TitleStyle="{DynamicResource SubtitleTextBlockStyle}"/>
+                <controls:SignalChart SignalName="Pulse" Title="Pulse" TitleStyle="{DynamicResource SubtitleTextBlockStyle}"/>
             </StackPanel>
         </ScrollViewer>
     </Grid>

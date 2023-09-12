@@ -1,22 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Media;
 
 using cpaplib;
 
 using example_viewer.Controls;
 using example_viewer.Helpers;
-
-using ScottPlot;
-using ScottPlot.Control;
-
-using Orientation = ScottPlot.Orientation;
 
 namespace example_viewer;
 
@@ -26,8 +18,6 @@ public partial class DataBrowser
 	private string _dataPath = String.Empty;
 
 	private DailyReport _selectedDay = null;
-
-	private List<WpfPlot> _charts = new();
 
 	public DataBrowser( string dataPath )
 	{
@@ -109,42 +99,11 @@ public partial class DataBrowser
 
 		SessionList.Children.Clear();
 		SessionList.RowDefinitions.Clear();
+		
 		foreach( var session in day.Sessions )
 		{
 			AddToSessionList( session );
 		}
-		
-		int[] annotationTypesSeen = new int[ 256 ];
-
-		foreach( var annotation in day.Events )
-		{
-			var x = (annotation.StartTime - day.RecordingStartTime).TotalSeconds;
-			
-			var annotationType = (int)annotation.Type;
-			var eventColor     = DataColors.GetMarkerColor( 9 + annotationType );
-			var durationColor  = eventColor.SetAlpha( 64 );
-		
-			string label = annotationTypesSeen[ annotationType ] == 0 ? annotation.Description : null;
-			annotationTypesSeen[ annotationType ] = 1;
-
-			var children = this.FindVisualChildren<SignalChart>();
-			foreach( var child in children )
-			{
-				if( child.FlagTypes == null || !child.FlagTypes.Contains( annotation.Type ) )
-				{
-					continue;
-				}
-				
-				child.Chart.Plot.AddVerticalLine( x, eventColor, 1, LineStyle.Solid );
-				// graphBreathing.Plot.AddTooltip( annotation.Description, x, -100 );
-
-				if( annotation.Duration > 0 )
-				{
-					child.Chart.Plot.AddHorizontalSpan( x - annotation.Duration, x, durationColor );
-				}
-			}
-		}
-		
 	}
 
 	private void ScrollGraphsOnPreviewMouseWheel( object sender, MouseWheelEventArgs e )
@@ -214,156 +173,6 @@ public partial class DataBrowser
 			graph.Chart.Plot.SetAxisLimitsX( startTime, endTime);
 			graph.Chart.Refresh();
 		}
-	}
-
-	private void ChartSignal( WpfPlot chart, DailyReport day, string signalName, float signalScale = 1f, float? axisMinValue = null, float? axisMaxValue = null, double[] manualLabels = null )
-	{
-		chart.Plot.Clear();
-
-		var minValue = axisMinValue ?? double.MaxValue;
-		var maxValue = axisMaxValue ?? double.MinValue;
-
-		double offset  = 0;
-		double endTime = 0;
-
-		int  signalIndex       = -1;
-		bool firstSessionAdded = true;
-
-		foreach( var session in day.Sessions )
-		{
-			if( signalIndex == -1 )
-			{
-				signalIndex = session.Signals.FindIndex( x => x.Name.Equals( signalName, StringComparison.OrdinalIgnoreCase ) );
-				if( signalIndex == -1 )
-				{
-					throw new KeyNotFoundException( $"Could not find a Signal named {signalName}" );
-				}
-			}
-
-			var signal = session.Signals[ signalIndex ];
-
-			minValue = Math.Min( minValue, signal.MinValue * signalScale );
-			maxValue = Math.Max( maxValue, signal.MaxValue * signalScale );
-
-			offset  = (signal.StartTime - day.RecordingStartTime).TotalSeconds;
-			endTime = (signal.EndTime - day.RecordingStartTime).TotalSeconds;
-
-			var chartColor = DataColors.GetDataColor( signalIndex );
-
-			var graph = chart.Plot.AddSignal( signal.Samples.ToArray(), signal.FrequencyInHz, chartColor, firstSessionAdded ? signal.Name : null );
-			graph.OffsetX    = offset;
-			graph.MarkerSize = 0;
-			graph.ScaleY     = signalScale;
-
-			firstSessionAdded = false;
-		}
-
-		chart.Plot.XAxis.TickLabelFormat( x => $"{day.RecordingStartTime.AddSeconds( x ):hh:mm:ss tt}" );
-
-		// Set zoom and boundary limits
-		chart.Plot.YAxis.SetBoundary( minValue, maxValue );
-		chart.Plot.XAxis.SetBoundary( -1, day.Duration.TotalSeconds + 1 );
-		chart.Plot.SetAxisLimits( -1, day.Duration.TotalSeconds + 1, minValue, maxValue );
-
-		// If manual vertical axis tick positions were provided, set up the labels for them and force the chart
-		// to show those instead of the automatically-generated tick positions. 
-		if( manualLabels != null && manualLabels.Length > 0 )
-		{
-			var labels = new string[ manualLabels.Length ];
-			for( int i = 0; i < labels.Length; i++ )
-			{
-				labels[ i ] = manualLabels[ i ].ToString( "F0" );
-			}
-			
-			chart.Plot.YAxis.ManualTickPositions( manualLabels, labels );
-		}
-
-		chart.Refresh();
-	}
-
-	private void InitializeChartProperties( WpfPlot chart )
-	{
-		_charts.Add( chart );
-		
-		var chartStyle = new CustomChartStyle( this );
-		var plot       = chart.Plot;
-		
-		// Measure enough space for a vertical axis label, padding, and the longest anticipated tick label 
-		var maximumLabelWidth = MeasureText( "8888.8", chartStyle.TickLabelFontName, (float)12 );
-
-		chart.RightClicked -= chart.DefaultRightClickEvent;
-		chart.AxesChanged += ChartOnAxesChanged;
-		//chart.Configuration.ScrollWheelZoom =  false;
-
-		chart.Configuration.Quality                                      = QualityMode.High;
-		chart.Configuration.QualityConfiguration.BenchmarkToggle         = RenderType.HighQuality;
-		chart.Configuration.QualityConfiguration.AutoAxis                = RenderType.HighQuality;
-		chart.Configuration.QualityConfiguration.MouseInteractiveDragged = RenderType.HighQuality;
-		chart.Configuration.QualityConfiguration.MouseInteractiveDropped = RenderType.HighQuality;
-		chart.Configuration.QualityConfiguration.MouseWheelScrolled      = RenderType.HighQuality;
-
-		plot.Style( chartStyle );
-		//plot.LeftAxis.Label( label );
-		plot.Layout( 0, 0, 0, 0 );
-		
-		plot.XAxis.MinimumTickSpacing( 1f );
-		plot.XAxis.SetZoomInLimit( 60 ); // Make smallest zoom window possible be 1 minute 
-		plot.XAxis.Layout( padding: 0 );
-		plot.XAxis.AxisTicks.MajorTickLength = 15;
-		plot.XAxis.AxisTicks.MinorTickLength = 5;
-		plot.XAxis2.Layout( 0, 1, 1 );
-
-		plot.YAxis.TickDensity( 1f );
-		plot.YAxis.Layout( 0, maximumLabelWidth, maximumLabelWidth );
-		plot.YAxis2.Layout( 0, 5, 5 );
-
-		var legend = plot.Legend();
-		legend.Location     = Alignment.UpperRight;
-		legend.Orientation  = Orientation.Horizontal;
-		legend.OutlineColor = chartStyle.TickMajorColor;
-		legend.FillColor    = chartStyle.DataBackgroundColor;
-		legend.FontColor    = chartStyle.TitleFontColor;
-
-		chart.Configuration.LockVerticalAxis = true;
-		
-		chart.Refresh();
-	}
-	
-	private void ChartOnAxesChanged( object sender, RoutedEventArgs e )
-	{
-		WpfPlot changedPlot = (WpfPlot)sender;
-
-		var newAxisLimits = changedPlot.Plot.GetAxisLimits();
-
-		foreach( var chart in _charts )
-		{
-			// disable events briefly to avoid an infinite loop
-			chart.Configuration.AxesChangedEventEnabled = false;
-			{
-				var currentAxisLimits  = chart.Plot.GetAxisLimits();
-				var modifiedAxisLimits = new AxisLimits( newAxisLimits.XMin, newAxisLimits.XMax, currentAxisLimits.YMin, currentAxisLimits.YMax );
-
-				chart.Plot.SetAxisLimits( modifiedAxisLimits );
-				chart.Render();
-			}
-			
-			chart.Configuration.AxesChangedEventEnabled = true;
-		}
-	}
-
-	private float MeasureText( string text, string fontFamily, float emSize )
-	{
-		FormattedText formatted = new FormattedText(
-			text,
-			CultureInfo.CurrentCulture,
-			FlowDirection.LeftToRight,
-			new Typeface( fontFamily ),
-			emSize,
-			Brushes.Black,
-			VisualTreeHelper.GetDpi( this ).PixelsPerDip
-		);
-
-		return (float)Math.Ceiling( formatted.Width );
 	}
 
 	private void OnSizeChanged( object sender, SizeChangedEventArgs e )
