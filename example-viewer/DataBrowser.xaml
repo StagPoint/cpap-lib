@@ -7,12 +7,19 @@
          mc:Ignorable="d"
          xmlns:ui="http://schemas.modernwpf.com/2019"
          xmlns:controls="clr-namespace:example_viewer.Controls"
-         xmlns:cpap="clr-namespace:cpaplib;assembly=cpap-lib"
+         xmlns:cpap="clr-namespace:cpaplib;assembly=cpap-lib" xmlns:sys="clr-namespace:System;assembly=mscorlib"
          Title="DataBrowser">
     <ui:Page.Resources>
         <local:BoolToGridRowHeightConverter x:Key="BoolToGridRowHeightConverter" />
         <local:PropertyValueToGridRowVisibilityConverter x:Key="PropertyValueToGridRowVisibilityConverter" />
         <local:NiceNameConverter x:Key="NiceNameConverter" />
+        <sys:Double x:Key="PivotHeaderItemFontSize">18</sys:Double>
+        <Thickness x:Key="PivotHeaderItemMargin">12,0</Thickness>
+        <Thickness x:Key="PivotNavButtonMargin">0,-9999,0,0</Thickness>
+        <FontWeight x:Key="PivotHeaderItemThemeFontWeight">Bold</FontWeight>
+        <Style x:Key="CustomPivotStyle" TargetType="TabControl" BasedOn="{StaticResource TabControlPivotStyle}">
+            <Setter Property="OverridesDefaultStyle" Value="True" />
+        </Style>
     </ui:Page.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
@@ -42,7 +49,7 @@
                 </Button>
             </Grid>
             <TabControl
-                    Style="{StaticResource TabControlPivotStyle}"
+                    Style="{StaticResource CustomPivotStyle}"
                     MinHeight="800" >
                 <TabItem Header="Details">
                     <ScrollViewer Name="scrollStatistics" Padding="5" Margin="0 0 0 0"
