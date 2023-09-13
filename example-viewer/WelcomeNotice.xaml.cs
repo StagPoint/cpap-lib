@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using System.Windows.Navigation;
 
 using cpaplib;
@@ -81,11 +82,13 @@ public partial class WelcomeNotice
 		{
 			if (ThemeManager.Current.ActualApplicationTheme == ApplicationTheme.Dark)
 			{
-				ThemeManager.Current.ApplicationTheme = ApplicationTheme.Light;
+				ThemeManager.Current.ApplicationTheme     = ApplicationTheme.Light;
+				Application.Current.MainWindow.Background = new SolidColorBrush( Color.FromRgb( 253, 253, 253 ) );
 			}
 			else
 			{
-				ThemeManager.Current.ApplicationTheme = ApplicationTheme.Dark;
+				ThemeManager.Current.ApplicationTheme     = ApplicationTheme.Dark;
+				Application.Current.MainWindow.Background = new SolidColorBrush( Color.FromRgb( 25, 25, 25 ) );
 			}
 		});	
 	}

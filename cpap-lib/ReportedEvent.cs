@@ -5,7 +5,7 @@ using StagPoint.EDF.Net;
 
 namespace cpaplib
 {
-	public enum EventType : int
+	public enum EventType
 	{
 		/// <summary>
 		/// Indicates the time when recording starts 
@@ -46,9 +46,14 @@ namespace cpaplib
 		CSR,
 	}
 
-	public class EventFlag
+	public class ReportedEvent
 	{
 		#region Public properties 
+		
+		/// <summary>
+		/// The descriptive name of the event being flagged 
+		/// </summary>
+		public EventType Type { get; internal set; }
 		
 		/// <summary>
 		/// The time when the event occurred 
@@ -60,20 +65,36 @@ namespace cpaplib
 		/// </summary>
 		public double Duration { get; internal set; }
 
-		/// <summary>
-		/// The descriptive name of the event being flagged 
-		/// </summary>
-		public EventType Type { get; internal set; }
-		
-		/// <summary>
-		/// A text description of the event 
-		/// </summary>
-		public string Description { get; internal set; }
-		
 		#endregion
 		
-		#region Internal functions and fields
+		#region Internal functions
 
+		internal static ReportedEvent FromEdfAnnotation( DateTime fileStartTime, EdfAnnotation annotation )
+		{
+			var flag = new ReportedEvent
+			{
+				StartTime = fileStartTime.AddSeconds( annotation.Onset ),
+				Duration  = annotation.Duration ?? 0.0,
+				Type      = EventTypeUtil.FromName( annotation.Annotation, false )
+			};
+
+			return flag;
+		}
+		
+		#endregion 
+		
+		#region Base class overrides
+
+		public override string ToString()
+		{
+			return $"Start: {StartTime:t}  Duration: {Duration:F2}  Description: {Type.ToName()}";
+		}
+
+		#endregion 
+	}
+
+	public static class EventTypeUtil
+	{
 		private static Dictionary<string, EventType> _textToEventTypeMap = new Dictionary<string, EventType>()
 		{
 			{ "Hypopnea", EventType.Hypopnea },
@@ -87,36 +108,43 @@ namespace cpaplib
 			{ "Unclassified", EventType.Unclassified },
 		};
 
-		internal static EventFlag FromEdfAnnotation( DateTime fileStartTime, EdfAnnotation annotation )
+		public static EventType FromName( string name, bool throwOnUnknown = true )
 		{
-			var flag = new EventFlag
+			if( string.IsNullOrEmpty( name ) )
 			{
-				StartTime   = fileStartTime.AddSeconds( annotation.Onset ),
-				Duration    = annotation.Duration ?? 0.0,
-				Description = annotation.Annotation
-			};
-
-			if( _textToEventTypeMap.TryGetValue( annotation.Annotation, out EventType type ) )
-			{
-				flag.Type = type;
+				throw new ArgumentNullException( nameof( name ) );
 			}
-			else
+			
+			if( _textToEventTypeMap.TryGetValue( name, out EventType value ) )
 			{
-				flag.Type = EventType.Unclassified;
+				return value;
 			}
 
-			return flag;
-		}
-		
-		#endregion 
-		
-		#region Base class overrides
+			if( Enum.TryParse( name, true, out EventType result ) )
+			{
+				return result;
+			}
 
-		public override string ToString()
+			if( throwOnUnknown )
+			{
+				throw new Exception( $"{name} is not a valid {nameof( EventType )} value" );
+			}
+			
+			return EventType.Unclassified;
+		}
+
+		public static string ToName( this EventType type )
 		{
-			return $"Start: {StartTime:t}  Duration: {Duration:F2}  Description: {Description}";
+			foreach( var pair in _textToEventTypeMap )
+			{
+				if( pair.Value == type )
+				{
+					return pair.Key;
+				}
+			}
+
+			return type.ToString();
 		}
 
-		#endregion 
 	}
 }

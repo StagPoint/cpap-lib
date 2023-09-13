@@ -31,7 +31,7 @@ namespace cpaplib
 		/// </summary>
 		public List<MaskSession> Sessions { get; } = new List<MaskSession>();
 
-		public List<EventFlag> Events { get; } = new List<EventFlag>();
+		public List<ReportedEvent> Events { get; } = new List<ReportedEvent>();
 
 		/// <summary>
 		/// Returns the number of "Mask Times" for the day

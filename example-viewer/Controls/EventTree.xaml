@@ -3,14 +3,16 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:local="clr-namespace:example_viewer.Controls"
+             xmlns:controls="clr-namespace:example_viewer.Controls"
              xmlns:viewModels="clr-namespace:example_viewer.ViewModels"
+             xmlns:local="clr-namespace:example_viewer"
              mc:Ignorable="d"
              d:DesignHeight="800" d:DesignWidth="350">
     <UserControl.Resources>
         <Style TargetType="{x:Type TreeViewItem}" BasedOn="{StaticResource {x:Type TreeViewItem}}">
             <Setter Property="IsExpanded" Value="True" />
         </Style>
+        <local:EventTypeToNameConverter x:Key="EventTypeToName" />
     </UserControl.Resources>
     <StackPanel Orientation="Vertical">
         <TextBlock Margin="0 10" Width="300" TextWrapping="Wrap" HorizontalAlignment="Left">Below is the list of all events that were reported during the recording period. Click on any event to zoom in and view it on the graphs.</TextBlock>
@@ -22,7 +24,7 @@
             <TreeView.ItemTemplate>
                 <HierarchicalDataTemplate ItemsSource="{Binding Events}">
                     <TextBlock FontWeight="Bold">
-                        <Run Text="{Binding Description, Mode=OneWay}" />
+                        <Run Text="{Binding Type, Mode=OneWay, Converter={StaticResource EventTypeToName}}" />
                         <Run Text="{Binding TotalCount, Mode=OneWay, StringFormat=({0:N1})}" />
                     </TextBlock>
                     <HierarchicalDataTemplate.ItemTemplate>

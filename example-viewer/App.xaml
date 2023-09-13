@@ -7,7 +7,10 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ui:ThemeResources />
+                <ui:ThemeResources>
+                    <!--<Color x:Key="SystemAltHighColor">#FF222222</Color>
+                    <Color x:Key="SystemChromeBlackHighColor">#FF222222</Color>-->
+                </ui:ThemeResources>
                 <ui:XamlControlsResources />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>

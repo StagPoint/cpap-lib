@@ -10,7 +10,8 @@
         WindowState="Maximized"
         xmlns:ui="http://schemas.modernwpf.com/2019"
         ui:WindowHelper.UseModernWindowStyle="True"
-        ui:TitleBar.ExtendViewIntoTitleBar="True">
+        ui:TitleBar.ExtendViewIntoTitleBar="True"
+        Background="#FF111113">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />

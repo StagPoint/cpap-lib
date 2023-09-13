@@ -31,11 +31,9 @@ public class EventTypeSummary
 	public double    PercentTotal { get; set; }
 	public TimeSpan  TotalTime    { get; set; }
 
-	public string Description { get => Events.First().Description; }
+	public List<ReportedEvent> Events { get; } = new List<ReportedEvent>();
 
-	public List<EventFlag> Events { get; } = new List<EventFlag>();
-
-	public EventTypeSummary( EventType type, TimeSpan dailyTotal, List<EventFlag> dailyEvents )
+	public EventTypeSummary( EventType type, TimeSpan dailyTotal, List<ReportedEvent> dailyEvents )
 	{
 		Type = type;
 
@@ -58,6 +56,6 @@ public class EventTypeSummary
 
 	public override string ToString()
 	{
-		return $"{Description} ({TotalCount})";
+		return $"{Type.ToName()} ({TotalCount})";
 	}
 }

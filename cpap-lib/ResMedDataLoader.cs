@@ -196,6 +196,18 @@ namespace cpaplib
 									signal.Samples[ i ] *= 60;
 								}
 							}
+							else if( signalName.Equals( "Tidal Volume", StringComparison.Ordinal ) )
+							{
+								// I don't know why ResMed reports Tidal Volume in Liters, but ml is the standard
+								signal.PhysicalDimension.Value =  "ml";
+								signal.PhysicalMaximum.Value   *= 1000;
+								signal.PhysicalMinimum.Value   *= 1000;
+								
+								for( int i = 0; i < signal.Samples.Count; i++ )
+								{
+									signal.Samples[ i ] *= 1000;
+								}
+							}
 
 							// Not every signal within a Session will have the same start and end time as the others
 							// because of differences in sampling rate, so we keep track of the start time and end
@@ -406,7 +418,7 @@ namespace cpaplib
 						}
 
 						// Try to convert the annotation text into an Enum for easier processing. 
-						var eventFlag = EventFlag.FromEdfAnnotation( day.RecordingStartTime, annotation );
+						var eventFlag = ReportedEvent.FromEdfAnnotation( day.RecordingStartTime, annotation );
 						
 						// We don't need the "Recording Starts" annotations either 
 						if( eventFlag.Type == EventType.RecordingStarts )
@@ -423,12 +435,11 @@ namespace cpaplib
 							// We're trusting the CPAP machine not to have overlapping CSR events
 							Debug.Assert( csrStartTime >= 0, "CSR Start/End pair mismatch found" );
 							
-							var newEvent = new EventFlag
+							var newEvent = new ReportedEvent
 							{
 								StartTime   = day.RecordingStartTime.AddSeconds( csrStartTime ),
 								Duration    = annotation.Onset - csrStartTime,
 								Type        = EventType.CSR,
-								Description = "CSR"
 							};
 
 							totalTimeInCSR += newEvent.Duration;
@@ -469,7 +480,7 @@ namespace cpaplib
 						}
 
 						// Try to convert the annotation text into an Enum for easier processing. 
-						var eventFlag = EventFlag.FromEdfAnnotation( day.RecordingStartTime, annotation );
+						var eventFlag = ReportedEvent.FromEdfAnnotation( day.RecordingStartTime, annotation );
 						
 						// We don't need the "Recording Starts" annotations either 
 						if( eventFlag.Type == EventType.RecordingStarts )

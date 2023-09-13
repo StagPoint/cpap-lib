@@ -26,7 +26,7 @@ public partial class EventTree : UserControl
 	private void TvwEventsOnSelectedItemChanged( object sender, RoutedPropertyChangedEventArgs<object> e )
 	{
 		var item = tvwEvents.SelectedItem;
-		if( item is EventFlag evt )
+		if( item is ReportedEvent evt )
 		{
 			OnTimeSelected?.Invoke( this, evt.StartTime );
 		}

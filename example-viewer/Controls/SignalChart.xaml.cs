@@ -37,7 +37,7 @@ public partial class SignalChart
 	private VLine            _mouseTrackLine     = null;
 	private MarkerPlot       _currentValueMarker = null;
 	private DailyReport      _day                = null;
-	private List<EventFlag>  _events             = new();
+	private List<ReportedEvent>  _events             = new();
 	private bool             _hasDataAvailable   = false;
 
 	public EventType[] FlagTypes
@@ -272,9 +272,9 @@ public partial class SignalChart
 			if( time >= startTime - highlightDistance && time <= endTime + highlightDistance )
 			{
 				if( flag.Duration > 0 )
-					_tooltip.Label = $"{flag.Description} ({TimeSpan.FromSeconds( flag.Duration ):g})";
+					_tooltip.Label = $"{flag.Type.ToName()} ({TimeSpan.FromSeconds( flag.Duration ):g})";
 				else
-					_tooltip.Label = $"{flag.Description}";
+					_tooltip.Label = $"{flag.Type.ToName()}";
 				
 				_tooltip.X         = endTime;
 				_tooltip.Y         = Chart.Plot.GetAxisLimits().YMax * 0.75;
@@ -367,7 +367,7 @@ public partial class SignalChart
 					bool   seenBefore = typesSeen[ (int)eventFlag.Type ] != 0;
 					Color  color      = DataColors.GetMarkerColor( (int)eventFlag.Type );
 					double offset     = (eventFlag.StartTime - day.RecordingStartTime).TotalSeconds;
-					string label      = seenBefore ? null : eventFlag.Description;
+					string label      = seenBefore ? null : eventFlag.Type.ToName();
 
 					var markerLine = Chart.Plot.AddVerticalLine( offset, color, 1f, LineStyle.Solid, label );
 					
@@ -393,7 +393,7 @@ public partial class SignalChart
 		var plot       = chart.Plot;
 		
 		// Measure enough space for a vertical axis label, padding, and the longest anticipated tick label 
-		var maximumLabelWidth = MeasureText( "8888.8", _chartStyle.TickLabelFontName, 12 );
+		var maximumLabelWidth = MeasureText( "88888.8", _chartStyle.TickLabelFontName, 12 );
 
 		chart.Configuration.Quality                                      = ScottPlot.Control.QualityMode.High;
 		chart.Configuration.QualityConfiguration.BenchmarkToggle         = RenderType.HighQuality;
