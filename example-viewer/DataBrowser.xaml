@@ -29,8 +29,7 @@
         </Grid.ColumnDefinitions>
         <GridSplitter Grid.Column="1" Width="4" HorizontalAlignment="Stretch"
                       Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}" />
-        <ui:SimpleStackPanel Grid.Column="0" Orientation="Vertical"
-                             Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}">
+        <ui:SimpleStackPanel Name="pnlTasks" Grid.Column="0" Orientation="Vertical" VerticalAlignment="Stretch">
             <Grid HorizontalAlignment="Stretch" Margin="0 0 0 0"
                   Background="{DynamicResource SystemControlBackgroundAccentBrush}">
                 <Grid.ColumnDefinitions>
@@ -48,12 +47,12 @@
                     <ui:FontIcon Name="btnNextDay" Glyph="&#xF0AF;" FontSize="14" />
                 </Button>
             </Grid>
-            <TabControl
+            <TabControl Name="mnuTasks"
                     Style="{StaticResource CustomPivotStyle}"
-                    MinHeight="800" >
+                    VerticalAlignment="Stretch" BorderBrush="{DynamicResource SystemControlBackgroundChromeMediumBrush}" >
                 <TabItem Header="Details">
                     <ScrollViewer Name="scrollStatistics" Padding="5" Margin="0 0 0 0"
-                          VerticalScrollBarVisibility="Visible">
+                          VerticalScrollBarVisibility="Visible" VerticalAlignment="Top">
                         <ui:SimpleStackPanel Orientation="Vertical">
                             <ui:SimpleStackPanel Name="MachineID" Orientation="Vertical" Margin="4 8 0 0">
                                 <TextBlock Style="{DynamicResource BaseTextBlockStyle}">
@@ -116,6 +115,8 @@
                                         <RowDefinition />
                                         <RowDefinition />
                                         <RowDefinition />
+                                        <RowDefinition Height="8"/>
+                                        <RowDefinition />
                                     </Grid.RowDefinitions>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto" />
@@ -157,6 +158,7 @@
                                        ToolTip="% Time spent in Cheyne-Stokes Respiration" />
                                     <TextBlock Grid.Column="2" Grid.Row="6" HorizontalAlignment="Center"
                                        Text="{Binding CSR, Mode=OneWay, StringFormat={}{0:N2} %}" />
+                                    <TextBlock Grid.Column="0" Grid.Row="8" Grid.ColumnSpan="4" FontWeight="DemiBold"  Text="{Binding TotalTimeInApnea, Mode=OneWay, StringFormat=Total time spent in apnea: {0}}" />
                                 </Grid>
                             </Expander>
                             <Expander
@@ -404,34 +406,10 @@
                     </ScrollViewer>
                 </TabItem>
                 <TabItem Header="Events">
-                    <TreeView
-                        x:Name="sampleTreeView"
-                        MinWidth="345"
-                        MaxHeight="400"
-                        Margin="0,12,0,0"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Top">
-                        <TreeViewItem
-                            Header="Work Documents"
-                            IsExpanded="True">
-                            <TreeViewItem Header="XYZ Functional Spec" />
-                            <TreeViewItem Header="Feature Schedule" />
-                            <TreeViewItem Header="Overall Project Plan" />
-                            <TreeViewItem Header="Feature Resources Allocation" />
-                        </TreeViewItem>
-                        <TreeViewItem
-                            Header="Personal Documents"
-                            IsExpanded="True">
-                            <TreeViewItem
-                                Header="Home Remodel"
-                                IsExpanded="True">
-                                <TreeViewItem Header="Contractor Contact Info" />
-                                <TreeViewItem Header="Paint Color Scheme" />
-                                <TreeViewItem Header="Flooring woodgrain type" />
-                                <TreeViewItem Header="Kitchen cabinet style" />
-                            </TreeViewItem>
-                        </TreeViewItem>
-                    </TreeView>
+                    <ScrollViewer Name="scrollEvents" Padding="5" Margin="0 0 0 0"
+                          VerticalScrollBarVisibility="Visible" VerticalAlignment="Stretch" VerticalContentAlignment="Top">
+                        <controls:EventTree OnTimeSelected="EventTree_OnOnTimeSelected" />
+                    </ScrollViewer>
                 </TabItem>
                 <TabItem Header="SatO2">
                     <TextBlock Text="flagged emails go here." />

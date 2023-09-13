@@ -68,6 +68,11 @@ namespace cpaplib
 			double offset     = (time - StartTime).TotalSeconds;
 			int    leftIndex  = (int)Math.Floor( offset * FrequencyInHz );
 			int    rightIndex = leftIndex + 1;
+
+			if( rightIndex >= Samples.Count )
+			{
+				return Samples[ Samples.Count - 1 ];
+			}
 			
 			double a     = Samples[ leftIndex ];
 			double b     = Samples[ rightIndex ];

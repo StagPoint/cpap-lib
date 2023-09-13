@@ -177,8 +177,11 @@ public partial class DataBrowser
 
 	private void OnSizeChanged( object sender, SizeChangedEventArgs e )
 	{
-		var position = scrollStatistics.TransformToAncestor( this ).Transform( new Point( 0, 0 ) );
-		scrollStatistics.Height = e.NewSize.Height - position.Y;
+		// This may well be one of the stupidest and most frustrating things about WPF :/
+		var height = e.NewSize.Height - 80;
+
+		scrollStatistics.Height = height;
+		scrollEvents.Height = height;	
 	}
 	
 	private void btnPrevDay_OnClick( object sender, RoutedEventArgs e )
@@ -209,6 +212,15 @@ public partial class DataBrowser
 		}
 		
 		LoadDay( _selectedDay );
+	}
+	
+	private void EventTree_OnOnTimeSelected( object sender, DateTime time )
+	{
+		var startTime = time.AddMinutes( -5 );
+		var endTime   = time.AddMinutes( 5 );
+	
+		var chart = this.FindVisualChildren<SignalChart>().FirstOrDefault();
+		chart.ZoomToTime( startTime, endTime );
 	}
 }
 

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace cpaplib
 {
@@ -68,6 +69,11 @@ namespace cpaplib
 		/// The total number of RERA events that occurred
 		/// </summary>
 		public int RespiratoryEffortCount { get; internal set; }
+		
+		/// <summary>
+		/// The total time spent that day in apnea events 
+		/// </summary>
+		public TimeSpan TotalTimeInApnea { get; internal set; }
 
 		internal void ReadFrom( Dictionary<string, double> data )
 		{

@@ -9,6 +9,8 @@ using System.Windows.Media;
 
 using cpaplib;
 
+using ModernWpf;
+
 using ScottPlot;
 using ScottPlot.Drawing;
 using ScottPlot.Plottable;
@@ -98,6 +100,17 @@ public partial class SignalChart
 		ChartLabel.Style = TitleStyle;
 
 		InitializeChartProperties( Chart );
+	}
+
+	public void ZoomToTime( DateTime startTime, DateTime endTime )
+	{
+		var axisLimits = Chart.Plot.GetAxisLimits();
+
+		var startOffset = (startTime - _day.RecordingStartTime).TotalSeconds;
+		var endOffset   = (endTime - _day.RecordingStartTime).TotalSeconds;
+
+		Chart.Plot.SetAxisLimits( axisLimits.WithX( startOffset, endOffset ) );
+		Chart.Refresh();
 	}
 
 	protected override void OnInitialized( EventArgs e )
@@ -317,8 +330,10 @@ public partial class SignalChart
 		ChartSignal( Chart, day, SignalName );
 		CreateEventMarkers( day );
 
+		Color lineColor = ThemeManager.Current.ActualApplicationTheme == ApplicationTheme.Dark ? Color.White : Color.Black;
+
 		_tooltip                                = Chart.Plot.AddTooltip( "", 0, 0 );
-		_mouseTrackLine                         = Chart.Plot.AddVerticalLine( 0, Color.Silver, 2f, LineStyle.Dot );
+		_mouseTrackLine                         = Chart.Plot.AddVerticalLine( 0, lineColor, 1f, LineStyle.Dot );
 		_mouseTrackLine.PositionLabel           = false;
 		_mouseTrackLine.PositionLabelAxis       = Chart.Plot.XAxis;
 		_mouseTrackLine.DragEnabled             = false;
@@ -394,6 +409,7 @@ public partial class SignalChart
 		plot.XAxis.MinimumTickSpacing( 1f );
 		plot.XAxis.SetZoomInLimit( 60 ); // Make smallest zoom window possible be 1 minute 
 		plot.XAxis.Layout( padding: 0 );
+		plot.XAxis.MajorGrid( false );
 		plot.XAxis.AxisTicks.MajorTickLength = 15;
 		plot.XAxis.AxisTicks.MinorTickLength = 5;
 		plot.XAxis2.Layout( 8, 1, 1 );

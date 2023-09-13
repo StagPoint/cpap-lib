@@ -488,6 +488,8 @@ namespace cpaplib
 			day.EventSummary.UnclassifiedApneaCount = day.Events.Count( x => x.Type == EventType.Unclassified );
 			day.EventSummary.ClearAirwayCount = day.Events.Count( x => x.Type == EventType.ClearAirway );
 			day.EventSummary.RespiratoryEffortCount = day.Events.Count( x => x.Type == EventType.RERA );
+
+			day.EventSummary.TotalTimeInApnea = TimeSpan.FromSeconds( day.Events.Sum( x => x.Duration ) );
 		}
 
 		private void LoadIndexAndSettings( string filename, DateTime? minDate, DateTime? maxDate )
