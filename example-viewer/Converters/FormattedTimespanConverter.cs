@@ -10,7 +10,7 @@ public enum TimespanFormatType
 	Long, Short, Abbreviated
 }
 
-[ValueConversion( typeof(TimeSpan), typeof(string))]
+[ValueConversion( typeof(TimeSpan), typeof(string) )]
 public class FormattedTimespanConverter : IValueConverter
 {
 	public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
@@ -35,15 +35,18 @@ public class FormattedTimespanConverter : IValueConverter
 		if( time.Minutes > 0 )
 		{
 			builder.Append( minutesText( time.Minutes ) );
-			if( format != TimespanFormatType.Long && time.Seconds > 0 )
+			if( format == TimespanFormatType.Long || time.Seconds > 0 )
 			{
 				builder.Append( ' ' );
 			}
 		}
 
-		if( format != TimespanFormatType.Long && time.Seconds > 0 )
+		if( format == TimespanFormatType.Long || time.Seconds > 0 )
 		{
-			builder.Append( secondsText( time.Seconds ) );
+			if( format == TimespanFormatType.Long )
+				builder.Append( totalSecondsText( time.TotalSeconds ) );
+			else
+				builder.Append( secondsText( time.Seconds ) );
 		}
 
 		if( builder.Length == 0 )
@@ -76,6 +79,23 @@ public class FormattedTimespanConverter : IValueConverter
 				case TimespanFormatType.Long:
 				default:
 					return seconds != 1 ? $"{seconds} seconds" : $"{seconds} second";
+			}
+		}
+		
+		string totalSecondsText( double seconds )
+		{
+			if( seconds < 1 )
+				return "";
+			
+			switch( format )
+			{
+				case TimespanFormatType.Abbreviated:
+					return $"{seconds:F2} s";
+				case TimespanFormatType.Short:
+					return $"{seconds:F2} sec";
+				case TimespanFormatType.Long:
+				default:
+					return $"{seconds:F2} seconds";
 			}
 		}
 		

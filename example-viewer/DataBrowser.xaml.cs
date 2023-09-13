@@ -93,7 +93,6 @@ public partial class DataBrowser
 		
 		DataContext                         = day;
 		MachineID.DataContext               = _data.MachineID;
-		RespiratoryEventSummary.DataContext = day.EventSummary;
 		StatisticsSummary.DataContext       = day.Statistics;
 		MachineSettings.DataContext         = day.Settings;
 

@@ -106,60 +106,7 @@
                                         <TextBlock Text="Reported Events" Style="{DynamicResource SubtitleTextBlockStyle}" />
                                     </StackPanel>
                                 </Expander.Header>
-                                <Grid Name="RespiratoryEventSummary" Margin="5 4 5 0">
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition />
-                                        <RowDefinition />
-                                        <RowDefinition />
-                                        <RowDefinition />
-                                        <RowDefinition />
-                                        <RowDefinition />
-                                        <RowDefinition />
-                                        <RowDefinition Height="10"/>
-                                        <RowDefinition />
-                                    </Grid.RowDefinitions>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="20" />
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="20" />
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Grid.Row="0" Text="Apnea-Hypopnea Index (AHI)" />
-                                    <TextBlock Grid.Column="2" Grid.Row="0" Text="{Binding AHI, Mode=OneWay, StringFormat={}{0:N1}}"
-                                       HorizontalAlignment="Center" />
-                                    <TextBlock Grid.Column="0" Grid.Row="1" Text="Obstructive Apnea" Padding="10 0" />
-                                    <TextBlock Grid.Column="2" Grid.Row="1" Text="{Binding OAI, Mode=OneWay, StringFormat={}{0:N1}}"
-                                       HorizontalAlignment="Center" />
-                                    <TextBlock Grid.Column="4" Grid.Row="1" Text="{Binding ObstructiveApneaCount, Mode=OneWay}"
-                                       HorizontalAlignment="Center" />
-                                    <TextBlock Grid.Column="0" Grid.Row="2" Text="Clear Airway" Padding="10 0" />
-                                    <TextBlock Grid.Column="2" Grid.Row="2" Text="{Binding CAI, Mode=OneWay, StringFormat={}{0:N1}}"
-                                       HorizontalAlignment="Center" />
-                                    <TextBlock Grid.Column="4" Grid.Row="2" Text="{Binding ClearAirwayCount, Mode=OneWay}"
-                                       HorizontalAlignment="Center" />
-                                    <TextBlock Grid.Column="0" Grid.Row="3" Text="Unclassified" Padding="10 0" />
-                                    <TextBlock Grid.Column="2" Grid.Row="3" Text="{Binding UAI, Mode=OneWay, StringFormat={}{0:N1}}"
-                                       HorizontalAlignment="Center" />
-                                    <TextBlock Grid.Column="4" Grid.Row="3" Text="{Binding UnclassifiedApneaCount, Mode=OneWay}"
-                                       HorizontalAlignment="Center" />
-                                    <TextBlock Grid.Column="0" Grid.Row="4" Text="Hypopnea" Padding="10 0" />
-                                    <TextBlock Grid.Column="2" Grid.Row="4" Text="{Binding HI, Mode=OneWay, StringFormat={}{0:N1}}"
-                                       HorizontalAlignment="Center" />
-                                    <TextBlock Grid.Column="4" Grid.Row="4" Text="{Binding HypopneaCount, Mode=OneWay}"
-                                       HorizontalAlignment="Center" />
-                                    <TextBlock Grid.Column="0" Grid.Row="5" Text="RERA" />
-                                    <TextBlock Grid.Column="2" Grid.Row="5" Text="{Binding RIN, Mode=OneWay, StringFormat={}{0:N1}}"
-                                       HorizontalAlignment="Center" />
-                                    <TextBlock Grid.Column="4" Grid.Row="5" Text="{Binding RespiratoryEffortCount, Mode=OneWay}"
-                                       HorizontalAlignment="Center" />
-                                    <TextBlock Grid.Column="0" Grid.Row="6" Text="Cheyne-Stokes"
-                                       ToolTip="% Time spent in Cheyne-Stokes Respiration" />
-                                    <TextBlock Grid.Column="2" Grid.Row="6" HorizontalAlignment="Center"
-                                       Text="{Binding CSR, Mode=OneWay, StringFormat={}{0:N2} %}" />
-                                    <TextBlock Grid.Column="0" Grid.Row="8" Grid.ColumnSpan="4" FontWeight="DemiBold"  Text="{Binding TotalTimeInApnea, Mode=OneWay, StringFormat=Total time spent in apnea: {0}}" />
-                                </Grid>
+                                <controls:EventSummary Margin="5 4 5 0"/>
                             </Expander>
                             <Expander
                         x:Name="expStatistics"
@@ -409,7 +356,34 @@
                 <TabItem Header="Events">
                     <ScrollViewer Name="scrollEvents" Padding="5" Margin="0 0 0 0"
                           VerticalScrollBarVisibility="Visible" VerticalAlignment="Stretch" VerticalContentAlignment="Top">
-                        <controls:EventTree OnTimeSelected="EventTree_OnOnTimeSelected"></controls:EventTree>
+                        <ui:SimpleStackPanel Orientation="Vertical">
+                            <Expander
+                                ExpandDirection="Down"
+                                IsExpanded="True"
+                                VerticalAlignment="Top"
+                                Margin="0 10">
+                                <Expander.Header>
+                                    <StackPanel Orientation="Horizontal">
+                                        <ui:FontIcon Glyph="&#xEC92;" Margin="0 2 8 0" />
+                                        <TextBlock Text="Reported Events" Style="{DynamicResource SubtitleTextBlockStyle}" />
+                                    </StackPanel>
+                                </Expander.Header>
+                                <controls:EventSummary Margin="0 10"/>
+                            </Expander>
+                            <Expander
+                                ExpandDirection="Down"
+                                IsExpanded="True"
+                                VerticalAlignment="Top"
+                                Margin="0 10">
+                                <Expander.Header>
+                                    <StackPanel Orientation="Horizontal">
+                                        <ui:FontIcon Glyph="&#xEC92;" Margin="0 2 8 0" />
+                                        <TextBlock Text="Event Times" Style="{DynamicResource SubtitleTextBlockStyle}" />
+                                    </StackPanel>
+                                </Expander.Header>
+                                <controls:EventTree OnTimeSelected="EventTree_OnOnTimeSelected" />
+                            </Expander>
+                        </ui:SimpleStackPanel>
                     </ScrollViewer>
                 </TabItem>
                 <TabItem Header="SpO2">

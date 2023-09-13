@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace cpaplib
 {
-	public class RespiratoryEventCounts
+	public class ReportedEventCounts
 	{
 		/// <summary>
 		/// Combined Apnea/Hypopnea Index

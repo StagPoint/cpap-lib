@@ -13,6 +13,8 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
+using ModernWpf.Controls;
+
 namespace example_viewer
 {
 	/// <summary>
@@ -26,6 +28,12 @@ namespace example_viewer
 
 			DataContext = this;
 			
+			var xcr = Application.Current.Resources.MergedDictionaries.OfType<XamlControlsResources>().FirstOrDefault();
+			if (xcr != null)
+			{
+				xcr.UseCompactResources = true;
+			}
+
 			_mainFrame.Navigate( new WelcomeNotice() );
 		}
 		

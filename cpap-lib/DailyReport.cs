@@ -56,7 +56,7 @@ namespace cpaplib
 		/// <summary>
 		/// The number of events of each type (Obstructive Apnea, Clear Airway, RERA, etc.) that occurred on this day.
 		/// </summary>
-		public RespiratoryEventCounts EventSummary { get; private set; } = new RespiratoryEventCounts();
+		public ReportedEventCounts EventSummary { get; private set; } = new ReportedEventCounts();
 
 		/// <summary>
 		/// The total amount of time the CPAP was used on the reported day (calculated)

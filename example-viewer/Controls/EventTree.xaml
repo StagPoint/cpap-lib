@@ -13,9 +13,9 @@
             <Setter Property="IsExpanded" Value="True" />
         </Style>
         <local:EventTypeToNameConverter x:Key="EventTypeToName" />
+        <ResourceDictionary x:Key="CompactSpacing" Source="pack://application:,,,/ModernWpf;component/DensityStyles/Compact.xaml" />
     </UserControl.Resources>
     <StackPanel Orientation="Vertical">
-        <TextBlock Margin="0 10" Width="300" TextWrapping="Wrap" HorizontalAlignment="Left">Below is the list of all events that were reported during the recording period. Click on any event to zoom in and view it on the graphs.</TextBlock>
         <TreeView
             x:Name="tvwEvents"
             VerticalAlignment="Top"
@@ -25,7 +25,7 @@
                 <HierarchicalDataTemplate ItemsSource="{Binding Events}">
                     <TextBlock FontWeight="Bold">
                         <Run Text="{Binding Type, Mode=OneWay, Converter={StaticResource EventTypeToName}}" />
-                        <Run Text="{Binding TotalCount, Mode=OneWay, StringFormat=({0:N1})}" />
+                        <!--<Run Text="{Binding TotalCount, Mode=OneWay, StringFormat=({0:N1})}" />-->
                     </TextBlock>
                     <HierarchicalDataTemplate.ItemTemplate>
                         <DataTemplate>
