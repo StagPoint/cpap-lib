@@ -91,11 +91,8 @@ public partial class DataBrowser
 		pnlCharts.Visibility          = Visibility.Visible;
 		pnlNoDataAvailable.Visibility = Visibility.Hidden;
 		
-		DataContext                         = day;
-		MachineID.DataContext               = _data.MachineID;
-		StatisticsSummary.DataContext       = day.Statistics;
-		MachineSettings.DataContext         = day.Settings;
-
+		DataContext                   = day;
+		MachineID.DataContext         = _data.MachineID;
 	}
 
 	private void ScrollGraphsOnPreviewMouseWheel( object sender, MouseWheelEventArgs e )

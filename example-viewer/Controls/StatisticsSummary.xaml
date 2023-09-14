@@ -1,0 +1,123 @@
+﻿<UserControl x:Class="example_viewer.Controls.StatisticsSummary"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:example_viewer.Controls"
+             mc:Ignorable="d"
+             d:DesignHeight="300" d:DesignWidth="300">
+    <Grid Name="grdStatisticsSummary">
+        <Grid.RowDefinitions>
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="10" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <!-- TODO: Add average as well, as it has usefulness that median doesn't address -->
+        <TextBlock Grid.Column="0" Grid.Row="0" Text="Statistic" FontWeight="Bold" />
+        <TextBlock Grid.Column="2" Grid.Row="0" Text="Min" FontWeight="Bold"
+                   HorizontalAlignment="Left" />
+        <TextBlock Grid.Column="3" Grid.Row="0" Text="Med" FontWeight="Bold"
+                   HorizontalAlignment="Left" />
+        <TextBlock Grid.Column="4" Grid.Row="0" Text="95%" FontWeight="Bold"
+                   HorizontalAlignment="Left" />
+        <TextBlock Grid.Column="5" Grid.Row="0" Text="99.5%" FontWeight="Bold"
+                   HorizontalAlignment="Left" />
+
+        <TextBlock Grid.Column="0" Grid.Row="1" Text="Flow Limit" />
+        <TextBlock Grid.Column="2" Grid.Row="1" Text="{Binding FlowLimit.Minimum, StringFormat=f2}"
+                   HorizontalAlignment="Left" />
+        <TextBlock Grid.Column="3" Grid.Row="1" Text="{Binding FlowLimit.Median, StringFormat=f2}"
+                   HorizontalAlignment="Left" />
+        <TextBlock Grid.Column="4" Grid.Row="1"
+                   Text="{Binding FlowLimit.Percentile95, StringFormat=f2}"
+                   HorizontalAlignment="Left" />
+        <TextBlock Grid.Column="5" Grid.Row="1"
+                   Text="{Binding FlowLimit.Percentile99, StringFormat=f2}"
+                   HorizontalAlignment="Left" />
+
+        <TextBlock Grid.Column="0" Grid.Row="2" Text="Mask Pressure" />
+        <TextBlock Grid.Column="2" Grid.Row="2"
+                   Text="{Binding MaskPressure.Minimum, StringFormat=f2}"
+                   HorizontalAlignment="Left" />
+        <TextBlock Grid.Column="3" Grid.Row="2"
+                   Text="{Binding MaskPressure.Median, StringFormat=f2}"
+                   HorizontalAlignment="Left" />
+        <TextBlock Grid.Column="4" Grid.Row="2"
+                   Text="{Binding MaskPressure.Percentile95, StringFormat=f2}"
+                   HorizontalAlignment="Left" />
+        <TextBlock Grid.Column="5" Grid.Row="2"
+                   Text="{Binding MaskPressure.Percentile99, StringFormat=f2}"
+                   HorizontalAlignment="Left" />
+
+        <TextBlock Grid.Column="0" Grid.Row="3" Text="Tidal Volume" />
+        <TextBlock Grid.Column="2" Grid.Row="3"
+                   Text="{Binding TidalVolume.Minimum, StringFormat=f2}"
+                   HorizontalAlignment="Left" Margin="0 0 8 0" />
+        <TextBlock Grid.Column="3" Grid.Row="3"
+                   Text="{Binding TidalVolume.Median, StringFormat=f2}"
+                   HorizontalAlignment="Left" Margin="0 0 8 0" />
+        <TextBlock Grid.Column="4" Grid.Row="3"
+                   Text="{Binding TidalVolume.Percentile95, StringFormat=f2}"
+                   HorizontalAlignment="Left" Margin="0 0 8 0" />
+        <TextBlock Grid.Column="5" Grid.Row="3"
+                   Text="{Binding TidalVolume.Percentile99, StringFormat=f2}"
+                   HorizontalAlignment="Left" Margin="0 0 8 0" />
+
+        <TextBlock Grid.Column="0" Grid.Row="4" Text="Minute Ventilation" />
+        <TextBlock Grid.Column="2" Grid.Row="4"
+                   Text="{Binding MinuteVent.Minimum, StringFormat=f2}"
+                   HorizontalAlignment="Left" />
+        <TextBlock Grid.Column="3" Grid.Row="4" Text="{Binding MinuteVent.Median, StringFormat=f2}"
+                   HorizontalAlignment="Left" />
+        <TextBlock Grid.Column="4" Grid.Row="4"
+                   Text="{Binding MinuteVent.Percentile95, StringFormat=f2}"
+                   HorizontalAlignment="Left" />
+        <TextBlock Grid.Column="5" Grid.Row="4"
+                   Text="{Binding MinuteVent.Percentile99, StringFormat=f2}"
+                   HorizontalAlignment="Left" />
+
+        <TextBlock Grid.Column="0" Grid.Row="5" Text="Respiration Rate" />
+        <TextBlock Grid.Column="2" Grid.Row="5"
+                   Text="{Binding RespirationRate.Minimum, StringFormat=f2}"
+                   HorizontalAlignment="Left" />
+        <TextBlock Grid.Column="3" Grid.Row="5"
+                   Text="{Binding RespirationRate.Median, StringFormat=f2}"
+                   HorizontalAlignment="Left" />
+        <TextBlock Grid.Column="4" Grid.Row="5"
+                   Text="{Binding RespirationRate.Percentile95, StringFormat=f2}"
+                   HorizontalAlignment="Left" />
+        <TextBlock Grid.Column="5" Grid.Row="5"
+                   Text="{Binding RespirationRate.Percentile99, StringFormat=f2}"
+                   HorizontalAlignment="Left" />
+
+        <TextBlock Grid.Column="0" Grid.Row="6" Text="Pressure" />
+        <TextBlock Grid.Column="2" Grid.Row="6"
+                   Text="{Binding TherapyPressure.Minimum, StringFormat=f2}"
+                   HorizontalAlignment="Left" />
+        <TextBlock Grid.Column="3" Grid.Row="6"
+                   Text="{Binding TherapyPressure.Median, StringFormat=f2}"
+                   HorizontalAlignment="Left" />
+        <TextBlock Grid.Column="4" Grid.Row="6"
+                   Text="{Binding TherapyPressure.Percentile95, StringFormat=f2}"
+                   HorizontalAlignment="Left" />
+        <TextBlock Grid.Column="5" Grid.Row="6"
+                   Text="{Binding TherapyPressure.Percentile99, StringFormat=f2}"
+                   HorizontalAlignment="Left" />
+    </Grid>
+</UserControl>

@@ -12,12 +12,12 @@
     <ListView Name="lvwSessions">
         <ListView.Resources>
             <Style TargetType="GridViewColumnHeader">
-                <Setter Property="Visibility" Value="Collapsed" />
+                <Setter Property="Template" Value="{x:Null}" />
             </Style>
         </ListView.Resources>
         <ListView.View>
             <GridView>
-                <GridViewColumn Header="Date" Width="Auto" DisplayMemberBinding="{Binding StartTime, StringFormat={}{0:d}}" />
+                <GridViewColumn Header="Date" Width="Auto" DisplayMemberBinding="{Binding StartTime, Mode=OneWay, StringFormat={}{0:d}}" />
                 <GridViewColumn Header="Start/End" Width="Auto">
                     <GridViewColumn.DisplayMemberBinding>
                         <MultiBinding StringFormat="{}{0:t} - {1:t}">
@@ -26,7 +26,7 @@
                         </MultiBinding>
                     </GridViewColumn.DisplayMemberBinding>
                 </GridViewColumn>
-                <GridViewColumn Header="Duration" Width="Auto" DisplayMemberBinding="{Binding Duration}" />
+                <GridViewColumn Header="Duration" Width="Auto" DisplayMemberBinding="{Binding Duration, Mode=OneWay}" />
             </GridView>
         </ListView.View>
     </ListView>

@@ -25,4 +25,8 @@
         <DependentUpon>SignalChart.xaml</DependentUpon>
       </Page>
     </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Loaders\" />
+    </ItemGroup>
 </Project>
