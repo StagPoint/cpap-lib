@@ -340,15 +340,7 @@
                                         <TextBlock Text="Sessions" Style="{DynamicResource SubtitleTextBlockStyle}" />
                                     </StackPanel>
                                 </Expander.Header>
-                                <Grid Name="SessionList" Margin="5 4 5 0">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="20" />
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="20" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
-                                </Grid>
+                                <controls:SessionList Margin="0 4 5 0" OnTimeSelected="SessionList_OnOnTimeSelected" />
                             </Expander>
                         </ui:SimpleStackPanel>
                     </ScrollViewer>

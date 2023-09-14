@@ -96,13 +96,6 @@ public partial class DataBrowser
 		StatisticsSummary.DataContext       = day.Statistics;
 		MachineSettings.DataContext         = day.Settings;
 
-		SessionList.Children.Clear();
-		SessionList.RowDefinitions.Clear();
-		
-		foreach( var session in day.Sessions )
-		{
-			AddToSessionList( session );
-		}
 	}
 
 	private void ScrollGraphsOnPreviewMouseWheel( object sender, MouseWheelEventArgs e )
@@ -126,54 +119,7 @@ public partial class DataBrowser
 			e.Handled = true;
 		}
 	}
-
-	private void AddToSessionList( MaskSession session )
-	{
-		var row = new RowDefinition();
-		SessionList.RowDefinitions.Add( row );
-		int rowIndex = SessionList.RowDefinitions.Count - 1;
-
-		var text = new TextBlock() { Text = $"{session.StartTime:d}" };
-		text.MouseDown += SessionsList_RowOnMouseDown;
-		text.Tag       =  session;
-		
-		SessionList.Children.Add( text );
-		Grid.SetRow( text, rowIndex );
-		Grid.SetColumn( text, 0 );
-
-		text           =  new TextBlock() { Text = $"{session.StartTime:t} - {session.EndTime:t}" };
-		text.MouseDown += SessionsList_RowOnMouseDown;
-		text.Tag       =  session;
-		
-		SessionList.Children.Add( text );
-		Grid.SetRow( text, rowIndex );
-		Grid.SetColumn( text, 2 );
-
-		text           =  new TextBlock() { Text = $"{session.Duration:g}" };
-		text.MouseDown += SessionsList_RowOnMouseDown;
-		text.Tag       =  session;
-		
-		SessionList.Children.Add( text );
-		Grid.SetRow( text, rowIndex );
-		Grid.SetColumn( text, 4 );
-	}
-
-	private void SessionsList_RowOnMouseDown( object sender, MouseButtonEventArgs e )
-	{
-		var session   = (MaskSession)((TextBlock)sender).Tag;
-		var startTime = (session.StartTime - _selectedDay.RecordingStartTime).TotalSeconds;
-		var endTime   = (session.EndTime - _selectedDay.RecordingStartTime).TotalSeconds;
-
-		// TODO: Shouldn't be accessing the SignalChart.Chart property directly
-		// Note: Only need to zoom the first chart found, any chart, and it will handle synchronization with the rest. 
-		var graph = this.FindVisualChildren<SignalChart>().FirstOrDefault();
-		if( graph != null )
-		{
-			graph.Chart.Plot.SetAxisLimitsX( startTime, endTime);
-			graph.Chart.Refresh();
-		}
-	}
-
+	
 	private void OnSizeChanged( object sender, SizeChangedEventArgs e )
 	{
 		// This may well be one of the stupidest and most frustrating things about WPF :/
@@ -218,6 +164,14 @@ public partial class DataBrowser
 		var startTime = time.AddMinutes( -5 );
 		var endTime   = time.AddMinutes( 5 );
 	
+		// Only need to zoom to the indicated time on the first chart, as it will synchronize all of the others
+		var chart = this.FindVisualChildren<SignalChart>().FirstOrDefault();
+		chart.ZoomToTime( startTime, endTime );
+	}
+	
+	private void SessionList_OnOnTimeSelected( object sender, DateTime startTime, DateTime endTime )
+	{
+		// Only need to zoom to the indicated time on the first chart, as it will synchronize all of the others
 		var chart = this.FindVisualChildren<SignalChart>().FirstOrDefault();
 		chart.ZoomToTime( startTime, endTime );
 	}

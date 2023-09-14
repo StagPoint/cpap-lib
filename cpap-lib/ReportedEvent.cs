@@ -37,13 +37,46 @@ namespace cpaplib
 		/// </summary>
 		Arousal,
 		/// <summary>
-		/// Respiratory Effort Related Arousal (RERA) is a period of increased respiratory effort leading to an arousal.
+		/// Respiratory Effort Related Arousal (RERA) is a period of increased respiratory effort leading to an arousal
 		/// </summary>
 		RERA,
 		/// <summary>
 		/// A period of Cheyne-Stokes Respiration
 		/// </summary>
 		CSR,
+		/// <summary>
+		/// A reduction in airflow of less than 50% and lasting for at least 1 second
+		/// </summary>
+		FlowLimitation,
+		/// <summary>
+		/// A period of low blood oxygen saturation (less than 90%) lasting for at least 1 second
+		/// </summary>
+		Hypoxemia,
+		/// <summary>
+		/// A drop in blood oxygen saturation of at least 4% below baseline, lasting at least 10 seconds
+		/// </summary>
+		Desaturation,
+		/// <summary>
+		/// A period of pulse rate below 50 beats/minute
+		/// </summary>
+		Bradycardia,
+		/// <summary>
+		/// A period of pulse rate above 100 beat/minute
+		/// </summary>
+		Tachycardia,
+		/// <summary>
+		/// A period of pressure leakage above 20 L/min lasting at least one second 
+		/// </summary>
+		LargeLeak,
+		/// <summary>
+		/// A period of three or more episodes of Central Apnea lasting more than three seconds,
+		/// separated by no more than 20 seconds of normal breathing. 
+		/// </summary>
+		PeriodicBreathing,
+		/// <summary>
+		/// The vibratory snore index measures the strength of the snoring vibrations
+		/// </summary>
+		VibratorySnore,
 	}
 
 	public class ReportedEvent
@@ -107,6 +140,16 @@ namespace cpaplib
 			{ "RERA", EventType.RERA },
 			{ "Unclassified", EventType.Unclassified },
 		};
+
+		static EventTypeUtil()
+		{
+			// Ensure that all of the EventType enumeration values are included 
+			foreach( var value in Enum.GetValues( typeof( EventType ) ) )
+			{
+				var key = NiceNames.Format( value.ToString() );
+				_textToEventTypeMap[ key ] = (EventType)value;
+			}
+		}
 
 		public static EventType FromName( string name, bool throwOnUnknown = true )
 		{
