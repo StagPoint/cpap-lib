@@ -49,7 +49,8 @@ public partial class OximetrySummary
 			return;
 		}
 
-		Session addedSession = null;
+		Session addedSession        = null;
+		int     numImportedSessions = 0;
 
 		foreach( var fullPath in ofd.FileNames )
 		{
@@ -83,11 +84,13 @@ public partial class OximetrySummary
 					// Ensure that the oximetry session overlaps the current day before integrating it. 
 					if( day.RecordingStartTime > session.EndTime || day.RecordingEndTime < session.StartTime )
 					{
-						MessageBox.Show( Application.Current.MainWindow, $"The pulse oximeter data does not match the current date and cannot be imported at this time." );
+						// TODO: Display a message when imported data does not match current DayRecord
+						//MessageBox.Show( Application.Current.MainWindow, $"The pulse oximeter data does not match the current date and cannot be imported at this time.", "Imported data does not match selected date" );
 						continue;
 					}
 					
 					day.AddSession( session );
+					numImportedSessions += 1;
 
 					addedSession = session;
 				}
@@ -103,6 +106,11 @@ public partial class OximetrySummary
 			}
 			
 			DailyReportModified?.Invoke( this, day );
+		}
+
+		if( numImportedSessions > 0 )
+		{
+			MessageBox.Show( Application.Current.MainWindow, $"Imported {numImportedSessions} sessions from {loader.FriendlyName}", "Import complete" );
 		}
 	}
 	

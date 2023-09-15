@@ -320,8 +320,8 @@ public partial class SignalChart
 	private void LoadData( DayRecord day )
 	{
 		_day = day;
+		
 		_events.Clear();
-
 		Chart.Plot.Clear();
 
 		// Check to see if there are any sessions with the named Signal. If not, display the "No Data Available" message and eject.
@@ -331,6 +331,9 @@ public partial class SignalChart
 			NoDataLabel.Text       = $"There is no {SignalName} data available";
 			NoDataLabel.Visibility = Visibility.Visible;
 			Chart.IsEnabled        = false;
+			
+			Chart.Refresh();
+			
 			return;
 		}
 		else

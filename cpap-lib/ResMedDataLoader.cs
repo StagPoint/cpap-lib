@@ -18,7 +18,7 @@ namespace cpaplib
 
 		public List<DayRecord> Days { get; } = new List<DayRecord>();
 		
-		private TimeSpan _timeAjustment = TimeSpan.Zero;
+		private TimeSpan _timeAjustment = new TimeSpan( 0, 0, 1, 10 );
 
 		private static string[] expectedFiles = new[]
 		{
@@ -229,8 +229,9 @@ namespace cpaplib
 
 							// Not every signal within a Session will have the same start and end time as the others
 							// because of differences in sampling rate, so we keep track of the start time and end
-							// time of each Signal separately. 
-							var startTime  = header.StartTime.Value;
+							// time of each Signal separately. Note the addition of a time adjustment, which allows
+							// the user to calibrate for "drift" of the ResMed machine's internal clock.  
+							var startTime  = header.StartTime.Value + _timeAjustment;
 							var endTime    = startTime.AddSeconds( header.NumberOfDataRecords * header.DurationOfDataRecord );
 
 							// We need to see if the session already contains a signal by this name, so we know what to do with it. 
@@ -380,7 +381,7 @@ namespace cpaplib
 			foreach( var filename in filenames )
 			{
 				var file = EdfFile.Open( filename );
-				day.RecordingStartTime = file.Header.StartTime;
+				day.RecordingStartTime = file.Header.StartTime.Value + _timeAjustment;
 				
 				foreach( var annotationSignal in file.AnnotationSignals )
 				{
@@ -444,7 +445,7 @@ namespace cpaplib
 			foreach( var filename in filenames )
 			{
 				var file = EdfFile.Open( filename );
-				day.RecordingStartTime = file.Header.StartTime;
+				day.RecordingStartTime = file.Header.StartTime.Value + _timeAjustment;
 				
 				foreach( var annotationSignal in file.AnnotationSignals )
 				{
@@ -503,9 +504,10 @@ namespace cpaplib
 				}
 
 				// Read in and process the settings for a single day
-				var settings = DayRecord.Read( lookup );
+				var day = DayRecord.Read( lookup );
+				day.RecordingStartTime += _timeAjustment;
 
-				Days.Add( settings );
+				Days.Add( day );
 			}
 
 			// Mask On and Mask Off times are stored as the number of seconds since the day started.

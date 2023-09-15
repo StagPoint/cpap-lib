@@ -243,8 +243,8 @@
                     </controls:SignalChart.FlagTypes>
                 </controls:SignalChart>
                 <controls:SignalChart SignalName="Leak Rate" Title="Leak Rate" RedLine="24" TitleStyle="{DynamicResource SubtitleTextBlockStyle}"/>
-                <controls:SignalChart SignalName="SpO2" Title="SpO2" RedLine="88" FillBelow="False" TitleStyle="{DynamicResource SubtitleTextBlockStyle}"/>
-                <controls:SignalChart SignalName="Pulse" Title="Pulse" RedLine="110" FillBelow="False" TitleStyle="{DynamicResource SubtitleTextBlockStyle}"/>
+                <controls:SignalChart SignalName="SpO2" Title="SpO2" RedLine="88" PlotColor="DodgerBlue" FillBelow="False" TitleStyle="{DynamicResource SubtitleTextBlockStyle}"/>
+                <controls:SignalChart SignalName="Pulse" Title="Pulse" RedLine="110" FillBelow="False" PlotColor="OrangeRed" TitleStyle="{DynamicResource SubtitleTextBlockStyle}"/>
             </StackPanel>
         </ScrollViewer>
     </Grid>

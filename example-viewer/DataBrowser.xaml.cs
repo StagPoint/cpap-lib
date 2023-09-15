@@ -138,7 +138,8 @@ public partial class DataBrowser
 			_selectedDay = _data.Days.First();
 		}
 
-		LoadDay( _selectedDay );
+		calendar.SelectedDate = _selectedDay.ReportDate.Date;
+		//LoadDay( _selectedDay );
 	}
 	
 	private void btnNextDay_OnClick( object sender, RoutedEventArgs e )
@@ -153,7 +154,8 @@ public partial class DataBrowser
 			_selectedDay = _data.Days.Last();
 		}
 		
-		LoadDay( _selectedDay );
+		calendar.SelectedDate = _selectedDay.ReportDate.Date;
+		//LoadDay( _selectedDay );
 	}
 	
 	private void EventTree_OnOnTimeSelected( object sender, DateTime time )

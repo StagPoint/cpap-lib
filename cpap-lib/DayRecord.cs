@@ -77,10 +77,10 @@ namespace cpaplib
 		/// </summary>
 		public static DayRecord Read( Dictionary<string, double> data )
 		{
-			var dialy = new DayRecord();
-			dialy.ReadFrom( data );
+			var day = new DayRecord();
+			day.ReadFrom( data );
 
-			return dialy;
+			return day;
 		}
 
 		/// <summary>

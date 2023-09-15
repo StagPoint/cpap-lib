@@ -29,7 +29,7 @@
                     </TextBlock>
                     <HierarchicalDataTemplate.ItemTemplate>
                         <DataTemplate>
-                            <TextBlock Text="{Binding StartTime, Mode=OneWay, StringFormat={}{0:g}}" />
+                            <TextBlock Text="{Binding StartTime, Mode=OneWay, StringFormat={}{0:T}}" />
                         </DataTemplate>
                     </HierarchicalDataTemplate.ItemTemplate>
                 </HierarchicalDataTemplate>
