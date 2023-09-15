@@ -21,7 +21,7 @@ public partial class EventSummary : UserControl
 
 		if( e.Property.Name == nameof( DataContext ) )
 		{
-			if( DataContext is DailyReport day )
+			if( DataContext is DayRecord day )
 			{
 				gridEventSummary.DataContext = day.EventSummary;
 			}

@@ -37,7 +37,7 @@ public partial class SessionList : UserControl
 
 		if( e.Property.Name == nameof( DataContext ) )
 		{
-			if( DataContext is DailyReport day )
+			if( DataContext is DayRecord day )
 			{
 				// In cases where the data source has changed and data binding is being refreshed, 
 				// it is necessary to clear the ItemsSource first to avoid a runtime exception 

@@ -18,7 +18,7 @@ public partial class MachineSettings : UserControl
 
 		if( e.Property.Name == nameof( DataContext ) )
 		{
-			if( DataContext is DailyReport day )
+			if( DataContext is DayRecord day )
 			{
 				grdMachineSettings.DataContext = day.Settings;
 			}

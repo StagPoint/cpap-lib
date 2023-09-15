@@ -8,13 +8,17 @@ using System.Threading.Tasks;
 
 using StagPoint.EDF.Net;
 
+// ReSharper disable ConvertToUsingDeclaration
+
 namespace cpaplib
 {
 	public class ResMedDataLoader
 	{
 		public MachineIdentification MachineID = new MachineIdentification();
 
-		public List<DailyReport> Days { get; } = new List<DailyReport>();
+		public List<DayRecord> Days { get; } = new List<DayRecord>();
+		
+		private TimeSpan _timeAjustment = TimeSpan.Zero;
 
 		private static string[] expectedFiles = new[]
 		{
@@ -28,8 +32,13 @@ namespace cpaplib
 			"DATALOG",
 		};
 
-		public void LoadFromFolder( string folderPath, DateTime? minDate = null, DateTime? maxDate = null )
+		public void LoadFromFolder( string folderPath, DateTime? minDate = null, DateTime? maxDate = null, TimeSpan? timeAdjustment = null )
 		{
+			if( timeAdjustment.HasValue )
+			{
+				_timeAjustment = (TimeSpan)timeAdjustment;
+			}
+			
 			EnsureCorrectFolderStructure( folderPath );
 			LoadMachineIdentificationInfo( folderPath );
 
@@ -117,7 +126,7 @@ namespace cpaplib
 			}
 		}
 
-		private void LoadSessionsForDay( string rootFolder, DailyReport day )
+		private void LoadSessionsForDay( string rootFolder, DayRecord day )
 		{
 			var logFolder = Path.Combine( rootFolder, $@"DATALOG\{day.ReportDate:yyyyMMdd}" );
 			if( !Directory.Exists( logFolder ) )
@@ -263,7 +272,7 @@ namespace cpaplib
 									
 									newSession.AddSignal( startTime, endTime, signal );
 									
-									// Add the session to the DailyReport. We'll need to sort sessions afterward because of this. 
+									// Add the session to the DayRecord. We'll need to sort sessions afterward because of this. 
 									day.Sessions.Add( newSession );
 								}
 							}
@@ -322,7 +331,7 @@ namespace cpaplib
 			CalculateSignalStatistics( day );
 		}
 		
-		private void CalculateSignalStatistics( DailyReport day )
+		private void CalculateSignalStatistics( DayRecord day )
 		{
 			// Determine the maximum sort buffer size we'll need so that we only need to allocate and reuse one buffer.
 			var maxBufferSize = 0;
@@ -362,7 +371,7 @@ namespace cpaplib
 			}
 		}
 
-		private void LoadCheyneStokesEvents( string logFolder, DailyReport day )
+		private void LoadCheyneStokesEvents( string logFolder, DayRecord day )
 		{
 			// Need to keep track of the total time spent in CSR
 			double totalTimeInCSR = 0;
@@ -429,7 +438,7 @@ namespace cpaplib
 			day.EventSummary.CSR = totalTimeInCSR / day.OnDuration.TotalSeconds;
 		}
 		
-		private void LoadEventsAndAnnotations( string logFolder, DailyReport day )
+		private void LoadEventsAndAnnotations( string logFolder, DayRecord day )
 		{
 			var filenames = Directory.GetFiles( logFolder, "*_EVE.edf" );
 			foreach( var filename in filenames )
@@ -481,7 +490,7 @@ namespace cpaplib
 			}
 
 			// The STR.edf file is essentially a vertical table containing the settings data for each
-			// recorded day. We need to transpose that data and use it to create a DailyReport for 
+			// recorded day. We need to transpose that data and use it to create a DayRecord for 
 			// each available day. 
 			for( int i = 0; i < file.Signals[ 0 ].Samples.Count; i++ )
 			{
@@ -494,7 +503,7 @@ namespace cpaplib
 				}
 
 				// Read in and process the settings for a single day
-				var settings = DailyReport.Read( lookup );
+				var settings = DayRecord.Read( lookup );
 
 				Days.Add( settings );
 			}

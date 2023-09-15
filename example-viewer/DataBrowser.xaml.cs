@@ -17,7 +17,7 @@ public partial class DataBrowser
 	private ResMedDataLoader _data = null;
 	private string _dataPath = String.Empty;
 
-	private DailyReport _selectedDay = null;
+	private DayRecord _selectedDay = null;
 
 	public DataBrowser( string dataPath )
 	{
@@ -83,7 +83,7 @@ public partial class DataBrowser
 		pnlNoDataAvailable.Visibility = Visibility.Visible;
 	}
 	
-	private void LoadDay( DailyReport day )
+	private void LoadDay( DayRecord day )
 	{
 		_selectedDay = day;
 		
@@ -173,7 +173,7 @@ public partial class DataBrowser
 		chart.ZoomToTime( startTime, endTime );
 	}
 	
-	private void OximetrySummary_OnDailyReportModified( object sender, DailyReport day )
+	private void OximetrySummary_OnDailyReportModified( object sender, DayRecord day )
 	{
 		DataContext = null;
 		LoadDay( day );

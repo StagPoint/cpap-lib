@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace cpaplib
 {
-	public class DailyReport
+	public class DayRecord
 	{
 		/// <summary>
 		/// The date on which this report was generated.
@@ -75,9 +75,9 @@ namespace cpaplib
 		/// <summary>
 		/// Reads the statistics, settings, and other information from the stored data
 		/// </summary>
-		public static DailyReport Read( Dictionary<string, double> data )
+		public static DayRecord Read( Dictionary<string, double> data )
 		{
-			var dialy = new DailyReport();
+			var dialy = new DayRecord();
 			dialy.ReadFrom( data );
 
 			return dialy;
@@ -154,7 +154,7 @@ namespace cpaplib
 		
 		/// <summary>
 		/// Merges Session data with existing Sessions when possible, or adds it if there are no coincident Sessions
-		/// to merge with. Note that the Session being passed must still overlap the time period of this DailyReport,
+		/// to merge with. Note that the Session being passed must still overlap the time period of this DayRecord,
 		/// and an exception will be thrown if that is not the case.  
 		/// </summary>
 		public void MergeSession( Session session )

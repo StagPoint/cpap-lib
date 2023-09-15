@@ -23,7 +23,7 @@ public partial class OximetrySummary
 	
 	private void BtnImportOxy_OnClick( object sender, RoutedEventArgs e )
 	{
-		if( DataContext is not DailyReport day )
+		if( DataContext is not DayRecord day )
 		{
 			MessageBox.Show( Application.Current.MainWindow, "There is no Daily Report to attach Pulse Oximeter data to" );
 			return;
@@ -112,7 +112,7 @@ public partial class OximetrySummary
 	
 		if( e.Property.Name == nameof( DataContext ) )
 		{
-			if( DataContext is DailyReport day )
+			if( DataContext is DayRecord day )
 			{
 				Debug.WriteLine( $"Data binding: {day}" );
 			}

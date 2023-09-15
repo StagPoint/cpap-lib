@@ -1,6 +1,6 @@
 ﻿namespace cpaplib
 {
-	public enum OperatingMode : int
+	public enum OperatingMode
 	{
 		UNKNOWN = -1,
 		/// <summary>
@@ -27,7 +27,7 @@
 		MAX_VALUE = AVAPS + 1
 	};
 
-	public enum OnOffType : int
+	public enum OnOffType
 	{
 		Off,
 		On
@@ -57,19 +57,19 @@
 	public enum ClimateControlType
 	{
 		/// <summary>
-		/// The user has set the humidity level and heated tube temperature manually
-		/// </summary>
-		Manual,
-		/// <summary>
 		/// The system controls the humidifier and the temperature of the heated air tubing 
 		/// </summary>
 		Auto,
+		/// <summary>
+		/// The user has set the humidity level and heated tube temperature manually
+		/// </summary>
+		Manual,
 	}
 
 	/// <summary>
 	/// Expiratory Pressure Relief (EPR) reduces the delivered mask pressure during exhalation.
 	/// </summary>
-	public enum EprType : int
+	public enum EprType
 	{
 		/// <summary>
 		/// EPR is not active

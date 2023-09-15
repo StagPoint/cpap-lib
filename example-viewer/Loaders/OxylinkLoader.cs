@@ -18,7 +18,7 @@ public class OxyLinkLoader : ISessionDataLoader
 	
 	public string FriendlyName  { get => "OxyLink Pulse Oximeter"; }
 
-	public string Source { get => "OxyLink"; }
+	public string Source { get => "Viatom OxyLink Ring"; }
 
 	public string FileExtension { get => "csv"; }
 

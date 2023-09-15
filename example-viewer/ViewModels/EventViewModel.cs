@@ -11,7 +11,7 @@ public class EventViewModel
 {
 	public List<EventTypeSummary> Items { get; } = new();
 	
-	public EventViewModel( DailyReport day )
+	public EventViewModel( DayRecord day )
 	{
 		var events = day.Events;
 		var types  = events.Select( x => x.Type ).Distinct();

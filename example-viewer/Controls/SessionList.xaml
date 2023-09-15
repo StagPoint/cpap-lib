@@ -20,7 +20,7 @@
                 <GridViewColumn Header="Date" Width="Auto" DisplayMemberBinding="{Binding StartTime, Mode=OneWay, StringFormat={}{0:d}}" />
                 <GridViewColumn Header="Start/End" Width="Auto">
                     <GridViewColumn.DisplayMemberBinding>
-                        <MultiBinding StringFormat="{}{0:t} - {1:t}">
+                        <MultiBinding StringFormat="{}{0:T} 🠚 {1:T}">
                             <Binding Path="StartTime" />
                             <Binding Path="EndTime" />
                         </MultiBinding>

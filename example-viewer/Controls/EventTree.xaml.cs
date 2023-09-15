@@ -57,7 +57,7 @@ public partial class EventTree : UserControl
 
 		if( e.Property.Name == nameof( DataContext ) )
 		{
-			if( DataContext is DailyReport day )
+			if( DataContext is DayRecord day )
 			{
 				tvwEvents.DataContext = new EventViewModel( day );
 

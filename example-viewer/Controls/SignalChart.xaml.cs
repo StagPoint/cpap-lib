@@ -39,7 +39,7 @@ public partial class SignalChart
 	private Tooltip          _tooltip            = null;
 	private VLine            _mouseTrackLine     = null;
 	private MarkerPlot       _currentValueMarker = null;
-	private DailyReport      _day                = null;
+	private DayRecord      _day                = null;
 	private List<ReportedEvent>  _events             = new();
 	private bool             _hasDataAvailable   = false;
 
@@ -305,7 +305,7 @@ public partial class SignalChart
 
 		if( e.Property.Name == nameof( DataContext ) )
 		{
-			if( DataContext is DailyReport day )
+			if( DataContext is DayRecord day )
 			{
 				if( string.IsNullOrEmpty( SignalName ) )
 				{
@@ -317,7 +317,7 @@ public partial class SignalChart
 		}
 	}
 	
-	private void LoadData( DailyReport day )
+	private void LoadData( DayRecord day )
 	{
 		_day = day;
 		_events.Clear();
@@ -372,7 +372,7 @@ public partial class SignalChart
 		_currentValueMarker.IsVisible = false;
 	}
 	
-	private void CreateEventMarkers( DailyReport day )
+	private void CreateEventMarkers( DayRecord day )
 	{
 		int[] typesSeen = new int[ 256 ];
 
@@ -449,7 +449,7 @@ public partial class SignalChart
 		chart.Refresh();
 	}
 	
-	private void ChartSignal( WpfPlot chart, DailyReport day, string signalName, float signalScale = 1f, float? axisMinValue = null, float? axisMaxValue = null, double[] manualLabels = null )
+	private void ChartSignal( WpfPlot chart, DayRecord day, string signalName, float signalScale = 1f, float? axisMinValue = null, float? axisMaxValue = null, double[] manualLabels = null )
 	{
 		var minValue = axisMinValue ?? double.MaxValue;
 		var maxValue = axisMaxValue ?? double.MinValue;

@@ -34,11 +34,16 @@ public partial class WelcomeNotice
 				var machineID = MachineIdentification.ReadFrom( Path.Combine( drive.RootDirectory.FullName, "Identification.tgt" ) );
 				
 
-				var messageBoxResult = MessageBox.Show( $"There appears to be a CPAP data folder structure on Drive {drive.Name}\nMachine: {machineID.ProductName}, Serial #: {machineID.SerialNumber}\n\nDo you want to import this data from {drive.Name}?", $"Import from {drive.Name}?", MessageBoxButton.YesNo );
+				var messageBoxResult = MessageBox.Show( $"There appears to be a CPAP data folder structure on Drive {drive.Name}\nMachine: {machineID.ProductName}, Serial #: {machineID.SerialNumber}\n\nDo you want to import this data from {drive.Name}?", $"Import from {drive.Name}?", MessageBoxButton.YesNoCancel );
 				if( messageBoxResult == MessageBoxResult.Yes )
 				{
 					NavigationService.Navigate( new DataBrowser( drive.RootDirectory.FullName ) );
 					NavigationService.RemoveBackEntry();
+					return;
+				}
+
+				if( messageBoxResult == MessageBoxResult.Cancel )
+				{
 					return;
 				}
 			}
