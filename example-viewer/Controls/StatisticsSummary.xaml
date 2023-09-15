@@ -6,33 +6,48 @@
              xmlns:local="clr-namespace:example_viewer.Controls"
              mc:Ignorable="d"
              d:DesignHeight="300" d:DesignWidth="300">
-    <UserControl.Resources>
-        <ResourceDictionary x:Key="CompactSpacing" Source="pack://application:,,,/ModernWpf;component/DensityStyles/Compact.xaml" />
-    </UserControl.Resources>
-    <ListView Name="lvwStatistics" Focusable="False" HorizontalAlignment="Stretch">
-        <!--<ListView.Resources>
-            <Style TargetType="GridViewColumnHeader">
-                <Setter Property="Template" Value="{x:Null}" />
-            </Style>
-        </ListView.Resources>-->
-        <ScrollBarVisibility>Hidden</ScrollBarVisibility>
-        <ListView.View>
-            <GridView AllowsColumnReorder="False">
-                <GridView.ColumnHeaderContainerStyle>
-                    <Style TargetType="GridViewColumnHeader" BasedOn="{StaticResource {x:Type GridViewColumnHeader}}">
-                        <Setter Property="BorderThickness" Value="0"/>
-                        <Setter Property="Background" Value="Transparent"/>
-                        <Setter Property="FontWeight" Value="Bold"/>
-                        <Setter Property="Focusable" Value="False"/>
-                    </Style>
-                </GridView.ColumnHeaderContainerStyle>  
-                <GridViewColumn Header="Stat Name" Width="100" DisplayMemberBinding="{Binding SignalName, Mode=OneWay}" />
-                <GridViewColumn Header="Min" Width="Auto" DisplayMemberBinding="{Binding Minimum, Mode=OneWay, StringFormat={}{0:f1}}" />
-                <GridViewColumn Header="Avg" Width="Auto" DisplayMemberBinding="{Binding Average, Mode=OneWay, StringFormat={}{0:f1}}" />
-                <GridViewColumn Header="Med" Width="Auto" DisplayMemberBinding="{Binding Median, Mode=OneWay, StringFormat={}{0:f1}}" />
-                <GridViewColumn Header="95%" Width="Auto" DisplayMemberBinding="{Binding Percentile95, Mode=OneWay, StringFormat={}{0:f1}}" />
-                <!--<GridViewColumn Header="99.5%" Width="Auto" DisplayMemberBinding="{Binding Percentile99, Mode=OneWay, StringFormat={}{0:f1}}" />-->
-            </GridView>
-        </ListView.View>
-    </ListView>
+    <Grid Grid.IsSharedSizeScope="True">
+        <Grid.RowDefinitions>
+            <RowDefinition />
+            <RowDefinition />
+        </Grid.RowDefinitions>
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" SharedSizeGroup="C0"/>
+                <ColumnDefinition />
+                <ColumnDefinition />
+                <ColumnDefinition />
+                <ColumnDefinition />
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0" Text="Channel Name" FontWeight="Bold" Padding="0 0 10 0"/>
+            <TextBlock Grid.Column="1" Text="Min" FontWeight="Bold" />
+            <TextBlock Grid.Column="2" Text="Avg" FontWeight="Bold" />
+            <TextBlock Grid.Column="3" Text="Med" FontWeight="Bold" />
+            <TextBlock Grid.Column="4" Text="95%" FontWeight="Bold" />
+            <!-- <TextBlock Grid.Column="5" Text="99%" /> -->
+        </Grid>
+        <ItemsControl Grid.Row="1" Name="lvwStatistics" ItemsSource="{Binding Persons}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="C0"/>
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="{Binding SignalName}" Padding="0 0 10 0"/>
+                        <TextBlock Grid.Column="1" Text="{Binding Minimum, Mode=OneWay, StringFormat={}{0:f1}}" />
+                        <TextBlock Grid.Column="2" Text="{Binding Average, Mode=OneWay, StringFormat={}{0:f1}}" />
+                        <TextBlock Grid.Column="3" Text="{Binding Median, Mode=OneWay, StringFormat={}{0:f1}}" />
+                        <TextBlock Grid.Column="4" Text="{Binding Percentile95, Mode=OneWay, StringFormat={}{0:f1}}" />
+                        <!-- <TextBlock Grid.Column="5" Text="{Binding Percentile99, Mode=OneWay, StringFormat={}{0:f1}}" /> -->
+                    </Grid>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </Grid>
 </UserControl>
