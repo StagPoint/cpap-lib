@@ -29,5 +29,14 @@
                 <GridViewColumn Header="Duration" Width="Auto" DisplayMemberBinding="{Binding Duration, Mode=OneWay}" />
             </GridView>
         </ListView.View>
+        <ListView.GroupStyle>
+            <GroupStyle>
+                <GroupStyle.HeaderTemplate>
+                    <DataTemplate>
+                        <TextBlock FontWeight="Bold" FontSize="14" Text="{Binding Name}"/>
+                    </DataTemplate>
+                </GroupStyle.HeaderTemplate>
+            </GroupStyle>
+        </ListView.GroupStyle>
     </ListView>
 </UserControl>

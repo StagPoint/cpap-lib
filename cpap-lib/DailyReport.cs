@@ -125,6 +125,34 @@ namespace cpaplib
 		}
 
 		/// <summary>
+		/// Recalculates the statistics for the named Signal. Designed to be called after a data import to
+		/// update the statistics to account for the newly imported data. 
+		/// </summary>
+		public void UpdateSignalStatistics( string signalName )
+		{
+			var calculator = new StatCalculator( short.MaxValue );
+			var stats      = calculator.CalculateStats( signalName, Sessions );
+
+			Statistics.RemoveAll( x => x.SignalName.Equals( signalName ) );
+			Statistics.Add( stats );
+		}
+
+		/// <summary>
+		/// Adds a new Session to the Sessions list and updates the RecordingStartTime and RecordingEndTime
+		/// properties if necessary.
+		/// </summary>
+		/// <param name="session"></param>
+		public void AddSession( Session session )
+		{
+			Sessions.Add( session );
+			
+			RecordingStartTime = DateUtil.Min( RecordingStartTime, session.StartTime );
+			Duration           = DateUtil.Max( RecordingEndTime, session.EndTime ) - RecordingStartTime;
+
+			Sessions.Sort( ( lhs, rhs ) => lhs.StartTime.CompareTo( rhs.StartTime ) );
+		}
+		
+		/// <summary>
 		/// Merges Session data with existing Sessions when possible, or adds it if there are no coincident Sessions
 		/// to merge with. Note that the Session being passed must still overlap the time period of this DailyReport,
 		/// and an exception will be thrown if that is not the case.  

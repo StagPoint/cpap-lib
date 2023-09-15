@@ -49,7 +49,7 @@ public partial class OximetrySummary
 			return;
 		}
 
-		var dayHasNewSessions = false;
+		Session addedSession = null;
 
 		foreach( var fullPath in ofd.FileNames )
 		{
@@ -87,15 +87,21 @@ public partial class OximetrySummary
 						continue;
 					}
 					
-					day.MergeSession( session );
-					
-					dayHasNewSessions = true;
+					day.AddSession( session );
+
+					addedSession = session;
 				}
 			}
 		}
 
-		if( dayHasNewSessions )
+		if( addedSession != null )
 		{
+			// Update the statistics for each Signal added 
+			foreach( var signal in addedSession.Signals )
+			{
+				day.UpdateSignalStatistics( signal.Name );
+			}
+			
 			DailyReportModified?.Invoke( this, day );
 		}
 	}

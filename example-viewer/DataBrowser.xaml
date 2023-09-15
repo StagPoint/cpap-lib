@@ -120,7 +120,7 @@
                                         <TextBlock Text="Statistics" Style="{DynamicResource SubtitleTextBlockStyle}" />
                                     </StackPanel>
                                 </Expander.Header>
-                                <controls:StatisticsSummary Margin="5 4 5 0"/>
+                                <controls:StatisticsSummary HorizontalAlignment="Stretch"/>
                             </Expander>
                             <Expander
                         x:Name="expSettings"

@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Input;
 
 using cpaplib;
@@ -42,8 +43,16 @@ public partial class SessionList : UserControl
 				// it is necessary to clear the ItemsSource first to avoid a runtime exception 
 				// caused by the underlying Session list changing. 
 				lvwSessions.ItemsSource = null;
-				
 				lvwSessions.ItemsSource = day.Sessions;
+
+				CollectionView view = (CollectionView)CollectionViewSource.GetDefaultView( lvwSessions.ItemsSource );
+				view.GroupDescriptions.Clear();
+
+				if( day.Sessions.Select( x => x.Source ).Distinct().Count() > 1 )
+				{
+					PropertyGroupDescription groupDescription = new PropertyGroupDescription( nameof( Session.Source ) );
+					view.GroupDescriptions.Add( groupDescription );
+				}
 			}
 		}
 	}

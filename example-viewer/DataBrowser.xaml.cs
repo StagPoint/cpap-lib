@@ -158,8 +158,8 @@ public partial class DataBrowser
 	
 	private void EventTree_OnOnTimeSelected( object sender, DateTime time )
 	{
-		var startTime = time.AddMinutes( -5 );
-		var endTime   = time.AddMinutes( 5 );
+		var startTime = time.AddMinutes( -2.5 );
+		var endTime   = time.AddMinutes( 2.5 );
 	
 		// Only need to zoom to the indicated time on the first chart, as it will synchronize all of the others
 		var chart = this.FindVisualChildren<SignalChart>().FirstOrDefault();

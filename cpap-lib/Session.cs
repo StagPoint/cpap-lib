@@ -47,11 +47,27 @@ namespace cpaplib
 					// The code calling Merge should have decided what to do about duplicate signal names before calling this function.
 					throw new Exception( $"The {nameof( Session )} already contains a {nameof( Signal )} named {signal.Name}" );
 				}
+
+				// We will create a clone and trim that, because it's conceivable (maybe even likely) that the caller
+				// will still want the original Signal unchanged when this call is finished. 
+				var trimmedSignal = signal.Clone();
+				trimmedSignal.TrimToTime( StartTime, EndTime );
 				
-				signal.TrimToTime( StartTime, EndTime );
-				
-				Signals.Add( signal );
+				Signals.Add( trimmedSignal );
 			}
+		}
+
+		public void AddSignal( Signal signal )
+		{
+			if( GetSignalByName( signal.Name ) != null )
+			{
+				throw new Exception( $"This {nameof( Session )} already contains a signal named {signal.Name}" );
+			}
+
+			Signals.Add( signal );
+			
+			StartTime = DateUtil.Min( StartTime, signal.StartTime );
+			EndTime   = DateUtil.Max( EndTime, signal.EndTime );
 		}
 
 		internal void AddSignal( DateTime startTime, DateTime endTime, EdfStandardSignal fileSignal )

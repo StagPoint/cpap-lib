@@ -79,7 +79,6 @@ public class OxyLinkLoader : ISessionDataLoader
 			UnitOfMeasurement = "",
 		};
 
-
 		Session result = new()
 		{
 			Source = this.Source,

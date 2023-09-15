@@ -55,6 +55,26 @@ namespace cpaplib
 		
 		#region Public functions
 
+		/// <summary>
+		/// Creates a full copy (deep copy) of this instance
+		/// </summary>
+		public Signal Clone()
+		{
+			var clone = new Signal
+			{
+				Name              = Name,
+				FrequencyInHz     = FrequencyInHz,
+				MinValue          = MinValue,
+				MaxValue          = MaxValue,
+				UnitOfMeasurement = UnitOfMeasurement,
+				Samples           = new List<double>( Samples ),
+				StartTime         = StartTime,
+				EndTime           = EndTime
+			};
+
+			return clone;
+		}
+
 		public void TrimToTime( DateTime minTime, DateTime maxTime )
 		{
 			if( maxTime < StartTime || minTime > EndTime )

@@ -342,65 +342,23 @@ namespace cpaplib
 			}
 
 			// Allocate the buffer that we'll sort signal data in. 
-			var sortBuffer = new Sorter( maxBufferSize );
+			var calculator = new StatCalculator( maxBufferSize );
 
-			day.Statistics.Add( calculateStatistics( "Mask Pressure",       sortBuffer ) );
-			day.Statistics.Add( calculateStatistics( "Pressure",            sortBuffer ) );
-			day.Statistics.Add( calculateStatistics( "Expiratory Pressure", sortBuffer ) );
-			day.Statistics.Add( calculateStatistics( "Leak Rate",           sortBuffer ) );
-			day.Statistics.Add( calculateStatistics( "Respiration Rate",    sortBuffer ) );
-			day.Statistics.Add( calculateStatistics( "Tidal Volume",        sortBuffer ) );
-			day.Statistics.Add( calculateStatistics( "Minute Vent",         sortBuffer ) );
-			day.Statistics.Add( calculateStatistics( "Snore",               sortBuffer ) );
-			day.Statistics.Add( calculateStatistics( "Flow Limit",          sortBuffer ) );
-
+			day.Statistics.Add( calculator.CalculateStats( "Mask Pressure", day.Sessions ) );
+			day.Statistics.Add( calculator.CalculateStats( "Pressure", day.Sessions ) );
+			day.Statistics.Add( calculator.CalculateStats( "Expiratory Pressure", day.Sessions ) );
+			day.Statistics.Add( calculator.CalculateStats( "Leak Rate", day.Sessions ) );
+			day.Statistics.Add( calculator.CalculateStats( "Respiration Rate", day.Sessions ) );
+			day.Statistics.Add( calculator.CalculateStats( "Tidal Volume", day.Sessions ) );
+			day.Statistics.Add( calculator.CalculateStats( "Minute Vent", day.Sessions ) );
+			day.Statistics.Add( calculator.CalculateStats( "Snore", day.Sessions ) );
+			day.Statistics.Add( calculator.CalculateStats( "Flow Limit", day.Sessions ) );
+			
 			// In most cases, there will be no SpO2 or Pulse data available 
 			if( day.Sessions.Any( x => x.GetSignalByName( "SpO2" ) != null ) )
 			{
-				day.Statistics.Add( calculateStatistics( "SpO2",  sortBuffer ) );
-				day.Statistics.Add( calculateStatistics( "Pulse", sortBuffer ) );
-			}
-
-			SignalStatistics calculateStatistics( string signalName, Sorter sorter )
-			{
-				// Reset the sorter for the next iteration 
-				sorter.Clear();
-
-				// Signal index will be consistent for all sessions (at this stage in the loading process), so grab that
-				// to avoid having to look it up each time
-				var signalIndex = day.Sessions[ 0 ].Signals.FindIndex( x => x.Name.Equals( signalName, StringComparison.Ordinal ) );
-
-				// The signal wasn't found... Typically only happens when a session is essentially empty because the
-				// base session data wasn't found. Should never get to this point if that's the case, but worth checking.
-				if( signalIndex == -1 )
-				{
-					throw new IndexOutOfRangeException( $"Failed to find signal {signalName} for day {day.ReportDate.ToShortDateString()}" );
-				}
-				
-				// Copy all available samples from all sessions into a single array that can be sorted and
-				// used to calculate the statistics. 
-				foreach( var session in day.Sessions )
-				{
-					var sourceSamples = session.Signals[ signalIndex ].Samples;
-					sorter.AddRange( sourceSamples );
-				}
-
-				// Sort the aggregated samples and calculate statistics on the results 
-				var sortedSamples = sorter.Sort();
-				var bufferLength  = sortedSamples.Count;
-
-				var stats = new SignalStatistics
-				{
-					SignalName   = signalName,
-					Minimum      = sortedSamples[ (int)(bufferLength * 0.01) ],
-					Average      = sortedSamples.Average(),
-					Maximum      = sortedSamples.Max(),
-					Median       = sortedSamples[ bufferLength / 2 ],
-					Percentile95 = sortedSamples[ (int)(bufferLength * 0.95) ],
-					Percentile99 = sortedSamples[ (int)(bufferLength * 0.995) ],
-				};
-				
-				return stats;
+				day.Statistics.Add( calculator.CalculateStats( "SpO2", day.Sessions ) );
+				day.Statistics.Add( calculator.CalculateStats( "Pulse", day.Sessions ) );
 			}
 		}
 

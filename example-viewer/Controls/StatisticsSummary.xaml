@@ -9,7 +9,7 @@
     <UserControl.Resources>
         <ResourceDictionary x:Key="CompactSpacing" Source="pack://application:,,,/ModernWpf;component/DensityStyles/Compact.xaml" />
     </UserControl.Resources>
-    <ListView Name="lvwStatistics" Focusable="False">
+    <ListView Name="lvwStatistics" Focusable="False" HorizontalAlignment="Stretch">
         <!--<ListView.Resources>
             <Style TargetType="GridViewColumnHeader">
                 <Setter Property="Template" Value="{x:Null}" />
@@ -26,12 +26,12 @@
                         <Setter Property="Focusable" Value="False"/>
                     </Style>
                 </GridView.ColumnHeaderContainerStyle>  
-                <GridViewColumn Header="Stat Name" Width="Auto" DisplayMemberBinding="{Binding SignalName, Mode=OneWay}" />
+                <GridViewColumn Header="Stat Name" Width="100" DisplayMemberBinding="{Binding SignalName, Mode=OneWay}" />
                 <GridViewColumn Header="Min" Width="Auto" DisplayMemberBinding="{Binding Minimum, Mode=OneWay, StringFormat={}{0:f1}}" />
                 <GridViewColumn Header="Avg" Width="Auto" DisplayMemberBinding="{Binding Average, Mode=OneWay, StringFormat={}{0:f1}}" />
                 <GridViewColumn Header="Med" Width="Auto" DisplayMemberBinding="{Binding Median, Mode=OneWay, StringFormat={}{0:f1}}" />
                 <GridViewColumn Header="95%" Width="Auto" DisplayMemberBinding="{Binding Percentile95, Mode=OneWay, StringFormat={}{0:f1}}" />
-                <GridViewColumn Header="99.5%" Width="Auto" DisplayMemberBinding="{Binding Percentile99, Mode=OneWay, StringFormat={}{0:f1}}" />
+                <!--<GridViewColumn Header="99.5%" Width="Auto" DisplayMemberBinding="{Binding Percentile99, Mode=OneWay, StringFormat={}{0:f1}}" />-->
             </GridView>
         </ListView.View>
     </ListView>
