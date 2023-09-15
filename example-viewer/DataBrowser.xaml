@@ -187,7 +187,7 @@
                     </ScrollViewer>
                 </TabItem>
                 <TabItem Header="SpO2">
-                    <TextBlock Text="TODO: Add SpO2 and Pulse information here" />
+                    <controls:OximetrySummary DailyReportModified="OximetrySummary_OnDailyReportModified"/>
                 </TabItem>
                 <TabItem Header="Notes">
                     <TextBlock Text="This feature is not yet implemented" />
@@ -208,7 +208,7 @@
                       VerticalScrollBarVisibility="Visible" VerticalContentAlignment="Top" VerticalAlignment="Stretch">
             <StackPanel Visibility="Visible" Name="pnlCharts" Orientation="Vertical"
                         VerticalAlignment="Stretch">
-                <controls:SignalChart SignalName="Flow Rate" Title="Flow Rate" TitleStyle="{DynamicResource SubtitleTextBlockStyle}">
+                <controls:SignalChart SignalName="Flow Rate" RedLine="0" Title="Flow Rate" TitleStyle="{DynamicResource SubtitleTextBlockStyle}">
                     <controls:SignalChart.FlagTypes>
                         <x:Array Type="cpap:EventType">
                             <cpap:EventType>ObstructiveApnea</cpap:EventType>
@@ -232,8 +232,9 @@
                     </controls:SignalChart.FlagTypes>
                 </controls:SignalChart>
                 <controls:SignalChart SignalName="Tidal Volume" Title="Tidal Volume" TitleStyle="{DynamicResource SubtitleTextBlockStyle}"/>
+                <controls:SignalChart SignalName="Pressure" Title="Pressure" FillBelow="False" TitleStyle="{DynamicResource SubtitleTextBlockStyle}"/>
                 <controls:SignalChart SignalName="Respiration Rate" Title="Respiration Rate" TitleStyle="{DynamicResource SubtitleTextBlockStyle}"/>
-                <controls:SignalChart SignalName="Flow Limit" Title="Flow Limit" TitleStyle="{DynamicResource SubtitleTextBlockStyle}">
+                <controls:SignalChart SignalName="Flow Limit" Title="Flow Limit" RedLine="0.2" TitleStyle="{DynamicResource SubtitleTextBlockStyle}">
                     <controls:SignalChart.FlagTypes>
                         <x:Array Type="cpap:EventType">
                             <cpap:EventType>ObstructiveApnea</cpap:EventType>
@@ -241,10 +242,9 @@
                         </x:Array>
                     </controls:SignalChart.FlagTypes>
                 </controls:SignalChart>
-                <controls:SignalChart SignalName="Leak Rate" Title="Leak Rate" TitleStyle="{DynamicResource SubtitleTextBlockStyle}"/>
-                <controls:SignalChart SignalName="Pressure" Title="Pressure" TitleStyle="{DynamicResource SubtitleTextBlockStyle}"/>
-                <controls:SignalChart SignalName="SpO2" Title="SpO2" TitleStyle="{DynamicResource SubtitleTextBlockStyle}"/>
-                <controls:SignalChart SignalName="Pulse" Title="Pulse" TitleStyle="{DynamicResource SubtitleTextBlockStyle}"/>
+                <controls:SignalChart SignalName="Leak Rate" Title="Leak Rate" RedLine="24" TitleStyle="{DynamicResource SubtitleTextBlockStyle}"/>
+                <controls:SignalChart SignalName="SpO2" Title="SpO2" RedLine="88" FillBelow="False" TitleStyle="{DynamicResource SubtitleTextBlockStyle}"/>
+                <controls:SignalChart SignalName="Pulse" Title="Pulse" RedLine="110" FillBelow="False" TitleStyle="{DynamicResource SubtitleTextBlockStyle}"/>
             </StackPanel>
         </ScrollViewer>
     </Grid>

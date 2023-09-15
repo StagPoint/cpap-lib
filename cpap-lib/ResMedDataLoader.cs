@@ -35,7 +35,7 @@ namespace cpaplib
 
 			var indexFilename = Path.Combine( folderPath, "STR.edf" );
 			LoadIndexAndSettings( indexFilename, minDate, maxDate );
-
+			
 #if ALLOW_ASYNC
 			var tasks = new Task[ Days.Count ];
 
@@ -56,6 +56,15 @@ namespace cpaplib
 				LoadSessionsForDay( folderPath, day );
 			}
 #endif
+
+			// Make sure that each Session has its Source set (anticipating other potential sources for Session data in the future)
+			foreach( var day in Days )
+			{
+				foreach( var session in day.Sessions )
+				{
+					session.Source = MachineID.ProductName;
+				}
+			}
 		}
 
 		private void LoadMachineIdentificationInfo( string rootFolder )
@@ -246,10 +255,10 @@ namespace cpaplib
 								{
 									// Create a new Session based on the current session's time period, which will contain all of
 									// the discontinuous signals (or at least the next set, as there may be more than one).
-									var newSession = new MaskSession()
+									var newSession = new Session()
 									{
 										StartTime = session.StartTime,
-										EndTime   = session.EndTime
+										EndTime   = session.EndTime,
 									};
 									
 									newSession.AddSignal( startTime, endTime, signal );
@@ -335,21 +344,21 @@ namespace cpaplib
 			// Allocate the buffer that we'll sort signal data in. 
 			var sortBuffer = new Sorter( maxBufferSize );
 
-			day.Statistics.MaskPressure       = calculateStatistics( "Mask Pressure",       sortBuffer );
-			day.Statistics.TherapyPressure    = calculateStatistics( "Pressure",            sortBuffer );
-			day.Statistics.ExpiratoryPressure = calculateStatistics( "Expiratory Pressure", sortBuffer );
-			day.Statistics.Leak               = calculateStatistics( "Leak Rate",           sortBuffer );
-			day.Statistics.RespirationRate    = calculateStatistics( "Respiration Rate",    sortBuffer );
-			day.Statistics.TidalVolume        = calculateStatistics( "Tidal Volume",        sortBuffer );
-			day.Statistics.MinuteVent         = calculateStatistics( "Minute Vent",         sortBuffer );
-			day.Statistics.Snore              = calculateStatistics( "Snore",               sortBuffer );
-			day.Statistics.FlowLimit          = calculateStatistics( "Flow Limit",          sortBuffer );
+			day.Statistics.Add( calculateStatistics( "Mask Pressure",       sortBuffer ) );
+			day.Statistics.Add( calculateStatistics( "Pressure",            sortBuffer ) );
+			day.Statistics.Add( calculateStatistics( "Expiratory Pressure", sortBuffer ) );
+			day.Statistics.Add( calculateStatistics( "Leak Rate",           sortBuffer ) );
+			day.Statistics.Add( calculateStatistics( "Respiration Rate",    sortBuffer ) );
+			day.Statistics.Add( calculateStatistics( "Tidal Volume",        sortBuffer ) );
+			day.Statistics.Add( calculateStatistics( "Minute Vent",         sortBuffer ) );
+			day.Statistics.Add( calculateStatistics( "Snore",               sortBuffer ) );
+			day.Statistics.Add( calculateStatistics( "Flow Limit",          sortBuffer ) );
 
 			// In most cases, there will be no SpO2 or Pulse data available 
 			if( day.Sessions.Any( x => x.GetSignalByName( "SpO2" ) != null ) )
 			{
-				day.Statistics.Pulse = calculateStatistics( "Pulse", sortBuffer );
-				day.Statistics.SpO2  = calculateStatistics( "SpO2",  sortBuffer );
+				day.Statistics.Add( calculateStatistics( "SpO2",  sortBuffer ) );
+				day.Statistics.Add( calculateStatistics( "Pulse", sortBuffer ) );
 			}
 
 			SignalStatistics calculateStatistics( string signalName, Sorter sorter )
@@ -382,6 +391,7 @@ namespace cpaplib
 
 				var stats = new SignalStatistics
 				{
+					SignalName   = signalName,
 					Minimum      = sortedSamples[ (int)(bufferLength * 0.01) ],
 					Average      = sortedSamples.Average(),
 					Maximum      = sortedSamples.Max(),
@@ -565,7 +575,6 @@ namespace cpaplib
 					// the ResMed "day" starts at 12pm (noon) and continues until the next calendar day at 12pm.
 					var maskOn   = day.ReportDate.AddMinutes( maskOnSignal.Samples[ sampleIndex ] );
 					var maskOff  = day.ReportDate.AddMinutes( maskOffSignal.Samples[ sampleIndex ] );
-					var duration = maskOffSignal.Samples[ sampleIndex ] - maskOnSignal.Samples[ sampleIndex ];
 
 					// Discard empty sessions
 					if( maskOff.Subtract( maskOn ).TotalMinutes < 1 )
@@ -573,7 +582,7 @@ namespace cpaplib
 						continue;
 					}
 
-					var session = new MaskSession()
+					var session = new Session()
 					{
 						StartTime = maskOn,
 						EndTime   = maskOff,

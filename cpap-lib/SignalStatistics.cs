@@ -5,6 +5,7 @@
 	/// </summary>
 	public class SignalStatistics
 	{
+		public string SignalName   { get; set; }
 		public double Minimum      { get; set; }
 		public double Median       { get; set; }
 		public double Average      { get; set; }
@@ -14,7 +15,7 @@
 
 		public override string ToString()
 		{
-			return $"Min: {Minimum:F2}, Med: {Median:F2}, Max: {Maximum:F2}";
+			return $"{SignalName, -25} Min: {Minimum:F2}, Med: {Median:F2}, Max: {Maximum:F2}";
 		}
 	}
 }

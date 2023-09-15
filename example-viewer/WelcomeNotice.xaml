@@ -24,7 +24,7 @@
                   </TextBlock>
                   <Button Name="btnImport" HorizontalAlignment="Center" Style="{StaticResource AccentButtonStyle}" ClickMode="Press" Click="Import_Clicked">
                         <StackPanel Orientation="Horizontal">
-                              <ui:FontIcon Name="btnPrevDay" Glyph="&#xE7F1;" FontSize="14" Margin="0 0 10 0"/>
+                              <ui:FontIcon Glyph="&#xE7F1;" FontSize="14" Margin="0 0 10 0"/>
                               <TextBlock>Import CPAP Data</TextBlock>
                         </StackPanel>
                   </Button>

@@ -1,10 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Numerics;
-
-using StagPoint.EDF.Net;
 
 namespace cpaplib
 {
@@ -12,7 +8,6 @@ namespace cpaplib
 	{
 		/// <summary>
 		/// The date on which this report was generated.
-		/// Note that this is the "ResMed Date", which begins at noon and continues until noon the following day. 
 		/// </summary>
 		public DateTime ReportDate { get; private set; }
 		
@@ -29,7 +24,7 @@ namespace cpaplib
 		/// <summary>
 		/// The list of sessions  for this day
 		/// </summary>
-		public List<MaskSession> Sessions { get; } = new List<MaskSession>();
+		public List<Session> Sessions { get; } = new List<Session>();
 
 		public List<ReportedEvent> Events { get; } = new List<ReportedEvent>();
 
@@ -51,7 +46,7 @@ namespace cpaplib
 		/// <summary>
 		/// Usage and performance statistics for this day (average pressure, leak rate, etc.)
 		/// </summary>
-		public DailyStatistics Statistics { get; private set; } = new DailyStatistics();
+		public List<SignalStatistics> Statistics { get; private set; } = new List<SignalStatistics>();
 
 		/// <summary>
 		/// The number of events of each type (Obstructive Apnea, Clear Airway, RERA, etc.) that occurred on this day.
@@ -127,6 +122,57 @@ namespace cpaplib
 
 				return 0;
 			}
+		}
+
+		/// <summary>
+		/// Merges Session data with existing Sessions when possible, or adds it if there are no coincident Sessions
+		/// to merge with. Note that the Session being passed must still overlap the time period of this DailyReport,
+		/// and an exception will be thrown if that is not the case.  
+		/// </summary>
+		public void MergeSession( Session session )
+		{
+			if( RecordingStartTime > session.EndTime || RecordingEndTime < session.StartTime )
+			{
+				throw new Exception( $"Session from {session.StartTime} to {session.EndTime} does not overlap reporting period for {ReportDate.Date} and cannot be merged." );
+			}
+			
+			// There are two obvious options here: Merge the new session's signals into an existing session, or 
+			// simply add the new session to the list of the day's sessions. 
+			//
+			// The first option will potentially involve fixing up start and end times, and might have more 
+			// non-obvious edge cases to worry about, but the second option creates a situation where all 
+			// sessions only contain a subset of the available data for a given period of time, which sort of
+			// breaks the original design of what a session entails.
+			//
+			// When merging into an existing session, there is the question of whether to extend the session
+			// start and end times if the new data exceeds them, or whether to trim the new data to match 
+			// those times if needed. Consider adding pulse oximetry data to a session containing CPAP flow
+			// pressure data (among others) when the pulse oximetry data starts a few seconds before the CPAP
+			// data starts and ends a minute after the CPAP session ends; The user probably cares more about
+			// the CPAP data and wants to see what their blood oxygen levels were during the CPAP therapy,
+			// and may not necessarily care about values that lie outside of the "mask on" period. 
+			//
+
+			foreach( var existingSession in Sessions )
+			{
+				bool disjoint = (existingSession.StartTime > session.EndTime || existingSession.EndTime < session.StartTime);
+				if( !disjoint )
+				{
+					// When merging with an existing Session, all of the merged Signals will be trimmed to fit the 
+					// destination Session's time period. 
+					existingSession.Merge( session );
+					
+					return;
+				}
+			}
+
+			Sessions.Add( session );
+			Sessions.Sort( ( lhs, rhs ) => lhs.StartTime.CompareTo( rhs.StartTime ) );
+			
+			RecordingStartTime = DateUtil.Min( RecordingStartTime, session.StartTime );
+			var endTime   = DateUtil.Max( RecordingEndTime, session.EndTime );
+
+			Duration = endTime - RecordingStartTime;
 		}
 
 		#endregion

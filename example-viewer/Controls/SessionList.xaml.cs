@@ -23,7 +23,7 @@ public partial class SessionList : UserControl
 	private void LvwSessionsOnSelectionChanged( object sender, SelectionChangedEventArgs e )
 	{
 		var item = lvwSessions.SelectedItem;
-		if( item is MaskSession session )
+		if( item is Session session )
 		{
 			lvwSessions.SelectedIndex = -1;
 			OnTimeSelected?.Invoke( this, session.StartTime, session.EndTime );
@@ -38,7 +38,11 @@ public partial class SessionList : UserControl
 		{
 			if( DataContext is DailyReport day )
 			{
-				lvwSessions.DataContext = day.Sessions;
+				// In cases where the data source has changed and data binding is being refreshed, 
+				// it is necessary to clear the ItemsSource first to avoid a runtime exception 
+				// caused by the underlying Session list changing. 
+				lvwSessions.ItemsSource = null;
+				
 				lvwSessions.ItemsSource = day.Sessions;
 			}
 		}

@@ -7,14 +7,15 @@ using StagPoint.EDF.Net;
 
 namespace cpaplib
 {
-	public class MaskSession
+	public class Session
 	{
-		public DateTime StartTime { get; internal set; }
-		public DateTime EndTime   { get; internal set; }
+		public DateTime StartTime { get; set; }
+		public DateTime EndTime   { get; set; }
+		public TimeSpan Duration  { get => EndTime - StartTime; }
+		
+		public string Source { get; set; }
 
-		public List<Signal> Signals { get; } = new List<Signal>();
-
-		public TimeSpan Duration { get => EndTime - StartTime; }
+		public List<Signal> Signals { get; set; } = new List<Signal>();
 
 		#region Public functions
 
@@ -29,6 +30,28 @@ namespace cpaplib
 			}
 
 			return null;
+		}
+
+		internal void Merge( Session other )
+		{
+			if( StartTime > other.EndTime || EndTime < other.StartTime )
+			{
+				throw new Exception( $"Cannot merge sessions which do not overlap in time {StartTime:T} to {EndTime:T}" );
+			}
+			
+			foreach( var signal in other.Signals )
+			{
+				var existingSignal = GetSignalByName( signal.Name );
+				if( existingSignal != null )
+				{
+					// The code calling Merge should have decided what to do about duplicate signal names before calling this function.
+					throw new Exception( $"The {nameof( Session )} already contains a {nameof( Signal )} named {signal.Name}" );
+				}
+				
+				signal.TrimToTime( StartTime, EndTime );
+				
+				Signals.Add( signal );
+			}
 		}
 
 		internal void AddSignal( DateTime startTime, DateTime endTime, EdfStandardSignal fileSignal )

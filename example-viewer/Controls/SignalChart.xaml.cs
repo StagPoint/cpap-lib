@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Windows;
@@ -29,6 +30,8 @@ public partial class SignalChart
 	public static readonly DependencyProperty TitleStyleProperty = DependencyProperty.Register( nameof( TitleStyle ), typeof( System.Windows.Style ), typeof( SignalChart ) );
 	public static readonly DependencyProperty PlotColorProperty  = DependencyProperty.Register( nameof( PlotColor ),  typeof( Brush ),                typeof( SignalChart ) );
 	public static readonly DependencyProperty FlagTypesProperty  = DependencyProperty.Register( nameof( FlagTypes ),  typeof( EventType[] ),          typeof( SignalChart ) );
+	public static readonly DependencyProperty RedLineProperty    = DependencyProperty.Register( nameof( RedLine ),    typeof( double ),               typeof( SignalChart ) );
+	public static readonly DependencyProperty FillBelowProperty  = DependencyProperty.Register( nameof( FillBelow ),  typeof( bool ),                 typeof( SignalChart ) );
 
 	private static Dictionary<string, List<SignalChart>> _chartGroups = new();
 
@@ -46,10 +49,22 @@ public partial class SignalChart
 		set => SetValue( FlagTypesProperty, value );
 	}
 
+	public double RedLine
+	{
+		get => (double)GetValue( RedLineProperty );
+		set => SetValue( RedLineProperty, value );
+	}
+
 	public string GroupName
 	{
 		get => (string)GetValue( GroupNameProperty );
 		set => SetValue( GroupNameProperty, value );
+	}
+
+	public bool FillBelow
+	{
+		get => (bool)GetValue( FillBelowProperty );
+		set => SetValue( FillBelowProperty, value );
 	}
 
 	public Brush PlotColor
@@ -218,6 +233,11 @@ public partial class SignalChart
 			return;
 		}
 		
+		if( SignalName == "SpO2" )
+		{
+			Debug.WriteLine( "TEsting" );
+		}
+		
 		_tooltip.IsVisible    = false;
 		_mouseTrackLine.X     = time;
 		_currentValueMarker.X = time;
@@ -243,20 +263,12 @@ public partial class SignalChart
                 // the signal itself also 
                 if ( signal.StartTime <= asDateTime && signal.EndTime >= asDateTime )
 				{
-					// The offset calculation can still result in an "off by one", so need to ensure that it's 
-					// within limits also
-					var offset = (int)(asDateTime.Subtract( session.StartTime ).TotalSeconds * signal.FrequencyInHz);
-					if( offset < signal.Samples.Count )
-					{
-						//var value  = signal.Samples[ offset ];
+					var value = signal.GetValueAtTime( asDateTime );
 
-						var value = signal.GetValueAtTime( asDateTime );
+					CurrentValue.Text = $"{asDateTime:T}        {Title}: {value:N2} {signal.UnitOfMeasurement}";
+					_currentValueMarker.Y = value;
 
-						CurrentValue.Text = $"{asDateTime:T}        {Title}: {value:N2} {signal.UnitOfMeasurement}";
-						_currentValueMarker.Y = value;
-
-						break;
-					}
+					break;
 				}
 			}
 		}
@@ -325,6 +337,13 @@ public partial class SignalChart
 		{
 			NoDataLabel.Visibility = Visibility.Hidden;
 			Chart.IsEnabled        = true;
+		}
+		
+		// If a RedLine position is specified, we want to add it before any signal data, as items are rendered in the 
+		// order in which they are added, and we want the redline rendered behind the signal data.
+		if( DependencyPropertyHelper.GetValueSource( this, RedLineProperty ).BaseValueSource != BaseValueSource.Default )
+		{
+			Chart.Plot.AddHorizontalLine( RedLine, Color.Red.MultiplyAlpha( 0.6f ), 1f, LineStyle.Dash );
 		}
 
 		ChartSignal( Chart, day, SignalName );
@@ -401,7 +420,7 @@ public partial class SignalChart
 		chart.Configuration.QualityConfiguration.MouseInteractiveDragged = RenderType.HighQuality;
 		chart.Configuration.QualityConfiguration.MouseInteractiveDropped = RenderType.HighQuality;
 		chart.Configuration.QualityConfiguration.MouseWheelScrolled      = RenderType.HighQuality;
-
+		
 		plot.Style( _chartStyle );
 		//plot.LeftAxis.Label( label );
 		plot.Layout( 0, 0, 0, 0 );
@@ -450,6 +469,14 @@ public partial class SignalChart
 		foreach( var session in day.Sessions )
 		{
 			var signal = session.GetSignalByName( signalName );
+			
+			// Not every Session will contain the signal data for this chart. This is often the case when Sessions
+			// have been added after CPAP data was imported, such as when importing pulse oximeter data or sleep
+			// stage data, for example. 
+			if( signal == null )
+			{
+				continue;
+			}
 
 			minValue = Math.Min( minValue, signal.MinValue * signalScale );
 			maxValue = Math.Max( maxValue, signal.MaxValue * signalScale );
@@ -467,11 +494,13 @@ public partial class SignalChart
 			}
 
 			var graph = chart.Plot.AddSignal( signal.Samples.ToArray(), signal.FrequencyInHz, chartColor, firstSessionAdded ? signal.Name : null );
-			graph.OffsetX    = offset;
-			graph.MarkerSize = 0;
-			graph.ScaleY     = signalScale;
+			graph.OffsetX     = offset;
+			graph.MarkerSize  = 0;
+			graph.ScaleY      = signalScale;
+			graph.UseParallel = true;
 
-			if( signal.MinValue >= 0 && signal.MaxValue > 0 )
+			// "Fill Below" is only available on signals that do not cross a zero line
+			if( signal.MinValue >= 0 && signal.MaxValue > 0 && FillBelow )
 			{
 				graph.FillBelow( chartColor, Color.Transparent, 0.66 );
 			}

@@ -4,5 +4,6 @@
     <Style TargetType="{x:Type controls:SignalChart}">
         <Setter Property="Title" Value="Signal Name"/>
         <Setter Property="GroupName" Value="Default"/>
+        <Setter Property="FillBelow" Value="True"/>
     </Style>
 </ResourceDictionary>

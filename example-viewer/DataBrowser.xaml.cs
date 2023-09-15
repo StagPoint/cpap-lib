@@ -172,5 +172,11 @@ public partial class DataBrowser
 		var chart = this.FindVisualChildren<SignalChart>().FirstOrDefault();
 		chart.ZoomToTime( startTime, endTime );
 	}
+	
+	private void OximetrySummary_OnDailyReportModified( object sender, DailyReport day )
+	{
+		DataContext = null;
+		LoadDay( day );
+	}
 }
 
