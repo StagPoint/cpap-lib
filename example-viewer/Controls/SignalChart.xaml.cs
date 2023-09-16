@@ -137,10 +137,34 @@ public partial class SignalChart
 		Chart.MouseMove    += ChartOnMouseMove;
 		Chart.RightClicked -= Chart.DefaultRightClickEvent;
 		Chart.AxesChanged  += ChartOnAxesChanged;
+		this.PreviewKeyDown += OnPreviewKeyDown;
 
 		AddToGroupList();
 	}
 	
+	private void OnPreviewKeyDown( object sender, KeyEventArgs args )
+	{
+		if( args.Key == Key.Left || args.Key == Key.Right )
+		{
+			bool isShiftDown = Keyboard.IsKeyDown( Key.LeftShift ) || Keyboard.IsKeyDown( Key.RightShift );
+			var  direction   = (args.Key == Key.Left) ? -1.0 : 1.0;
+			var  amount      = isShiftDown ? 20 : 10;
+
+			var plot  = Chart.Plot;
+
+			var axisLimits = plot.GetAxisLimits();
+			var axisRange  = axisLimits.XMax - axisLimits.XMin;
+			var scale      = axisRange / 1;
+
+			if( scale < 0.99 )
+			{
+				plot.AxisPan( (direction * amount) / (1.0 - scale), 0 );
+			}
+
+			args.Handled = true;
+		}
+	}
+
 	private void OnUnloaded( object sender, RoutedEventArgs e )
 	{
 		RemoveFromGroupList();

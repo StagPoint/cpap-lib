@@ -71,6 +71,16 @@ namespace cpaplib
 		public int RespiratoryEffortCount { get; internal set; }
 		
 		/// <summary>
+		/// The number of Flow Limit events that occur per hour
+		/// </summary>
+		public double FlowLimitIndex { get; internal set; }
+		
+		/// <summary>
+		/// The total number of Flow Limit events that occurred
+		/// </summary>
+		public int FlowLimitCount { get; internal set; }
+		
+		/// <summary>
 		/// The total time spent that day in apnea events 
 		/// </summary>
 		public TimeSpan TotalTimeInApnea { get; internal set; }

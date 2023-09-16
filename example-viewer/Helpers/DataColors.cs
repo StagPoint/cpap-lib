@@ -44,8 +44,16 @@ public class DataColors
 
 	public static Color GetMarkerColor( int index )
 	{
-		return _markerColors[ index % _markerColors.Length ];
-		//return Color.FromArgb( unchecked( (int)_markerColors[ index % _markerColors.Length ] ) );
+		var palette = ScottPlot.Palette.Category20.Colors;
+		
+		var color = palette[ index % palette.Length ].ToColor();
+
+		if( ThemeManager.Current.ActualApplicationTheme == ApplicationTheme.Dark )
+		{
+			color = ColorTransforms.TransformBrightness( color, ColorTransforms.ColorTransformMode.Hsb, 1.1 );
+		}
+
+		return color;
 	}
 }
  

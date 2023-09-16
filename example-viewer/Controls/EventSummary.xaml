@@ -18,6 +18,7 @@
             <RowDefinition />
             <RowDefinition />
             <RowDefinition />
+            <RowDefinition />
             <RowDefinition Height="10" />
             <RowDefinition />
         </Grid.RowDefinitions>
@@ -52,16 +53,21 @@
                    HorizontalAlignment="Center" />
         <TextBlock Grid.Column="4" Grid.Row="4" Text="{Binding HypopneaCount, Mode=OneWay}"
                    HorizontalAlignment="Center" />
-        <TextBlock Grid.Column="0" Grid.Row="5" Text="RERA" />
-        <TextBlock Grid.Column="2" Grid.Row="5" Text="{Binding RIN, Mode=OneWay, StringFormat={}{0:N1}}"
+        <TextBlock Grid.Column="0" Grid.Row="5" Text="Flow Limit" Padding="10 0" />
+        <TextBlock Grid.Column="2" Grid.Row="5" Text="{Binding FlowLimitIndex, Mode=OneWay, StringFormat={}{0:N1}}"
                    HorizontalAlignment="Center" />
-        <TextBlock Grid.Column="4" Grid.Row="5" Text="{Binding RespiratoryEffortCount, Mode=OneWay}"
+        <TextBlock Grid.Column="4" Grid.Row="5" Text="{Binding FlowLimitCount, Mode=OneWay}"
                    HorizontalAlignment="Center" />
-        <TextBlock Grid.Column="0" Grid.Row="6" Text="Cheyne-Stokes"
+        <TextBlock Grid.Column="0" Grid.Row="6" Text="RERA" />
+        <TextBlock Grid.Column="2" Grid.Row="6" Text="{Binding RIN, Mode=OneWay, StringFormat={}{0:N1}}"
+                   HorizontalAlignment="Center" />
+        <TextBlock Grid.Column="4" Grid.Row="6" Text="{Binding RespiratoryEffortCount, Mode=OneWay}"
+                   HorizontalAlignment="Center" />
+        <TextBlock Grid.Column="0" Grid.Row="7" Text="Cheyne-Stokes"
                    ToolTip="% Time spent in Cheyne-Stokes Respiration" />
-        <TextBlock Grid.Column="2" Grid.Row="6" HorizontalAlignment="Center"
+        <TextBlock Grid.Column="2" Grid.Row="7" HorizontalAlignment="Center"
                    Text="{Binding CSR, Mode=OneWay, StringFormat={}{0:N2} %}" />
-        <TextBlock Grid.Column="0" Grid.Row="8" Grid.ColumnSpan="4" FontWeight="DemiBold"
-                   Text="{Binding TotalTimeInApnea, Mode=OneWay, StringFormat=Time spent in apnea: {0}, Converter={StaticResource FormattedTimeSpan}}" />
+        <TextBlock Grid.Column="0" Grid.Row="9" Grid.ColumnSpan="4" FontWeight="DemiBold"
+                   Text="{Binding TotalTimeInApnea, Mode=OneWay, StringFormat=Time spent in apnea: {0}, Converter={StaticResource FormattedTimeSpan}, ConverterParameter=Short}" />
     </Grid>
 </UserControl>

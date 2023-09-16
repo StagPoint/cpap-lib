@@ -239,18 +239,6 @@ namespace cpaplib
 									signal.Samples[ i ] *= 1000;
 								}
 							}
-							else if( signalName.Equals( SignalNames.FlowLimit, StringComparison.Ordinal ) )
-							{
-								// Convert flow limit from 0..1 to a percentage
-								signal.PhysicalDimension.Value =  "%";
-								signal.PhysicalMaximum.Value   *= 100;
-								signal.PhysicalMinimum.Value   *= 100;
-								
-								for( int i = 0; i < signal.Samples.Count; i++ )
-								{
-									signal.Samples[ i ] *= 100;
-								}
-							}
 
 							// Not every signal within a Session will have the same start and end time as the others
 							// because of differences in sampling rate, so we keep track of the start time and end
@@ -359,13 +347,32 @@ namespace cpaplib
 			
 			// Generate events that are of interest which are not reported by the ResMed machine
 			GenerateEvents( day );
+			
+			// Generate a summary of all reported events
+			CalculateEventSummary( day );
 		}
 
 		private void GenerateEvents( DayRecord day )
 		{
 			GenerateLeakEvents( day );
+			GenerateFlowLimitEvents( day );
 		}
 		
+		private void GenerateFlowLimitEvents( DayRecord day )
+		{
+			// TODO: Flow Limitation Redline needs to be a configurable value 
+			const double FlowLimitRedline = 0.25;
+			
+			foreach( var session in day.Sessions )
+			{
+				var signal = session.GetSignalByName( SignalNames.FlowLimit );
+				if( signal != null )
+				{
+					Annotate( day.Events, EventType.FlowLimitation, signal, 1, (sample, index) => sample >= FlowLimitRedline );
+				}
+			}
+		}
+
 		private void GenerateLeakEvents( DayRecord day )
 		{
 			// TODO: Leak Redline needs to be a configurable value 
@@ -376,15 +383,15 @@ namespace cpaplib
 				var signal = session.GetSignalByName( SignalNames.LeakRate );
 				if( signal != null )
 				{
-					Annotate( day.Events, EventType.LargeLeak, signal, (sample, index) => sample >= LeakRedline );
+					Annotate( day.Events, EventType.LargeLeak, signal, 1, (sample, index) => sample >= LeakRedline );
 				}
 			}
 		}
 
-		private void Annotate( List<ReportedEvent> events, EventType eventType, Signal signal, Func<double, int, bool> predicate )
+		private void Annotate( List<ReportedEvent> events, EventType eventType, Signal signal, double minDuration, Func<double, int, bool> predicate )
 		{
-			int   state      = 0;
-			short eventStart = -1;
+			int    state      = 0;
+			double eventStart = -1;
 
 			var sourceData     = signal.Samples;
 			var sampleInterval = 1.0 / signal.FrequencyInHz;
@@ -392,7 +399,7 @@ namespace cpaplib
 			for( int i = 0; i < sourceData.Count; i++ )
 			{
 				var sample = sourceData[ i ];
-				var time   = (short)(i * sampleInterval);
+				var time   = i * sampleInterval;
 
 				switch( state )
 				{
@@ -405,17 +412,23 @@ namespace cpaplib
 						break;
 
 					case 1:
-						int duration = (time - eventStart);
+						// Calculate the duration of the event.
+						// Note that we use the time of the *last* sample that didn't match the exit predicate.
+						double duration = Math.Max( 0.0, time - eventStart - sampleInterval );
+						
 						if( !predicate( sample, i ) )
 						{
-							var annotation = new ReportedEvent
+							if( duration >= minDuration )
 							{
-								Type      = eventType,
-								StartTime = signal.StartTime.AddSeconds( eventStart ),
-								Duration  = TimeSpan.FromSeconds( duration ),
-							};
+								var annotation = new ReportedEvent
+								{
+									Type      = eventType,
+									StartTime = signal.StartTime.AddSeconds( eventStart ),
+									Duration  = TimeSpan.FromSeconds( duration ),
+								};
 
-							events.Add( annotation );
+								events.Add( annotation );
+							}
 
 							state = 0;
 						}
@@ -567,12 +580,17 @@ namespace cpaplib
 					}
 				}
 			}
-
-			day.EventSummary.ObstructiveApneaCount = day.Events.Count( x => x.Type == EventType.ObstructiveApnea );
-			day.EventSummary.HypopneaCount = day.Events.Count( x => x.Type == EventType.Hypopnea );
+		}
+		
+		private static void CalculateEventSummary( DayRecord day )
+		{
+			day.EventSummary.ObstructiveApneaCount  = day.Events.Count( x => x.Type == EventType.ObstructiveApnea );
+			day.EventSummary.HypopneaCount          = day.Events.Count( x => x.Type == EventType.Hypopnea );
 			day.EventSummary.UnclassifiedApneaCount = day.Events.Count( x => x.Type == EventType.Unclassified );
-			day.EventSummary.ClearAirwayCount = day.Events.Count( x => x.Type == EventType.ClearAirway );
+			day.EventSummary.ClearAirwayCount       = day.Events.Count( x => x.Type == EventType.ClearAirway );
 			day.EventSummary.RespiratoryEffortCount = day.Events.Count( x => x.Type == EventType.RERA );
+			day.EventSummary.FlowLimitCount         = day.Events.Count( x => x.Type == EventType.FlowLimitation );
+			day.EventSummary.FlowLimitIndex         = day.EventSummary.FlowLimitCount / day.OnDuration.TotalHours;
 
 			day.EventSummary.TotalTimeInApnea      = TimeSpan.FromSeconds( day.Events.Sum( x => x.Duration.TotalSeconds ) );
 			day.EventSummary.TotalTimeOfLargeLeaks = TimeSpan.FromSeconds( day.Events.Where( x => x.Type == EventType.LargeLeak ).Sum( x => x.Duration.TotalSeconds ) );

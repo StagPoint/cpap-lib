@@ -218,6 +218,7 @@
                             <cpap:EventType>Hypopnea</cpap:EventType>
                             <cpap:EventType>ClearAirway</cpap:EventType>
                             <cpap:EventType>RERA</cpap:EventType>
+                            <cpap:EventType>FlowLimitation</cpap:EventType>
                         </x:Array>
                     </controls:SignalChart.FlagTypes>
                 </controls:SignalChart>
@@ -233,11 +234,12 @@
                         </x:Array>
                     </controls:SignalChart.FlagTypes>
                 </controls:SignalChart>
-                <controls:SignalChart SignalName="Flow Limit" Title="Flow Limit" RedLine="0.2" TitleStyle="{DynamicResource SubtitleTextBlockStyle}">
+                <controls:SignalChart SignalName="Flow Limit" Title="Flow Limit" RedLine="0.25" TitleStyle="{DynamicResource SubtitleTextBlockStyle}">
                     <controls:SignalChart.FlagTypes>
                         <x:Array Type="cpap:EventType">
                             <cpap:EventType>ObstructiveApnea</cpap:EventType>
                             <cpap:EventType>RERA</cpap:EventType>
+                            <cpap:EventType>FlowLimitation</cpap:EventType>
                         </x:Array>
                     </controls:SignalChart.FlagTypes>
                 </controls:SignalChart>
