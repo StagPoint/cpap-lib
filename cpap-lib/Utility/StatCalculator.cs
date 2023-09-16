@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace cpaplib
@@ -18,11 +19,7 @@ namespace cpaplib
 			// Reset the _sorter for the next iteration 
 			_sorter.Clear();
 
-			// Make sure that there is at least one session which contains the named Signal
-			if( sessions.All( x => x.GetSignalByName( signalName ) == null ) )
-			{
-				throw new IndexOutOfRangeException( $"Failed to find signal {signalName}" );
-			}
+			string unitOfMeasurement = "";
 
 			// Copy all available samples from all sessions into a single array that can be sorted and
 			// used to calculate the statistics. 
@@ -31,6 +28,7 @@ namespace cpaplib
 				var signal = session.GetSignalByName( signalName );
 				if( signal != null )
 				{
+					unitOfMeasurement = signal.UnitOfMeasurement;
 					_sorter.AddRange( signal.Samples );
 				}
 			}
@@ -41,13 +39,14 @@ namespace cpaplib
 
 			var stats = new SignalStatistics
 			{
-				SignalName   = signalName,
-				Minimum      = sortedSamples[ (int)(bufferLength * 0.01) ],
-				Average      = sortedSamples.Average(),
-				Maximum      = sortedSamples.Max(),
-				Median       = sortedSamples[ bufferLength / 2 ],
-				Percentile95 = sortedSamples[ (int)(bufferLength * 0.95) ],
-				Percentile99 = sortedSamples[ (int)(bufferLength * 0.995) ],
+				SignalName        = signalName,
+				UnitOfMeasurement = unitOfMeasurement,
+				Minimum           = sortedSamples[ (int)(bufferLength * 0.01) ],
+				Average           = sortedSamples.Average(),
+				Maximum           = sortedSamples.Max(),
+				Median            = sortedSamples[ bufferLength / 2 ],
+				Percentile95      = sortedSamples[ (int)(bufferLength * 0.95) ],
+				Percentile99      = sortedSamples[ (int)(bufferLength * 0.995) ],
 			};
 				
 			return stats;

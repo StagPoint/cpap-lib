@@ -79,6 +79,12 @@ namespace cpaplib
 		VibratorySnore,
 	}
 
+	internal enum EventMarkerPosition
+	{
+		AfterDuration = 0,
+		BeforeDuration,
+	}
+
 	public class ReportedEvent
 	{
 		#region Public properties 
@@ -87,7 +93,12 @@ namespace cpaplib
 		/// The descriptive name of the event being flagged 
 		/// </summary>
 		public EventType Type { get; internal set; }
-		
+
+		/// <summary>
+		/// Gets or sets whether the Event's position occurs logically before or after the Duration 
+		/// </summary>
+		internal EventMarkerPosition MarkerPosition { get => GetOnsetPositionType( Type ); }
+
 		/// <summary>
 		/// The time when the event occurred 
 		/// </summary>
@@ -96,22 +107,91 @@ namespace cpaplib
 		/// <summary>
 		/// The duration of the event being flagged, in seconds
 		/// </summary>
-		public double Duration { get; internal set; }
+		public TimeSpan Duration { get; internal set; }
 
 		#endregion
+		
+		#region Public functions
+
+		public TimeRange GetTimeBounds()
+		{
+			var markerPosition = GetOnsetPositionType( Type );
+
+			if( markerPosition == EventMarkerPosition.AfterDuration )
+			{
+				return new TimeRange()
+				{
+					StartTime = StartTime - Duration,
+					EndTime   = StartTime
+				};
+			}
+
+			return new TimeRange()
+			{
+				StartTime = StartTime,
+				EndTime   = StartTime + Duration
+			};
+		}
+		
+		#endregion 
 		
 		#region Internal functions
 
 		internal static ReportedEvent FromEdfAnnotation( DateTime fileStartTime, EdfAnnotation annotation )
 		{
+			var direction = 1;
+
+			EventType eventType = EventTypeUtil.FromName( annotation.Annotation, false );
+			
 			var flag = new ReportedEvent
 			{
-				StartTime = fileStartTime.AddSeconds( annotation.Onset ),
-				Duration  = annotation.Duration ?? 0.0,
-				Type      = EventTypeUtil.FromName( annotation.Annotation, false )
+				StartTime = fileStartTime.AddSeconds( direction * annotation.Onset ),
+				Duration  = TimeSpan.FromSeconds( annotation.Duration ?? 0.0 ),
+				Type      = eventType
 			};
 
 			return flag;
+		}
+
+		private EventMarkerPosition GetOnsetPositionType( EventType eventType )
+		{
+			EventMarkerPosition markerPosition = EventMarkerPosition.BeforeDuration;
+
+			switch( eventType )
+			{
+				case EventType.Unclassified:
+					markerPosition = EventMarkerPosition.AfterDuration;
+					break;
+				case EventType.ObstructiveApnea:
+					markerPosition = EventMarkerPosition.AfterDuration;
+					break;
+				case EventType.Hypopnea:
+					markerPosition = EventMarkerPosition.AfterDuration;
+					break;
+				case EventType.ClearAirway:
+					markerPosition = EventMarkerPosition.AfterDuration;
+					break;
+				case EventType.Arousal:
+					markerPosition = EventMarkerPosition.AfterDuration;
+					break;
+				case EventType.RERA:
+					markerPosition = EventMarkerPosition.AfterDuration;
+					break;
+				case EventType.CSR:
+					markerPosition = EventMarkerPosition.AfterDuration;
+					break;
+				case EventType.FlowLimitation:
+					markerPosition = EventMarkerPosition.AfterDuration;
+					break;
+				case EventType.VibratorySnore:
+					markerPosition = EventMarkerPosition.AfterDuration;
+					break;
+				default:
+					markerPosition = EventMarkerPosition.BeforeDuration;
+					break;
+			}
+
+			return markerPosition;
 		}
 		
 		#endregion 
@@ -120,7 +200,7 @@ namespace cpaplib
 
 		public override string ToString()
 		{
-			return $"Start: {StartTime:t}  Duration: {Duration:F2}  Description: {Type.ToName()}";
+			return $"Start: {StartTime:t}  Duration: {Duration:T}  Description: {Type.ToName()}";
 		}
 
 		#endregion 

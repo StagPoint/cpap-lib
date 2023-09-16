@@ -9,7 +9,7 @@
     <UserControl.Resources>
         <local:FormattedTimespanConverter x:Key="FormattedTimeSpan" />
     </UserControl.Resources>
-    <Grid Name="gridEventSummary">
+    <Grid Name="gridEventSummary" DataContext="{Binding EventSummary}">
         <Grid.RowDefinitions>
             <RowDefinition />
             <RowDefinition />

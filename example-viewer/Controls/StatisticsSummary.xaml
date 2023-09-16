@@ -11,40 +11,47 @@
             <RowDefinition />
             <RowDefinition />
         </Grid.RowDefinitions>
-        <Grid Grid.Row="0">
+        <Grid Grid.Row="0" HorizontalAlignment="Stretch">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" SharedSizeGroup="C0"/>
-                <ColumnDefinition />
-                <ColumnDefinition />
-                <ColumnDefinition />
-                <ColumnDefinition />
-                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto" SharedSizeGroup="C1"/>
+                <ColumnDefinition Width="Auto" SharedSizeGroup="C2"/>
+                <ColumnDefinition Width="Auto" SharedSizeGroup="C3"/>
+                <ColumnDefinition Width="Auto" SharedSizeGroup="C4"/>
+                <ColumnDefinition Width="Auto" SharedSizeGroup="C5"/>
             </Grid.ColumnDefinitions>
             <TextBlock Grid.Column="0" Text="Channel Name" FontWeight="Bold" Padding="0 0 10 0"/>
             <TextBlock Grid.Column="1" Text="Min" FontWeight="Bold" />
-            <TextBlock Grid.Column="2" Text="Avg" FontWeight="Bold" />
             <TextBlock Grid.Column="3" Text="Med" FontWeight="Bold" />
+            <TextBlock Grid.Column="2" Text="Avg" FontWeight="Bold" />
             <TextBlock Grid.Column="4" Text="95%" FontWeight="Bold" />
-            <!-- <TextBlock Grid.Column="5" Text="99%" /> -->
+            <TextBlock Grid.Column="5" Text="Max" FontWeight="Bold" />
         </Grid>
-        <ItemsControl Grid.Row="1" Name="lvwStatistics" ItemsSource="{Binding Persons}">
+        <ItemsControl Grid.Row="1" Name="lvwStatistics" ItemsSource="{Binding Statistics}">
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" SharedSizeGroup="C0"/>
-                            <ColumnDefinition />
-                            <ColumnDefinition />
-                            <ColumnDefinition />
-                            <ColumnDefinition />
-                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="C1"/>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="C2"/>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="C3"/>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="C4"/>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="C5"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="{Binding SignalName}" Padding="0 0 10 0"/>
-                        <TextBlock Grid.Column="1" Text="{Binding Minimum, Mode=OneWay, StringFormat={}{0:f1}}" />
-                        <TextBlock Grid.Column="2" Text="{Binding Average, Mode=OneWay, StringFormat={}{0:f1}}" />
-                        <TextBlock Grid.Column="3" Text="{Binding Median, Mode=OneWay, StringFormat={}{0:f1}}" />
-                        <TextBlock Grid.Column="4" Text="{Binding Percentile95, Mode=OneWay, StringFormat={}{0:f1}}" />
-                        <!-- <TextBlock Grid.Column="5" Text="{Binding Percentile99, Mode=OneWay, StringFormat={}{0:f1}}" /> -->
+                        <TextBlock Grid.Column="0" Text="{Binding SignalName}" Padding="0 0 10 0">
+                            <TextBlock.ToolTip>
+                                <MultiBinding StringFormat="{}{0}  ({1})">
+                                    <Binding Path="SignalName" />
+                                    <Binding Path="UnitOfMeasurement" />
+                                </MultiBinding>
+                            </TextBlock.ToolTip>
+                        </TextBlock>
+                        <TextBlock Grid.Column="1" Text="{Binding Minimum, Mode=OneWay, StringFormat={}{0:f2}}" Padding="0 0 10 0"/>
+                        <TextBlock Grid.Column="3" Text="{Binding Median, Mode=OneWay, StringFormat={}{0:f2}}" Padding="0 0 10 0"/>
+                        <TextBlock Grid.Column="2" Text="{Binding Average, Mode=OneWay, StringFormat={}{0:f2}}" Padding="0 0 10 0"/>
+                        <TextBlock Grid.Column="4" Text="{Binding Percentile95, Mode=OneWay, StringFormat={}{0:f2}}" Padding="0 0 10 0"/>
+                        <TextBlock Grid.Column="5" Text="{Binding Maximum, Mode=OneWay, StringFormat={}{0:f2}}" Padding="0 0 10 0"/>
                     </Grid>
                 </DataTemplate>
             </ItemsControl.ItemTemplate>

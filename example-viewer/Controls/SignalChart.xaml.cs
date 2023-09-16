@@ -278,13 +278,14 @@ public partial class SignalChart
 		// Find any events the mouse might be hovering over
 		foreach( var flag in _events )
 		{
-			var startTime = (flag.StartTime - _day.RecordingStartTime).TotalSeconds - flag.Duration;
-			var endTime = (flag.StartTime - _day.RecordingStartTime).TotalSeconds;
+			var bounds    = flag.GetTimeBounds();
+			var startTime = (bounds.StartTime - _day.RecordingStartTime).TotalSeconds;
+			var endTime   = (bounds.EndTime - _day.RecordingStartTime).TotalSeconds;
 			
 			if( time >= startTime - highlightDistance && time <= endTime + highlightDistance )
 			{
-				if( flag.Duration > 0 )
-					_tooltip.Label = $"{flag.Type.ToName()} ({TimeSpan.FromSeconds( flag.Duration ):g})";
+				if( flag.Duration.TotalSeconds > 0 )
+					_tooltip.Label = $"{flag.Type.ToName()} ({flag.Duration:g})";
 				else
 					_tooltip.Label = $"{flag.Type.ToName()}";
 				
@@ -340,6 +341,8 @@ public partial class SignalChart
 		{
 			NoDataLabel.Visibility = Visibility.Hidden;
 			Chart.IsEnabled        = true;
+			
+			Chart.Refresh();
 		}
 		
 		// If a RedLine position is specified, we want to add it before any signal data, as items are rendered in the 
@@ -373,6 +376,8 @@ public partial class SignalChart
 		// TODO: The "Current Value" marker dot is currently not visible. 
 		_currentValueMarker           = Chart.Plot.AddMarker( -1, -1, MarkerShape.filledCircle, 8, Color.White, null );
 		_currentValueMarker.IsVisible = false;
+		
+		Chart.Refresh();
 	}
 	
 	private void CreateEventMarkers( DayRecord day )
@@ -393,12 +398,17 @@ public partial class SignalChart
 
 					var markerLine = Chart.Plot.AddVerticalLine( offset, color, 1f, LineStyle.Solid, label );
 					
-					if( eventFlag.Duration > 0 )
+					if( eventFlag.Duration.TotalSeconds > 0 )
 					{
+						// Determine whether to consider the Duration as occurring before or after the marker flag
+						var bounds    = eventFlag.GetTimeBounds();
+						var startTime = (bounds.StartTime - _day.RecordingStartTime).TotalSeconds;
+						var endTime   = (bounds.EndTime - _day.RecordingStartTime).TotalSeconds;
+						
 						// This seems backwards, but it appears that ResMed CPAP machines will set Duration to include
 						// the period *before* the event, presumably because that period of time is a defining characteristic
 						// of said event (such as "a decrease in airflow lasting at least 10 seconds", etc).
-						Chart.Plot.AddHorizontalSpan( offset - eventFlag.Duration, offset, color.MultiplyAlpha( 0.2f ) );
+						Chart.Plot.AddHorizontalSpan( startTime, endTime, color.MultiplyAlpha( 0.2f ) );
 					}
 
 					_events.Add( eventFlag );
@@ -549,8 +559,6 @@ public partial class SignalChart
 			
 			chart.Plot.YAxis.ManualTickPositions( automaticLabels, labels );
 		}
-
-		chart.Refresh();
 	}
 
 	private float MeasureText( string text, string fontFamily, float emSize )

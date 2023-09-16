@@ -54,7 +54,7 @@ public class OxyLinkLoader : ISessionDataLoader
 
 		Signal oxygen = new Signal
 		{
-			Name              = "SpO2",
+			Name              = SignalNames.SpO2,
 			FrequencyInHz     = 0.25,
 			MinValue          = 80,
 			MaxValue          = 100,
@@ -63,7 +63,7 @@ public class OxyLinkLoader : ISessionDataLoader
 		
 		Signal pulse = new Signal
 		{
-			Name              = "Pulse",
+			Name              = SignalNames.Pulse,
 			FrequencyInHz     = 0.25,
 			MinValue          = 60,
 			MaxValue          = 120,
@@ -72,7 +72,7 @@ public class OxyLinkLoader : ISessionDataLoader
 		
 		Signal movement = new Signal
 		{
-			Name              = "Movement",
+			Name              = SignalNames.Movement,
 			FrequencyInHz     = 0.25,
 			MinValue          = 0,
 			MaxValue          = 100,

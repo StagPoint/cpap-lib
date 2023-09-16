@@ -14,10 +14,10 @@ namespace cpaplib
 
 		public Sorter() { throw new NotImplementedException(); }
 
-		public Sorter( int bufferSize )
+		public Sorter( int bufferSize = short.MaxValue )
 		{
 			_sortBuffer = new ListEx<float>( bufferSize );
-			_workBuffer = new uint[ bufferSize ];
+			_workBuffer = null;
 		}
 
 		public void Clear()
@@ -27,11 +27,8 @@ namespace cpaplib
 
 		public void AddRange( IList<double> values )
 		{
-			if( _sortBuffer.Capacity < _sortBuffer.Count + values.Count )
-			{
-				throw new Exception(  $"Buffer size of {_sortBuffer.Capacity} is smaller than actual workload" );
-			}
-
+			_sortBuffer.GrowIfNeeded( values.Count );
+			
 			foreach( var value in values )
 			{
 				_sortBuffer.Add( (float)value );
@@ -41,9 +38,9 @@ namespace cpaplib
 		public ListEx<float> Sort()
 		{
 #if ALLOW_UNSAFE
-			if( _workBuffer.Length < _sortBuffer.Count )
+			if( _workBuffer == null || _workBuffer.Length < _sortBuffer.Count )
 			{
-				throw new Exception( $"Work Buffer size of {_workBuffer.Length} is smaller than actual workload" );
+				_workBuffer = new uint[ _sortBuffer.Count ];
 			}
 			
 			RadixSort( _sortBuffer.Items, _workBuffer, _sortBuffer.Count );

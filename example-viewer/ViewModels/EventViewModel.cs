@@ -45,7 +45,7 @@ public class EventTypeSummary
 			{
 				Events.Add( evt );
 				TotalCount   += 1;
-				totalSeconds += evt.Duration;
+				totalSeconds += evt.Duration.TotalSeconds;
 			}
 		}
 

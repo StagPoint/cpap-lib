@@ -74,6 +74,11 @@ namespace cpaplib
 		/// The total time spent that day in apnea events 
 		/// </summary>
 		public TimeSpan TotalTimeInApnea { get; internal set; }
+		
+		/// <summary>
+		/// The total time when large leaks (above the specified limit) occured
+		/// </summary>
+		public TimeSpan TotalTimeOfLargeLeaks { get; internal set; }
 
 		internal void ReadFrom( Dictionary<string, double> data )
 		{

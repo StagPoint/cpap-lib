@@ -140,7 +140,8 @@ namespace cpaplib
 			var filenames = Directory.GetFiles( logFolder, "*.edf" );
 			
 			// I believe the filenames are already sorted, but since it's important that they are sorted by date
-			// and time, we'll explicitly sort them. 
+			// and time, we'll explicitly sort them. Note that this coincidentally sorts the high-resolution 
+			// signals before the low-resolution signals, which is a nice bonus.
 			Array.Sort( filenames );
 			
 			foreach( var filename in filenames )
@@ -198,14 +199,26 @@ namespace cpaplib
 							{
 								continue;
 							}
+
+							if( signalName.Equals( SignalNames.MaskPressureLow, StringComparison.Ordinal ) )
+							{
+								// If we already have high-resolution Mask Pressure signal data, ignore the low-resolution 
+								if( session.Signals.Any( x => x.Name == SignalNames.MaskPressure ) )
+								{
+									continue;
+								}
+
+								// Otherwise, rename the low-resolution mask pressure data for consistency 
+								signalName = signal.Label.Value = SignalNames.MaskPressure;
+							}
 							
 							// Some signals should be scaled to match the other signals
-							var scaleToLitersPerMinute = signalName.Equals( "Flow Rate", StringComparison.Ordinal ) ||
-							                             signalName.Equals( "Leak Rate", StringComparison.Ordinal );
+							var scaleToLitersPerMinute = signalName.Equals( SignalNames.FlowRate, StringComparison.Ordinal ) ||
+							                             signalName.Equals( SignalNames.LeakRate, StringComparison.Ordinal );
 							if( scaleToLitersPerMinute )
 							{
 								// Convert from L/s to L/m
-								signal.PhysicalDimension.Value =  "L/m";
+								signal.PhysicalDimension.Value =  "L/min";
 								signal.PhysicalMaximum.Value   *= 60;
 								signal.PhysicalMinimum.Value   *= 60;
 								
@@ -214,7 +227,7 @@ namespace cpaplib
 									signal.Samples[ i ] *= 60;
 								}
 							}
-							else if( signalName.Equals( "Tidal Volume", StringComparison.Ordinal ) )
+							else if( signalName.Equals( SignalNames.TidalVolume, StringComparison.Ordinal ) )
 							{
 								// I don't know why ResMed reports Tidal Volume in Liters, but ml is the standard
 								signal.PhysicalDimension.Value =  "ml";
@@ -224,6 +237,18 @@ namespace cpaplib
 								for( int i = 0; i < signal.Samples.Count; i++ )
 								{
 									signal.Samples[ i ] *= 1000;
+								}
+							}
+							else if( signalName.Equals( SignalNames.FlowLimit, StringComparison.Ordinal ) )
+							{
+								// Convert flow limit from 0..1 to a percentage
+								signal.PhysicalDimension.Value =  "%";
+								signal.PhysicalMaximum.Value   *= 100;
+								signal.PhysicalMinimum.Value   *= 100;
+								
+								for( int i = 0; i < signal.Samples.Count; i++ )
+								{
+									signal.Samples[ i ] *= 100;
 								}
 							}
 
@@ -299,8 +324,8 @@ namespace cpaplib
 			// signal matching, but doesn't hurt anything when no sessions are split. 
 			day.Sessions.Sort( ( lhs, rhs ) => lhs.StartTime.CompareTo( rhs.StartTime ) );
 			
-			var lastRecordedTime  = DateTime.MinValue;
 			var firstRecordedTime = DateTime.MaxValue;
+			var lastRecordedTime  = DateTime.MinValue;
 			
 			// Now that each Session has all of its Signals added, each with correct StartTime and EndTime values, 
 			// we can update the StartTime and EndTime of the Sessions. These values were previously set by the 
@@ -329,9 +354,88 @@ namespace cpaplib
 			day.RecordingStartTime = firstRecordedTime;
 			day.Duration           = (lastRecordedTime - day.RecordingStartTime);
 
+			// Calculate statistics (min, avg, median, max, etc) for each Signal
 			CalculateSignalStatistics( day );
+			
+			// Generate events that are of interest which are not reported by the ResMed machine
+			GenerateEvents( day );
+		}
+
+		private void GenerateEvents( DayRecord day )
+		{
+			GenerateLeakEvents( day );
 		}
 		
+		private void GenerateLeakEvents( DayRecord day )
+		{
+			// TODO: Leak Redline needs to be a configurable value 
+			const double LeakRedline = 24;
+			
+			foreach( var session in day.Sessions )
+			{
+				var signal = session.GetSignalByName( SignalNames.LeakRate );
+				if( signal != null )
+				{
+					Annotate( day.Events, EventType.LargeLeak, signal, (sample, index) => sample >= LeakRedline );
+				}
+			}
+		}
+
+		private void Annotate( List<ReportedEvent> events, EventType eventType, Signal signal, Func<double, int, bool> predicate )
+		{
+			int   state      = 0;
+			short eventStart = -1;
+
+			var sourceData     = signal.Samples;
+			var sampleInterval = 1.0 / signal.FrequencyInHz;
+			
+			for( int i = 0; i < sourceData.Count; i++ )
+			{
+				var sample = sourceData[ i ];
+				var time   = (short)(i * sampleInterval);
+
+				switch( state )
+				{
+					case 0:
+						if( predicate( sample, i ) )
+						{
+							eventStart = time;
+							state      = 1;
+						}
+						break;
+
+					case 1:
+						int duration = (time - eventStart);
+						if( !predicate( sample, i ) )
+						{
+							var annotation = new ReportedEvent
+							{
+								Type      = eventType,
+								StartTime = signal.StartTime.AddSeconds( eventStart ),
+								Duration  = TimeSpan.FromSeconds( duration ),
+							};
+
+							events.Add( annotation );
+
+							state = 0;
+						}
+						break;
+				}
+			}
+
+			if( state == 1 )
+			{
+				var annotation = new ReportedEvent()
+				{
+					Type      = eventType,
+					StartTime = signal.StartTime.AddSeconds( eventStart ),
+					Duration  = TimeSpan.FromSeconds( sourceData.Count - 1 - eventStart ),
+				};
+
+				events.Add( annotation );
+			}
+		}
+
 		private void CalculateSignalStatistics( DayRecord day )
 		{
 			// Determine the maximum sort buffer size we'll need so that we only need to allocate and reuse one buffer.
@@ -354,21 +458,13 @@ namespace cpaplib
 			// Allocate the buffer that we'll sort signal data in. 
 			var calculator = new StatCalculator( maxBufferSize );
 
-			day.Statistics.Add( calculator.CalculateStats( "Mask Pressure", day.Sessions ) );
-			day.Statistics.Add( calculator.CalculateStats( "Pressure", day.Sessions ) );
-			day.Statistics.Add( calculator.CalculateStats( "Expiratory Pressure", day.Sessions ) );
-			day.Statistics.Add( calculator.CalculateStats( "Leak Rate", day.Sessions ) );
-			day.Statistics.Add( calculator.CalculateStats( "Respiration Rate", day.Sessions ) );
-			day.Statistics.Add( calculator.CalculateStats( "Tidal Volume", day.Sessions ) );
-			day.Statistics.Add( calculator.CalculateStats( "Minute Vent", day.Sessions ) );
-			day.Statistics.Add( calculator.CalculateStats( "Snore", day.Sessions ) );
-			day.Statistics.Add( calculator.CalculateStats( "Flow Limit", day.Sessions ) );
-			
-			// In most cases, there will be no SpO2 or Pulse data available 
-			if( day.Sessions.Any( x => x.GetSignalByName( "SpO2" ) != null ) )
+			foreach( var signal in day.Sessions[ 0 ].Signals )
 			{
-				day.Statistics.Add( calculator.CalculateStats( "SpO2", day.Sessions ) );
-				day.Statistics.Add( calculator.CalculateStats( "Pulse", day.Sessions ) );
+				// Automatically calculate statistics for all Signals whose value range is zero or above
+				if( signal.MinValue >= 0 && signal.MaxValue > signal.MinValue )
+				{
+					day.Statistics.Add( calculator.CalculateStats( signal.Name, day.Sessions ) );
+				}
 			}
 		}
 
@@ -416,11 +512,11 @@ namespace cpaplib
 							var newEvent = new ReportedEvent
 							{
 								StartTime   = day.RecordingStartTime.AddSeconds( csrStartTime ),
-								Duration    = annotation.Onset - csrStartTime,
+								Duration    = TimeSpan.FromSeconds( annotation.Onset - csrStartTime ),
 								Type        = EventType.CSR,
 							};
 
-							totalTimeInCSR += newEvent.Duration;
+							totalTimeInCSR += newEvent.Duration.TotalSeconds;
 
 							day.Events.Add( newEvent );
 
@@ -478,7 +574,8 @@ namespace cpaplib
 			day.EventSummary.ClearAirwayCount = day.Events.Count( x => x.Type == EventType.ClearAirway );
 			day.EventSummary.RespiratoryEffortCount = day.Events.Count( x => x.Type == EventType.RERA );
 
-			day.EventSummary.TotalTimeInApnea = TimeSpan.FromSeconds( day.Events.Sum( x => x.Duration ) );
+			day.EventSummary.TotalTimeInApnea      = TimeSpan.FromSeconds( day.Events.Sum( x => x.Duration.TotalSeconds ) );
+			day.EventSummary.TotalTimeOfLargeLeaks = TimeSpan.FromSeconds( day.Events.Where( x => x.Type == EventType.LargeLeak ).Sum( x => x.Duration.TotalSeconds ) );
 		}
 
 		private void LoadIndexAndSettings( string filename, DateTime? minDate, DateTime? maxDate )

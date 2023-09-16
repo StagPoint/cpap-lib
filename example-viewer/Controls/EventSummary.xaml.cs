@@ -14,22 +14,5 @@ public partial class EventSummary : UserControl
 	{
 		InitializeComponent();
 	}
-	
-	protected override void OnPropertyChanged( DependencyPropertyChangedEventArgs e )
-	{
-		base.OnPropertyChanged( e );
-
-		if( e.Property.Name == nameof( DataContext ) )
-		{
-			if( DataContext is DayRecord day )
-			{
-				gridEventSummary.DataContext = day.EventSummary;
-			}
-			else if( DataContext is EventSummary summary )
-			{
-				gridEventSummary.DataContext = summary;
-			}
-		}
-	}
 }
 

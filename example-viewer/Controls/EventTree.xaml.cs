@@ -60,8 +60,6 @@ public partial class EventTree : UserControl
 			if( DataContext is DayRecord day )
 			{
 				tvwEvents.DataContext = new EventViewModel( day );
-
-				Debug.WriteLine( $"Event Tree Loading {day.ReportDate.Date}" );
 			}
 		}
 	}
