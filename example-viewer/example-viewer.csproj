@@ -3,10 +3,14 @@
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
         <TargetFramework>net7.0-windows</TargetFramework>
-        <RootNamespace>example_viewer</RootNamespace>
+        <RootNamespace>cpaplib.viewer</RootNamespace>
         <Nullable>disable</Nullable>
         <UseWPF>true</UseWPF>
         <ApplicationManifest>app.manifest</ApplicationManifest>
+        <AssemblyName>cpap-viewer</AssemblyName>
+        <Company>StagPoint</Company>
+        <Product>cpap-viewer</Product>
+        <AssemblyVersion>0.1 alpha</AssemblyVersion>
     </PropertyGroup>
 
     <ItemGroup>

@@ -12,6 +12,7 @@
         <Style TargetType="{x:Type TreeViewItem}" BasedOn="{StaticResource {x:Type TreeViewItem}}">
             <Setter Property="IsExpanded" Value="True" />
         </Style>
+        <local:FormattedTimespanConverter x:Key="FormattedTimeSpan" />
         <local:EventTypeToNameConverter x:Key="EventTypeToName" />
         <ResourceDictionary x:Key="CompactSpacing" Source="pack://application:,,,/ModernWpf;component/DensityStyles/Compact.xaml" />
     </UserControl.Resources>
@@ -29,7 +30,10 @@
                     </TextBlock>
                     <HierarchicalDataTemplate.ItemTemplate>
                         <DataTemplate>
-                            <TextBlock Text="{Binding StartTime, Mode=OneWay, StringFormat={}{0:T}}" />
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{Binding StartTime, Mode=OneWay, StringFormat={}{0:T}}" Width="100" />
+                                <TextBlock Text="{Binding Duration, Mode=OneWay, Converter={StaticResource FormattedTimeSpan}, ConverterParameter=Short.Empty}"/>
+                            </StackPanel>
                         </DataTemplate>
                     </HierarchicalDataTemplate.ItemTemplate>
                 </HierarchicalDataTemplate>

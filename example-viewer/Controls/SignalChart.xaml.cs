@@ -535,6 +535,7 @@ public partial class SignalChart
 			graph.MarkerSize  = 0;
 			graph.ScaleY      = signalScale;
 			graph.UseParallel = true;
+			// graph.StepDisplay = true;
 
 			// "Fill Below" is only available on signals that do not cross a zero line
 			if( signal.MinValue >= 0 && signal.MaxValue > 0 && FillBelow )

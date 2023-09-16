@@ -53,7 +53,7 @@
                    HorizontalAlignment="Center" />
         <TextBlock Grid.Column="4" Grid.Row="4" Text="{Binding HypopneaCount, Mode=OneWay}"
                    HorizontalAlignment="Center" />
-        <TextBlock Grid.Column="0" Grid.Row="5" Text="Flow Limit" Padding="10 0" />
+        <TextBlock Grid.Column="0" Grid.Row="5" Text="Flow Limit" />
         <TextBlock Grid.Column="2" Grid.Row="5" Text="{Binding FlowLimitIndex, Mode=OneWay, StringFormat={}{0:N1}}"
                    HorizontalAlignment="Center" />
         <TextBlock Grid.Column="4" Grid.Row="5" Text="{Binding FlowLimitCount, Mode=OneWay}"

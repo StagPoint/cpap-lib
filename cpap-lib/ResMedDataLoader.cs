@@ -66,7 +66,8 @@ namespace cpaplib
 			}
 #endif
 
-			// Make sure that each Session has its Source set (anticipating other potential sources for Session data in the future)
+			// Make sure that each Session has its Source set (sessions may be created by other processes, such as
+			// pulse oximeter import, etc.)
 			foreach( var day in Days )
 			{
 				foreach( var session in day.Sessions )
@@ -340,7 +341,7 @@ namespace cpaplib
 			// think of what it is and doing so makes working with and displaying the data a lot more frustrating, so
 			// we'll use the *actual* recorded session times instead. 
 			day.RecordingStartTime = firstRecordedTime;
-			day.Duration           = (lastRecordedTime - day.RecordingStartTime);
+			day.Duration           = TimeSpan.FromSeconds( day.Sessions.Sum( x => x.Duration.TotalSeconds ) );
 
 			// Calculate statistics (min, avg, median, max, etc) for each Signal
 			CalculateSignalStatistics( day );
@@ -361,14 +362,14 @@ namespace cpaplib
 		private void GenerateFlowLimitEvents( DayRecord day )
 		{
 			// TODO: Flow Limitation Redline needs to be a configurable value 
-			const double FlowLimitRedline = 0.25;
+			const double FlowLimitRedline = 0.2;
 			
 			foreach( var session in day.Sessions )
 			{
 				var signal = session.GetSignalByName( SignalNames.FlowLimit );
 				if( signal != null )
 				{
-					Annotate( day.Events, EventType.FlowLimitation, signal, 1, (sample, index) => sample >= FlowLimitRedline );
+					Annotate( day.Events, EventType.FlowLimitation, signal, 8, (sample, _) => sample >= FlowLimitRedline );
 				}
 			}
 		}
@@ -383,7 +384,7 @@ namespace cpaplib
 				var signal = session.GetSignalByName( SignalNames.LeakRate );
 				if( signal != null )
 				{
-					Annotate( day.Events, EventType.LargeLeak, signal, 1, (sample, index) => sample >= LeakRedline );
+					Annotate( day.Events, EventType.LargeLeak, signal, 2, (sample, _) => sample > LeakRedline );
 				}
 			}
 		}

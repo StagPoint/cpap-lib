@@ -20,7 +20,15 @@ public class FormattedTimespanConverter : IValueConverter
 			throw new Exception( $"{value} is not a TimeSpan" );
 		}
 
-		var format = string.IsNullOrEmpty( (string)parameter ) ? TimespanFormatType.Long : Enum.Parse<TimespanFormatType>( (string)parameter );
+		var stringParameter = (string)parameter ?? string.Empty;
+
+		bool allowEmpty = stringParameter.EndsWith( ".Empty", StringComparison.OrdinalIgnoreCase );
+		if( allowEmpty )
+		{
+			stringParameter = stringParameter.Replace( ".Empty", "", StringComparison.OrdinalIgnoreCase );
+		}
+
+		var format  = string.IsNullOrEmpty( stringParameter ) ? TimespanFormatType.Long : Enum.Parse<TimespanFormatType>( stringParameter );
 		var builder = new StringBuilder();
 
 		if( time.Hours > 0 )
@@ -49,7 +57,7 @@ public class FormattedTimespanConverter : IValueConverter
 				builder.Append( secondsText( time.Seconds ) );
 		}
 
-		if( builder.Length == 0 )
+		if( builder.Length == 0 && !allowEmpty )
 		{
 			switch( format )
 			{
