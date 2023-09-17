@@ -25,7 +25,7 @@ public class MachineSettings_Tests
 
 		foreach( var day in days )
 		{
-			Debug.WriteLine( $"{day.ReportDate.ToLongDateString()}   Events: {day.MaskEvents}, Duration: {day.Duration}, Mode: {day.Settings.Mode}" );
+			Debug.WriteLine( $"{day.ReportDate.ToLongDateString()}   Duration: {day.Duration}, Mode: {day.Settings.Mode}" );
 
 			// for( int i = 0; i < day.MaskOn.Count; i++ )
 			// {

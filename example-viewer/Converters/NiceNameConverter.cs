@@ -4,9 +4,9 @@ using System.Text;
 using System.Windows;
 using System.Windows.Data;
 
-using example_viewer.Helpers;
+using cpapviewer.Helpers;
 
-namespace example_viewer;
+namespace cpapviewer;
 
 [ValueConversion( typeof(bool), typeof(GridLength))]
 public class NiceNameConverter : IValueConverter

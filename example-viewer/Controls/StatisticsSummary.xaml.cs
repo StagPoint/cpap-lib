@@ -3,7 +3,7 @@ using System.Windows.Controls;
 
 using cpaplib;
 
-namespace example_viewer.Controls;
+namespace cpapviewer.Controls;
 
 public partial class StatisticsSummary : UserControl
 {

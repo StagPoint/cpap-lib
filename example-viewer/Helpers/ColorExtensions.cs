@@ -2,7 +2,7 @@
 using System;
 using System.Drawing;
 
-namespace example_viewer;
+namespace cpapviewer;
 
 public static class ColorExtensions
 {

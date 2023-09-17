@@ -15,7 +15,7 @@ using System.Windows.Shapes;
 
 using ModernWpf.Controls;
 
-namespace example_viewer
+namespace cpapviewer
 {
 	/// <summary>
 	/// Interaction logic for MainWindow.xaml

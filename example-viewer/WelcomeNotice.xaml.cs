@@ -10,7 +10,7 @@ using Microsoft.Win32;
 
 using ModernWpf;
 
-namespace example_viewer;
+namespace cpapviewer;
 
 public partial class WelcomeNotice
 {

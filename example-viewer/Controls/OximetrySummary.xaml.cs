@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text.RegularExpressions;
@@ -6,15 +7,19 @@ using System.Windows;
 
 using cpaplib;
 
-using example_viewer.Loaders;
+using cpapviewer.Loaders;
 
 using Microsoft.Win32;
 
-namespace example_viewer.Controls;
+namespace cpapviewer.Controls;
 
 public partial class OximetrySummary
 {
 	public event DailyReportModifiedHandler DailyReportModified;
+
+	// TODO: REMOVE THIS DEBUG CODE
+	// DEBUG: REMOVE THIS DEBUG CODE
+	public const int TIME_ADJUST = -30; 
 	
 	public OximetrySummary()
 	{
@@ -23,7 +28,7 @@ public partial class OximetrySummary
 	
 	private void BtnImportOxy_OnClick( object sender, RoutedEventArgs e )
 	{
-		if( DataContext is not DayRecord day )
+		if( DataContext is not DailyReport day )
 		{
 			MessageBox.Show( Application.Current.MainWindow, "There is no Daily Report to attach Pulse Oximeter data to" );
 			return;
@@ -72,19 +77,19 @@ public partial class OximetrySummary
 
 			using( var file = File.OpenRead( fullPath ) )
 			{
-				(List<Session> sessions, _ ) = loader.Load( file );
+				(List<Session> sessions, _ ) = loader.Load( file, TimeSpan.FromSeconds( TIME_ADJUST ) );
 				if( sessions == null || sessions.Count == 0 )
 				{
 					Debug.WriteLine( $"Failed to import {filename}" );
 					continue;
 				}
-
+				
 				foreach( var session in sessions )
 				{
 					// Ensure that the oximetry session overlaps the current day before integrating it. 
 					if( day.RecordingStartTime > session.EndTime || day.RecordingEndTime < session.StartTime )
 					{
-						// TODO: Display a message when imported data does not match current DayRecord
+						// TODO: Display a message when imported data does not match current DailyReport
 						//MessageBox.Show( Application.Current.MainWindow, $"The pulse oximeter data does not match the current date and cannot be imported at this time.", "Imported data does not match selected date" );
 						continue;
 					}
@@ -120,7 +125,7 @@ public partial class OximetrySummary
 	
 		if( e.Property.Name == nameof( DataContext ) )
 		{
-			if( DataContext is DayRecord day )
+			if( DataContext is DailyReport day )
 			{
 				Debug.WriteLine( $"Data binding: {day}" );
 			}

@@ -6,7 +6,7 @@ using System.Text;
 
 using cpaplib;
 
-namespace example_viewer.Loaders;
+namespace cpapviewer.Loaders;
 
 public class OxyLinkLoader : ISessionDataLoader
 {
@@ -37,6 +37,11 @@ public class OxyLinkLoader : ISessionDataLoader
 	#region Public functions 
 
 	public (List<Session>, List<ReportedEvent>) Load( Stream stream )
+	{
+		return Load( stream, TimeSpan.Zero );
+	}
+	
+	public (List<Session>, List<ReportedEvent>) Load( Stream stream, TimeSpan? timeAdjust )
 	{
 		using var reader = new StreamReader( stream, Encoding.Default, leaveOpen: true );
 
@@ -90,6 +95,8 @@ public class OxyLinkLoader : ISessionDataLoader
 		byte lastGoodHR       = 0;
 		byte lastGoodMovement = 0;
 
+		double timeAjustSeconds = timeAdjust?.TotalSeconds ?? 0;
+
 		while( !reader.EndOfStream )
 		{
 			var line = reader.ReadLine();
@@ -105,7 +112,10 @@ public class OxyLinkLoader : ISessionDataLoader
 			{
 				return (null, null);
 			}
-			else if( isStartRecord )
+
+			dateTimeValue = dateTimeValue.AddSeconds( timeAjustSeconds );
+			
+			if( isStartRecord )
 			{
 				result.StartTime = dateTimeValue;
 				isStartRecord    = false;

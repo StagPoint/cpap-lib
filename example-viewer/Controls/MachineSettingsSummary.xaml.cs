@@ -3,11 +3,11 @@ using System.Windows.Controls;
 
 using cpaplib;
 
-namespace example_viewer.Controls;
+namespace cpapviewer.Controls;
 
-public partial class MachineSettings : UserControl
+public partial class MachineSettingsSummary : UserControl
 {
-	public MachineSettings()
+	public MachineSettingsSummary()
 	{
 		InitializeComponent();
 	}
@@ -18,7 +18,7 @@ public partial class MachineSettings : UserControl
 
 		if( e.Property.Name == nameof( DataContext ) )
 		{
-			if( DataContext is DayRecord day )
+			if( DataContext is DailyReport day )
 			{
 				grdMachineSettings.DataContext = day.Settings;
 			}

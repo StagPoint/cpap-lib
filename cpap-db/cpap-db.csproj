@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net7.0</TargetFramework>
+        <RootNamespace>cpap_db</RootNamespace>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>disable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\cpap-lib\cpap-lib.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="sqlite-net-pcl" Version="1.8.116" />
+    </ItemGroup>
+
+</Project>

@@ -4,9 +4,9 @@ using System.Windows.Controls;
 
 using cpaplib;
 
-using example_viewer.ViewModels;
+using cpapviewer.ViewModels;
 
-namespace example_viewer.Controls;
+namespace cpapviewer.Controls;
 
 public partial class EventSummary : UserControl
 {

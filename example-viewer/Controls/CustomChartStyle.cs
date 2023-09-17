@@ -5,7 +5,7 @@ using System.Windows.Media;
 using Color = System.Drawing.Color;
 using FontFamily = System.Drawing.FontFamily;
 
-namespace example_viewer.Controls;
+namespace cpapviewer.Controls;
 
 public class CustomChartStyle : ScottPlot.Styles.Default
 {

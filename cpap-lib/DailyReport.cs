@@ -4,22 +4,24 @@ using System.Linq;
 
 namespace cpaplib
 {
-	public class DayRecord
+	public class DailyReport
 	{
+		#region Public properties 
+		
 		/// <summary>
 		/// The date on which this report was generated.
 		/// </summary>
-		public DateTime ReportDate { get; private set; }
+		public DateTime ReportDate { get; set; }
 		
 		/// <summary>
 		/// The specific time at which recording began
 		/// </summary>
-		public DateTime RecordingStartTime { get; internal set; }
+		public DateTime RecordingStartTime { get; set; }
 		
 		/// <summary>
 		/// The specific time at which recording ended
 		/// </summary>
-		public DateTime RecordingEndTime { get => RecordingStartTime + Duration; }
+		public DateTime RecordingEndTime { get; set; }
 
 		/// <summary>
 		/// The list of sessions  for this day
@@ -31,7 +33,7 @@ namespace cpaplib
 		/// <summary>
 		/// Returns the number of "Mask Times" for the day
 		/// </summary>
-		public int MaskEvents { get; private set; }
+		public int MaskEvents { get; set; }
 
 		/// <summary>
 		/// Fault information reported by the CPAP machine
@@ -46,38 +48,40 @@ namespace cpaplib
 		/// <summary>
 		/// Usage and performance statistics for this day (average pressure, leak rate, etc.)
 		/// </summary>
-		public List<SignalStatistics> Statistics { get; private set; } = new List<SignalStatistics>();
+		public List<SignalStatistics> Statistics { get; set; } = new List<SignalStatistics>();
 
 		/// <summary>
 		/// The number of events of each type (Obstructive Apnea, Clear Airway, RERA, etc.) that occurred on this day.
 		/// </summary>
-		public ReportedEventCounts EventSummary { get; private set; } = new ReportedEventCounts();
+		public ReportedEventCounts EventSummary { get; set; } = new ReportedEventCounts();
 
 		/// <summary>
 		/// The total amount of time the CPAP was used on the reported day (calculated)
 		/// </summary>
-		public TimeSpan Duration { get; internal set; }
+		public TimeSpan Duration { get; set; }
 
 		/// <summary>
 		/// The total amount of time the CPAP was used on the recorded day, as reported by the CPAP machine 
 		/// </summary>
-		public TimeSpan OnDuration { get; private set; }
+		public TimeSpan OnDuration { get; set; }
 
-		public double PatientHours { get; private set; }
+		public double PatientHours { get; set; }
 
 		/// <summary>
 		/// Contains all of the raw data stored for each Day
 		/// </summary>
 		public Dictionary<string, double> RawData = new Dictionary<string, double>();
+		
+		#endregion 
 
 		#region Public functions
 
 		/// <summary>
 		/// Reads the statistics, settings, and other information from the stored data
 		/// </summary>
-		public static DayRecord Read( Dictionary<string, double> data )
+		internal static DailyReport Read( Dictionary<string, double> data )
 		{
-			var day = new DayRecord();
+			var day = new DailyReport();
 			day.ReadFrom( data );
 
 			return day;
@@ -86,7 +90,7 @@ namespace cpaplib
 		/// <summary>
 		/// Reads the statistics, settings, and other information from the stored data
 		/// </summary>
-		public void ReadFrom( Dictionary<string, double> data )
+		internal void ReadFrom( Dictionary<string, double> data )
 		{
 			// I've tried my best to decode what all of the data means, and convert it to meaningful typed
 			// values exposed in a reasonable manner, but it's highly likely that there's something I didn't
@@ -147,6 +151,7 @@ namespace cpaplib
 			Sessions.Add( session );
 			
 			RecordingStartTime = DateUtil.Min( RecordingStartTime, session.StartTime );
+			RecordingEndTime   = DateUtil.Max( RecordingEndTime, session.EndTime );
 			Duration           = DateUtil.Max( RecordingEndTime, session.EndTime ) - RecordingStartTime;
 
 			Sessions.Sort( ( lhs, rhs ) => lhs.StartTime.CompareTo( rhs.StartTime ) );
@@ -154,7 +159,7 @@ namespace cpaplib
 		
 		/// <summary>
 		/// Merges Session data with existing Sessions when possible, or adds it if there are no coincident Sessions
-		/// to merge with. Note that the Session being passed must still overlap the time period of this DayRecord,
+		/// to merge with. Note that the Session being passed must still overlap the time period of this DailyReport,
 		/// and an exception will be thrown if that is not the case.  
 		/// </summary>
 		public void MergeSession( Session session )
@@ -198,9 +203,9 @@ namespace cpaplib
 			Sessions.Sort( ( lhs, rhs ) => lhs.StartTime.CompareTo( rhs.StartTime ) );
 			
 			RecordingStartTime = DateUtil.Min( RecordingStartTime, session.StartTime );
-			var endTime   = DateUtil.Max( RecordingEndTime, session.EndTime );
+			RecordingEndTime   = DateUtil.Max( RecordingEndTime, session.EndTime );
 
-			Duration = endTime - RecordingStartTime;
+			Duration = RecordingEndTime - RecordingStartTime;
 		}
 
 		#endregion

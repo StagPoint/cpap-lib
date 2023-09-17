@@ -16,7 +16,7 @@ namespace cpaplib
 	{
 		public MachineIdentification MachineID = new MachineIdentification();
 
-		public List<DayRecord> Days { get; } = new List<DayRecord>();
+		public List<DailyReport> Days { get; } = new List<DailyReport>();
 		
 		private TimeSpan _timeAjustment = new TimeSpan( 0, 0, 1, 10 );
 
@@ -127,7 +127,7 @@ namespace cpaplib
 			}
 		}
 
-		private void LoadSessionsForDay( string rootFolder, DayRecord day )
+		private void LoadSessionsForDay( string rootFolder, DailyReport day )
 		{
 			var logFolder = Path.Combine( rootFolder, $@"DATALOG\{day.ReportDate:yyyyMMdd}" );
 			if( !Directory.Exists( logFolder ) )
@@ -287,7 +287,7 @@ namespace cpaplib
 									
 									newSession.AddSignal( startTime, endTime, signal );
 									
-									// Add the session to the DayRecord. We'll need to sort sessions afterward because of this. 
+									// Add the session to the DailyReport. We'll need to sort sessions afterward because of this. 
 									day.Sessions.Add( newSession );
 								}
 							}
@@ -341,6 +341,7 @@ namespace cpaplib
 			// think of what it is and doing so makes working with and displaying the data a lot more frustrating, so
 			// we'll use the *actual* recorded session times instead. 
 			day.RecordingStartTime = firstRecordedTime;
+			day.RecordingEndTime   = lastRecordedTime;
 			day.Duration           = TimeSpan.FromSeconds( day.Sessions.Sum( x => x.Duration.TotalSeconds ) );
 
 			// Calculate statistics (min, avg, median, max, etc) for each Signal
@@ -353,13 +354,13 @@ namespace cpaplib
 			CalculateEventSummary( day );
 		}
 
-		private void GenerateEvents( DayRecord day )
+		private void GenerateEvents( DailyReport day )
 		{
 			GenerateLeakEvents( day );
 			GenerateFlowLimitEvents( day );
 		}
 		
-		private void GenerateFlowLimitEvents( DayRecord day )
+		private void GenerateFlowLimitEvents( DailyReport day )
 		{
 			// TODO: Flow Limitation Redline needs to be a configurable value 
 			const double FlowLimitRedline = 0.2;
@@ -374,7 +375,7 @@ namespace cpaplib
 			}
 		}
 
-		private void GenerateLeakEvents( DayRecord day )
+		private void GenerateLeakEvents( DailyReport day )
 		{
 			// TODO: Leak Redline needs to be a configurable value 
 			const double LeakRedline = 24;
@@ -450,7 +451,7 @@ namespace cpaplib
 			}
 		}
 
-		private void CalculateSignalStatistics( DayRecord day )
+		private void CalculateSignalStatistics( DailyReport day )
 		{
 			// Determine the maximum sort buffer size we'll need so that we only need to allocate and reuse one buffer.
 			var maxBufferSize = 0;
@@ -482,7 +483,7 @@ namespace cpaplib
 			}
 		}
 
-		private void LoadCheyneStokesEvents( string logFolder, DayRecord day )
+		private void LoadCheyneStokesEvents( string logFolder, DailyReport day )
 		{
 			// Need to keep track of the total time spent in CSR
 			double totalTimeInCSR = 0;
@@ -549,7 +550,7 @@ namespace cpaplib
 			day.EventSummary.CSR = totalTimeInCSR / day.OnDuration.TotalSeconds;
 		}
 		
-		private void LoadEventsAndAnnotations( string logFolder, DayRecord day )
+		private void LoadEventsAndAnnotations( string logFolder, DailyReport day )
 		{
 			var filenames = Directory.GetFiles( logFolder, "*_EVE.edf" );
 			foreach( var filename in filenames )
@@ -583,7 +584,7 @@ namespace cpaplib
 			}
 		}
 		
-		private static void CalculateEventSummary( DayRecord day )
+		private static void CalculateEventSummary( DailyReport day )
 		{
 			day.EventSummary.ObstructiveApneaCount  = day.Events.Count( x => x.Type == EventType.ObstructiveApnea );
 			day.EventSummary.HypopneaCount          = day.Events.Count( x => x.Type == EventType.Hypopnea );
@@ -607,7 +608,7 @@ namespace cpaplib
 			}
 
 			// The STR.edf file is essentially a vertical table containing the settings data for each
-			// recorded day. We need to transpose that data and use it to create a DayRecord for 
+			// recorded day. We need to transpose that data and use it to create a DailyReport for 
 			// each available day. 
 			for( int i = 0; i < file.Signals[ 0 ].Samples.Count; i++ )
 			{
@@ -620,7 +621,7 @@ namespace cpaplib
 				}
 
 				// Read in and process the settings for a single day
-				var day = DayRecord.Read( lookup );
+				var day = DailyReport.Read( lookup );
 				day.RecordingStartTime += _timeAjustment;
 
 				Days.Add( day );

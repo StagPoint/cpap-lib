@@ -3,7 +3,7 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
 
-namespace example_viewer;
+namespace cpapviewer;
 
 [ValueConversion( typeof(bool), typeof(GridLength))]
 public class BoolToGridRowHeightConverter : IValueConverter

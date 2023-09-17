@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace example_viewer.Helpers;
+namespace cpapviewer.Helpers;
 
 internal static class NiceNames
 {

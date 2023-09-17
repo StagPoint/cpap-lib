@@ -4,7 +4,7 @@ using System.Windows.Data;
 
 using cpaplib;
 
-namespace example_viewer;
+namespace cpapviewer;
 
 [ValueConversion( typeof(EventType), typeof(string))]
 public class EventTypeToNameConverter : IValueConverter

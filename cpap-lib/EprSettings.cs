@@ -2,12 +2,16 @@
 {
 	public class EprSettings
 	{
+		#region Public properties 
+		
 		public EprType Mode             { get; set; }
 		public bool    ClinicianEnabled { get; set; }
 		public bool    EprEnabled       { get; set; }
 		public int     Level            { get; set; }
+		
+		#endregion 
 
-	#region Base class overrides
+		#region Base class overrides
 
 		public override string ToString()
 		{
@@ -17,6 +21,6 @@
 			return $"{Mode}";
 		}
 
-	#endregion
+		#endregion
 	}
 }

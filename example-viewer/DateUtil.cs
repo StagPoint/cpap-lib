@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace example_viewer;
+namespace cpapviewer;
 
 public static class DateTimeExtensions
 {

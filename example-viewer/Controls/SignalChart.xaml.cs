@@ -20,7 +20,7 @@ using Brushes = System.Windows.Media.Brushes;
 using Color = System.Drawing.Color;
 using Style = System.Windows.Style;
 
-namespace example_viewer.Controls;
+namespace cpapviewer.Controls;
 
 public partial class SignalChart
 {
@@ -39,7 +39,7 @@ public partial class SignalChart
 	private Tooltip          _tooltip            = null;
 	private VLine            _mouseTrackLine     = null;
 	private MarkerPlot       _currentValueMarker = null;
-	private DayRecord      _day                = null;
+	private DailyReport      _day                = null;
 	private List<ReportedEvent>  _events             = new();
 	private bool             _hasDataAvailable   = false;
 
@@ -330,7 +330,7 @@ public partial class SignalChart
 
 		if( e.Property.Name == nameof( DataContext ) )
 		{
-			if( DataContext is DayRecord day )
+			if( DataContext is DailyReport day )
 			{
 				if( string.IsNullOrEmpty( SignalName ) )
 				{
@@ -342,7 +342,7 @@ public partial class SignalChart
 		}
 	}
 	
-	private void LoadData( DayRecord day )
+	private void LoadData( DailyReport day )
 	{
 		_day = day;
 		
@@ -404,7 +404,7 @@ public partial class SignalChart
 		Chart.Refresh();
 	}
 	
-	private void CreateEventMarkers( DayRecord day )
+	private void CreateEventMarkers( DailyReport day )
 	{
 		int[] typesSeen = new int[ 256 ];
 
@@ -486,7 +486,7 @@ public partial class SignalChart
 		chart.Refresh();
 	}
 	
-	private void ChartSignal( WpfPlot chart, DayRecord day, string signalName, float signalScale = 1f, float? axisMinValue = null, float? axisMaxValue = null, double[] manualLabels = null )
+	private void ChartSignal( WpfPlot chart, DailyReport day, string signalName, float signalScale = 1f, float? axisMinValue = null, float? axisMaxValue = null, double[] manualLabels = null )
 	{
 		var minValue = axisMinValue ?? double.MaxValue;
 		var maxValue = axisMaxValue ?? double.MinValue;

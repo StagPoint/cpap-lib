@@ -7,9 +7,9 @@ using System.Windows.Input;
 
 using cpaplib;
 
-using example_viewer.Helpers;
+using cpapviewer.Helpers;
 
-namespace example_viewer.Controls;
+namespace cpapviewer.Controls;
 
 public partial class SessionList : UserControl
 {
@@ -37,7 +37,7 @@ public partial class SessionList : UserControl
 
 		if( e.Property.Name == nameof( DataContext ) )
 		{
-			if( DataContext is DayRecord day )
+			if( DataContext is DailyReport day )
 			{
 				// In cases where the data source has changed and data binding is being refreshed, 
 				// it is necessary to clear the ItemsSource first to avoid a runtime exception 

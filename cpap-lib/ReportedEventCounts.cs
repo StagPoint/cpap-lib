@@ -8,87 +8,87 @@ namespace cpaplib
 		/// <summary>
 		/// Combined Apnea/Hypopnea Index
 		/// </summary>
-		public double AHI { get; private set; }
+		public double AHI { get; set; }
 
 		/// <summary>
 		/// Hypopnea Index
 		/// </summary>
-		public double HI { get; private set; }
+		public double HI { get; set; }
 
 		/// <summary>
 		/// Apnea Index
 		/// </summary>
-		public double AI { get; private set; }
+		public double AI { get; set; }
 
 		/// <summary>
 		/// Obstructive Apnea Index
 		/// </summary>
-		public double OAI { get; private set; }
+		public double OAI { get; set; }
 
 		/// <summary>
 		/// Clear Airway Index
 		/// </summary>
-		public double CAI { get; private set; }
+		public double CAI { get; set; }
 
 		/// <summary>
 		/// Uncategorized Apnea Index 
 		/// </summary>
-		public double UAI { get; private set; }
+		public double UAI { get; set; }
 
 		/// <summary>
 		/// RERA?
 		/// </summary>
-		public double RIN { get; private set; }
+		public double RIN { get; set; }
 
 		/// <summary>
 		/// Cheyne-Stokes Respiration
 		/// </summary>
-		public double CSR { get; internal set; }
+		public double CSR { get; set; }
 
 		/// <summary>
 		/// The total number of Obstructive Apnea events that occurred
 		/// </summary>
-		public int ObstructiveApneaCount { get; internal set; }
+		public int ObstructiveApneaCount { get; set; }
 
 		/// <summary>
 		/// The total number of Hypopnea events that occurred
 		/// </summary>
-		public int HypopneaCount { get; internal set; }
+		public int HypopneaCount { get; set; }
 
 		/// <summary>
 		/// The total number of Open Airway events that occurred
 		/// </summary>
-		public int ClearAirwayCount { get; internal set; }
+		public int ClearAirwayCount { get; set; }
 
 		/// <summary>
 		/// The total number of Unclassified Apnea events that occurred
 		/// </summary>
-		public int UnclassifiedApneaCount { get; internal set; }
+		public int UnclassifiedApneaCount { get; set; }
 
 		/// <summary>
 		/// The total number of RERA events that occurred
 		/// </summary>
-		public int RespiratoryEffortCount { get; internal set; }
+		public int RespiratoryEffortCount { get; set; }
 		
 		/// <summary>
 		/// The number of Flow Limit events that occur per hour
 		/// </summary>
-		public double FlowLimitIndex { get; internal set; }
+		public double FlowLimitIndex { get; set; }
 		
 		/// <summary>
 		/// The total number of Flow Limit events that occurred
 		/// </summary>
-		public int FlowLimitCount { get; internal set; }
+		public int FlowLimitCount { get; set; }
 		
 		/// <summary>
 		/// The total time spent that day in apnea events 
 		/// </summary>
-		public TimeSpan TotalTimeInApnea { get; internal set; }
+		public TimeSpan TotalTimeInApnea { get; set; }
 		
 		/// <summary>
 		/// The total time when large leaks (above the specified limit) occured
 		/// </summary>
-		public TimeSpan TotalTimeOfLargeLeaks { get; internal set; }
+		public TimeSpan TotalTimeOfLargeLeaks { get; set; }
 
 		internal void ReadFrom( Dictionary<string, double> data )
 		{

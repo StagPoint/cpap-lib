@@ -9,6 +9,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "cpaplib_tests", "cpaplib_te
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "example-viewer", "example-viewer\example-viewer.csproj", "{BDB1E981-1A3A-4979-A210-F8AF6E3F01F7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cpap-db", "cpap-db\cpap-db.csproj", "{64EF7EA9-A2E4-407C-B12E-3D0145516BD0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{BDB1E981-1A3A-4979-A210-F8AF6E3F01F7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BDB1E981-1A3A-4979-A210-F8AF6E3F01F7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BDB1E981-1A3A-4979-A210-F8AF6E3F01F7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{64EF7EA9-A2E4-407C-B12E-3D0145516BD0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{64EF7EA9-A2E4-407C-B12E-3D0145516BD0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{64EF7EA9-A2E4-407C-B12E-3D0145516BD0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{64EF7EA9-A2E4-407C-B12E-3D0145516BD0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

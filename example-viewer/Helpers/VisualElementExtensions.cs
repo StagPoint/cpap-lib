@@ -3,7 +3,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Media;
 
-namespace example_viewer.Helpers;
+namespace cpapviewer.Helpers;
 
 public static class VisualElementExtensions
 {

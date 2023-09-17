@@ -3,7 +3,7 @@ using System.Drawing;
 
 using ModernWpf;
 
-namespace example_viewer;
+namespace cpapviewer;
 
 public class DataColors
 {

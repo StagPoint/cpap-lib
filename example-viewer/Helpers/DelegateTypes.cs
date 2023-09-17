@@ -2,9 +2,9 @@
 
 using cpaplib;
 
-namespace example_viewer;
+namespace cpapviewer;
 
-public delegate void DailyReportModifiedHandler( object sender, DayRecord day );
+public delegate void DailyReportModifiedHandler( object sender, DailyReport day );
 
 public delegate void TimeSelectedEventHandler(object sender, DateTime time);
 

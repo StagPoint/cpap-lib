@@ -5,13 +5,13 @@ using System.Linq;
 
 using cpaplib;
 
-namespace example_viewer.ViewModels;
+namespace cpapviewer.ViewModels;
 
 public class EventViewModel
 {
 	public List<EventTypeSummary> Items { get; } = new();
 	
-	public EventViewModel( DayRecord day )
+	public EventViewModel( DailyReport day )
 	{
 		var events = day.Events;
 		var types  = events.Select( x => x.Type ).Distinct();

@@ -5,7 +5,7 @@ using System.Windows.Data;
 
 using cpaplib;
 
-namespace example_viewer;
+namespace cpapviewer;
 
 [ValueConversion( typeof(bool), typeof(GridLength))]
 public class PropertyValueToGridRowVisibilityConverter : IValueConverter

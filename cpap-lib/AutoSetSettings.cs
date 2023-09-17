@@ -5,6 +5,8 @@
 	/// </summary>
 	public class AutoSetSettings
 	{
+		#region Public properties 
+		
 		/// <summary>
 		/// Indicates the speed at which pressure increases during AutoSet mode operation 
 		/// </summary>
@@ -24,6 +26,8 @@
 		/// Minimum pressure 
 		/// </summary>
 		public double MinPressure { get; set; }
+		
+		#endregion
 
 		#region Base class overrides
 

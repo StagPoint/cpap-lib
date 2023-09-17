@@ -1,9 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 
 using cpaplib;
 
-namespace example_viewer.Loaders;
+namespace cpapviewer.Loaders;
 
 public interface ISessionDataLoader
 {
@@ -14,4 +15,5 @@ public interface ISessionDataLoader
 	public string FilenameMatchPattern { get; }
 
 	public (List<Session>, List<ReportedEvent>) Load( Stream stream );
+	public (List<Session>, List<ReportedEvent>) Load( Stream stream, TimeSpan? timeAdjust );
 }

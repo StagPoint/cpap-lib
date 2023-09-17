@@ -3,7 +3,7 @@ using System.Globalization;
 using System.Text;
 using System.Windows.Data;
 
-namespace example_viewer;
+namespace cpapviewer;
 
 public enum TimespanFormatType
 {

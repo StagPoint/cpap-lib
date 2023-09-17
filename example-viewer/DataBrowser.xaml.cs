@@ -5,19 +5,21 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 
+using cpap_db;
+
 using cpaplib;
 
-using example_viewer.Controls;
-using example_viewer.Helpers;
+using cpapviewer.Controls;
+using cpapviewer.Helpers;
 
-namespace example_viewer;
+namespace cpapviewer;
 
 public partial class DataBrowser
 {
 	private ResMedDataLoader _data = null;
 	private string _dataPath = String.Empty;
 
-	private DayRecord _selectedDay = null;
+	private DailyReport _selectedDay = null;
 
 	public DataBrowser( string dataPath )
 	{
@@ -40,9 +42,16 @@ public partial class DataBrowser
 	private void OnPageLoaded( object sender, RoutedEventArgs e )
 	{
 		var startTime = Environment.TickCount;
-		
-		_data = new ResMedDataLoader();
-		_data.LoadFromFolder( _dataPath );
+
+		DateTime mostRecentDay = DateTime.MinValue;
+
+		using( var db = new StorageService( "CPAP" ) )
+		{
+			mostRecentDay = db.GetMostRecentDay();
+
+			_data = new ResMedDataLoader();
+			_data.LoadFromFolder( _dataPath, mostRecentDay );
+		}
 
 		var elapsed = Environment.TickCount - startTime;
 		Debug.WriteLine( $"Time to load CPAP data ({_data.Days.Count} days): {elapsed/1000.0f:F3} seconds" );
@@ -83,7 +92,7 @@ public partial class DataBrowser
 		pnlNoDataAvailable.Visibility = Visibility.Visible;
 	}
 	
-	private void LoadDay( DayRecord day )
+	private void LoadDay( DailyReport day )
 	{
 		_selectedDay = day;
 		
@@ -175,7 +184,7 @@ public partial class DataBrowser
 		chart.ZoomToTime( startTime, endTime );
 	}
 	
-	private void OximetrySummary_OnDailyReportModified( object sender, DayRecord day )
+	private void OximetrySummary_OnDailyReportModified( object sender, DailyReport day )
 	{
 		DataContext = null;
 		LoadDay( day );

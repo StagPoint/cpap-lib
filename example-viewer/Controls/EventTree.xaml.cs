@@ -7,9 +7,9 @@ using System.Windows.Input;
 
 using cpaplib;
 
-using example_viewer.ViewModels;
+using cpapviewer.ViewModels;
 
-namespace example_viewer.Controls;
+namespace cpapviewer.Controls;
 
 public partial class EventTree : UserControl
 {
@@ -57,7 +57,7 @@ public partial class EventTree : UserControl
 
 		if( e.Property.Name == nameof( DataContext ) )
 		{
-			if( DataContext is DayRecord day )
+			if( DataContext is DailyReport day )
 			{
 				tvwEvents.DataContext = new EventViewModel( day );
 			}
