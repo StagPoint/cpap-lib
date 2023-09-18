@@ -26,12 +26,16 @@ namespace cpap_db
 
 		static StorageService()
 		{
+			#region Create mappings for cpap-lib types 
+			
 			var mapping = CreateMapping<DailyReport>( "day" );
 			mapping.PrimaryKey = new PrimaryKeyColumn( "id", typeof( DateTime ) );
 
 			mapping            = CreateMapping<FaultInfo>( "fault" );
 			mapping.PrimaryKey = new PrimaryKeyColumn( "id", typeof( int ), true );
 			mapping.ForeignKey = new ForeignKeyColumn( "day", typeof( DateTime ), "day", "id" );
+			
+			#endregion 
 		}
 		
 		#endregion

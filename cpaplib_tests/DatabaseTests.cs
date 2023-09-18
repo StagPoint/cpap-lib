@@ -20,11 +20,18 @@ public class DatabaseTests
 		public TimeSpan Duration   { get; set; }
 	}
 
-	public class EventFlag
+	public class FlaggedEvent
 	{
 		public int      Type      { get; set; }
 		public DateTime StartTime { get; set; }
 		public TimeSpan Duration  { get; set; }
+	}
+
+	public class ValueList
+	{
+		public double       MinValue { get; set; }
+		public double       MaxValue { get; set; }
+		public List<double> Values   { get; set; } = new();
 	}
 	
 	[TestMethod]
@@ -42,7 +49,7 @@ public class DatabaseTests
 				var tableCreated = mapping.CreateTable( db.Connection );
 				Assert.IsTrue( tableCreated );
 
-				var columns = db.Connection.GetTableInfo( "Fault" );
+				var columns = db.Connection.GetTableInfo( mapping.TableName );
 				Assert.AreEqual( 5, columns.Count );
 			}
 		}
@@ -71,7 +78,7 @@ public class DatabaseTests
 				var tableCreated = mapping.CreateTable( db.Connection );
 				Assert.IsTrue( tableCreated );
 
-				var columns = db.Connection.GetTableInfo( "Fault" );
+				var columns = db.Connection.GetTableInfo( mapping.TableName );
 				Assert.AreEqual( 5, columns.Count );
 
 				var data = new FaultInfo
@@ -112,7 +119,7 @@ public class DatabaseTests
 				var tableCreated = mapping.CreateTable( db.Connection );
 				Assert.IsTrue( tableCreated );
 
-				var columns = db.Connection.GetTableInfo( "Fault" );
+				var columns = db.Connection.GetTableInfo( mapping.TableName );
 				Assert.AreEqual( 5, columns.Count );
 
 				var data = new FaultInfo
@@ -155,7 +162,7 @@ public class DatabaseTests
 				var tableCreated = mapping.CreateTable( db.Connection );
 				Assert.IsTrue( tableCreated );
 
-				var columns = db.Connection.GetTableInfo( "report" );
+				var columns = db.Connection.GetTableInfo( mapping.TableName );
 				Assert.AreEqual( 6, columns.Count );
 
 				var data = new Report
@@ -197,7 +204,7 @@ public class DatabaseTests
 				var tableCreated = mapping.CreateTable( db.Connection );
 				Assert.IsTrue( tableCreated );
 
-				var columns = db.Connection.GetTableInfo( "report" );
+				var columns = db.Connection.GetTableInfo( mapping.TableName );
 				Assert.AreEqual( 6, columns.Count );
 
 				var primaryKey = DateTime.Today.AddDays( -30 );
@@ -241,14 +248,14 @@ public class DatabaseTests
 				var reportMapping = new DatabaseMapping<Report>( "report" );
 				reportMapping.PrimaryKey = new PrimaryKeyColumn( "id", typeof( DateTime ) );
 
-				var eventMapping = new DatabaseMapping<EventFlag>( "event" );
+				var eventMapping = new DatabaseMapping<FlaggedEvent>( "event" );
 				eventMapping.ForeignKey = new ForeignKeyColumn( "reportID", typeof( DateTime ), "report", "id" );
 
 				Assert.IsTrue( reportMapping.CreateTable( db.Connection ) );
-				Assert.AreEqual( 6, db.Connection.GetTableInfo( "report" ).Count );
+				Assert.AreEqual( 6, db.Connection.GetTableInfo( reportMapping.TableName ).Count );
 
 				Assert.IsTrue( eventMapping.CreateTable( db.Connection ) );
-				Assert.AreEqual( 4, db.Connection.GetTableInfo( "event" ).Count );
+				Assert.AreEqual( 4, db.Connection.GetTableInfo( eventMapping.TableName ).Count );
 
 				var primaryKey = DateTime.Today.AddDays( -30 );
 
@@ -266,7 +273,7 @@ public class DatabaseTests
 
 				for( int i = 0; i < 10; i++ )
 				{
-					var eventData = new EventFlag
+					var eventData = new FlaggedEvent
 					{
 						Type      = i,
 						StartTime = primaryKey.AddMinutes( i * 10 ),
@@ -303,16 +310,16 @@ public class DatabaseTests
 				var reportMapping = new DatabaseMapping<Report>( "report" );
 				reportMapping.PrimaryKey = new PrimaryKeyColumn( "id", typeof( DateTime ) );
 
-				var eventMapping = new DatabaseMapping<EventFlag>( "event" );
+				var eventMapping = new DatabaseMapping<FlaggedEvent>( "event" );
 				eventMapping.ForeignKey = new ForeignKeyColumn( "reportID", typeof( DateTime ), "report", "id" );
 
 				Assert.IsTrue( reportMapping.CreateTable( db.Connection ) );
-				Assert.AreEqual( 6, db.Connection.GetTableInfo( "report" ).Count );
+				Assert.AreEqual( 6, db.Connection.GetTableInfo( reportMapping.TableName ).Count );
 
 				Assert.IsTrue( eventMapping.CreateTable( db.Connection ) );
-				Assert.AreEqual( 4, db.Connection.GetTableInfo( "event" ).Count );
+				Assert.AreEqual( 4, db.Connection.GetTableInfo( eventMapping.TableName ).Count );
 
-				var eventData = new EventFlag
+				var eventData = new FlaggedEvent
 				{
 					Type      = 0,
 					StartTime = DateTime.Today,
@@ -347,14 +354,14 @@ public class DatabaseTests
 				var reportMapping = new DatabaseMapping<Report>( "report" );
 				reportMapping.PrimaryKey = new PrimaryKeyColumn( "id", typeof( DateTime ) );
 
-				var eventMapping = new DatabaseMapping<EventFlag>( "event" );
+				var eventMapping = new DatabaseMapping<FlaggedEvent>( "event" );
 				eventMapping.ForeignKey = new ForeignKeyColumn( "reportID", typeof( DateTime ), "report", "id" );
 
 				Assert.IsTrue( reportMapping.CreateTable( db.Connection ) );
-				Assert.AreEqual( 6, db.Connection.GetTableInfo( "report" ).Count );
+				Assert.AreEqual( 6, db.Connection.GetTableInfo( reportMapping.TableName ).Count );
 
 				Assert.IsTrue( eventMapping.CreateTable( db.Connection ) );
-				Assert.AreEqual( 4, db.Connection.GetTableInfo( "event" ).Count );
+				Assert.AreEqual( 4, db.Connection.GetTableInfo( eventMapping.TableName ).Count );
 
 				var primaryKey = DateTime.Today.AddDays( -30 );
 
@@ -372,7 +379,7 @@ public class DatabaseTests
 
 				for( int i = 0; i < 10; i++ )
 				{
-					var eventData = new EventFlag
+					var eventData = new FlaggedEvent
 					{
 						Type      = i,
 						StartTime = primaryKey.AddMinutes( i * 10 ),
@@ -386,13 +393,66 @@ public class DatabaseTests
 				rowCount = db.Connection.ExecuteScalar<int>( $"SELECT COUNT(*) FROM {eventMapping.TableName}" );
 				Assert.AreEqual( 10, rowCount );
 
-				// Delete our Report record. The foreign key constraint should cause all EventFlag records 
+				// Delete our Report record. The foreign key constraint should cause all FlaggedEvent records 
 				// to be deleted as well. 
 				rowCount = db.Execute( $"DELETE FROM {reportMapping.TableName}" );
 
-				// Get a count of how many EventFlag records exist now 
+				// Get a count of how many FlaggedEvent records exist now 
 				rowCount = db.Connection.ExecuteScalar<int>( $"SELECT COUNT(*) FROM {eventMapping.TableName}" );
 				Assert.AreEqual( 0, rowCount );
+			}
+		}
+		catch( Exception e )
+		{
+			Console.WriteLine( e );
+			throw;
+		}
+		finally
+		{
+			File.Delete( databasePath );
+		}
+	}
+
+	[TestMethod]
+	public void CanStoreListAsBlob()
+	{
+		string databasePath = Path.Combine( Path.GetTempPath(), "cpaplib-tests.db" );
+		try
+		{
+			using( var db = new StorageService( databasePath ) )
+			{
+				var blobColumnMapping = new ColumnMapping( "values", "Values", typeof( ValueList ) );
+				blobColumnMapping.Converter = new DoubleListBlobConverter();
+
+				var mapping = new DatabaseMapping<ValueList>( "Values" );
+				mapping.PrimaryKey = new PrimaryKeyColumn( "id", typeof( int ), true );
+				mapping.Columns.Add( blobColumnMapping );
+
+				var tableCreated = mapping.CreateTable( db.Connection );
+				Assert.IsTrue( tableCreated );
+
+				var columns = db.Connection.GetTableInfo( mapping.TableName );
+				Assert.AreEqual( 4, columns.Count );
+
+				var dataObject = new ValueList
+				{
+					MinValue = short.MinValue,
+					MaxValue = short.MaxValue,
+					Values   = new List<double>() { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 }
+				};
+
+				int rowCount = mapping.Insert( db.Connection, dataObject, primaryKeyValue: 1 );
+				Assert.AreEqual( 1, rowCount );
+
+				var retrievedObject = mapping.SelectByPrimaryKey<ValueList>( db.Connection, 1 );
+				Assert.IsNotNull( retrievedObject );
+				Assert.IsNotNull( retrievedObject.Values );
+				Assert.AreEqual( dataObject.Values.Count, retrievedObject.Values.Count );
+
+				for( int i = 0; i < dataObject.Values.Count; i++ )
+				{
+					Assert.AreEqual( dataObject.Values[ i ], retrievedObject.Values[ i ] );
+				}
 			}
 		}
 		catch( Exception e )

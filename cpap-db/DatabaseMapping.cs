@@ -294,7 +294,7 @@ public class DatabaseMapping
 			throw new Exception( $"No primary key has been defined for table {TableName}" );
 		}
 
-		return $"SELECT * FROM {TableName} WHERE {PrimaryKey.ColumnName} = ?;";
+		return $"SELECT * FROM \"{TableName}\" WHERE {PrimaryKey.ColumnName} = ?;";
 	}
 
 	private string GenerateSelectByForeignKeyQuery()
@@ -304,7 +304,7 @@ public class DatabaseMapping
 			throw new Exception( $"No foreign key has been defined for table {TableName}" );
 		}
 
-		return $"SELECT * FROM {TableName} WHERE {ForeignKey.ColumnName} = ?;";
+		return $"SELECT * FROM \"{TableName}\" WHERE {ForeignKey.ColumnName} = ?;";
 	}
 
 	private string GenerateDeleteQuery()
@@ -314,12 +314,12 @@ public class DatabaseMapping
 			throw new Exception( $"No primary key has been defined for table {TableName}" );
 		}
 
-		return $"DELETE FROM {TableName} WHERE {PrimaryKey.ColumnName} = ?";
+		return $"DELETE FROM \"{TableName}\" WHERE {PrimaryKey.ColumnName} = ?";
 	}
 
 	private string GenerateSelectAllQuery()
 	{
-		return $"SELECT * FROM {TableName}";
+		return $"SELECT * FROM \"{TableName}\"";
 	}
 
 	private string GenerateInsertQuery()
@@ -329,7 +329,7 @@ public class DatabaseMapping
 
 		bool hasPreviousColumn = false;
 
-		builder.Append( $"INSERT INTO {TableName} ( " );
+		builder.Append( $"INSERT INTO \"{TableName}\" ( " );
 
 		if( PrimaryKey != null && !PrimaryKey.AutoIncrement )
 		{
@@ -361,7 +361,7 @@ public class DatabaseMapping
 				parameters.Append( ", " );
 			}
 
-			builder.Append( column.ColumnName );
+			builder.Append( $"\"{column.ColumnName}\"" );
 			parameters.Append( '?' );
 
 			hasPreviousColumn = true;
@@ -376,7 +376,7 @@ public class DatabaseMapping
 	{
 		var builder = new StringBuilder();
 
-		builder.Append( $"CREATE TABLE IF NOT EXISTS {TableName} (\n" );
+		builder.Append( $"CREATE TABLE IF NOT EXISTS \"{TableName}\" (\n" );
 
 		var first = true;
 
@@ -423,10 +423,17 @@ public class DatabaseMapping
 			first = false;
 
 			builder.Append( ' ' );
-			builder.Append( column.ColumnName );
+			builder.Append( $"\"{column.ColumnName}\"" );
 
 			builder.Append( ' ' );
-			builder.Append( GetSqlType( column.Type, column.MaxStringLength ) );
+			if( column.Converter != null )
+			{
+				builder.Append( "BLOB" );
+			}
+			else
+			{
+				builder.Append( GetSqlType( column.Type, column.MaxStringLength ) );
+			}
 
 			if( !column.IsNullable )
 			{
