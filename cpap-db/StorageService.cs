@@ -13,10 +13,26 @@ namespace cpap_db
 		#region Private fields
 
 		public SQLiteConnection _connection = null;
+
+		private static Dictionary<System.Type, DatabaseMapping> _mappings = new();
 		
 		#endregion 
 		
-		#region Class constructor
+		#region Class Constructor
+
+		static StorageService()
+		{
+			var mapping = CreateMapping<DailyReport>( "day" );
+			mapping.PrimaryKey = new PrimaryKeyColumn( "id", typeof( DateTime ) );
+
+			mapping            = CreateMapping<FaultInfo>( "fault" );
+			mapping.PrimaryKey = new PrimaryKeyColumn( "id", typeof( int ), true );
+			mapping.ForeignKey = new ForeignKeyColumn( "day", typeof( DateTime ), "day", "id" );
+		}
+		
+		#endregion
+		
+		#region Instance Constructor 
 
 		public StorageService( string databasePath )
 		{
@@ -38,6 +54,14 @@ namespace cpap_db
 		#endregion
 		
 		#region Public functions
+		
+		public static DatabaseMapping CreateMapping<T>( string tableName = null ) where T : new()
+		{
+			var mapping = new DatabaseMapping<T>( tableName ?? typeof( T ).Name );
+			_mappings[ typeof( T ) ] = mapping;
+
+			return mapping;
+		}
 
 		public DateTime GetMostRecentDay()
 		{
@@ -45,11 +69,6 @@ namespace cpap_db
 			return DateTime.FromFileTimeUtc( value );
 		}
 
-		public void Save( DailyReport day )
-		{
-			_connection.InsertOrReplace( new DbDayRecord( day ) );
-		}
-		
 		#endregion 
 		
 		#region IDisposable interface implementation
