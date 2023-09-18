@@ -24,7 +24,8 @@ public class PrimaryKeyColumn : KeyColumn
 {
 	public bool AutoIncrement { get; set; }
 
-	public PrimaryKeyColumn( string name, Type type, bool autoIncrement = false ) : base( name, type )
+	public PrimaryKeyColumn( string name, Type type, bool autoIncrement = false ) 
+		: base( name, type )
 	{
 		AutoIncrement = autoIncrement;
 	}
@@ -39,7 +40,8 @@ public class ForeignKeyColumn : KeyColumn
 
 	public string OnUpdateAction { get; set; } = "NO ACTION";
 
-	public ForeignKeyColumn( string name, Type type, string referencedTable, string referencedField ) : base( name, type )
+	public ForeignKeyColumn( string name, Type type, string referencedTable, string referencedField ) 
+		: base( name, type )
 	{
 		ReferencedTable = referencedTable;
 		ReferencedField = referencedField;
