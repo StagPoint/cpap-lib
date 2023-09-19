@@ -550,8 +550,8 @@ public partial class SignalChart
 
 		// Set zoom and boundary limits
 		chart.Plot.YAxis.SetBoundary( minValue, maxValue );
-		chart.Plot.XAxis.SetBoundary( -1, day.Duration.TotalSeconds + 1 );
-		chart.Plot.SetAxisLimits( -1, day.Duration.TotalSeconds + 1, minValue, maxValue );
+		chart.Plot.XAxis.SetBoundary( -1, day.TotalTimeSpan.TotalSeconds + 1 );
+		chart.Plot.SetAxisLimits( -1, day.TotalTimeSpan.TotalSeconds + 1, minValue, maxValue );
 
 		// If manual vertical axis tick positions were provided, set up the labels for them and force the chart
 		// to show those instead of the automatically-generated tick positions. 

@@ -43,14 +43,19 @@ public partial class DataBrowser
 	{
 		var startTime = Environment.TickCount;
 
-		DateTime mostRecentDay = DateTime.MinValue;
+		DateTime mostRecentDay = DateTime.Today.AddDays( -30 );
 
-		using( var db = new StorageService( "CPAP" ) )
+		using( var db = new StorageService( @"D:\Temp\CPAP.db" ) )
 		{
-			mostRecentDay = db.GetMostRecentDay();
+			//mostRecentDay = db.GetMostRecentDay();
 
 			_data = new ResMedDataLoader();
 			_data.LoadFromFolder( _dataPath, mostRecentDay );
+
+			foreach( var day in _data.Days )
+			{
+				db.SaveDailyReport( day );
+			}
 		}
 
 		var elapsed = Environment.TickCount - startTime;

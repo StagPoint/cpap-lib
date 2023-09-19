@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using System.Security.Permissions;
 using System.Text;
 
 using cpaplib;
@@ -12,6 +13,26 @@ using SQLitePCL;
 
 namespace cpap_db
 {
+	public static class TableNames
+	{
+		public const string DailyReport         = "day";
+		public const string Session             = "session";
+		public const string Signal              = "signal";
+		public const string FaultMapping        = "fault";
+		public const string ReportedEvent       = "event";
+		public const string SignalStatistics    = "signal_stats";
+		public const string ReportedEventCounts = "event_counts";
+		
+		public const string MachineSettings     = "machine_settings";
+		
+		// All of the following classes will likely be eliminated at some point, but for now...
+		public const string EprSettings         = "epr_settings";
+		public const string CpapSettings        = "cpap_settings";
+		public const string AutoSetSettings     = "auto_settings";
+		public const string AsvSettings         = "asv_settings";
+		public const string AvapsSettings       = "avaps_settings";
+	}
+	
 	public class StorageService : IDisposable
 	{
 		#region Private fields
@@ -26,16 +47,56 @@ namespace cpap_db
 
 		static StorageService()
 		{
-			#region Create mappings for cpap-lib types 
 			
-			var mapping = CreateMapping<DailyReport>( "day" );
-			mapping.PrimaryKey = new PrimaryKeyColumn( "id", typeof( DateTime ) );
+			#region Create mappings for cpap-lib types
 
-			mapping            = CreateMapping<FaultInfo>( "fault" );
-			mapping.PrimaryKey = new PrimaryKeyColumn( "id", typeof( int ), true );
-			mapping.ForeignKey = new ForeignKeyColumn( "day", typeof( DateTime ), "day", "id" );
+			var dayMapping = CreateMapping<DailyReport>( TableNames.DailyReport );
+			dayMapping.PrimaryKey = new PrimaryKeyColumn( "id", typeof( DateTime ) );
+
+			var faultMapping = CreateMapping<FaultInfo>( TableNames.FaultMapping );
+			faultMapping.PrimaryKey = new PrimaryKeyColumn( "id", typeof( int ), true );
+			faultMapping.ForeignKey = new ForeignKeyColumn( dayMapping );
+
+			var eventMapping = CreateMapping<ReportedEvent>( TableNames.ReportedEvent );
+			eventMapping.ForeignKey = new ForeignKeyColumn( dayMapping );
 			
-			#endregion 
+			var sessionMapping = CreateMapping<Session>( TableNames.Session );
+			sessionMapping.PrimaryKey = new PrimaryKeyColumn( "id", typeof( int ), true );
+			sessionMapping.ForeignKey = new ForeignKeyColumn( dayMapping );
+
+			var blobColumnMapping = new ColumnMapping( "samples", "Samples", typeof( Signal ) );
+			blobColumnMapping.Converter = new DoubleListBlobConverter();
+
+			var signalMapping = CreateMapping<Signal>( TableNames.Signal );
+			signalMapping.ForeignKey = new ForeignKeyColumn( sessionMapping );
+			signalMapping.Columns.Add( blobColumnMapping );
+
+			var statisticsMapping = CreateMapping<SignalStatistics>( TableNames.SignalStatistics );
+			statisticsMapping.ForeignKey = new ForeignKeyColumn( dayMapping );
+
+			var eventsMapping = CreateMapping<ReportedEvent>( TableNames.ReportedEvent );
+			eventsMapping.ForeignKey = new ForeignKeyColumn( dayMapping );
+
+			var machineSettingsMapping = CreateMapping<MachineSettings>( TableNames.MachineSettings );
+			machineSettingsMapping.PrimaryKey = new PrimaryKeyColumn( "id", typeof( int ), true );
+			machineSettingsMapping.ForeignKey = new ForeignKeyColumn( dayMapping );
+
+			var eprMapping = CreateMapping<EprSettings>( TableNames.EprSettings );
+			eprMapping.ForeignKey = new ForeignKeyColumn( machineSettingsMapping );
+
+			var cpapMapping = CreateMapping<EprSettings>( TableNames.CpapSettings );
+			cpapMapping.ForeignKey = new ForeignKeyColumn( machineSettingsMapping );
+
+			var autosetMapping = CreateMapping<EprSettings>( TableNames.AutoSetSettings );
+			autosetMapping.ForeignKey = new ForeignKeyColumn( machineSettingsMapping );
+
+			var asvMapping = CreateMapping<EprSettings>( TableNames.AsvSettings );
+			asvMapping.ForeignKey = new ForeignKeyColumn( machineSettingsMapping );
+
+			var avapsMapping = CreateMapping<EprSettings>( TableNames.AvapsSettings );
+			avapsMapping.ForeignKey = new ForeignKeyColumn( machineSettingsMapping );
+
+			#endregion
 		}
 		
 		#endregion
@@ -45,13 +106,22 @@ namespace cpap_db
 		public StorageService( string databasePath )
 		{
 			Connection = new SQLiteConnection( databasePath );
+
+			var info = Connection.GetTableInfo( TableNames.DailyReport );
+			if( info.Count == 0 )
+			{
+				foreach( var mapping in _mappings )
+				{
+					mapping.Value.CreateTable( Connection );
+				}
+			}
 		}
 
 		#endregion
 		
-		#region Public functions
-
-		public DatabaseMapping GetMapping<T>()
+		#region Static functions 
+		
+		public static DatabaseMapping GetMapping<T>()
 		{
 			if( _mappings.TryGetValue( typeof( T ), out DatabaseMapping mapping ) )
 			{
@@ -61,6 +131,41 @@ namespace cpap_db
 			return null;
 		}
 		
+		public static DatabaseMapping CreateMapping<T>( string tableName = null ) where T : new()
+		{
+			var mapping = new DatabaseMapping<T>( tableName ?? typeof( T ).Name );
+			_mappings[ typeof( T ) ] = mapping;
+
+			return mapping;
+		}
+
+		#endregion 
+		
+		#region Public functions
+
+		public void SaveDailyReport( DailyReport day )
+		{
+			var dayID = day.ReportDate.Date;
+
+			Insert( day, dayID );
+
+			foreach( var session in day.Sessions )
+			{
+				var sessionID = Insert( session, foreignKeyValue: dayID );
+
+				foreach( var signal in session.Signals )
+				{
+					Insert( signal, foreignKeyValue: sessionID );
+				}
+			}
+		}
+
+		public int Insert<T>( T record, object primaryKeyValue = null, object foreignKeyValue = null ) where T : class
+		{
+			var mapping = GetMapping<T>();
+			return mapping.Insert( Connection, record, primaryKeyValue, foreignKeyValue );
+		}
+
 		public bool CreateTable<T>()
 		{
 			var mapping = GetMapping<T>();
@@ -72,14 +177,6 @@ namespace cpap_db
 			return mapping.CreateTable( Connection );
 		}
 		
-		public static DatabaseMapping CreateMapping<T>( string tableName = null ) where T : new()
-		{
-			var mapping = new DatabaseMapping<T>( tableName ?? typeof( T ).Name );
-			_mappings[ typeof( T ) ] = mapping;
-
-			return mapping;
-		}
-
 		public DateTime GetMostRecentDay()
 		{
 			return Connection.ExecuteScalar<DateTime>( "SELECT ReportDate FROM Day ORDER BY ReportDate DESC LIMIT 1" );

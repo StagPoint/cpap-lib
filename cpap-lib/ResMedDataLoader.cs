@@ -342,7 +342,7 @@ namespace cpaplib
 			// we'll use the *actual* recorded session times instead. 
 			day.RecordingStartTime = firstRecordedTime;
 			day.RecordingEndTime   = lastRecordedTime;
-			day.Duration           = TimeSpan.FromSeconds( day.Sessions.Sum( x => x.Duration.TotalSeconds ) );
+			day.UsageTime           = TimeSpan.FromSeconds( day.Sessions.Sum( x => x.Duration.TotalSeconds ) );
 
 			// Calculate statistics (min, avg, median, max, etc) for each Signal
 			CalculateSignalStatistics( day );
@@ -547,7 +547,7 @@ namespace cpaplib
 			}
 
 			// "Time spent in CSR" is given as a percentage of the total time 
-			day.EventSummary.CSR = totalTimeInCSR / day.OnDuration.TotalSeconds;
+			day.EventSummary.CSR = totalTimeInCSR / day.UsageTime.TotalSeconds;
 		}
 		
 		private void LoadEventsAndAnnotations( string logFolder, DailyReport day )
@@ -592,7 +592,7 @@ namespace cpaplib
 			day.EventSummary.ClearAirwayCount       = day.Events.Count( x => x.Type == EventType.ClearAirway );
 			day.EventSummary.RespiratoryEffortCount = day.Events.Count( x => x.Type == EventType.RERA );
 			day.EventSummary.FlowLimitCount         = day.Events.Count( x => x.Type == EventType.FlowLimitation );
-			day.EventSummary.FlowLimitIndex         = day.EventSummary.FlowLimitCount / day.OnDuration.TotalHours;
+			day.EventSummary.FlowLimitIndex         = day.EventSummary.FlowLimitCount / day.UsageTime.TotalHours;
 
 			day.EventSummary.TotalTimeInApnea      = TimeSpan.FromSeconds( day.Events.Sum( x => x.Duration.TotalSeconds ) );
 			day.EventSummary.TotalTimeOfLargeLeaks = TimeSpan.FromSeconds( day.Events.Where( x => x.Type == EventType.LargeLeak ).Sum( x => x.Duration.TotalSeconds ) );
@@ -642,7 +642,7 @@ namespace cpaplib
 			{
 				var day = Days[ dayIndex ];
 
-				if( day.Duration.TotalMinutes < 5 )
+				if( day.UsageTime.TotalMinutes < 5 )
 				{
 					continue;
 				}
@@ -718,7 +718,7 @@ namespace cpaplib
 			int dayIndex = 0;
 			while( dayIndex < Days.Count )
 			{
-				if( Days[ dayIndex ].Duration.TotalMinutes <= 5 )
+				if( Days[ dayIndex ].UsageTime.TotalMinutes <= 5 )
 				{
 					Days.RemoveAt( dayIndex );
 					continue;

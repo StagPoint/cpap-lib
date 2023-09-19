@@ -294,7 +294,7 @@ public class DatabaseMapping
 			throw new Exception( $"No primary key has been defined for table {TableName}" );
 		}
 
-		return $"SELECT * FROM \"{TableName}\" WHERE {PrimaryKey.ColumnName} = ?;";
+		return $"SELECT * FROM \"{TableName}\" WHERE \"{PrimaryKey.ColumnName}\" = ?;";
 	}
 
 	private string GenerateSelectByForeignKeyQuery()
@@ -304,7 +304,7 @@ public class DatabaseMapping
 			throw new Exception( $"No foreign key has been defined for table {TableName}" );
 		}
 
-		return $"SELECT * FROM \"{TableName}\" WHERE {ForeignKey.ColumnName} = ?;";
+		return $"SELECT * FROM \"{TableName}\" WHERE \"{ForeignKey.ColumnName}\" = ?;";
 	}
 
 	private string GenerateDeleteQuery()
@@ -314,7 +314,7 @@ public class DatabaseMapping
 			throw new Exception( $"No primary key has been defined for table {TableName}" );
 		}
 
-		return $"DELETE FROM \"{TableName}\" WHERE {PrimaryKey.ColumnName} = ?";
+		return $"DELETE FROM \"{TableName}\" WHERE \"{PrimaryKey.ColumnName}\" = ?";
 	}
 
 	private string GenerateSelectAllQuery()
@@ -333,7 +333,7 @@ public class DatabaseMapping
 
 		if( PrimaryKey != null && !PrimaryKey.AutoIncrement )
 		{
-			builder.Append( PrimaryKey.ColumnName );
+			builder.Append( $"\"{PrimaryKey.ColumnName}\"" );
 			parameters.Append( '?' );
 
 			hasPreviousColumn = true;
@@ -347,7 +347,7 @@ public class DatabaseMapping
 				parameters.Append( ", " );
 			}
 
-			builder.Append( ForeignKey.ColumnName );
+			builder.Append( $"\"{ForeignKey.ColumnName}\"" );
 			parameters.Append( '?' );
 
 			hasPreviousColumn = true;
@@ -382,7 +382,7 @@ public class DatabaseMapping
 
 		if( PrimaryKey != null )
 		{
-			builder.Append( $"{PrimaryKey.ColumnName} {PrimaryKey.DbType} PRIMARY KEY" );
+			builder.Append( $"\"{PrimaryKey.ColumnName}\" {PrimaryKey.DbType} PRIMARY KEY" );
 
 			if( PrimaryKey.AutoIncrement )
 			{
@@ -406,7 +406,7 @@ public class DatabaseMapping
 			first = false;
 
 			builder.Append( ' ' );
-			builder.Append( ForeignKey.ColumnName );
+			builder.Append( $"\"{ForeignKey.ColumnName}\"" );
 
 			builder.Append( ' ' );
 			builder.Append( GetSqlType( ForeignKey.Type, null ) );
@@ -453,7 +453,7 @@ public class DatabaseMapping
 				builder.Append( ", " );
 			}
 
-			builder.Append( $"\nFOREIGN KEY({ForeignKey.ColumnName}) REFERENCES {ForeignKey.ReferencedTable}({ForeignKey.ReferencedField})" );
+			builder.Append( $"\nFOREIGN KEY( \"{ForeignKey.ColumnName}\" ) REFERENCES \"{ForeignKey.ReferencedTable}\"( \"{ForeignKey.ReferencedField}\" )" );
 
 			if( !string.IsNullOrEmpty( ForeignKey.OnDeleteAction ) )
 			{

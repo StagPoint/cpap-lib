@@ -12,10 +12,10 @@ public class KeyColumn
 	public object Value      { get; set; }
 	public bool   IsNullable { get; set; } = false;
 
-	public KeyColumn( string name, Type type )
+	protected KeyColumn( string name, Type type )
 	{
-		ColumnName = name;
-		Type       = type;
+		ColumnName = !string.IsNullOrEmpty( name ) ? name : throw new ArgumentNullException( "Name argument cannot be null or empty " );
+		Type       = type ?? throw new ArgumentNullException( $"Type argument cannot be null" );
 		DbType     = DatabaseMapping.GetSqlType( type );
 		Value      = null;
 	}
@@ -39,13 +39,20 @@ public class ForeignKeyColumn : KeyColumn
 
 	public string OnDeleteAction { get; set; } = "CASCADE";
 
-	public string OnUpdateAction { get; set; } = "NO ACTION";
+	public string OnUpdateAction { get; set; } = "CASCADE";
 
 	public ForeignKeyColumn( string name, Type type, string referencedTable, string referencedField ) 
 		: base( name, type )
 	{
 		ReferencedTable = referencedTable;
 		ReferencedField = referencedField;
+	}
+
+	public ForeignKeyColumn( DatabaseMapping referencedTable )
+		: base( $"{referencedTable.TableName}ID", referencedTable.PrimaryKey.Type )
+	{
+		ReferencedTable = referencedTable.TableName;
+		ReferencedField = referencedTable.PrimaryKey.ColumnName;
 	}
 }
 

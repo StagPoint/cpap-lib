@@ -22,6 +22,11 @@ namespace cpaplib
 		/// The specific time at which recording ended
 		/// </summary>
 		public DateTime RecordingEndTime { get; set; }
+		
+		/// <summary>
+		/// Returns the total time between the start of the first session and the end of the last session
+		/// </summary>
+		public TimeSpan TotalTimeSpan { get => RecordingEndTime - RecordingStartTime; }
 
 		/// <summary>
 		/// The list of sessions  for this day
@@ -58,19 +63,14 @@ namespace cpaplib
 		/// <summary>
 		/// The total amount of time the CPAP was used on the reported day (calculated)
 		/// </summary>
-		public TimeSpan Duration { get; set; }
-
-		/// <summary>
-		/// The total amount of time the CPAP was used on the recorded day, as reported by the CPAP machine 
-		/// </summary>
-		public TimeSpan OnDuration { get; set; }
+		public TimeSpan UsageTime { get; set; }
 
 		public double PatientHours { get; set; }
 
 		/// <summary>
 		/// Contains all of the raw data stored for each Day
 		/// </summary>
-		public Dictionary<string, double> RawData = new Dictionary<string, double>();
+		//public Dictionary<string, double> RawData = new Dictionary<string, double>();
 		
 		#endregion 
 
@@ -96,7 +96,7 @@ namespace cpaplib
 			// values exposed in a reasonable manner, but it's highly likely that there's something I didn't
 			// understand correctly, not to mention fields that are different for different models, so the
 			// raw data will be kept available for the consumer of this library to make use of if needs be.
-			RawData = data;
+			//RawData = data;
 
 			ReportDate = new DateTime( 1970, 1, 1 ).AddDays( data[ "Date" ] ).AddHours( 12 );
 
@@ -104,8 +104,8 @@ namespace cpaplib
 			EventSummary.ReadFrom( data );
 
 			MaskEvents = (int)(data[ "MaskEvents" ] / 2);
-			Duration   = TimeSpan.FromMinutes( data[ "Duration" ] );
-			OnDuration = TimeSpan.FromMinutes( data[ "OnDuration" ] );
+			UsageTime   = TimeSpan.FromMinutes( data[ "Duration" ] );
+			//OnDuration = TimeSpan.FromMinutes( data[ "OnDuration" ] );
 
 			PatientHours = getValue( "PatientHours" );
 
@@ -152,7 +152,7 @@ namespace cpaplib
 			
 			RecordingStartTime = DateUtil.Min( RecordingStartTime, session.StartTime );
 			RecordingEndTime   = DateUtil.Max( RecordingEndTime, session.EndTime );
-			Duration           = DateUtil.Max( RecordingEndTime, session.EndTime ) - RecordingStartTime;
+			UsageTime           = DateUtil.Max( RecordingEndTime, session.EndTime ) - RecordingStartTime;
 
 			Sessions.Sort( ( lhs, rhs ) => lhs.StartTime.CompareTo( rhs.StartTime ) );
 		}
@@ -205,7 +205,7 @@ namespace cpaplib
 			RecordingStartTime = DateUtil.Min( RecordingStartTime, session.StartTime );
 			RecordingEndTime   = DateUtil.Max( RecordingEndTime, session.EndTime );
 
-			Duration = RecordingEndTime - RecordingStartTime;
+			UsageTime = RecordingEndTime - RecordingStartTime;
 		}
 
 		#endregion
@@ -216,10 +216,10 @@ namespace cpaplib
 		{
 			if( Sessions.Count > 0 )
 			{
-				return $"{ReportDate.ToLongDateString()}   {Sessions.First().StartTime.ToShortTimeString()} - {Sessions.Last().EndTime.ToShortTimeString()}    ({Duration})";
+				return $"{ReportDate.ToLongDateString()}   {Sessions.First().StartTime.ToShortTimeString()} - {Sessions.Last().EndTime.ToShortTimeString()}    ({UsageTime})";
 			}
 
-			return $"{ReportDate.ToLongDateString()}   ({Duration})";
+			return $"{ReportDate.ToLongDateString()}   ({UsageTime})";
 		}
 
 		#endregion

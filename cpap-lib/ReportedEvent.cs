@@ -18,7 +18,7 @@ namespace cpaplib
 		/// <summary>
 		/// The descriptive name of the event being flagged 
 		/// </summary>
-		public EventType Type { get; internal set; }
+		public EventType Type { get; set; }
 
 		/// <summary>
 		/// Gets or sets whether the Event's position occurs logically before or after the Duration 
@@ -28,12 +28,12 @@ namespace cpaplib
 		/// <summary>
 		/// The time when the event occurred 
 		/// </summary>
-		public DateTime StartTime { get; internal set; }
+		public DateTime StartTime { get; set; }
 
 		/// <summary>
 		/// The duration of the event being flagged, in seconds
 		/// </summary>
-		public TimeSpan Duration { get; internal set; }
+		public TimeSpan Duration { get; set; }
 
 		#endregion
 		

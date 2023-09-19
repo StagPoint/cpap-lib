@@ -18,7 +18,7 @@ public class EventViewModel
 		
 		foreach( var type in types )
 		{
-			Items.Add( new EventTypeSummary( type, day.OnDuration, events ) );
+			Items.Add( new EventTypeSummary( type, day.UsageTime, events ) );
 		}
 	}
 }
