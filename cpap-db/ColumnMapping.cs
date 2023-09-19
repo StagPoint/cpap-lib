@@ -41,11 +41,14 @@ public class ForeignKeyColumn : KeyColumn
 
 	public string OnUpdateAction { get; set; } = "CASCADE";
 
-	public ForeignKeyColumn( string name, Type type, string referencedTable, string referencedField ) 
+	public bool IsForeignKeyConstraintEnforced { get; set; } = true;
+
+	public ForeignKeyColumn( string name, Type type, string referencedTable, string referencedField, bool isEnforced = true ) 
 		: base( name, type )
 	{
-		ReferencedTable = referencedTable;
-		ReferencedField = referencedField;
+		ReferencedTable                = referencedTable;
+		ReferencedField                = referencedField;
+		IsForeignKeyConstraintEnforced = isEnforced;
 	}
 
 	public ForeignKeyColumn( DatabaseMapping referencedTable )

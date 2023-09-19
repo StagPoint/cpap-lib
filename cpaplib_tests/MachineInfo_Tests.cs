@@ -10,10 +10,9 @@ public class MachineInfo_Tests
 	[TestMethod]
 	public void ReadMachineIdentificationFile()
 	{
-		string filename = Path.Combine( Environment.CurrentDirectory, "Files", "Identification.tgt" );
-		Assert.IsTrue( File.Exists( filename ), "Test file does not exist" );
+		string testFolder = Path.Combine( Environment.CurrentDirectory, "Files" );
 
-		var machineID = MachineIdentification.ReadFrom( filename );
+		var machineID = ResMedDataLoader.LoadMachineIdentificationInfo( testFolder );
 
 		Assert.IsNotNull( machineID );
 		Assert.IsTrue( machineID.ProductName.Contains( "AirSense", StringComparison.OrdinalIgnoreCase ) );

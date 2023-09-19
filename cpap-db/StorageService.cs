@@ -52,10 +52,14 @@ namespace cpap_db
 
 			var dayMapping = CreateMapping<DailyReport>( TableNames.DailyReport );
 			dayMapping.PrimaryKey = new PrimaryKeyColumn( "id", typeof( DateTime ) );
+			dayMapping.ForeignKey = new ForeignKeyColumn( "profileID", typeof( int ), "profile", "profileID", false );
 
 			var faultMapping = CreateMapping<FaultInfo>( TableNames.FaultMapping );
 			faultMapping.PrimaryKey = new PrimaryKeyColumn( "id", typeof( int ), true );
 			faultMapping.ForeignKey = new ForeignKeyColumn( dayMapping );
+
+			var eventCountMapping = CreateMapping<ReportedEventCounts>( TableNames.ReportedEventCounts );
+			eventCountMapping.ForeignKey = new ForeignKeyColumn( dayMapping );
 
 			var eventMapping = CreateMapping<ReportedEvent>( TableNames.ReportedEvent );
 			eventMapping.ForeignKey = new ForeignKeyColumn( dayMapping );
@@ -147,7 +151,18 @@ namespace cpap_db
 		{
 			var dayID = day.ReportDate.Date;
 
-			Insert( day, dayID );
+			Insert( day, dayID, -1 );
+			Insert( day.EventSummary, foreignKeyValue: dayID );
+
+			foreach( var evt in day.Events )
+			{
+				Insert( evt, foreignKeyValue: dayID );
+			}
+
+			foreach( var stat in day.Statistics )
+			{
+				Insert( stat, foreignKeyValue: dayID );
+			}
 
 			foreach( var session in day.Sessions )
 			{

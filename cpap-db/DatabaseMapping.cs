@@ -135,7 +135,7 @@ public class DatabaseMapping
 		{
 			if( property.CanRead && property.CanWrite )
 			{
-				if( property.PropertyType.IsValueType )
+				if( property.PropertyType.IsValueType || property.PropertyType == typeof( string ) )
 				{
 					Columns.Add( new ColumnMapping( property.Name, property ) );
 				}
@@ -446,7 +446,7 @@ public class DatabaseMapping
 			}
 		}
 
-		if( ForeignKey != null )
+		if( ForeignKey != null && ForeignKey.IsForeignKeyConstraintEnforced )
 		{
 			if( !first )
 			{

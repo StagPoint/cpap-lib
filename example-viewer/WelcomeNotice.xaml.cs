@@ -31,8 +31,7 @@ public partial class WelcomeNotice
 
 			if( ResMedDataLoader.HasCorrectFolderStructure( drive.RootDirectory.FullName ) )
 			{
-				var machineID = MachineIdentification.ReadFrom( Path.Combine( drive.RootDirectory.FullName, "Identification.tgt" ) );
-				
+				var machineID = ResMedDataLoader.LoadMachineIdentificationInfo( drive.RootDirectory.FullName );
 
 				var messageBoxResult = MessageBox.Show( $"There appears to be a CPAP data folder structure on Drive {drive.Name}\nMachine: {machineID.ProductName}, Serial #: {machineID.SerialNumber}\n\nDo you want to import this data from {drive.Name}?", $"Import from {drive.Name}?", MessageBoxButton.YesNoCancel );
 				if( messageBoxResult == MessageBoxResult.Yes )

@@ -39,14 +39,7 @@
                             <ColumnDefinition Width="Auto" SharedSizeGroup="C4"/>
                             <ColumnDefinition Width="Auto" SharedSizeGroup="C5"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="{Binding SignalName}" Padding="0 0 10 0">
-                            <TextBlock.ToolTip>
-                                <MultiBinding StringFormat="{}{0}  ({1})">
-                                    <Binding Path="SignalName" />
-                                    <Binding Path="UnitOfMeasurement" />
-                                </MultiBinding>
-                            </TextBlock.ToolTip>
-                        </TextBlock>
+                        <TextBlock Grid.Column="0" Text="{Binding SignalName}" Padding="0 0 10 0" />
                         <TextBlock Grid.Column="1" Text="{Binding Minimum, Mode=OneWay, StringFormat={}{0:f2}}" Padding="0 0 10 0"/>
                         <TextBlock Grid.Column="3" Text="{Binding Median, Mode=OneWay, StringFormat={}{0:f2}}" Padding="0 0 10 0"/>
                         <TextBlock Grid.Column="2" Text="{Binding Average, Mode=OneWay, StringFormat={}{0:f2}}" Padding="0 0 10 0"/>

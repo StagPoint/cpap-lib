@@ -41,7 +41,7 @@ namespace cpaplib
 			{
 				SignalName        = signalName,
 				UnitOfMeasurement = unitOfMeasurement,
-				Minimum           = sortedSamples[ (int)(bufferLength * 0.01) ],
+				Minimum           = sortedSamples.Any( x => x > 0 ) ? sortedSamples.Where( x => x > 0 ).Min() : 0,
 				Average           = sortedSamples.Average(),
 				Maximum           = sortedSamples.Max(),
 				Median            = sortedSamples[ bufferLength / 2 ],

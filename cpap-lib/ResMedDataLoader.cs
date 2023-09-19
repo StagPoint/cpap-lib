@@ -14,8 +14,6 @@ namespace cpaplib
 {
 	public class ResMedDataLoader
 	{
-		public MachineIdentification MachineID = new MachineIdentification();
-
 		public List<DailyReport> Days { get; } = new List<DailyReport>();
 		
 		private TimeSpan _timeAjustment = new TimeSpan( 0, 0, 1, 10 );
@@ -32,6 +30,8 @@ namespace cpaplib
 			"DATALOG",
 		};
 
+		private MachineIdentification _machineInfo = new MachineIdentification();
+
 		public void LoadFromFolder( string folderPath, DateTime? minDate = null, DateTime? maxDate = null, TimeSpan? timeAdjustment = null )
 		{
 			if( timeAdjustment.HasValue )
@@ -40,7 +40,8 @@ namespace cpaplib
 			}
 			
 			EnsureCorrectFolderStructure( folderPath );
-			LoadMachineIdentificationInfo( folderPath );
+
+			_machineInfo = LoadMachineIdentificationInfo( folderPath );
 
 			var indexFilename = Path.Combine( folderPath, "STR.edf" );
 			LoadIndexAndSettings( indexFilename, minDate, maxDate );
@@ -72,15 +73,44 @@ namespace cpaplib
 			{
 				foreach( var session in day.Sessions )
 				{
-					session.Source = MachineID.ProductName;
+					session.Source = _machineInfo.ProductName;
 				}
 			}
 		}
 
-		private void LoadMachineIdentificationInfo( string rootFolder )
+		public static MachineIdentification LoadMachineIdentificationInfo( string rootFolder )
 		{
-			var filename = Path.Combine( rootFolder, "Identification.tgt" );
-			MachineID = MachineIdentification.ReadFrom( filename );
+			var filename    = Path.Combine( rootFolder, "Identification.tgt" );
+			var machineInfo = new MachineIdentification();
+
+			using( var file = File.OpenRead( filename ) )
+			{
+				using( var reader = new StreamReader( file ) )
+				{
+					while( !reader.EndOfStream )
+					{
+						var line = reader.ReadLine()?.Trim();
+						if( string.IsNullOrEmpty( line ) || !line.StartsWith( "#", StringComparison.Ordinal ) )
+						{
+							continue;
+						}
+
+						int spaceIndex = line.IndexOf( " ", StringComparison.Ordinal );
+						Debug.Assert( spaceIndex != -1 );
+
+						var key   = line.Substring( 1, spaceIndex - 1 );
+						var value = line.Substring( spaceIndex + 1 ).Trim().Replace( '_', ' ' );
+
+						machineInfo.Fields[ key ] = value;
+					}
+
+					machineInfo.ProductName  = machineInfo.Fields[ "PNA" ];
+					machineInfo.SerialNumber = machineInfo.Fields[ "SRN" ];
+					machineInfo.ModelNumber  = machineInfo.Fields[ "PCD" ];
+				}
+			}
+
+			return machineInfo;
 		}
 
 		public static bool HasCorrectFolderStructure( string rootFolder )
@@ -584,7 +614,7 @@ namespace cpaplib
 			}
 		}
 		
-		private static void CalculateEventSummary( DailyReport day )
+		private void CalculateEventSummary( DailyReport day )
 		{
 			day.EventSummary.ObstructiveApneaCount  = day.Events.Count( x => x.Type == EventType.ObstructiveApnea );
 			day.EventSummary.HypopneaCount          = day.Events.Count( x => x.Type == EventType.Hypopnea );
@@ -621,7 +651,8 @@ namespace cpaplib
 				}
 
 				// Read in and process the settings for a single day
-				var day = DailyReport.Read( lookup );
+				var day = ReadDailyReport( lookup );
+				day.MachineInfo        =  _machineInfo;
 				day.RecordingStartTime += _timeAjustment;
 
 				Days.Add( day );
@@ -685,6 +716,192 @@ namespace cpaplib
 			// gathered the basic day information, but it keeps the code much cleaner and more readable, and this 
 			// isn't exactly a performance-critical section of code ;)
 			FilterDaysByDate( minDate, maxDate );
+		}
+
+		/// <summary>
+		/// Reads the statistics, settings, and other information from the stored data
+		/// </summary>
+		private DailyReport ReadDailyReport( Dictionary<string, double> data )
+		{
+			// I've tried my best to decode what all of the data means, and convert it to meaningful typed
+			// values exposed in a reasonable manner, but it's highly likely that there's something I didn't
+			// understand correctly, not to mention fields that are different for different models, so the
+			// raw data will be kept available for the consumer of this library to make use of if needs be.
+			//RawData = data;
+
+			var day = new DailyReport();
+
+			day.MachineInfo = _machineInfo;
+			day.ReportDate  = new DateTime( 1970, 1, 1 ).AddDays( data[ "Date" ] ).AddHours( 12 );
+
+			day.Settings = ReadMachineSettings( data );
+			day.EventSummary = ReadEventSummary( data );
+
+			day.MaskEvents = (int)(data[ "MaskEvents" ] / 2);
+			day.UsageTime  = TimeSpan.FromMinutes( data[ "Duration" ] );
+			//OnDuration = TimeSpan.FromMinutes( data[ "OnDuration" ] );
+
+			day.PatientHours = getValue( "PatientHours" );
+
+			day.Fault.Device     = getValue( "Fault.Device" );
+			day.Fault.Alarm      = getValue( "Fault.Alarm" );
+			day.Fault.Humidifier = getValue( "Fault.Humidifier" );
+			day.Fault.HeatedTube = getValue( "Fault.HeatedTube" );
+
+			double getValue( params string[] keys )
+			{
+				foreach( var key in keys )
+				{
+					if( data.TryGetValue( key, out double value ) )
+					{
+						return value;
+					}
+				}
+
+				return 0;
+			}
+
+			return day;
+		}
+
+		private ReportedEventCounts ReadEventSummary( Dictionary<string, double> data )
+		{
+			return new ReportedEventCounts()
+			{
+				AHI = data[ "AHI" ],
+				HI = data[ "HI" ],
+				AI = data[ "AI" ],
+				OAI = data[ "OAI" ],
+				CAI = data[ "CAI" ],
+				UAI = data[ "UAI" ],
+				RIN = data[ "RIN" ],
+				CSR = data[ "CSR" ],
+			};
+		}
+
+		private MachineSettings ReadMachineSettings( Dictionary<string, double> data )
+		{
+			var settings = new MachineSettings();
+			
+			if( data.TryGetValue( "CPAP_MODE", out double legacyMode ) )
+			{
+				switch( (int)legacyMode )
+				{
+					case 1:
+					case 2:
+						settings.Mode = OperatingMode.APAP;
+						break;
+					case 3:
+						settings.Mode = OperatingMode.CPAP;
+						break;
+					default:
+						settings.Mode = OperatingMode.UNKNOWN;
+						break;
+				}
+			}
+			else
+			{
+				var mode = (int)data.GetValue( "Mode" );
+				if( mode >= (int)OperatingMode.MAX_VALUE )
+				{
+					mode = -1;
+				}
+
+				settings.Mode = (OperatingMode)mode;
+			}
+
+			if(settings. Mode == OperatingMode.ASV )
+			{
+				settings.ASV = new AsvSettings
+				{
+					StartPressure = data[ "S.AV.StartPress" ],
+					MinPressure   = data[ "S.AV.MinPS" ],
+					MaxPressure   = data[ "S.AV.MaxPS" ],
+					EPAP          = data[ "S.AV.EPAP" ],
+					EpapMin       = data[ "S.AV.EPAP" ],
+					EpapMax       = data[ "S.AV.EPAP" ],
+					IpapMin       = data[ "S.AV.EPAP" ] + data[ "S.AV.MinPS" ],
+					IpapMax       = data[ "S.AV.EPAP" ] + data[ "S.AV.MaxPS" ],
+				};
+			}
+			else if( settings.Mode == OperatingMode.ASV_VARIABLE_EPAP )
+			{
+				settings.ASV = new AsvSettings
+				{
+					StartPressure = data[ "S.AA.StartPress" ],
+					MinPressure   = data[ "S.AA.MinPS" ],
+					MaxPressure   = data[ "S.AA.MaxPS" ],
+					EPAP          = data[ "S.AA.MinEPAP" ],
+					EpapMin       = data[ "S.AA.MinEPAP" ],
+					EpapMax       = data[ "S.AA.MaxEPAP" ],
+				};
+			}
+			else if( settings.Mode == OperatingMode.AVAPS )
+			{
+				settings.AVAP = new AvapsSettings
+				{
+					StartPressure = data[ "S.i.StartPress" ],
+					MinPressure   = data[ "S.i.MinPS" ],
+					MaxPressure   = data[ "S.i.MaxPS" ],
+					EpapAuto      = data[ "S.i.EPAPAuto" ] > 0.5,
+					EPAP          = data[ "S.i.EPAP" ],
+					EpapMin       = data[ "S.i.EPAP" ],
+					EpapMax       = data[ "S.i.EPAP" ],
+				};
+
+				if( settings.AVAP.EpapAuto )
+				{
+					settings.AVAP.EpapMin = data[ "S.i.MinEPAP" ];
+					settings.AVAP.EpapMax = data[ "S.i.MaxEPAP" ];
+					
+					settings.AVAP.IPAP    = settings.AVAP.EpapMin + settings.AVAP.MinPressure;
+					settings.AVAP.IpapMin = settings.AVAP.EpapMin + settings.AVAP.MinPressure;
+					settings.AVAP.IpapMax = settings.AVAP.EpapMax + settings.AVAP.MaxPressure;
+				}
+				else 
+				{
+					settings.AVAP.IPAP    = settings. AVAP.EPAP + settings.AVAP.MinPressure;
+					settings.AVAP.IpapMin = settings.AVAP.EPAP + settings.AVAP.MinPressure;
+					settings.AVAP.IpapMax = settings.AVAP.EPAP + settings.AVAP.MaxPressure;
+				}
+			}
+
+			settings.HeatedTube = data["HeatedTube"] > 0.5;
+			settings.Humidifier = data["Humidifier"] > 0.5;
+
+			settings.CPAP.StartPressure = data["S.C.StartPress"];
+			settings.CPAP.Pressure      = data["S.C.Press"];
+
+			settings.EPR.ClinicianEnabled = data["S.EPR.ClinEnable"] >= 0.5;
+			settings.EPR.EprEnabled       = data["S.EPR.EPREnable"] >= 0.5;
+			settings.EPR.Level            = (int)data["S.EPR.Level"];
+			settings.EPR.Mode             = (EprType)(int)(data["S.EPR.EPRType"] + 1);
+
+			settings.AutoSet.ResponseType  = (AutoSetResponseType)(int)data["S.AS.Comfort"];
+			settings.AutoSet.StartPressure = data["S.AS.StartPress"];
+			settings.AutoSet.MaxPressure   = data["S.AS.MaxPress"];
+			settings.AutoSet.MinPressure   = data["S.AS.MinPress"];
+
+			settings.RampMode = (RampModeType)(int)data["S.RampEnable"];
+			settings.RampTime = data["S.RampTime"];
+
+			settings.SmartStart          = data["S.SmartStart"] > 0.5 ? OnOffType.On : OnOffType.Off;
+			settings.AntibacterialFilter = data["S.ABFilter"] >= 0.5;
+
+			settings.ClimateControl     = (ClimateControlType)(int)data["S.ClimateControl"];
+			settings.Tube               = data["S.Tube"];
+			settings.HumidifierStatus   = data["S.HumEnable"] > 0.5 ? OnOffType.On : OnOffType.Off;
+			settings.HumidityLevel      = data["S.HumLevel"];
+			settings.TemperatureEnabled = data["S.TempEnable"] > 0.5;
+			settings.Temperature        = data["S.Temp"] * 1.8 + 32; // Converted from Celsius to Fahrenheit
+
+			settings.Mask = (MaskType)(int)data["S.Mask"];
+
+			settings.Essentials = data["S.PtAccess"] > 0.5 ? EssentialsMode.On : EssentialsMode.Plus;
+
+			settings.PtAccess = data["S.PtAccess"];
+
+			return settings;
 		}
 
 		private void FilterDaysByDate( DateTime? minDate, DateTime? maxDate )

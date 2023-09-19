@@ -89,17 +89,5 @@ namespace cpaplib
 		/// The total time when large leaks (above the specified limit) occured
 		/// </summary>
 		public TimeSpan TotalTimeOfLargeLeaks { get; set; }
-
-		internal void ReadFrom( Dictionary<string, double> data )
-		{
-			AHI = data[ "AHI" ];
-			HI  = data[ "HI" ];
-			AI  = data[ "AI" ];
-			OAI = data[ "OAI" ];
-			CAI = data[ "CAI" ];
-			UAI = data[ "UAI" ];
-			RIN = data[ "RIN" ];
-			CSR = data[ "CSR" ];
-		}
 	}
 }

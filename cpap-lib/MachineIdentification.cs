@@ -7,7 +7,7 @@ namespace cpaplib
 {
 	public class MachineIdentification
 	{
-	#region Static fields
+		#region Static fields
 
 		/// <summary>
 		/// The list of known Model Numbers for the ResMed CPAP Line from 10 and up
@@ -27,96 +27,39 @@ namespace cpaplib
 			{ "39000", "ResMed AirSense 11 AutoSet" },
 		};
 
-	#endregion
+		#endregion
 
-	#region Public properties
+		#region Public properties
 
 		/// <summary>
 		/// The Product Name of the machine, as reported
 		/// </summary>
-		public string ProductName { get; private set; } = "";
+		public string ProductName { get; set; } = "UNKNOWN";
 
 		/// <summary>
 		/// The machine's Serial Number, as reported
 		/// </summary>
-		public string SerialNumber { get; private set; } = "";
+		public string SerialNumber { get; set; } = "UNKNOWN";
 
 		/// <summary>
 		/// The machine's Model Number, as reported 
 		/// </summary>
-		public string ModelNumber { get; private set; } = "";
+		public string ModelNumber { get; set; } = "UNKNOWN";
 
 		/// <summary>
 		/// Contains all of the other fields included in the Identification.tgt file 
 		/// </summary>
 		public Dictionary<string, string> Fields { get; } = new Dictionary<string, string>();
 
-	#endregion
+		#endregion
 
-	#region Static functions
-
-		public static MachineIdentification ReadFrom( string filename )
-		{
-			using( var file = File.OpenRead( filename ) )
-			{
-				return ReadFrom( file );
-			}
-		}
-
-		public static MachineIdentification ReadFrom( Stream file )
-		{
-			var machine = new MachineIdentification();
-
-			using( var reader = new StreamReader( file ) )
-			{
-				while( !reader.EndOfStream )
-				{
-					var line = reader.ReadLine()?.Trim();
-					if( string.IsNullOrEmpty( line ) || !line.StartsWith( "#", StringComparison.Ordinal ) )
-					{
-						continue;
-					}
-
-					int spaceIndex = line.IndexOf( " ", StringComparison.Ordinal );
-					Debug.Assert( spaceIndex != -1 );
-
-					var key   = line.Substring( 1, spaceIndex - 1 );
-					var value = line.Substring( spaceIndex + 1 ).Trim().Replace( '_', ' ' );
-
-					machine.Fields[ key ] = value;
-				}
-
-				machine.ProductName  = machine.Fields[ "PNA" ];
-				machine.SerialNumber = machine.Fields[ "SRN" ];
-				machine.ModelNumber  = machine.Fields[ "PCD" ];
-			}
-
-			return machine;
-		}
-
-	#endregion
-
-	#region Private functions
-
-		private string getField( string key )
-		{
-			if( Fields.TryGetValue( key, out string value ) )
-			{
-				return value;
-			}
-
-			return "NOT FOUND";
-		}
-
-	#endregion
-
-	#region Base class overrides
+		#region Base class overrides
 
 		public override string ToString()
 		{
 			return $"{ProductName} (SN: {SerialNumber})";
 		}
 
-	#endregion
+		#endregion
 	}
 }

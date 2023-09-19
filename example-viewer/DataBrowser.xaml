@@ -50,7 +50,7 @@
                     <ScrollViewer Name="scrollStatistics" Padding="5" Margin="0 0 0 0"
                                   VerticalScrollBarVisibility="Visible" VerticalAlignment="Top">
                         <ui:SimpleStackPanel Orientation="Vertical">
-                            <ui:SimpleStackPanel Name="MachineID" Orientation="Vertical" Margin="4 8 0 0">
+                            <ui:SimpleStackPanel Name="MachineInfoBlock" Orientation="Vertical" Margin="4 8 0 0" DataContext="{Binding MachineInfo}">
                                 <TextBlock Style="{DynamicResource BaseTextBlockStyle}">
                                     <Run>Model: </Run>
                                     <Run Text="{Binding ProductName, Mode=OneWay}" />
@@ -88,7 +88,7 @@
                                 <TextBlock Grid.Column="0" Grid.Row="3" Text="Usage Hours:"
                                            Style="{DynamicResource BaseTextBlockStyle}" />
                                 <TextBlock Grid.Column="2" Grid.Row="3"
-                                           Text="{Binding Duration, Mode=OneWay, StringFormat={}{0:T}}" />
+                                           Text="{Binding UsageTime, Mode=OneWay, StringFormat={}{0:T}}" />
                             </Grid>
                             <Expander
                                 x:Name="expReportedEvents"

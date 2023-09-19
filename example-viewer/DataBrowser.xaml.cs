@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -45,16 +46,31 @@ public partial class DataBrowser
 
 		DateTime mostRecentDay = DateTime.Today.AddDays( -30 );
 
-		using( var db = new StorageService( @"D:\Temp\CPAP.db" ) )
+		// DEBUG: Get rid of this
+		const string databasePath = @"D:\Temp\CPAP.db";
+		File.Delete( databasePath );
+
+		using( var db = new StorageService( databasePath ) )
 		{
-			//mostRecentDay = db.GetMostRecentDay();
+			db.Connection.BeginTransaction();
 
-			_data = new ResMedDataLoader();
-			_data.LoadFromFolder( _dataPath, mostRecentDay );
-
-			foreach( var day in _data.Days )
+			try
 			{
-				db.SaveDailyReport( day );
+				//mostRecentDay = db.GetMostRecentDay();
+
+				_data = new ResMedDataLoader();
+				_data.LoadFromFolder( _dataPath, mostRecentDay );
+
+				foreach( var day in _data.Days )
+				{
+					db.SaveDailyReport( day );
+				}
+				
+				db.Connection.Commit();
+			}
+			catch( Exception err )
+			{
+				db.Connection.Rollback();
 			}
 		}
 
@@ -104,9 +120,8 @@ public partial class DataBrowser
 		scrollStatistics.Visibility   = Visibility.Visible;
 		pnlCharts.Visibility          = Visibility.Visible;
 		pnlNoDataAvailable.Visibility = Visibility.Hidden;
-		
-		DataContext                   = day;
-		MachineID.DataContext         = _data.MachineID;
+
+		DataContext = day;
 	}
 
 	private void ScrollGraphsOnPreviewMouseWheel( object sender, MouseWheelEventArgs e )

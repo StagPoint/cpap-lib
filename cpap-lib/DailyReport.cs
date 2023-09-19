@@ -9,6 +9,11 @@ namespace cpaplib
 		#region Public properties 
 		
 		/// <summary>
+		/// Identifies the machine that was used to record this report 
+		/// </summary>
+		public MachineIdentification MachineInfo { get; set; } = new MachineIdentification();
+		
+		/// <summary>
 		/// The date on which this report was generated.
 		/// </summary>
 		public DateTime ReportDate { get; set; }
@@ -75,58 +80,6 @@ namespace cpaplib
 		#endregion 
 
 		#region Public functions
-
-		/// <summary>
-		/// Reads the statistics, settings, and other information from the stored data
-		/// </summary>
-		internal static DailyReport Read( Dictionary<string, double> data )
-		{
-			var day = new DailyReport();
-			day.ReadFrom( data );
-
-			return day;
-		}
-
-		/// <summary>
-		/// Reads the statistics, settings, and other information from the stored data
-		/// </summary>
-		internal void ReadFrom( Dictionary<string, double> data )
-		{
-			// I've tried my best to decode what all of the data means, and convert it to meaningful typed
-			// values exposed in a reasonable manner, but it's highly likely that there's something I didn't
-			// understand correctly, not to mention fields that are different for different models, so the
-			// raw data will be kept available for the consumer of this library to make use of if needs be.
-			//RawData = data;
-
-			ReportDate = new DateTime( 1970, 1, 1 ).AddDays( data[ "Date" ] ).AddHours( 12 );
-
-			Settings.ReadFrom( data );
-			EventSummary.ReadFrom( data );
-
-			MaskEvents = (int)(data[ "MaskEvents" ] / 2);
-			UsageTime   = TimeSpan.FromMinutes( data[ "Duration" ] );
-			//OnDuration = TimeSpan.FromMinutes( data[ "OnDuration" ] );
-
-			PatientHours = getValue( "PatientHours" );
-
-			Fault.Device     = getValue( "Fault.Device" );
-			Fault.Alarm      = getValue( "Fault.Alarm" );
-			Fault.Humidifier = getValue( "Fault.Humidifier" );
-			Fault.HeatedTube = getValue( "Fault.HeatedTube" );
-
-			double getValue( params string[] keys )
-			{
-				foreach( var key in keys )
-				{
-					if( data.TryGetValue( key, out double value ) )
-					{
-						return value;
-					}
-				}
-
-				return 0;
-			}
-		}
 
 		/// <summary>
 		/// Recalculates the statistics for the named Signal. Designed to be called after a data import to
