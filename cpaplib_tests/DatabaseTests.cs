@@ -11,7 +11,7 @@ namespace cpaplib_tests;
 [TestClass]
 public class DatabaseTests
 {
-	public class Report
+	public class TestReport
 	{
 		public DateTime ReportDate { get; set; }
 		public double   Hours      { get; set; }
@@ -20,7 +20,7 @@ public class DatabaseTests
 		public TimeSpan Duration   { get; set; }
 	}
 
-	public class FlaggedEvent
+	public class TestEvent
 	{
 		public int      Type      { get; set; }
 		public DateTime StartTime { get; set; }
@@ -43,14 +43,14 @@ public class DatabaseTests
 		{
 			using( var db = new StorageService( databasePath ) )
 			{
-				var mapping = new DatabaseMapping<FaultInfo>( "Fault" );
+				var mapping = new DatabaseMapping<TestReport>( "test_report" );
 				mapping.PrimaryKey = new PrimaryKeyColumn( "id", typeof( int ), true );
 
 				var tableCreated = mapping.CreateTable( db.Connection );
 				Assert.IsTrue( tableCreated );
 
 				var columns = db.Connection.GetTableInfo( mapping.TableName );
-				Assert.AreEqual( 5, columns.Count );
+				Assert.AreEqual( 6, columns.Count );
 			}
 		}
 		catch( Exception e )
@@ -72,22 +72,16 @@ public class DatabaseTests
 		{
 			using( var db = new StorageService( databasePath ) )
 			{
-				var mapping = new DatabaseMapping<FaultInfo>( "Fault" );
+				var mapping = new DatabaseMapping<TestReport>( "test_report" );
 				mapping.PrimaryKey = new PrimaryKeyColumn( "id", typeof( int ), true );
 
 				var tableCreated = mapping.CreateTable( db.Connection );
 				Assert.IsTrue( tableCreated );
 
 				var columns = db.Connection.GetTableInfo( mapping.TableName );
-				Assert.AreEqual( 5, columns.Count );
+				Assert.AreEqual( 6, columns.Count );
 
-				var data = new FaultInfo
-				{
-					Device     = 1,
-					Alarm      = 2,
-					Humidifier = 3,
-					HeatedTube = 4
-				};
+				var data = new TestReport();
 
 				int rowID = mapping.Insert( db.Connection, data );
 				
@@ -113,22 +107,16 @@ public class DatabaseTests
 		{
 			using( var db = new StorageService( databasePath ) )
 			{
-				var mapping = new DatabaseMapping<FaultInfo>( "Fault" );
+				var mapping = new DatabaseMapping<TestEvent>( "test-event" );
 				mapping.PrimaryKey = new PrimaryKeyColumn( "id", typeof( int ), true );
 
 				var tableCreated = mapping.CreateTable( db.Connection );
 				Assert.IsTrue( tableCreated );
 
 				var columns = db.Connection.GetTableInfo( mapping.TableName );
-				Assert.AreEqual( 5, columns.Count );
+				Assert.AreEqual( 4, columns.Count );
 
-				var data = new FaultInfo
-				{
-					Device     = 1,
-					Alarm      = 2,
-					Humidifier = 3,
-					HeatedTube = 4
-				};
+				var data = new TestEvent();
 
 				for( int i = 1; i < 10; i++ )
 				{
@@ -156,7 +144,7 @@ public class DatabaseTests
 		{
 			using( var db = new StorageService( databasePath ) )
 			{
-				var mapping = new DatabaseMapping<Report>( "report" );
+				var mapping = new DatabaseMapping<TestReport>( "test_report" );
 				mapping.PrimaryKey = new PrimaryKeyColumn( "id", typeof( DateTime ) );
 
 				var tableCreated = mapping.CreateTable( db.Connection );
@@ -165,7 +153,7 @@ public class DatabaseTests
 				var columns = db.Connection.GetTableInfo( mapping.TableName );
 				Assert.AreEqual( 6, columns.Count );
 
-				var data = new Report
+				var data = new TestReport
 				{
 					ReportDate = DateTime.Today,
 					Hours      = 5,
@@ -198,7 +186,7 @@ public class DatabaseTests
 		{
 			using( var db = new StorageService( databasePath ) )
 			{
-				var mapping = new DatabaseMapping<Report>( "report" );
+				var mapping = new DatabaseMapping<TestReport>( "test_report" );
 				mapping.PrimaryKey = new PrimaryKeyColumn( "id", typeof( DateTime ) );
 
 				var tableCreated = mapping.CreateTable( db.Connection );
@@ -209,7 +197,7 @@ public class DatabaseTests
 
 				var primaryKey = DateTime.Today.AddDays( -30 );
 
-				var data = new Report
+				var data = new TestReport
 				{
 					ReportDate = primaryKey,
 					Hours      = 5,
@@ -221,7 +209,7 @@ public class DatabaseTests
 				int rowCount = mapping.Insert( db.Connection, data, primaryKeyValue: DateTime.Today );
 				Assert.AreEqual( 1, rowCount );
 
-				var test = mapping.SelectByPrimaryKey<Report>( db.Connection, DateTime.Today );
+				var test = mapping.SelectByPrimaryKey<TestReport>( db.Connection, DateTime.Today );
 				Assert.IsNotNull( test );
 				Assert.AreEqual( data.ReportDate, test.ReportDate );
 			}
@@ -245,11 +233,11 @@ public class DatabaseTests
 		{
 			using( var db = new StorageService( databasePath ) )
 			{
-				var reportMapping = new DatabaseMapping<Report>( "report" );
+				var reportMapping = new DatabaseMapping<TestReport>( "test_report" );
 				reportMapping.PrimaryKey = new PrimaryKeyColumn( "id", typeof( DateTime ) );
 
-				var eventMapping = new DatabaseMapping<FlaggedEvent>( "event" );
-				eventMapping.ForeignKey = new ForeignKeyColumn( "reportID", typeof( DateTime ), "report", "id" );
+				var eventMapping = new DatabaseMapping<TestEvent>( "ef" );
+				eventMapping.ForeignKey = new ForeignKeyColumn( "reportID", typeof( DateTime ), "test_report", "id" );
 
 				Assert.IsTrue( reportMapping.CreateTable( db.Connection ) );
 				Assert.AreEqual( 6, db.Connection.GetTableInfo( reportMapping.TableName ).Count );
@@ -259,7 +247,7 @@ public class DatabaseTests
 
 				var primaryKey = DateTime.Today.AddDays( -30 );
 
-				var reportData = new Report
+				var reportData = new TestReport
 				{
 					ReportDate = primaryKey,
 					Hours      = 5,
@@ -273,7 +261,7 @@ public class DatabaseTests
 
 				for( int i = 0; i < 10; i++ )
 				{
-					var eventData = new FlaggedEvent
+					var eventData = new TestEvent
 					{
 						Type      = i,
 						StartTime = primaryKey.AddMinutes( i * 10 ),
@@ -307,11 +295,11 @@ public class DatabaseTests
 		{
 			using( var db = new StorageService( databasePath ) )
 			{
-				var reportMapping = new DatabaseMapping<Report>( "report" );
+				var reportMapping = new DatabaseMapping<TestReport>( "test_report" );
 				reportMapping.PrimaryKey = new PrimaryKeyColumn( "id", typeof( DateTime ) );
 
-				var eventMapping = new DatabaseMapping<FlaggedEvent>( "event" );
-				eventMapping.ForeignKey = new ForeignKeyColumn( "reportID", typeof( DateTime ), "report", "id" );
+				var eventMapping = new DatabaseMapping<TestEvent>( "test_event" );
+				eventMapping.ForeignKey = new ForeignKeyColumn( "reportID", typeof( DateTime ), "test_report", "id" );
 
 				Assert.IsTrue( reportMapping.CreateTable( db.Connection ) );
 				Assert.AreEqual( 6, db.Connection.GetTableInfo( reportMapping.TableName ).Count );
@@ -319,7 +307,7 @@ public class DatabaseTests
 				Assert.IsTrue( eventMapping.CreateTable( db.Connection ) );
 				Assert.AreEqual( 4, db.Connection.GetTableInfo( eventMapping.TableName ).Count );
 
-				var eventData = new FlaggedEvent
+				var eventData = new TestEvent
 				{
 					Type      = 0,
 					StartTime = DateTime.Today,
@@ -351,11 +339,11 @@ public class DatabaseTests
 		{
 			using( var db = new StorageService( databasePath ) )
 			{
-				var reportMapping = new DatabaseMapping<Report>( "report" );
+				var reportMapping = new DatabaseMapping<TestReport>( "test_report" );
 				reportMapping.PrimaryKey = new PrimaryKeyColumn( "id", typeof( DateTime ) );
 
-				var eventMapping = new DatabaseMapping<FlaggedEvent>( "event" );
-				eventMapping.ForeignKey = new ForeignKeyColumn( "reportID", typeof( DateTime ), "report", "id" );
+				var eventMapping = new DatabaseMapping<TestEvent>( "test_event" );
+				eventMapping.ForeignKey = new ForeignKeyColumn( "reportID", typeof( DateTime ), "test_report", "id" );
 
 				Assert.IsTrue( reportMapping.CreateTable( db.Connection ) );
 				Assert.AreEqual( 6, db.Connection.GetTableInfo( reportMapping.TableName ).Count );
@@ -365,7 +353,7 @@ public class DatabaseTests
 
 				var primaryKey = DateTime.Today.AddDays( -30 );
 
-				var reportData = new Report
+				var reportData = new TestReport
 				{
 					ReportDate = primaryKey,
 					Hours      = 5,
@@ -379,7 +367,7 @@ public class DatabaseTests
 
 				for( int i = 0; i < 10; i++ )
 				{
-					var eventData = new FlaggedEvent
+					var eventData = new TestEvent
 					{
 						Type      = i,
 						StartTime = primaryKey.AddMinutes( i * 10 ),

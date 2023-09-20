@@ -2,41 +2,65 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:vm="clr-namespace:cpap_app.ViewModels"
              xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="cpap_app.Views.MainView">
     <Grid>
         <ui:NavigationView x:Name="NavView"
-                           PaneDisplayMode="LeftMinimal"
+                           PaneDisplayMode="Left"
+                           OpenPaneLength="250"
                            IsBackButtonVisible="False"
                            IsBackEnabled="False"
                            Header=""
                            AlwaysShowHeader="False"
                            PaneTitle="Navigation"
-                           IsSettingsVisible="True">
+                           IsSettingsVisible="True"
+                           SelectionChanged="NavView_OnSelectionChanged">
             <ui:NavigationView.MenuItems>
-                <ui:NavigationViewItem Content="Home" Tag="SamplePage1" IconSource="Home" />
-                <ui:NavigationViewItem Content="Account" Tag="SamplePage2" IconSource="Home">
+                <ui:NavigationViewItem Content="Home" Tag="Home" IconSource="Home" />
+                <ui:NavigationViewItem Content="Daily View" Tag="DailyReport">
+                    <ui:NavigationViewItem.IconSource>
+                        <ui:FontIconSource Glyph="&#xE9D2;" FontFamily="Segoe MDL2 Assets"/>
+                    </ui:NavigationViewItem.IconSource>
+                </ui:NavigationViewItem>
+                <ui:NavigationViewItem Content="Import">
+                    <ui:NavigationViewItem.IconSource>
+                            <ui:FontIconSource Glyph="&#xE11C;" FontFamily="Segoe MDL2 Assets"/>
+                    </ui:NavigationViewItem.IconSource>
                     <ui:NavigationViewItem.MenuItems>
-                        <ui:NavigationViewItem Content="Mail" IconSource="Mail" Tag="SamplePage3" />
-                        <ui:NavigationViewItem Content="Calendar" IconSource="Calendar" Tag="SamplePage4" />
+                        <ui:NavigationViewItem Content="CPAP Data" Tapped="Import_CPAP">
+                            <ui:NavigationViewItem.IconSource>
+                                <ui:FontIconSource Glyph="&#xE7F1;" FontFamily="Segoe MDL2 Assets"/>
+                            </ui:NavigationViewItem.IconSource>
+                        </ui:NavigationViewItem>
+                        <ui:NavigationViewItem Content="Pulse Oximeter" Tapped="Import_SpO2">
+                            <ui:NavigationViewItem.IconSource>
+                                <ui:FontIconSource Glyph="&#xE8EA;" FontFamily="Segoe MDL2 Assets"/>
+                            </ui:NavigationViewItem.IconSource>
+                        </ui:NavigationViewItem>
                     </ui:NavigationViewItem.MenuItems>
                 </ui:NavigationViewItem>
-                <ui:NavigationViewItem Content="Document options" Tag="SamplePage3" IconSource="Document" SelectsOnInvoked="False">
-                    <ui:NavigationViewItem.MenuItems>
-                        <ui:NavigationViewItem Content="Create new" IconSource="New" Tag="SamplePage5" />
-                        <ui:NavigationViewItem Content="Upload file" IconSource="Upload" Tag="SamplePage6" />
-                    </ui:NavigationViewItem.MenuItems>
+                <ui:NavigationViewItem Content="History" Tag="History">
+                    <ui:NavigationViewItem.IconSource>
+                        <ui:FontIconSource Glyph="&#xE81C;" FontFamily="Segoe MDL2 Assets"/>
+                    </ui:NavigationViewItem.IconSource>
+                </ui:NavigationViewItem>
+                <ui:NavigationViewItem Content="Statistics" Tag="Statistics">
+                    <ui:NavigationViewItem.IconSource>
+                        <ui:FontIconSource Glyph="&#xE8EF;" FontFamily="Segoe MDL2 Assets"/>
+                    </ui:NavigationViewItem.IconSource>
+                </ui:NavigationViewItem>
+                <ui:NavigationViewItem Content="Reports" Tag="Reports">
+                    <ui:NavigationViewItem.IconSource>
+                        <ui:FontIconSource Glyph="&#xE9F9;" FontFamily="Segoe MDL2 Assets"/>
+                    </ui:NavigationViewItem.IconSource>
                 </ui:NavigationViewItem>
             </ui:NavigationView.MenuItems>
 
-            <ui:NavigationView.PaneFooter>
-                <StackPanel Name="FooterStackPanel" Orientation="Vertical" IsVisible="True">
-                    <ui:NavigationViewItem IconSource="Download" />
-                    <ui:NavigationViewItem IconSource="Alert" />
-                </StackPanel>
-            </ui:NavigationView.PaneFooter>
+            <ui:NavigationView.FooterMenuItems>
+                <ui:NavigationViewItem Content="Profile" Tag="Profile" IconSource="Contact" />
+                <ui:NavigationViewItem Content="Backup" IconSource="SaveAs" />
+            </ui:NavigationView.FooterMenuItems>
 
         </ui:NavigationView>
     </Grid>

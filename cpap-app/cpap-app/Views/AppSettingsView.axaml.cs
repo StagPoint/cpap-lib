@@ -4,9 +4,9 @@ using Avalonia.Markup.Xaml;
 
 namespace cpap_app.Views;
 
-public partial class DailyReportView : UserControl
+public partial class AppSettingsView : UserControl
 {
-	public DailyReportView()
+	public AppSettingsView()
 	{
 		InitializeComponent();
 	}

@@ -1,0 +1,22 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="cpap_app.Views.HomeView">
+    <StackPanel Width="800" Orientation="Vertical" VerticalAlignment="Top">
+        <TextBlock Text="Welcome to the CPAP Data Viewer" Margin="0 30 0 0" HorizontalAlignment="Center" Theme="{StaticResource TitleLargeTextBlockStyle}" />
+        <TextBlock TextWrapping="Wrap" Width="600" HorizontalAlignment="Center" FontSize="16" Margin="20">
+            To begin, please import your CPAP data (typically found on the SD Card in your CPAP machine) by clicking the 
+            "Import" button below and selecting the CPAP data folder which contains the STR.edf file, or select a destination 
+            from the navigation menu to the left.
+        </TextBlock>
+        <Button Name="btnImport" HorizontalAlignment="Center" ClickMode="Press" Classes="accent" Padding="20 10" Click="BtnImport_OnClick">
+            <StackPanel Orientation="Horizontal">
+                <ui:FontIcon Glyph="&#xE7F1;" FontSize="18" FontFamily="{DynamicResource SymbolThemeFontFamily}" FontWeight="Normal" FontStyle="Normal" Margin="0 -2 10 0"/>
+                <TextBlock>Import CPAP Data</TextBlock>
+            </StackPanel>
+        </Button>
+    </StackPanel>
+</UserControl>

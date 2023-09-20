@@ -294,7 +294,7 @@ public class DatabaseMapping
 			throw new Exception( $"No primary key has been defined for table {TableName}" );
 		}
 
-		return $"SELECT * FROM \"{TableName}\" WHERE \"{PrimaryKey.ColumnName}\" = ?;";
+		return SelectAllQuery + $"\n WHERE \n\t[{PrimaryKey.ColumnName}] = ?;";
 	}
 
 	private string GenerateSelectByForeignKeyQuery()
@@ -304,7 +304,7 @@ public class DatabaseMapping
 			throw new Exception( $"No foreign key has been defined for table {TableName}" );
 		}
 
-		return $"SELECT * FROM \"{TableName}\" WHERE \"{ForeignKey.ColumnName}\" = ?;";
+		return SelectAllQuery + $"\n WHERE \n\t[{ForeignKey.ColumnName}] = ?;";
 	}
 
 	private string GenerateDeleteQuery()
@@ -314,12 +314,47 @@ public class DatabaseMapping
 			throw new Exception( $"No primary key has been defined for table {TableName}" );
 		}
 
-		return $"DELETE FROM \"{TableName}\" WHERE \"{PrimaryKey.ColumnName}\" = ?";
+		return $"DELETE FROM [{TableName}] WHERE [{PrimaryKey.ColumnName}] = ?";
 	}
 
 	private string GenerateSelectAllQuery()
 	{
-		return $"SELECT * FROM \"{TableName}\"";
+		var builder = new StringBuilder();
+		builder.Append( "SELECT " );
+
+		bool firstColumn = true;
+
+		if( PrimaryKey != null )
+		{
+			builder.Append( $"\n\t[{PrimaryKey.ColumnName}]" );
+			firstColumn = false;
+		}
+
+		if( ForeignKey != null )
+		{
+			if( !firstColumn )
+			{
+				builder.Append( ',' );
+			}
+			
+			builder.Append( $"\n\t[{ForeignKey.ColumnName}]" );
+			firstColumn = false;
+		}
+
+		foreach( var column in Columns )
+		{
+			if( !firstColumn )
+			{
+				builder.Append( ',' );
+			}
+			
+			builder.Append( $"\n\t[{column.ColumnName}]" );
+			firstColumn = false;
+		}
+
+		builder.Append( $"\nFROM \n\t[{TableName}]" );
+
+		return builder.ToString();
 	}
 
 	private string GenerateInsertQuery()
@@ -329,11 +364,11 @@ public class DatabaseMapping
 
 		bool hasPreviousColumn = false;
 
-		builder.Append( $"INSERT INTO \"{TableName}\" ( " );
+		builder.Append( $"INSERT INTO [{TableName}] ( " );
 
 		if( PrimaryKey != null && !PrimaryKey.AutoIncrement )
 		{
-			builder.Append( $"\"{PrimaryKey.ColumnName}\"" );
+			builder.Append( $"[{PrimaryKey.ColumnName}]" );
 			parameters.Append( '?' );
 
 			hasPreviousColumn = true;
@@ -347,7 +382,7 @@ public class DatabaseMapping
 				parameters.Append( ", " );
 			}
 
-			builder.Append( $"\"{ForeignKey.ColumnName}\"" );
+			builder.Append( $"[{ForeignKey.ColumnName}]" );
 			parameters.Append( '?' );
 
 			hasPreviousColumn = true;
@@ -361,7 +396,7 @@ public class DatabaseMapping
 				parameters.Append( ", " );
 			}
 
-			builder.Append( $"\"{column.ColumnName}\"" );
+			builder.Append( $"[{column.ColumnName}]" );
 			parameters.Append( '?' );
 
 			hasPreviousColumn = true;
@@ -376,13 +411,13 @@ public class DatabaseMapping
 	{
 		var builder = new StringBuilder();
 
-		builder.Append( $"CREATE TABLE IF NOT EXISTS \"{TableName}\" (\n" );
+		builder.Append( $"CREATE TABLE IF NOT EXISTS [{TableName}] (\n" );
 
 		var first = true;
 
 		if( PrimaryKey != null )
 		{
-			builder.Append( $"\"{PrimaryKey.ColumnName}\" {PrimaryKey.DbType} PRIMARY KEY" );
+			builder.Append( $"[{PrimaryKey.ColumnName}] {PrimaryKey.DbType} PRIMARY KEY" );
 
 			if( PrimaryKey.AutoIncrement )
 			{
@@ -406,7 +441,7 @@ public class DatabaseMapping
 			first = false;
 
 			builder.Append( ' ' );
-			builder.Append( $"\"{ForeignKey.ColumnName}\"" );
+			builder.Append( $"[{ForeignKey.ColumnName}]" );
 
 			builder.Append( ' ' );
 			builder.Append( GetSqlType( ForeignKey.Type, null ) );
@@ -423,7 +458,7 @@ public class DatabaseMapping
 			first = false;
 
 			builder.Append( ' ' );
-			builder.Append( $"\"{column.ColumnName}\"" );
+			builder.Append( $"[{column.ColumnName}]" );
 
 			builder.Append( ' ' );
 			if( column.Converter != null )
@@ -453,7 +488,7 @@ public class DatabaseMapping
 				builder.Append( ", " );
 			}
 
-			builder.Append( $"\nFOREIGN KEY( \"{ForeignKey.ColumnName}\" ) REFERENCES \"{ForeignKey.ReferencedTable}\"( \"{ForeignKey.ReferencedField}\" )" );
+			builder.Append( $"\nFOREIGN KEY( [{ForeignKey.ColumnName}] ) REFERENCES [{ForeignKey.ReferencedTable}]( [{ForeignKey.ReferencedField}] )" );
 
 			if( !string.IsNullOrEmpty( ForeignKey.OnDeleteAction ) )
 			{
