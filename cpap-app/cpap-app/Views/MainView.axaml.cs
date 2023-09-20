@@ -30,6 +30,13 @@ public partial class MainView : UserControl
 	public MainView()
 	{
 		InitializeComponent();
+
+		NavView.SelectionChanged += NavViewOnSelectionChanged;
+		NavView.Content          =  new DailyReportView() { DataContext = new DailyReportViewModel( DateTime.Today ) };
+	}
+	
+	private void NavViewOnSelectionChanged( object? sender, NavigationViewSelectionChangedEventArgs e )
+	{
 	}
 
 	private void Exit_OnClick( object? sender, RoutedEventArgs e )

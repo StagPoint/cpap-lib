@@ -7,13 +7,37 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="cpap_app.Views.MainView">
     <Grid>
-        <ui:NavigationView x:Name="nvSample" MinHeight="460" PaneDisplayMode="Left">
+        <ui:NavigationView x:Name="NavView"
+                           PaneDisplayMode="LeftMinimal"
+                           IsBackButtonVisible="False"
+                           IsBackEnabled="False"
+                           Header=""
+                           AlwaysShowHeader="False"
+                           PaneTitle="Navigation"
+                           IsSettingsVisible="True">
             <ui:NavigationView.MenuItems>
-                <ui:NavigationViewItem IsExpanded="True" Content="Menu Item1" Tag="SamplePage1" IconSource="Play" />
-                <ui:NavigationViewItem Content="Menu Item2" Tag="SamplePage2" IconSource="Save" />
-                <ui:NavigationViewItem Content="Menu Item3" Tag="SamplePage3" IconSource="Refresh" />
-                <ui:NavigationViewItem Content="Menu Item4" Tag="SamplePage4" IconSource="Download" />
+                <ui:NavigationViewItem Content="Home" Tag="SamplePage1" IconSource="Home" />
+                <ui:NavigationViewItem Content="Account" Tag="SamplePage2" IconSource="Home">
+                    <ui:NavigationViewItem.MenuItems>
+                        <ui:NavigationViewItem Content="Mail" IconSource="Mail" Tag="SamplePage3" />
+                        <ui:NavigationViewItem Content="Calendar" IconSource="Calendar" Tag="SamplePage4" />
+                    </ui:NavigationViewItem.MenuItems>
+                </ui:NavigationViewItem>
+                <ui:NavigationViewItem Content="Document options" Tag="SamplePage3" IconSource="Document" SelectsOnInvoked="False">
+                    <ui:NavigationViewItem.MenuItems>
+                        <ui:NavigationViewItem Content="Create new" IconSource="New" Tag="SamplePage5" />
+                        <ui:NavigationViewItem Content="Upload file" IconSource="Upload" Tag="SamplePage6" />
+                    </ui:NavigationViewItem.MenuItems>
+                </ui:NavigationViewItem>
             </ui:NavigationView.MenuItems>
+
+            <ui:NavigationView.PaneFooter>
+                <StackPanel Name="FooterStackPanel" Orientation="Vertical" IsVisible="True">
+                    <ui:NavigationViewItem IconSource="Download" />
+                    <ui:NavigationViewItem IconSource="Alert" />
+                </StackPanel>
+            </ui:NavigationView.PaneFooter>
+
         </ui:NavigationView>
     </Grid>
 </UserControl>

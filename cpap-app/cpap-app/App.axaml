@@ -12,7 +12,6 @@
 
     <Application.Styles>
         <FluentTheme />
-        <!-- As of preview5, these properties now default to false -->
         <sty:FluentAvaloniaTheme PreferSystemTheme="True" PreferUserAccentColor="True" />
     </Application.Styles>
 </Application>
