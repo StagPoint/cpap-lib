@@ -17,10 +17,8 @@ public class MachineSettings_Tests
 		Assert.IsTrue( Directory.Exists( rootFolder ), "Test file does not exist" );
 
 		var loader = new ResMedDataLoader();
-		loader.LoadFromFolder( rootFolder, DateTime.Today ); //, new DateTime( 2023, 08, 28 ), new DateTime( 2023, 08, 28 ) );
+		var days = loader.LoadFromFolder( rootFolder, DateTime.Today ); //, new DateTime( 2023, 08, 28 ), new DateTime( 2023, 08, 28 ) );
 
-		var days = loader.Days;
-		
 		Debug.WriteLine( $"Number of days: {days.Count}" );
 
 		foreach( var day in days )

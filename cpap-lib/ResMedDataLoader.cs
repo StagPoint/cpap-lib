@@ -14,9 +14,6 @@ namespace cpaplib
 {
 	public class ResMedDataLoader
 	{
-		public List<DailyReport> Days { get; } = new List<DailyReport>();
-		
-		private TimeSpan _timeAjustment = new TimeSpan( 0, 0, 1, 10 );
 
 		private static string[] expectedFiles = new[]
 		{
@@ -30,9 +27,10 @@ namespace cpaplib
 			"DATALOG",
 		};
 
-		private MachineIdentification _machineInfo = new MachineIdentification();
+		private MachineIdentification _machineInfo   = new MachineIdentification();
+		private TimeSpan              _timeAjustment = new TimeSpan( 0, 0, 1, 10 );
 
-		public void LoadFromFolder( string folderPath, DateTime? minDate = null, DateTime? maxDate = null, TimeSpan? timeAdjustment = null )
+		public List<DailyReport> LoadFromFolder( string folderPath, DateTime? minDate = null, DateTime? maxDate = null, TimeSpan? timeAdjustment = null )
 		{
 			if( timeAdjustment.HasValue )
 			{
@@ -44,14 +42,14 @@ namespace cpaplib
 			_machineInfo = LoadMachineIdentificationInfo( folderPath );
 
 			var indexFilename = Path.Combine( folderPath, "STR.edf" );
-			LoadIndexAndSettings( indexFilename, minDate, maxDate );
+			var days = LoadIndexAndSettings( indexFilename, minDate, maxDate );
 			
 #if ALLOW_ASYNC
-			var tasks = new Task[ Days.Count ];
+			var tasks = new Task[ days.Count ];
 
-			for( int i = 0; i < Days.Count; i++ )
+			for( int i = 0; i < days.Count; i++ )
 			{
-				var day = Days[ i ];
+				var day = days[ i ];
 				
 				tasks[i] = Task.Run( () =>
 				{
@@ -69,13 +67,15 @@ namespace cpaplib
 
 			// Make sure that each Session has its Source set (sessions may be created by other processes, such as
 			// pulse oximeter import, etc.)
-			foreach( var day in Days )
+			foreach( var day in days )
 			{
 				foreach( var session in day.Sessions )
 				{
 					session.Source = _machineInfo.ProductName;
 				}
 			}
+
+			return days;
 		}
 
 		public static MachineIdentification LoadMachineIdentificationInfo( string rootFolder )
@@ -628,13 +628,15 @@ namespace cpaplib
 			day.EventSummary.TotalTimeOfLargeLeaks = TimeSpan.FromSeconds( day.Events.Where( x => x.Type == EventType.LargeLeak ).Sum( x => x.Duration.TotalSeconds ) );
 		}
 
-		private void LoadIndexAndSettings( string filename, DateTime? minDate, DateTime? maxDate )
+		private List<DailyReport> LoadIndexAndSettings( string filename, DateTime? minDate, DateTime? maxDate )
 		{
+			var days = new List<DailyReport>();
+			
 			var file = EdfFile.Open( filename );
 
 			if( file.Signals.Count == 0 )
 			{
-				return;
+				return days;
 			}
 
 			// The STR.edf file is essentially a vertical table containing the settings data for each
@@ -655,7 +657,7 @@ namespace cpaplib
 				day.MachineInfo        =  _machineInfo;
 				day.RecordingStartTime += _timeAjustment;
 
-				Days.Add( day );
+				days.Add( day );
 			}
 
 			// Mask On and Mask Off times are stored as the number of seconds since the day started.
@@ -666,12 +668,12 @@ namespace cpaplib
 			var maskOffSignal = file.GetSignalByName( "MaskOff", "Mask Off" );
 
 			// There will be an even number of MaskOn/MaskOff times for each day
-			var numberOfEntriesPerDay = maskOnSignal.Samples.Count / Days.Count;
+			var numberOfEntriesPerDay = maskOnSignal.Samples.Count / days.Count;
 			Debug.Assert( maskOnSignal.Samples.Count % numberOfEntriesPerDay == 0, "Invalid calculation of Number of Sessions Per Day" );
 
-			for( int dayIndex = 0; dayIndex < Days.Count; dayIndex++ )
+			for( int dayIndex = 0; dayIndex < days.Count; dayIndex++ )
 			{
-				var day = Days[ dayIndex ];
+				var day = days[ dayIndex ];
 
 				if( day.UsageTime.TotalMinutes < 5 )
 				{
@@ -710,12 +712,14 @@ namespace cpaplib
 			}
 
 			// Remove all days that are too short to be valid or are otherwise invalid
-			RemoveInvalidDays();
+			RemoveInvalidDays( days );
 
 			// Remove days that don't match the provided range. It's less efficient to do this after we've already 
 			// gathered the basic day information, but it keeps the code much cleaner and more readable, and this 
 			// isn't exactly a performance-critical section of code ;)
-			FilterDaysByDate( minDate, maxDate );
+			FilterDaysByDate( days, minDate, maxDate );
+
+			return days;
 		}
 
 		/// <summary>
@@ -904,24 +908,24 @@ namespace cpaplib
 			return settings;
 		}
 
-		private void FilterDaysByDate( DateTime? minDate, DateTime? maxDate )
+		private void FilterDaysByDate( List<DailyReport> days, DateTime? minDate, DateTime? maxDate )
 		{
 			int dayIndex = 0;
 			if( minDate.HasValue || maxDate.HasValue )
 			{
-				while( dayIndex < Days.Count )
+				while( dayIndex < days.Count )
 				{
-					var date = Days[ dayIndex ].ReportDate.Date;
+					var date = days[ dayIndex ].ReportDate.Date;
 
 					if( minDate.HasValue && date < minDate )
 					{
-						Days.RemoveAt( dayIndex );
+						days.RemoveAt( dayIndex );
 						continue;
 					}
 
 					if( maxDate.HasValue && date > maxDate )
 					{
-						Days.RemoveAt( dayIndex );
+						days.RemoveAt( dayIndex );
 						continue;
 					}
 
@@ -930,14 +934,14 @@ namespace cpaplib
 			}
 		}
 
-		private void RemoveInvalidDays()
+		private void RemoveInvalidDays( List<DailyReport> days )
 		{
 			int dayIndex = 0;
-			while( dayIndex < Days.Count )
+			while( dayIndex < days.Count )
 			{
-				if( Days[ dayIndex ].UsageTime.TotalMinutes <= 5 )
+				if( days[ dayIndex ].UsageTime.TotalMinutes <= 5 )
 				{
-					Days.RemoveAt( dayIndex );
+					days.RemoveAt( dayIndex );
 					continue;
 				}
 

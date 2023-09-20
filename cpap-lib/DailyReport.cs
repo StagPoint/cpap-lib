@@ -11,7 +11,7 @@ namespace cpaplib
 		/// <summary>
 		/// Identifies the machine that was used to record this report 
 		/// </summary>
-		public MachineIdentification MachineInfo { get; set; } = new MachineIdentification();
+		public MachineIdentification MachineInfo { get; set; }
 		
 		/// <summary>
 		/// The date on which this report was generated.
@@ -70,13 +70,12 @@ namespace cpaplib
 		/// </summary>
 		public TimeSpan UsageTime { get; set; }
 
+		/// <summary>
+		/// Returns the total number of hours the patient has used the CPAP machine since the last factory reset.
+		/// Supported on ResMed AirSense machines, not sure about others. 
+		/// </summary>
 		public double PatientHours { get; set; }
 
-		/// <summary>
-		/// Contains all of the raw data stored for each Day
-		/// </summary>
-		//public Dictionary<string, double> RawData = new Dictionary<string, double>();
-		
 		#endregion 
 
 		#region Public functions

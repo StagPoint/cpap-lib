@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -17,10 +18,10 @@ namespace cpapviewer;
 
 public partial class DataBrowser
 {
-	private ResMedDataLoader _data = null;
 	private string _dataPath = String.Empty;
 
-	private DailyReport _selectedDay = null;
+	private DailyReport       _selectedDay = null;
+	private List<DailyReport> _days        = null;
 
 	public DataBrowser( string dataPath )
 	{
@@ -58,10 +59,10 @@ public partial class DataBrowser
 			{
 				//mostRecentDay = db.GetMostRecentDay();
 
-				_data = new ResMedDataLoader();
-				_data.LoadFromFolder( _dataPath, mostRecentDay );
+				var loader = new ResMedDataLoader();
+				_days = loader.LoadFromFolder( _dataPath, mostRecentDay );
 
-				foreach( var day in _data.Days )
+				foreach( var day in _days )
 				{
 					db.SaveDailyReport( day );
 				}
@@ -75,18 +76,18 @@ public partial class DataBrowser
 		}
 
 		var elapsed = Environment.TickCount - startTime;
-		Debug.WriteLine( $"Time to load CPAP data ({_data.Days.Count} days): {elapsed/1000.0f:F3} seconds" );
+		Debug.WriteLine( $"Time to load CPAP data ({_days.Count} days): {elapsed/1000.0f:F3} seconds" );
 
 		// It shouldn't be possible to load this page without a valid path, but if it happened anyways
 		// go back to the Welcome screen.
-		if( _data.Days.Count == 0 )
+		if( _days.Count == 0 )
 		{
 			NavigationService!.Navigate( new WelcomeNotice() );
 			NavigationService.RemoveBackEntry();
 			return;
 		}
 			
-		var selectedDay = _data.Days.LastOrDefault();
+		var selectedDay = _days.LastOrDefault();
 		if( selectedDay != null )
 		{
 			calendar.SelectedDate = selectedDay.ReportDate.Date;
@@ -97,7 +98,7 @@ public partial class DataBrowser
 	
 	private void CalendarOnSelectedDateChanged( object sender, SelectionChangedEventArgs e )
 	{
-		foreach( var day in _data.Days )
+		foreach( var day in _days )
 		{
 			if( day.ReportDate.Date == calendar.SelectedDate )
 			{
@@ -159,12 +160,12 @@ public partial class DataBrowser
 	{
 		if( _selectedDay != null )
 		{
-			_selectedDay = _data.Days.LastOrDefault( x => x.ReportDate < _selectedDay.ReportDate );
+			_selectedDay = _days.LastOrDefault( x => x.ReportDate < _selectedDay.ReportDate );
 		}
 
 		if( _selectedDay == null )
 		{
-			_selectedDay = _data.Days.First();
+			_selectedDay = _days.First();
 		}
 
 		calendar.SelectedDate = _selectedDay.ReportDate.Date;
@@ -175,12 +176,12 @@ public partial class DataBrowser
 	{
 		if( _selectedDay != null )
 		{
-			_selectedDay = _data.Days.FirstOrDefault( x => x.ReportDate > _selectedDay.ReportDate );
+			_selectedDay = _days.FirstOrDefault( x => x.ReportDate > _selectedDay.ReportDate );
 		}
 
 		if( _selectedDay == null )
 		{
-			_selectedDay = _data.Days.Last();
+			_selectedDay = _days.Last();
 		}
 		
 		calendar.SelectedDate = _selectedDay.ReportDate.Date;
