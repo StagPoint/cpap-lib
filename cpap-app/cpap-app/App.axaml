@@ -3,8 +3,8 @@
              xmlns:local="using:cpap_app"
              xmlns:sty="using:FluentAvalonia.Styling"
              x:Class="cpap_app.App"
+             Name="CPAP-Viewer"
              RequestedThemeVariant="Default">
-    <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 
     <Application.DataTemplates>
         <local:ViewLocator />
@@ -12,6 +12,7 @@
 
     <Application.Styles>
         <FluentTheme />
-        <sty:FluentAvaloniaTheme PreferSystemTheme="True" PreferUserAccentColor="True" />
+        <sty:FluentAvaloniaTheme PreferSystemTheme="False" PreferUserAccentColor="True" />
     </Application.Styles>
+    
 </Application>

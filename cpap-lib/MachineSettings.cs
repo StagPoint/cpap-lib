@@ -16,15 +16,8 @@ namespace cpaplib
 
 		public bool Humidifier { get; set; }
 
-		public EprSettings EPR { get; set; } = new EprSettings();
-		public CpapSettings CPAP { get; set; } = new CpapSettings();
-		public AutoSetSettings AutoSet { get; set; } = new AutoSetSettings();
-
-		public AsvSettings ASV { get; set; } = null;
-
-		public AvapsSettings AVAP { get; set; } = null;
-
 		public RampModeType RampMode { get; set; }
+		
 		public double RampTime { get; set; }
 
 		public double RampStartingPressure
@@ -55,6 +48,16 @@ namespace cpaplib
 		public double Temperature { get; set; }
 		public OnOffType SmartStart { get; set; }
 		public double PtAccess { get; set; }
+
+		public AutoSetSettings AutoSet { get; set; } = new AutoSetSettings();
+		
+		public AsvSettings ASV { get; set; } = new AsvSettings();
+		
+		public AvapSettings Avap { get; set; } = new AvapSettings();
+		
+		public CpapSettings CPAP { get; set; } = new CpapSettings();
+		
+		public EprSettings EPR { get; set; } = new EprSettings();
 
 		#endregion
 	}

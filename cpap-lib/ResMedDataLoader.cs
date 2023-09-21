@@ -842,7 +842,7 @@ namespace cpaplib
 			}
 			else if( settings.Mode == OperatingMode.AVAPS )
 			{
-				settings.AVAP = new AvapsSettings
+				settings.Avap = new AvapSettings
 				{
 					StartPressure = data[ "S.i.StartPress" ],
 					MinPressure   = data[ "S.i.MinPS" ],
@@ -853,20 +853,20 @@ namespace cpaplib
 					EpapMax       = data[ "S.i.EPAP" ],
 				};
 
-				if( settings.AVAP.EpapAuto )
+				if( settings.Avap.EpapAuto )
 				{
-					settings.AVAP.EpapMin = data[ "S.i.MinEPAP" ];
-					settings.AVAP.EpapMax = data[ "S.i.MaxEPAP" ];
+					settings.Avap.EpapMin = data[ "S.i.MinEPAP" ];
+					settings.Avap.EpapMax = data[ "S.i.MaxEPAP" ];
 					
-					settings.AVAP.IPAP    = settings.AVAP.EpapMin + settings.AVAP.MinPressure;
-					settings.AVAP.IpapMin = settings.AVAP.EpapMin + settings.AVAP.MinPressure;
-					settings.AVAP.IpapMax = settings.AVAP.EpapMax + settings.AVAP.MaxPressure;
+					settings.Avap.IPAP    = settings.Avap.EpapMin + settings.Avap.MinPressure;
+					settings.Avap.IpapMin = settings.Avap.EpapMin + settings.Avap.MinPressure;
+					settings.Avap.IpapMax = settings.Avap.EpapMax + settings.Avap.MaxPressure;
 				}
 				else 
 				{
-					settings.AVAP.IPAP    = settings. AVAP.EPAP + settings.AVAP.MinPressure;
-					settings.AVAP.IpapMin = settings.AVAP.EPAP + settings.AVAP.MinPressure;
-					settings.AVAP.IpapMax = settings.AVAP.EPAP + settings.AVAP.MaxPressure;
+					settings.Avap.IPAP    = settings. Avap.EPAP + settings.Avap.MinPressure;
+					settings.Avap.IpapMin = settings.Avap.EPAP + settings.Avap.MinPressure;
+					settings.Avap.IpapMax = settings.Avap.EPAP + settings.Avap.MaxPressure;
 				}
 			}
 

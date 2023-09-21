@@ -222,6 +222,13 @@ public class DatabaseMapping
 		return result;
 	}
 
+	public bool Delete( SQLiteConnection connection, object primaryKeyValue )
+	{
+		var rows = connection.Execute( DeleteQuery, primaryKeyValue );
+		
+		return rows > 0;
+	}
+
 	public T SelectByPrimaryKey<T>( SQLiteConnection connection, object primaryKeyValue ) where T: class, new()
 	{
 		var rows = ExecuteQuery<T>( connection, SelectByPrimaryKeyQuery, primaryKeyValue );
@@ -314,7 +321,7 @@ public class DatabaseMapping
 			throw new Exception( $"No primary key has been defined for table {TableName}" );
 		}
 
-		return $"DELETE FROM [{TableName}] WHERE [{PrimaryKey.ColumnName}] = ?";
+		return $"DELETE FROM [{TableName}] WHERE [{PrimaryKey.ColumnName}] = ?;";
 	}
 
 	private string GenerateSelectAllQuery()
@@ -352,7 +359,7 @@ public class DatabaseMapping
 			firstColumn = false;
 		}
 
-		builder.Append( $"\nFROM \n\t[{TableName}]" );
+		builder.Append( $"\nFROM \n\t[{TableName}];" );
 
 		return builder.ToString();
 	}
@@ -402,7 +409,7 @@ public class DatabaseMapping
 			hasPreviousColumn = true;
 		}
 
-		builder.Append( $" ) VALUES ( {parameters} )" );
+		builder.Append( $" ) VALUES ( {parameters} );" );
 
 		return builder.ToString();
 	}
@@ -503,7 +510,7 @@ public class DatabaseMapping
 			}
 		}
 
-		builder.Append( " )" );
+		builder.Append( " );" );
 
 		return builder.ToString();
 	}

@@ -2,7 +2,39 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+             xmlns:views="clr-namespace:cpap_app.Views"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="700"
              x:Class="cpap_app.Views.DailyReportView">
-   Daily Report Page
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition MinWidth="375" Width="Auto" />
+            <ColumnDefinition Width="5" />
+            <ColumnDefinition MinWidth="300" Width="*" />
+        </Grid.ColumnDefinitions>
+        <GridSplitter Grid.Column="1" Width="4" HorizontalAlignment="Stretch"/>
+        <DockPanel Grid.Column="0" Background="{DynamicResource SolidBackgroundFillColorSecondaryBrush}">
+            <Grid DockPanel.Dock="Top" Grid.ColumnDefinitions="Auto,*,Auto, Auto">
+                <Button Name="btnPrevDay" Grid.Column="0" Padding="5" ToolTip.Tip="Go to the previous day with CPAP data">
+                    <ui:FontIcon Glyph="&#xE892;" FontSize="18" FontFamily="{DynamicResource SymbolThemeFontFamily}"/>
+                </Button>
+                <CalendarDatePicker Grid.Column="1" Name="DateSelector" HorizontalAlignment="Stretch" SelectedDateFormat="Long" />
+                <Button Name="btnNextDay" Grid.Column="2" Padding="5" ToolTip.Tip="Go to the next day with CPAP data">
+                    <ui:FontIcon Glyph="&#xE101;" FontSize="18" FontFamily="{DynamicResource SymbolThemeFontFamily}"/>
+                </Button>
+                <Button Name="btnLastDay" Grid.Column="3" Padding="5" ToolTip.Tip="Go to the last day with available CPAP data">
+                    <ui:FontIcon Glyph="&#xE8D1;" FontSize="18" FontFamily="{DynamicResource SymbolThemeFontFamily}"/>
+                </Button>
+            </Grid>
+            <TabStrip Name="DetailTypes" HorizontalAlignment="Stretch" WrapSelection="False" DockPanel.Dock="Top" SelectionChanged="DetailTypes_OnSelectionChanged">
+                <TabItem Header="Details" Tag="DailyDetails" FontSize="18" Padding="0"/>
+                <TabItem Header="Events" Tag="DailyEvents" FontSize="18" Padding="0"/>
+                <TabItem Header="SpO2" Tag="DailySpO2" FontSize="18" Padding="0"/>
+                <TabItem Header="Notes" Tag="DailyNotes" FontSize="18" Padding="0"/>
+            </TabStrip>
+            <ui:Frame Name="TabFrame" Margin="0 10 0 1" Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}"
+                      Foreground="{DynamicResource TextFillColorPrimaryBrush}">
+            </ui:Frame>
+        </DockPanel>
+    </Grid>
 </UserControl>

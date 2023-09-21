@@ -1,6 +1,6 @@
 ﻿namespace cpaplib
 {
-	public class AvapsSettings
+	public class AvapSettings
 	{
 		public double StartPressure { get; set; }
 		public double MinPressure   { get; set; }

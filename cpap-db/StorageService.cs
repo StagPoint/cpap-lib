@@ -23,14 +23,15 @@ namespace cpap_db
 		public const string SignalStatistics    = "signal_stats";
 		public const string ReportedEventCounts = "event_counts";
 		
-		public const string MachineSettings     = "machine_settings";
+		public const string MachineSettings = "machine_settings";
+		public const string MachineInfo     = "machine_info";
 		
 		// All of the following classes will likely be eliminated at some point, but for now...
 		public const string EprSettings         = "epr_settings";
 		public const string CpapSettings        = "cpap_settings";
 		public const string AutoSetSettings     = "auto_settings";
 		public const string AsvSettings         = "asv_settings";
-		public const string AvapsSettings       = "avaps_settings";
+		public const string AvapSettings       = "avaps_settings";
 	}
 	
 	public class StorageService : IDisposable
@@ -47,16 +48,18 @@ namespace cpap_db
 
 		static StorageService()
 		{
-			
 			#region Create mappings for cpap-lib types
 
 			var dayMapping = CreateMapping<DailyReport>( TableNames.DailyReport );
 			dayMapping.PrimaryKey = new PrimaryKeyColumn( "id", typeof( DateTime ) );
 			dayMapping.ForeignKey = new ForeignKeyColumn( "profileID", typeof( int ), "profile", "profileID", false );
 
-			var faultMapping = CreateMapping<FaultInfo>( TableNames.FaultMapping );
-			faultMapping.PrimaryKey = new PrimaryKeyColumn( "id", typeof( int ), true );
-			faultMapping.ForeignKey = new ForeignKeyColumn( dayMapping );
+			var machineInfoMapping = CreateMapping<MachineIdentification>( TableNames.MachineInfo );
+			machineInfoMapping.ForeignKey = new ForeignKeyColumn( dayMapping );
+
+			var faultInfoMapping = CreateMapping<FaultInfo>( TableNames.FaultMapping );
+			faultInfoMapping.PrimaryKey = new PrimaryKeyColumn( "id", typeof( int ), true );
+			faultInfoMapping.ForeignKey = new ForeignKeyColumn( dayMapping );
 
 			var eventCountMapping = CreateMapping<ReportedEventCounts>( TableNames.ReportedEventCounts );
 			eventCountMapping.ForeignKey = new ForeignKeyColumn( dayMapping );
@@ -75,8 +78,8 @@ namespace cpap_db
 			signalMapping.ForeignKey = new ForeignKeyColumn( sessionMapping );
 			signalMapping.Columns.Add( blobColumnMapping );
 
-			var statisticsMapping = CreateMapping<SignalStatistics>( TableNames.SignalStatistics );
-			statisticsMapping.ForeignKey = new ForeignKeyColumn( dayMapping );
+			var signalStatisticsMapping = CreateMapping<SignalStatistics>( TableNames.SignalStatistics );
+			signalStatisticsMapping.ForeignKey = new ForeignKeyColumn( dayMapping );
 
 			var eventsMapping = CreateMapping<ReportedEvent>( TableNames.ReportedEvent );
 			eventsMapping.ForeignKey = new ForeignKeyColumn( dayMapping );
@@ -88,17 +91,17 @@ namespace cpap_db
 			var eprMapping = CreateMapping<EprSettings>( TableNames.EprSettings );
 			eprMapping.ForeignKey = new ForeignKeyColumn( machineSettingsMapping );
 
-			var cpapMapping = CreateMapping<EprSettings>( TableNames.CpapSettings );
+			var cpapMapping = CreateMapping<CpapSettings>( TableNames.CpapSettings );
 			cpapMapping.ForeignKey = new ForeignKeyColumn( machineSettingsMapping );
 
-			var autosetMapping = CreateMapping<EprSettings>( TableNames.AutoSetSettings );
+			var autosetMapping = CreateMapping<AutoSetSettings>( TableNames.AutoSetSettings );
 			autosetMapping.ForeignKey = new ForeignKeyColumn( machineSettingsMapping );
 
-			var asvMapping = CreateMapping<EprSettings>( TableNames.AsvSettings );
+			var asvMapping = CreateMapping<AsvSettings>( TableNames.AsvSettings );
 			asvMapping.ForeignKey = new ForeignKeyColumn( machineSettingsMapping );
 
-			var avapsMapping = CreateMapping<EprSettings>( TableNames.AvapsSettings );
-			avapsMapping.ForeignKey = new ForeignKeyColumn( machineSettingsMapping );
+			var avapMapping = CreateMapping<AvapSettings>( TableNames.AvapSettings );
+			avapMapping.ForeignKey = new ForeignKeyColumn( machineSettingsMapping );
 
 			#endregion
 		}
@@ -110,20 +113,42 @@ namespace cpap_db
 		public StorageService( string databasePath )
 		{
 			Connection = new SQLiteConnection( databasePath );
-
-			var info = Connection.GetTableInfo( TableNames.DailyReport );
-			if( info.Count == 0 )
-			{
-				foreach( var mapping in _mappings )
-				{
-					mapping.Value.CreateTable( Connection );
-				}
-			}
 		}
 
 		#endregion
 		
-		#region Static functions 
+		#region Static functions
+
+		public static string GetApplicationDatabasePath()
+		{
+			var appDataPath    = Environment.GetFolderPath( Environment.SpecialFolder.LocalApplicationData );
+			var databaseFolder = Path.Combine( appDataPath,    "cpap-viewer" );
+			var databasePath   = Path.Combine( databaseFolder, "cpap-data.db" );
+
+			if( !Directory.Exists( databaseFolder ) )
+			{
+				Directory.CreateDirectory( databaseFolder );
+			}
+
+			return databasePath;
+		}
+		
+		public static void InitializeDatabase( string databasePath )
+		{
+			using( var store = new StorageService( databasePath ) )
+			{
+				foreach( var mapping in _mappings )
+				{
+					Debug.WriteLine( $"Checking database table {mapping.Key.Name}" );
+					mapping.Value.CreateTable( store.Connection );
+				}
+			}
+		}
+
+		public static StorageService Connect()
+		{
+			return new StorageService( GetApplicationDatabasePath() );
+		}
 		
 		public static DatabaseMapping GetMapping<T>()
 		{
@@ -151,8 +176,24 @@ namespace cpap_db
 		{
 			var dayID = day.ReportDate.Date;
 
+			// Delete any existing record first. This will not cause any exception if the record does
+			// not already exist, and there's no convenient way to update existing records with this 
+			// many nested dependencies, so just get rid of it if it already exists. 
+			var mapping = GetMapping<DailyReport>();
+			mapping.Delete( Connection, dayID );
+
 			Insert( day, dayID, -1 );
+			
 			Insert( day.EventSummary, foreignKeyValue: dayID );
+			Insert( day.MachineInfo,  foreignKeyValue: dayID );
+			Insert( day.Fault,        foreignKeyValue: dayID );
+
+			int settingsID = Insert( day.Settings, foreignKeyValue: dayID );
+			Insert( day.Settings.AutoSet, foreignKeyValue: settingsID );
+			Insert( day.Settings.ASV, foreignKeyValue: settingsID );
+			Insert( day.Settings.CPAP, foreignKeyValue: settingsID );
+			Insert( day.Settings.EPR, foreignKeyValue: settingsID );
+			Insert( day.Settings.Avap, foreignKeyValue: settingsID );
 
 			foreach( var evt in day.Events )
 			{
@@ -163,7 +204,7 @@ namespace cpap_db
 			{
 				Insert( stat, foreignKeyValue: dayID );
 			}
-
+			
 			foreach( var session in day.Sessions )
 			{
 				var sessionID = Insert( session, foreignKeyValue: dayID );
@@ -194,7 +235,9 @@ namespace cpap_db
 		
 		public DateTime GetMostRecentDay()
 		{
-			return Connection.ExecuteScalar<DateTime>( "SELECT ReportDate FROM Day ORDER BY ReportDate DESC LIMIT 1" );
+			var mapping = GetMapping<DailyReport>();
+			
+			return Connection.ExecuteScalar<DateTime>( $"SELECT IFNULL( [{mapping.PrimaryKey.ColumnName}], datetime('now','-180 day','localtime') ) FROM [{mapping.TableName}] ORDER BY ReportDate DESC LIMIT 1" );
 		}
 
 		public int Execute( string query, params object[] arguments )
@@ -537,6 +580,6 @@ namespace cpap_db
 			#endregion 
 		}
 		
-		#endregion 
+		#endregion
 	}
 }

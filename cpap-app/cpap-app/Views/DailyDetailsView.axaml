@@ -1,0 +1,53 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:cpaplib="clr-namespace:cpaplib;assembly=cpap-lib"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="cpap_app.Views.DailyDetailsView"
+             x:DataType="cpaplib:DailyReport">
+    <ScrollViewer BorderBrush="Red" BorderThickness="4">
+        <StackPanel>
+            <StackPanel DataContext="{Binding MachineInfo}" Margin="4 8 0 0">
+                <TextBlock Theme="{StaticResource BodyStrongTextBlockStyle}">
+                    <Run>Model: </Run>
+                    <Run Text="{Binding ProductName, Mode=OneWay}" />
+                </TextBlock>
+                <TextBlock Theme="{StaticResource BodyStrongTextBlockStyle}">
+                    <Run>Serial: </Run>
+                    <Run Text="{Binding SerialNumber, Mode=OneWay}" />
+                </TextBlock>
+            </StackPanel>
+            <Grid Margin="4 10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"></ColumnDefinition>
+                    <ColumnDefinition Width="20"></ColumnDefinition>
+                    <ColumnDefinition Width="Auto"></ColumnDefinition>
+                    <ColumnDefinition Width="*"></ColumnDefinition>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition />
+                    <RowDefinition />
+                    <RowDefinition />
+                    <RowDefinition />
+                </Grid.RowDefinitions>
+                <TextBlock Grid.Column="0" Grid.Row="0" Text="Date:"
+                           Theme="{StaticResource BodyStrongTextBlockStyle}" />
+                <TextBlock Grid.Column="2" Grid.Row="0"
+                           Text="{Binding ReportDate, Mode=OneWay, StringFormat={}{0:D}}" />
+                <TextBlock Grid.Column="0" Grid.Row="1" Text="Start Time:"
+                           Theme="{StaticResource BodyStrongTextBlockStyle}" />
+                <TextBlock Grid.Column="2" Grid.Row="1"
+                           Text="{Binding RecordingStartTime, Mode=OneWay, StringFormat={}{0:g}}" />
+                <TextBlock Grid.Column="0" Grid.Row="2" Text="End Time:"
+                           Theme="{StaticResource BodyStrongTextBlockStyle}" />
+                <TextBlock Grid.Column="2" Grid.Row="2"
+                           Text="{Binding RecordingEndTime, Mode=OneWay, StringFormat={}{0:g}}" />
+                <TextBlock Grid.Column="0" Grid.Row="3" Text="Usage Hours:"
+                           Theme="{StaticResource BodyStrongTextBlockStyle}" />
+                <TextBlock Grid.Column="2" Grid.Row="3"
+                           Text="{Binding UsageTime, Mode=OneWay, StringFormat={}{0:T}}" />
+            </Grid>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

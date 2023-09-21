@@ -9,11 +9,6 @@ namespace cpaplib
 		#region Public properties 
 		
 		/// <summary>
-		/// Identifies the machine that was used to record this report 
-		/// </summary>
-		public MachineIdentification MachineInfo { get; set; }
-		
-		/// <summary>
 		/// The date on which this report was generated.
 		/// </summary>
 		public DateTime ReportDate { get; set; }
@@ -34,36 +29,9 @@ namespace cpaplib
 		public TimeSpan TotalTimeSpan { get => RecordingEndTime - RecordingStartTime; }
 
 		/// <summary>
-		/// The list of sessions  for this day
-		/// </summary>
-		public List<Session> Sessions { get; } = new List<Session>();
-
-		public List<ReportedEvent> Events { get; } = new List<ReportedEvent>();
-
-		/// <summary>
 		/// Returns the number of "Mask Times" for the day
 		/// </summary>
 		public int MaskEvents { get; set; }
-
-		/// <summary>
-		/// Fault information reported by the CPAP machine
-		/// </summary>
-		public FaultInfo Fault { get; set; } = new FaultInfo();
-
-		/// <summary>
-		/// The settings (pressure, EPR, response type, etc.) used on this day
-		/// </summary>
-		public MachineSettings Settings { get; set; } = new MachineSettings();
-
-		/// <summary>
-		/// Usage and performance statistics for this day (average pressure, leak rate, etc.)
-		/// </summary>
-		public List<SignalStatistics> Statistics { get; set; } = new List<SignalStatistics>();
-
-		/// <summary>
-		/// The number of events of each type (Obstructive Apnea, Clear Airway, RERA, etc.) that occurred on this day.
-		/// </summary>
-		public ReportedEventCounts EventSummary { get; set; } = new ReportedEventCounts();
 
 		/// <summary>
 		/// The total amount of time the CPAP was used on the reported day (calculated)
@@ -75,6 +43,38 @@ namespace cpaplib
 		/// Supported on ResMed AirSense machines, not sure about others. 
 		/// </summary>
 		public double PatientHours { get; set; }
+
+		/// <summary>
+		/// Identifies the machine that was used to record this report 
+		/// </summary>
+		public MachineIdentification MachineInfo { get; set; } = new MachineIdentification();
+		
+		/// <summary>
+		/// Fault information reported by the CPAP machine
+		/// </summary>
+		public FaultInfo Fault { get; set; } = new FaultInfo();
+
+		/// <summary>
+		/// The settings (pressure, EPR, response type, etc.) used on this day
+		/// </summary>
+		public MachineSettings Settings { get; set; } = new MachineSettings();
+
+		/// <summary>
+		/// The number of events of each type (Obstructive Apnea, Clear Airway, RERA, etc.) that occurred on this day.
+		/// </summary>
+		public ReportedEventCounts EventSummary { get; set; } = new ReportedEventCounts();
+
+		/// <summary>
+		/// The list of sessions  for this day
+		/// </summary>
+		public List<Session> Sessions { get; } = new List<Session>();
+
+		public List<ReportedEvent> Events { get; } = new List<ReportedEvent>();
+
+		/// <summary>
+		/// Usage and performance statistics for this day (average pressure, leak rate, etc.)
+		/// </summary>
+		public List<SignalStatistics> Statistics { get; set; } = new List<SignalStatistics>();
 
 		#endregion 
 

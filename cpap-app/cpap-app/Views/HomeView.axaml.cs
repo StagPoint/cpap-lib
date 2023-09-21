@@ -2,11 +2,11 @@
 using System.Diagnostics;
 using System.IO;
 
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
-using Avalonia.Markup.Xaml;
 using Avalonia.VisualTree;
+
+using cpap_app.ViewModels;
 
 using cpap_db;
 
@@ -92,40 +92,36 @@ public partial class HomeView : UserControl
 
 	private void ImportFrom( string folder )
 	{
-		// DEBUG: Get rid of this
-		const string databasePath = @"D:\Temp\CPAP.db";
-		File.Delete( databasePath );
-		
-		using( var storage = new StorageService( databasePath ) )
+		using var storage = new StorageService( StorageService.GetApplicationDatabasePath() );
+		storage.Connection.BeginTransaction();
+
+		try
 		{
-			storage.Connection.BeginTransaction();
+			int startTime = Environment.TickCount;
 
-			try
+			var mostRecentDay = storage.GetMostRecentDay().AddHours( 12 );
+				
+			var loader = new ResMedDataLoader();
+			var days   = loader.LoadFromFolder( folder, mostRecentDay );
+
+			foreach( var day in days )
 			{
-				int startTime = Environment.TickCount;
-				
-				var loader    = new ResMedDataLoader();
-				var days      = loader.LoadFromFolder( folder, DateTime.Today.AddDays( -30 ) );
+				storage.SaveDailyReport( day );
+			}
 
-				foreach( var day in days )
-				{
-					storage.SaveDailyReport( day );
-				}
-
-				storage.Connection.Commit();
+			storage.Connection.Commit();
 				
-				var elapsed = Environment.TickCount - startTime;
-				Debug.WriteLine( $"Time to load CPAP data ({days.Count} days): {elapsed / 1000.0f:F3} seconds" );
+			var elapsed = Environment.TickCount - startTime;
+			Debug.WriteLine( $"Time to load CPAP data ({days.Count} days): {elapsed / 1000.0f:F3} seconds" );
 		
-				var mostRecentDay = storage.GetMostRecentDay();
+			mostRecentDay = storage.GetMostRecentDay();
 
-				//Navigation.DataContext = new DailyReportViewModel( mostRecentDay );
-			}
-			catch
-			{
-				storage.Connection.Rollback();
-				throw;
-			}
+			this.DataContext = new DailyReportViewModel( mostRecentDay );
+		}
+		catch
+		{
+			storage.Connection.Rollback();
+			throw;
 		}
 	}
 }
