@@ -92,14 +92,14 @@ public partial class HomeView : UserControl
 
 	private void ImportFrom( string folder )
 	{
-		using var storage = new StorageService( StorageService.GetApplicationDatabasePath() );
+		using var storage = StorageService.Connect();
 		storage.Connection.BeginTransaction();
 
 		try
 		{
 			int startTime = Environment.TickCount;
 
-			var mostRecentDay = storage.GetMostRecentDay().AddHours( 12 );
+			var mostRecentDay = storage.GetMostRecentStoredDate().AddHours( 12 );
 				
 			var loader = new ResMedDataLoader();
 			var days   = loader.LoadFromFolder( folder, mostRecentDay );
@@ -114,7 +114,7 @@ public partial class HomeView : UserControl
 			var elapsed = Environment.TickCount - startTime;
 			Debug.WriteLine( $"Time to load CPAP data ({days.Count} days): {elapsed / 1000.0f:F3} seconds" );
 		
-			mostRecentDay = storage.GetMostRecentDay();
+			mostRecentDay = storage.GetMostRecentStoredDate();
 
 			this.DataContext = new DailyReportViewModel( mostRecentDay );
 		}

@@ -6,44 +6,51 @@
              mc:Ignorable="d" d:DesignWidth="350" d:DesignHeight="450"
              x:Class="cpap_app.Views.DailyStatisticsSummaryView"
              x:DataType="cpaplib:DailyReport">
-    <Design.DataContext>    
-        <cpaplib:DailyReport/>
-    </Design.DataContext>    
+    <Design.DataContext>
+        <cpaplib:DailyReport />
+    </Design.DataContext>
     <Grid Grid.IsSharedSizeScope="True" RowDefinitions="Auto,*">
+        <Grid.Styles>
+            <Style Selector="TextBlock">
+                <Setter Property="Padding" Value="0 0 10 0"></Setter>
+            </Style>
+        </Grid.Styles>
         <Grid Grid.Row="0" HorizontalAlignment="Stretch" RowDefinitions="Auto">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" SharedSizeGroup="C0"/>
-                <ColumnDefinition Width="Auto" SharedSizeGroup="C1"/>
-                <ColumnDefinition Width="Auto" SharedSizeGroup="C2"/>
-                <ColumnDefinition Width="Auto" SharedSizeGroup="C3"/>
-                <ColumnDefinition Width="Auto" SharedSizeGroup="C4"/>
-                <ColumnDefinition Width="Auto" SharedSizeGroup="C5"/>
+                <ColumnDefinition Width="Auto" SharedSizeGroup="C0" />
+                <ColumnDefinition Width="0" SharedSizeGroup="C1" />
+                <ColumnDefinition Width="Auto" SharedSizeGroup="C2" />
+                <ColumnDefinition Width="Auto" SharedSizeGroup="C3" />
+                <ColumnDefinition Width="Auto" SharedSizeGroup="C4" />
+                <ColumnDefinition Width="Auto" SharedSizeGroup="C5" />
             </Grid.ColumnDefinitions>
-            <TextBlock Grid.Column="0" Text="Channel Name" FontWeight="Bold" Padding="0 0 10 0"/>
-            <TextBlock Grid.Column="1" Text="Min" FontWeight="Bold" />
-            <TextBlock Grid.Column="3" Text="Med" FontWeight="Bold" />
-            <TextBlock Grid.Column="2" Text="Avg" FontWeight="Bold" />
-            <TextBlock Grid.Column="4" Text="95%" FontWeight="Bold" />
-            <TextBlock Grid.Column="5" Text="Max" FontWeight="Bold" />
+            <Border Grid.Column="0" Grid.ColumnSpan="6"
+                    Background="{DynamicResource ControlAltFillColorSecondaryBrush}" HorizontalAlignment="Stretch" />
+            <TextBlock Grid.Column="0" Text="Name" Theme="{StaticResource BodyStrongTextBlockStyle}" />
+            <TextBlock Grid.Column="1" Text="Min" Theme="{StaticResource BodyStrongTextBlockStyle}" />
+            <TextBlock Grid.Column="3" Text="Med" Theme="{StaticResource BodyStrongTextBlockStyle}" />
+            <TextBlock Grid.Column="2" Text="Avg" Theme="{StaticResource BodyStrongTextBlockStyle}" />
+            <TextBlock Grid.Column="4" Text="95%" Theme="{StaticResource BodyStrongTextBlockStyle}" />
+            <TextBlock Grid.Column="5" Text="Max" Theme="{StaticResource BodyStrongTextBlockStyle}" />
         </Grid>
-        <ItemsControl Grid.Row="1" Name="lvwStatistics" ItemsSource="{Binding Statistics}">
+        <ItemsControl Grid.Row="1" ItemsSource="{Binding Statistics}">
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
                     <Grid>
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" SharedSizeGroup="C0"/>
-                            <ColumnDefinition Width="Auto" SharedSizeGroup="C1"/>
-                            <ColumnDefinition Width="Auto" SharedSizeGroup="C2"/>
-                            <ColumnDefinition Width="Auto" SharedSizeGroup="C3"/>
-                            <ColumnDefinition Width="Auto" SharedSizeGroup="C4"/>
-                            <ColumnDefinition Width="Auto" SharedSizeGroup="C5"/>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="C0" />
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="C1" />
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="C2" />
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="C3" />
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="C4" />
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="C5" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="{Binding SignalName}" Padding="0 0 10 0" />
-                        <TextBlock Grid.Column="1" Text="{Binding Minimum, Mode=OneWay, StringFormat={}{0:f2}}" Padding="0 0 10 0"/>
-                        <TextBlock Grid.Column="3" Text="{Binding Median, Mode=OneWay, StringFormat={}{0:f2}}" Padding="0 0 10 0"/>
-                        <TextBlock Grid.Column="2" Text="{Binding Average, Mode=OneWay, StringFormat={}{0:f2}}" Padding="0 0 10 0"/>
-                        <TextBlock Grid.Column="4" Text="{Binding Percentile95, Mode=OneWay, StringFormat={}{0:f2}}" Padding="0 0 10 0"/>
-                        <TextBlock Grid.Column="5" Text="{Binding Maximum, Mode=OneWay, StringFormat={}{0:f2}}" Padding="0 0 10 0"/>
+                        <TextBlock Grid.Column="0" Text="{Binding SignalName}" />
+                        <TextBlock Grid.Column="1" Text="{Binding Minimum, Mode=OneWay, StringFormat={}{0:f2}}" />
+                        <TextBlock Grid.Column="3" Text="{Binding Median, Mode=OneWay, StringFormat={}{0:f2}}" />
+                        <TextBlock Grid.Column="2" Text="{Binding Average, Mode=OneWay, StringFormat={}{0:f2}}" />
+                        <TextBlock Grid.Column="4" Text="{Binding Percentile95, Mode=OneWay, StringFormat={}{0:f2}}" />
+                        <TextBlock Grid.Column="5" Text="{Binding Maximum, Mode=OneWay, StringFormat={}{0:f2}}" />
                     </Grid>
                 </DataTemplate>
             </ItemsControl.ItemTemplate>

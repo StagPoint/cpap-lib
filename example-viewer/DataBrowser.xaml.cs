@@ -51,7 +51,7 @@ public partial class DataBrowser
 		const string databasePath = @"D:\Temp\CPAP.db";
 		File.Delete( databasePath );
 
-		using( var db = new StorageService( databasePath ) )
+		using( var db = StorageService.Connect() )
 		{
 			db.Connection.BeginTransaction();
 

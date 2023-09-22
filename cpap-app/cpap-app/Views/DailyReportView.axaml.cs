@@ -1,16 +1,11 @@
 ﻿using System;
-using System.Diagnostics;
-using System.Linq;
 
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Interactivity;
-using Avalonia.Markup.Xaml;
 
 using cpap_db;
-
-using FluentAvalonia.UI.Controls;
 
 namespace cpap_app.Views;
 
@@ -28,7 +23,7 @@ public partial class DailyReportView : UserControl
 		
 		using( var store = StorageService.Connect() )
 		{
-			var latestDate = store.GetMostRecentDay();
+			var latestDate = store.GetMostRecentStoredDate();
 			DateSelector.SelectedDate = latestDate;
 		}
 	}
@@ -63,7 +58,7 @@ public partial class DailyReportView : UserControl
 
 		if( page is StyledElement view )
 		{
-			view.DataContext = this.DataContext;
+			view.DataContext = DataContext;
 		}
 	}
 	
@@ -72,15 +67,15 @@ public partial class DailyReportView : UserControl
 		using( var store = StorageService.Connect() )
 		{
 			// TODO: Implement visual indication of "no data available" to match previous viewer codebase
-			var day = store.LoadDailyReport( DateSelector.SelectedDate ?? store.GetMostRecentDay() );
+			var day = store.LoadDailyReport( DateSelector.SelectedDate ?? store.GetMostRecentStoredDate() );
 
 			DataContext = day;
 			
 			// I don't know why setting DataContext doesn't cascade down in Avalonia like it did in WPF, 
 			// but apparently I need to handle that manually.
-			if( TabFrame.Content is StyledElement uc )
+			if( TabFrame.Content is StyledElement childView )
 			{
-				uc.DataContext = day;
+				childView.DataContext = day;
 			}
 		}
 	}

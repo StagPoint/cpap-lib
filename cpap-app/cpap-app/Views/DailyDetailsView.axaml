@@ -58,7 +58,8 @@
                 ExpandDirection="Down"
                 IsExpanded="True"
                 VerticalAlignment="Top" 
-                Margin="0 10 0 0">
+                Margin="0 10 0 0"
+                Padding="10">
                 <Expander.Header>
                     <StackPanel Orientation="Horizontal">
                         <controls:FontIcon Glyph="&#xE7C1;" FontSize="24" FontFamily="{DynamicResource SymbolThemeFontFamily}" FontWeight="Normal" FontStyle="Normal" Margin="0 0 10 0"/>
@@ -72,7 +73,8 @@
                 ExpandDirection="Down"
                 IsExpanded="True"
                 VerticalAlignment="Top" 
-                Margin="0 10 0 0">
+                Margin="0 10 0 0"
+                Padding="10">
                 <Expander.Header>
                     <StackPanel Orientation="Horizontal">
                         <controls:FontIcon Glyph="&#xE8EF;" FontSize="24" FontFamily="{DynamicResource SymbolThemeFontFamily}" FontWeight="Normal" FontStyle="Normal" Margin="0 0 10 0"/>
@@ -86,7 +88,8 @@
                 ExpandDirection="Down"
                 IsExpanded="True"
                 VerticalAlignment="Top" 
-                Margin="0 10 0 0">
+                Margin="0 10 0 0"
+                Padding="10">
                 <Expander.Header>
                     <StackPanel Orientation="Horizontal">
                         <controls:FontIcon Glyph="&#xE713;" FontSize="24" FontFamily="{DynamicResource SymbolThemeFontFamily}" FontWeight="Normal" FontStyle="Normal" Margin="0 0 10 0"/>
@@ -100,18 +103,15 @@
                 ExpandDirection="Down"
                 IsExpanded="True"
                 VerticalAlignment="Top" 
-                Margin="0 10 0 0">
+                Margin="0 10 0 0"
+                Padding="10">
                 <Expander.Header>
                     <StackPanel Orientation="Horizontal">
                         <controls:FontIcon Glyph="&#xEC92;" FontSize="24" FontFamily="{DynamicResource SymbolThemeFontFamily}" FontWeight="Normal" FontStyle="Normal" Margin="0 0 10 0"/>
                         <TextBlock Text="Sessions" FontSize="16" Theme="{StaticResource BodyStrongTextBlockStyle}"/>
                     </StackPanel>
                 </Expander.Header>
-                <StackPanel>
-                    <TextBlock Text="CONTENT"></TextBlock>
-                    <TextBlock Text="CONTENT"></TextBlock>
-                    <TextBlock Text="CONTENT"></TextBlock>
-                </StackPanel>
+               <views:DailySessionsList />
             </Expander>
 
         </StackPanel>

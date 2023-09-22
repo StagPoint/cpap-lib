@@ -110,7 +110,7 @@ namespace cpap_db
 		
 		#region Instance Constructor 
 
-		public StorageService( string databasePath )
+		internal StorageService( string databasePath )
 		{
 			Connection = new SQLiteConnection( databasePath );
 		}
@@ -180,11 +180,22 @@ namespace cpap_db
 				return null;
 			}
 			
-			day.EventCounts = SelectByForeignKey<ReportedEventCounts>( date ).First();
 			day.MachineInfo = SelectByForeignKey<MachineIdentification>( date ).First();
 			day.Fault       = SelectByForeignKey<FaultInfo>( date ).First();
-			day.Settings    = SelectByForeignKey<MachineSettings>( date ).First();
 			day.Statistics  = SelectByForeignKey<SignalStatistics>( date );
+			
+			day.Settings    = SelectByForeignKey<MachineSettings>( date ).First();
+			day.EventCounts = SelectByForeignKey<ReportedEventCounts>( date ).First();
+			day.Events      = SelectByForeignKey<ReportedEvent>( date );
+
+			var sessionKeys = new List<int>();
+			day.Sessions = SelectByForeignKey<Session, int>( date, sessionKeys );
+
+			Debug.Assert( sessionKeys.Count == day.Sessions.Count );
+			for( int i = 0; i < sessionKeys.Count; i++ )
+			{
+				day.Sessions[ i ].Signals = SelectByForeignKey<Signal>( sessionKeys[ i ] );
+			}
 
 			return day;
 		}
@@ -233,6 +244,21 @@ namespace cpap_db
 			}
 		}
 
+		public List<T> SelectAll<T>() where T : class, new()
+		{
+			var mapping = GetMapping<T>();
+			return mapping.ExecuteQuery<T>( Connection, mapping.SelectAllQuery );
+		}
+
+		public List<T> SelectAll<T, P>( IList<P> primaryKeys ) 
+			where T : class, new()
+			where P : struct
+		{
+			var mapping = GetMapping<T>();
+			
+			return mapping.ExecuteQuery<T>( Connection, mapping.SelectAllQuery, primaryKeys );
+		}
+
 		public T SelectById<T>( object primaryKeyValue ) where T : class, new()
 		{
 			var mapping = GetMapping<T>();
@@ -244,7 +270,23 @@ namespace cpap_db
 			var mapping = GetMapping<T>();
 			return mapping.SelectByForeignKey<T>( Connection, foreignKeyValue );
 		}
-
+		
+		public List<T> SelectByForeignKey<T, P>( object foreignKeyValue, IList<P> primaryKeys ) 
+			where T : class, new()
+			where P : struct
+		{
+			var mapping = GetMapping<T>();
+			return mapping.SelectByForeignKey<T, P>( Connection, foreignKeyValue, primaryKeys );
+		}
+		
+		/// <summary>
+		/// Inserts a new record into the mapped table. 
+		/// </summary>
+		/// <param name="record">The object to be inserted</param>
+		/// <param name="primaryKeyValue">If a primary key is defined in the table mapping and is not auto-increment, it must be supplied here</param>
+		/// <param name="foreignKeyValue">If a foreign key is defined in the table mapping, it must be supplied here</param>
+		/// <typeparam name="T">If the primary key is defined as AUTOINCREMENT, it will be returned. Otherwise, the number of records inserted (1) will be returned.</typeparam>
+		/// <returns></returns>
 		public int Insert<T>( T record, object primaryKeyValue = null, object foreignKeyValue = null ) where T : class
 		{
 			var mapping = GetMapping<T>();
@@ -261,12 +303,21 @@ namespace cpap_db
 
 			return mapping.CreateTable( Connection );
 		}
-		
-		public DateTime GetMostRecentDay()
+
+		public List<DateTime> GetStoredDates()
 		{
 			var mapping = GetMapping<DailyReport>();
+			var days    = mapping.SelectAll<DailyReport>( Connection );
+
+			return days.Select( x => x.ReportDate.Date ).ToList();
+		}
+		
+		public DateTime GetMostRecentStoredDate()
+		{
+			var mapping = GetMapping<DailyReport>();
+			var query   = $"SELECT IFNULL( [{mapping.PrimaryKey.ColumnName}], datetime('now','-180 day','localtime') ) FROM [{mapping.TableName}] ORDER BY ReportDate DESC LIMIT 1";
 			
-			return Connection.ExecuteScalar<DateTime>( $"SELECT IFNULL( [{mapping.PrimaryKey.ColumnName}], datetime('now','-180 day','localtime') ) FROM [{mapping.TableName}] ORDER BY ReportDate DESC LIMIT 1" );
+			return Connection.ExecuteScalar<DateTime>( query );
 		}
 
 		public int Execute( string query, params object[] arguments )

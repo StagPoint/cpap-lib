@@ -34,7 +34,8 @@
                 <TabItem Header="SpO2" Tag="DailySpO2" FontSize="18" Padding="0"/>
                 <TabItem Header="Notes" Tag="DailyNotes" FontSize="18" Padding="0"/>
             </TabStrip>
-            <ui:Frame Name="TabFrame" Margin="0 10 0 1" Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}"
+            <ui:Frame Name="TabFrame" Margin="0 10 0 1"
+                      Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}"
                       Foreground="{DynamicResource TextFillColorPrimaryBrush}">
             </ui:Frame>
         </DockPanel>

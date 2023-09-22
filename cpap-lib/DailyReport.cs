@@ -67,9 +67,9 @@ namespace cpaplib
 		/// <summary>
 		/// The list of sessions  for this day
 		/// </summary>
-		public List<Session> Sessions { get; } = new List<Session>();
+		public List<Session> Sessions { get; set; } = new List<Session>();
 
-		public List<ReportedEvent> Events { get; } = new List<ReportedEvent>();
+		public List<ReportedEvent> Events { get; set; } = new List<ReportedEvent>();
 
 		/// <summary>
 		/// Usage and performance statistics for this day (average pressure, leak rate, etc.)

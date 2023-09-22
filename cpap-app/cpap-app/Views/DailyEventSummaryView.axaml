@@ -19,36 +19,36 @@
         <!--<TextBlock Grid.Column="0" Grid.Row="0" Text="Event" HorizontalAlignment="Left" Theme="{StaticResource BodyStrongTextBlockStyle}"/>-->
         <TextBlock Grid.Column="2" Grid.Row="0" Text="Index" HorizontalAlignment="Center" Theme="{StaticResource BodyStrongTextBlockStyle}"/>
         <TextBlock Grid.Column="4" Grid.Row="0" Text="Count" HorizontalAlignment="Center" Theme="{StaticResource BodyStrongTextBlockStyle}"/>
-        <TextBlock Grid.Column="0" Grid.Row="1" Text="Apnea-Hypopnea Index (AHI)" />
-        <TextBlock Grid.Column="2" Grid.Row="1" Text="{Binding AHI, Mode=OneWay, StringFormat={}{0:N1}}"
-                   HorizontalAlignment="Center" />
+        <TextBlock Grid.Column="0" Grid.Row="1" Text="Apnea-Hypopnea Index (AHI)" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+        <TextBlock Grid.Column="2" Grid.Row="1" Text="{Binding AHI, Mode=OneWay, StringFormat={}{0:N2}}"
+                   HorizontalAlignment="Center" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"/>
         <TextBlock Grid.Column="0" Grid.Row="2" Text="Obstructive Apnea" Padding="10 0" />
-        <TextBlock Grid.Column="2" Grid.Row="2" Text="{Binding OAI, Mode=OneWay, StringFormat={}{0:N1}}"
+        <TextBlock Grid.Column="2" Grid.Row="2" Text="{Binding OAI, Mode=OneWay, StringFormat={}{0:N2}}"
                    HorizontalAlignment="Center" />
         <TextBlock Grid.Column="4" Grid.Row="2" Text="{Binding ObstructiveApneaCount, Mode=OneWay}"
                    HorizontalAlignment="Center" />
         <TextBlock Grid.Column="0" Grid.Row="3" Text="Clear Airway" Padding="10 0" />
-        <TextBlock Grid.Column="2" Grid.Row="3" Text="{Binding CAI, Mode=OneWay, StringFormat={}{0:N1}}"
+        <TextBlock Grid.Column="2" Grid.Row="3" Text="{Binding CAI, Mode=OneWay, StringFormat={}{0:N2}}"
                    HorizontalAlignment="Center" />
         <TextBlock Grid.Column="4" Grid.Row="3" Text="{Binding ClearAirwayCount, Mode=OneWay}"
                    HorizontalAlignment="Center" />
         <TextBlock Grid.Column="0" Grid.Row="4" Text="Unclassified" Padding="10 0" />
-        <TextBlock Grid.Column="2" Grid.Row="4" Text="{Binding UAI, Mode=OneWay, StringFormat={}{0:N1}}"
+        <TextBlock Grid.Column="2" Grid.Row="4" Text="{Binding UAI, Mode=OneWay, StringFormat={}{0:N2}}"
                    HorizontalAlignment="Center" />
         <TextBlock Grid.Column="4" Grid.Row="4" Text="{Binding UnclassifiedApneaCount, Mode=OneWay}"
                    HorizontalAlignment="Center" />
         <TextBlock Grid.Column="0" Grid.Row="5" Text="Hypopnea" Padding="10 0" />
-        <TextBlock Grid.Column="2" Grid.Row="5" Text="{Binding HI, Mode=OneWay, StringFormat={}{0:N1}}"
+        <TextBlock Grid.Column="2" Grid.Row="5" Text="{Binding HI, Mode=OneWay, StringFormat={}{0:N2}}"
                    HorizontalAlignment="Center" />
         <TextBlock Grid.Column="4" Grid.Row="5" Text="{Binding HypopneaCount, Mode=OneWay}"
                    HorizontalAlignment="Center" />
         <TextBlock Grid.Column="0" Grid.Row="6" Text="Flow Limit" />
-        <TextBlock Grid.Column="2" Grid.Row="6" Text="{Binding FlowLimitIndex, Mode=OneWay, StringFormat={}{0:N1}}"
+        <TextBlock Grid.Column="2" Grid.Row="6" Text="{Binding FlowLimitIndex, Mode=OneWay, StringFormat={}{0:N2}}"
                    HorizontalAlignment="Center" />
         <TextBlock Grid.Column="4" Grid.Row="6" Text="{Binding FlowLimitCount, Mode=OneWay}"
                    HorizontalAlignment="Center" />
         <TextBlock Grid.Column="0" Grid.Row="7" Text="RERA" />
-        <TextBlock Grid.Column="2" Grid.Row="7" Text="{Binding RIN, Mode=OneWay, StringFormat={}{0:N1}}"
+        <TextBlock Grid.Column="2" Grid.Row="7" Text="{Binding RIN, Mode=OneWay, StringFormat={}{0:N2}}"
                    HorizontalAlignment="Center" />
         <TextBlock Grid.Column="4" Grid.Row="7" Text="{Binding RespiratoryEffortCount, Mode=OneWay}"
                    HorizontalAlignment="Center" />

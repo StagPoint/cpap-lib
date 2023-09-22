@@ -27,7 +27,7 @@ public class DatabaseMapping
 		get => Columns.Count + (PrimaryKey != null ? 1 : 0) + (ForeignKey != null ? 1 : 0);
 	}
 
-	public string CreateTableQuery
+	internal string CreateTableQuery
 	{
 		get
 		{
@@ -40,7 +40,7 @@ public class DatabaseMapping
 		}
 	}
 
-	public string DeleteQuery
+	internal string DeleteQuery
 	{
 		get
 		{
@@ -53,7 +53,7 @@ public class DatabaseMapping
 		}
 	}
 
-	public string SelectAllQuery
+	internal string SelectAllQuery
 	{
 		get
 		{
@@ -66,7 +66,7 @@ public class DatabaseMapping
 		}
 	}
 
-	public string SelectByPrimaryKeyQuery
+	internal string SelectByPrimaryKeyQuery
 	{
 		get
 		{
@@ -79,7 +79,7 @@ public class DatabaseMapping
 		}
 	}
 
-	public string SelectByForeignKeyQuery
+	internal string SelectByForeignKeyQuery
 	{
 		get
 		{
@@ -92,7 +92,7 @@ public class DatabaseMapping
 		}
 	}
 
-	public string InsertQuery
+	internal string InsertQuery
 	{
 		get
 		{
@@ -160,7 +160,7 @@ public class DatabaseMapping
 		return null;
 	}
 
-	public bool CreateTable( SQLiteConnection connection )
+	internal bool CreateTable( SQLiteConnection connection )
 	{
 		List<SQLiteConnection.ColumnInfo> tableInfo = connection.GetTableInfo( TableName );
 		if( tableInfo.Count == 0 )
@@ -173,7 +173,63 @@ public class DatabaseMapping
 		return false;
 	}
 
-	public List<T> ExecuteQuery<T>( SQLiteConnection connection, string query, params object[] arguments ) where T : new()
+	internal List<T> ExecuteQuery<T, P>( SQLiteConnection connection, string query, IList<P> primaryKeys, params object[] arguments ) 
+		where T : new()
+		where P : struct
+	{
+		if( typeof( T ) != ObjectType )
+		{
+			throw new Exception( $"Type {typeof( T ).Name} does not match the mapping for type {ObjectType.Name}" );
+		}
+
+		List<T> result = new();
+
+		var stmt = SQLite3.Prepare2( connection.Handle, query );
+
+		int argumentIndex = 1;
+		foreach( var arg in arguments )
+		{
+			StorageService.BindParameter( stmt, argumentIndex++, arg );
+		}
+
+		try
+		{
+			while( SQLite3.Step( stmt ) == SQLite3.Result.Row )
+			{
+				var obj = Activator.CreateInstance<T>();
+
+				int columnCount = SQLite3.ColumnCount( stmt );
+				for( int index = 0; index < columnCount; ++index )
+				{
+					var columnName = SQLite3.ColumnName( stmt, index );
+					var columnType = SQLite3.ColumnType( stmt, index );
+					
+					var columnMapping = GetColumnByName( columnName );
+					if( columnMapping != null )
+					{
+						var val = StorageService.ReadColumn( connection, stmt, index, columnType, columnMapping.Type );
+
+						columnMapping.SetValue( obj, val );
+					}
+					else if( PrimaryKey != null && primaryKeys != null && columnName.Equals( PrimaryKey.ColumnName, StringComparison.OrdinalIgnoreCase ) )
+					{
+						var val = StorageService.ReadColumn( connection, stmt, index, columnType, PrimaryKey.Type );
+						primaryKeys.Add( (P)val );
+					}
+				}
+
+				result.Add( obj );
+			}
+		}
+		finally
+		{
+			SQLite3.Finalize( stmt );
+		}
+
+		return result;
+	}
+
+	internal List<T> ExecuteQuery<T>( SQLiteConnection connection, string query, params object[] arguments ) where T : new()
 	{
 		if( typeof( T ) != ObjectType )
 		{
@@ -222,14 +278,19 @@ public class DatabaseMapping
 		return result;
 	}
 
-	public bool Delete( SQLiteConnection connection, object primaryKeyValue )
+	internal bool Delete( SQLiteConnection connection, object primaryKeyValue )
 	{
 		var rows = connection.Execute( DeleteQuery, primaryKeyValue );
 		
 		return rows > 0;
 	}
 
-	public T SelectByPrimaryKey<T>( SQLiteConnection connection, object primaryKeyValue ) where T: class, new()
+	internal List<T> SelectAll<T>( SQLiteConnection connection ) where T: class, new()
+	{
+		return ExecuteQuery<T>( connection, SelectAllQuery );
+	}
+
+	internal T SelectByPrimaryKey<T>( SQLiteConnection connection, object primaryKeyValue ) where T: class, new()
 	{
 		var rows = ExecuteQuery<T>( connection, SelectByPrimaryKeyQuery, primaryKeyValue );
 
@@ -241,12 +302,20 @@ public class DatabaseMapping
 		return rows[ 0 ];
 	}
 
-	public List<T> SelectByForeignKey<T>( SQLiteConnection connection, object foreignKeyValue ) where T: class, new()
+	internal List<T> SelectByForeignKey<T, P>( SQLiteConnection connection, object foreignKeyValue, IList<P> primaryKeys = null ) 
+		where T: class, new()
+		where P: struct
+	{
+		return ExecuteQuery<T, P>( connection, SelectByForeignKeyQuery, primaryKeys, foreignKeyValue );
+	}
+
+	internal List<T> SelectByForeignKey<T>( SQLiteConnection connection, object foreignKeyValue ) 
+		where T: class, new()
 	{
 		return ExecuteQuery<T>( connection, SelectByForeignKeyQuery, foreignKeyValue );
 	}
 
-	public int Insert( SQLiteConnection connection, object data, object primaryKeyValue = null, object foreignKeyValue = null )
+	internal int Insert( SQLiteConnection connection, object data, object primaryKeyValue = null, object foreignKeyValue = null )
 	{
 		int columnCount = Columns.Count;
 		if( PrimaryKey != null && !PrimaryKey.AutoIncrement )

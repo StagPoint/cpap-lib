@@ -1,0 +1,47 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:cpaplib="clr-namespace:cpaplib;assembly=cpap-lib"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="cpap_app.Views.DailySessionsList"
+             x:DataType="cpaplib:DailyReport">
+    <ListBox Grid.IsSharedSizeScope="True" Margin="0" ItemsSource="{Binding Sessions}">
+        <ListBox.Styles>
+            <Style Selector="ListBoxItem">
+                <Setter Property="Padding" Value="8,0,8,1"/>
+                <Setter Property="MinHeight" Value="0"/>
+                <Setter Property="MinWidth" Value="0"/>
+                <Setter Property="Margin" Value="-1"/>
+                <Setter Property="CornerRadius" Value="0"/>
+                <Setter Property="Background" Value="Transparent"/>
+            </Style>
+            <Style Selector="ContentPresenter">
+            </Style>
+        </ListBox.Styles>
+        <ListBox.ItemTemplate>
+            <DataTemplate>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" SharedSizeGroup="C0" />
+                        <ColumnDefinition Width="10" />
+                        <ColumnDefinition Width="*" SharedSizeGroup="C1" />
+                        <ColumnDefinition Width="10" />
+                        <ColumnDefinition Width="*" SharedSizeGroup="C2" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="{Binding StartTime, Mode=OneWay, StringFormat={}{0:d}}"></TextBlock>
+                    <TextBlock Grid.Column="2">
+                        <TextBox.Text>
+                            <MultiBinding StringFormat="{}{0:T} 🠚 {1:T}">
+                                <Binding Path="StartTime" />
+                                <Binding Path="EndTime" />
+                            </MultiBinding>
+                        </TextBox.Text>
+                    </TextBlock>
+                    <TextBlock Grid.Column="4" Text="{Binding Duration, Mode=OneWay}" />
+                </Grid>
+            </DataTemplate>
+        </ListBox.ItemTemplate>
+    </ListBox>
+
+</UserControl>
