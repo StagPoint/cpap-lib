@@ -25,7 +25,7 @@
                 </ui:NavigationViewItem>
                 <ui:NavigationViewItem Content="Import">
                     <ui:NavigationViewItem.IconSource>
-                            <ui:FontIconSource Glyph="&#xE11C;" FontFamily="Segoe MDL2 Assets"/>
+                            <ui:FontIconSource Glyph="&#xE8E5;" FontFamily="Segoe MDL2 Assets"/>
                     </ui:NavigationViewItem.IconSource>
                     <ui:NavigationViewItem.MenuItems>
                         <ui:NavigationViewItem Content="CPAP Data" Tapped="Import_CPAP">

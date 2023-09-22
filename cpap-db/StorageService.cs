@@ -171,6 +171,23 @@ namespace cpap_db
 		#endregion 
 		
 		#region Public functions
+		
+		public DailyReport LoadDailyReport( DateTime date )
+		{
+			var day = SelectById<DailyReport>( date );
+			if( day == null )
+			{
+				return null;
+			}
+			
+			day.EventCounts = SelectByForeignKey<ReportedEventCounts>( date ).First();
+			day.MachineInfo = SelectByForeignKey<MachineIdentification>( date ).First();
+			day.Fault       = SelectByForeignKey<FaultInfo>( date ).First();
+			day.Settings    = SelectByForeignKey<MachineSettings>( date ).First();
+			day.Statistics  = SelectByForeignKey<SignalStatistics>( date );
+
+			return day;
+		}
 
 		public void SaveDailyReport( DailyReport day )
 		{
@@ -184,7 +201,7 @@ namespace cpap_db
 
 			Insert( day, dayID, -1 );
 			
-			Insert( day.EventSummary, foreignKeyValue: dayID );
+			Insert( day.EventCounts, foreignKeyValue: dayID );
 			Insert( day.MachineInfo,  foreignKeyValue: dayID );
 			Insert( day.Fault,        foreignKeyValue: dayID );
 
@@ -214,6 +231,18 @@ namespace cpap_db
 					Insert( signal, foreignKeyValue: sessionID );
 				}
 			}
+		}
+
+		public T SelectById<T>( object primaryKeyValue ) where T : class, new()
+		{
+			var mapping = GetMapping<T>();
+			return mapping.SelectByPrimaryKey<T>( Connection, primaryKeyValue );
+		}
+
+		public List<T> SelectByForeignKey<T>( object foreignKeyValue ) where T : class, new()
+		{
+			var mapping = GetMapping<T>();
+			return mapping.SelectByForeignKey<T>( Connection, foreignKeyValue );
 		}
 
 		public int Insert<T>( T record, object primaryKeyValue = null, object foreignKeyValue = null ) where T : class

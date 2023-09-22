@@ -359,7 +359,7 @@ public class DatabaseMapping
 			firstColumn = false;
 		}
 
-		builder.Append( $"\nFROM \n\t[{TableName}];" );
+		builder.Append( $"\nFROM \n\t[{TableName}]" );
 
 		return builder.ToString();
 	}

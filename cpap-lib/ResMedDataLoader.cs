@@ -577,7 +577,7 @@ namespace cpaplib
 			}
 
 			// "Time spent in CSR" is given as a percentage of the total time 
-			day.EventSummary.CSR = totalTimeInCSR / day.UsageTime.TotalSeconds;
+			day.EventCounts.CSR = totalTimeInCSR / day.UsageTime.TotalSeconds;
 		}
 		
 		private void LoadEventsAndAnnotations( string logFolder, DailyReport day )
@@ -616,16 +616,16 @@ namespace cpaplib
 		
 		private void CalculateEventSummary( DailyReport day )
 		{
-			day.EventSummary.ObstructiveApneaCount  = day.Events.Count( x => x.Type == EventType.ObstructiveApnea );
-			day.EventSummary.HypopneaCount          = day.Events.Count( x => x.Type == EventType.Hypopnea );
-			day.EventSummary.UnclassifiedApneaCount = day.Events.Count( x => x.Type == EventType.Unclassified );
-			day.EventSummary.ClearAirwayCount       = day.Events.Count( x => x.Type == EventType.ClearAirway );
-			day.EventSummary.RespiratoryEffortCount = day.Events.Count( x => x.Type == EventType.RERA );
-			day.EventSummary.FlowLimitCount         = day.Events.Count( x => x.Type == EventType.FlowLimitation );
-			day.EventSummary.FlowLimitIndex         = day.EventSummary.FlowLimitCount / day.UsageTime.TotalHours;
+			day.EventCounts.ObstructiveApneaCount  = day.Events.Count( x => x.Type == EventType.ObstructiveApnea );
+			day.EventCounts.HypopneaCount          = day.Events.Count( x => x.Type == EventType.Hypopnea );
+			day.EventCounts.UnclassifiedApneaCount = day.Events.Count( x => x.Type == EventType.Unclassified );
+			day.EventCounts.ClearAirwayCount       = day.Events.Count( x => x.Type == EventType.ClearAirway );
+			day.EventCounts.RespiratoryEffortCount = day.Events.Count( x => x.Type == EventType.RERA );
+			day.EventCounts.FlowLimitCount         = day.Events.Count( x => x.Type == EventType.FlowLimitation );
+			day.EventCounts.FlowLimitIndex         = day.EventCounts.FlowLimitCount / day.UsageTime.TotalHours;
 
-			day.EventSummary.TotalTimeInApnea      = TimeSpan.FromSeconds( day.Events.Sum( x => x.Duration.TotalSeconds ) );
-			day.EventSummary.TotalTimeOfLargeLeaks = TimeSpan.FromSeconds( day.Events.Where( x => x.Type == EventType.LargeLeak ).Sum( x => x.Duration.TotalSeconds ) );
+			day.EventCounts.TotalTimeInApnea      = TimeSpan.FromSeconds( day.Events.Sum( x => x.Duration.TotalSeconds ) );
+			day.EventCounts.TotalTimeOfLargeLeaks = TimeSpan.FromSeconds( day.Events.Where( x => x.Type == EventType.LargeLeak ).Sum( x => x.Duration.TotalSeconds ) );
 		}
 
 		private List<DailyReport> LoadIndexAndSettings( string filename, DateTime? minDate, DateTime? maxDate )
@@ -739,7 +739,7 @@ namespace cpaplib
 			day.ReportDate  = new DateTime( 1970, 1, 1 ).AddDays( data[ "Date" ] ).AddHours( 12 );
 
 			day.Settings = ReadMachineSettings( data );
-			day.EventSummary = ReadEventSummary( data );
+			day.EventCounts = ReadEventSummary( data );
 
 			day.MaskEvents = (int)(data[ "MaskEvents" ] / 2);
 			day.UsageTime  = TimeSpan.FromMinutes( data[ "Duration" ] );

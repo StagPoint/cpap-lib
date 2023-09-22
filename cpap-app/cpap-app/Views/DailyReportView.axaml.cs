@@ -19,14 +19,18 @@ public partial class DailyReportView : UserControl
 	public DailyReportView()
 	{
 		InitializeComponent();
+		TabFrame.Content = new DailyDetailsView();
+	}
 
+	protected override void OnLoaded( RoutedEventArgs e )
+	{
+		base.OnLoaded( e );
+		
 		using( var store = StorageService.Connect() )
 		{
 			var latestDate = store.GetMostRecentDay();
 			DateSelector.SelectedDate = latestDate;
 		}
-
-		TabFrame.Content = new DailyDetailsView();
 	}
 
 	private void DetailTypes_OnSelectionChanged( object? sender, SelectionChangedEventArgs e )
@@ -56,6 +60,33 @@ public partial class DailyReportView : UserControl
 	
 		var page = Activator.CreateInstance( pageType );
 		TabFrame.Content = page;
+
+		if( page is StyledElement view )
+		{
+			view.DataContext = this.DataContext;
+		}
+	}
+	
+	private void DateSelector_OnSelectedDateChanged( object? sender, SelectionChangedEventArgs e )
+	{
+		using( var store = StorageService.Connect() )
+		{
+			// TODO: Implement visual indication of "no data available" to match previous viewer codebase
+			var day = store.LoadDailyReport( DateSelector.SelectedDate ?? store.GetMostRecentDay() );
+
+			DataContext = day;
+			
+			// I don't know why setting DataContext doesn't cascade down in Avalonia like it did in WPF, 
+			// but apparently I need to handle that manually.
+			if( TabFrame.Content is StyledElement uc )
+			{
+				uc.DataContext = day;
+			}
+		}
+	}
+	private void BtnLastDay_OnClick( object? sender, RoutedEventArgs e )
+	{
+		DateSelector.SelectedDate = DateTime.Today.AddDays( -1 );
 	}
 }
 

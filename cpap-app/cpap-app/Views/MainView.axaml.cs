@@ -18,7 +18,7 @@ public partial class MainView : UserControl
 	{
 		InitializeComponent();
 
-		NavView.Content = new HomeView() { DataContext = new HomeViewModel( DateTime.Today ) };
+		NavView.Content = new HomeView();
 	}
 
 	private void NavView_OnSelectionChanged( object? sender, NavigationViewSelectionChangedEventArgs e )

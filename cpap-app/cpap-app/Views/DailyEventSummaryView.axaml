@@ -1,0 +1,62 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:cpaplib="clr-namespace:cpaplib;assembly=cpap-lib"
+             xmlns:converters="clr-namespace:cpap_app.Converters"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="cpap_app.Views.DailyEventSummaryView"
+             x:DataType="cpaplib:ReportedEventCounts">
+    <Design.DataContext>
+        <cpaplib:DailyReport />
+    </Design.DataContext>
+    <UserControl.Resources>
+        <converters:FormattedTimespanConverter x:Key="FormattedTimeSpan" />
+    </UserControl.Resources>
+    <Grid Name="gridEventSummary"
+          ColumnDefinitions="Auto,20,Auto,20,Auto,*"
+          RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,10,Auto">
+        <!--<TextBlock Grid.Column="0" Grid.Row="0" Text="Event" HorizontalAlignment="Left" Theme="{StaticResource BodyStrongTextBlockStyle}"/>-->
+        <TextBlock Grid.Column="2" Grid.Row="0" Text="Index" HorizontalAlignment="Center" Theme="{StaticResource BodyStrongTextBlockStyle}"/>
+        <TextBlock Grid.Column="4" Grid.Row="0" Text="Count" HorizontalAlignment="Center" Theme="{StaticResource BodyStrongTextBlockStyle}"/>
+        <TextBlock Grid.Column="0" Grid.Row="1" Text="Apnea-Hypopnea Index (AHI)" />
+        <TextBlock Grid.Column="2" Grid.Row="1" Text="{Binding AHI, Mode=OneWay, StringFormat={}{0:N1}}"
+                   HorizontalAlignment="Center" />
+        <TextBlock Grid.Column="0" Grid.Row="2" Text="Obstructive Apnea" Padding="10 0" />
+        <TextBlock Grid.Column="2" Grid.Row="2" Text="{Binding OAI, Mode=OneWay, StringFormat={}{0:N1}}"
+                   HorizontalAlignment="Center" />
+        <TextBlock Grid.Column="4" Grid.Row="2" Text="{Binding ObstructiveApneaCount, Mode=OneWay}"
+                   HorizontalAlignment="Center" />
+        <TextBlock Grid.Column="0" Grid.Row="3" Text="Clear Airway" Padding="10 0" />
+        <TextBlock Grid.Column="2" Grid.Row="3" Text="{Binding CAI, Mode=OneWay, StringFormat={}{0:N1}}"
+                   HorizontalAlignment="Center" />
+        <TextBlock Grid.Column="4" Grid.Row="3" Text="{Binding ClearAirwayCount, Mode=OneWay}"
+                   HorizontalAlignment="Center" />
+        <TextBlock Grid.Column="0" Grid.Row="4" Text="Unclassified" Padding="10 0" />
+        <TextBlock Grid.Column="2" Grid.Row="4" Text="{Binding UAI, Mode=OneWay, StringFormat={}{0:N1}}"
+                   HorizontalAlignment="Center" />
+        <TextBlock Grid.Column="4" Grid.Row="4" Text="{Binding UnclassifiedApneaCount, Mode=OneWay}"
+                   HorizontalAlignment="Center" />
+        <TextBlock Grid.Column="0" Grid.Row="5" Text="Hypopnea" Padding="10 0" />
+        <TextBlock Grid.Column="2" Grid.Row="5" Text="{Binding HI, Mode=OneWay, StringFormat={}{0:N1}}"
+                   HorizontalAlignment="Center" />
+        <TextBlock Grid.Column="4" Grid.Row="5" Text="{Binding HypopneaCount, Mode=OneWay}"
+                   HorizontalAlignment="Center" />
+        <TextBlock Grid.Column="0" Grid.Row="6" Text="Flow Limit" />
+        <TextBlock Grid.Column="2" Grid.Row="6" Text="{Binding FlowLimitIndex, Mode=OneWay, StringFormat={}{0:N1}}"
+                   HorizontalAlignment="Center" />
+        <TextBlock Grid.Column="4" Grid.Row="6" Text="{Binding FlowLimitCount, Mode=OneWay}"
+                   HorizontalAlignment="Center" />
+        <TextBlock Grid.Column="0" Grid.Row="7" Text="RERA" />
+        <TextBlock Grid.Column="2" Grid.Row="7" Text="{Binding RIN, Mode=OneWay, StringFormat={}{0:N1}}"
+                   HorizontalAlignment="Center" />
+        <TextBlock Grid.Column="4" Grid.Row="7" Text="{Binding RespiratoryEffortCount, Mode=OneWay}"
+                   HorizontalAlignment="Center" />
+        <TextBlock Grid.Column="0" Grid.Row="8" Text="Cheyne-Stokes"
+                   ToolTip.Tip="% Time spent in Cheyne-Stokes Respiration" />
+        <TextBlock Grid.Column="2" Grid.Row="8" HorizontalAlignment="Center"
+                   Text="{Binding CSR, Mode=OneWay, StringFormat={}{0:N2} %}" />
+        <TextBlock Grid.Column="0" Grid.Row="10" Grid.ColumnSpan="4" FontWeight="DemiBold"
+                   Text="{Binding TotalTimeInApnea, Mode=OneWay, StringFormat=Time spent in apnea: {0}, Converter={StaticResource FormattedTimeSpan}, ConverterParameter=Short}" />
+    </Grid>
+</UserControl>
