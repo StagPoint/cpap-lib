@@ -7,7 +7,8 @@
              xmlns:views="clr-namespace:cpap_app.Views"
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="600"
              x:Class="cpap_app.Views.DailyDetailsView"
-             x:DataType="cpaplib:DailyReport">
+             x:DataType="cpaplib:DailyReport"
+             >
     <Design.DataContext>
         <cpaplib:DailyReport />
     </Design.DataContext>
@@ -59,7 +60,8 @@
                 IsExpanded="True"
                 VerticalAlignment="Top" 
                 Margin="0 10 0 0"
-                Padding="10">
+                Padding="10"
+                >
                 <Expander.Header>
                     <StackPanel Orientation="Horizontal">
                         <controls:FontIcon Glyph="&#xE7C1;" FontSize="24" FontFamily="{DynamicResource SymbolThemeFontFamily}" FontWeight="Normal" FontStyle="Normal" Margin="0 0 10 0"/>

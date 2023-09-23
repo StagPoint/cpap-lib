@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
@@ -184,9 +185,15 @@ namespace cpap_db
 			day.Fault       = SelectByForeignKey<FaultInfo>( date ).First();
 			day.Statistics  = SelectByForeignKey<SignalStatistics>( date );
 			
-			day.Settings    = SelectByForeignKey<MachineSettings>( date ).First();
 			day.EventCounts = SelectByForeignKey<ReportedEventCounts>( date ).First();
 			day.Events      = SelectByForeignKey<ReportedEvent>( date );
+
+			day.Settings         = SelectByForeignKey<MachineSettings>( date, out int settingsID );
+			day.Settings.AutoSet = SelectByForeignKey<AutoSetSettings>( settingsID ).First();
+			day.Settings.CPAP    = SelectByForeignKey<CpapSettings>( settingsID ).First();
+			day.Settings.Avap    = SelectByForeignKey<AvapSettings>( settingsID ).First();
+			day.Settings.ASV     = SelectByForeignKey<AsvSettings>( settingsID ).First();
+			day.Settings.EPR     = SelectByForeignKey<EprSettings>( settingsID ).First();
 
 			var sessionKeys = new List<int>();
 			day.Sessions = SelectByForeignKey<Session, int>( date, sessionKeys );
@@ -265,6 +272,18 @@ namespace cpap_db
 			return mapping.SelectByPrimaryKey<T>( Connection, primaryKeyValue );
 		}
 
+		public T SelectByForeignKey<T>( object foreignKeyValue, out int primaryKeyValue ) where T : class, new()
+		{
+			var mapping = GetMapping<T>();
+
+			var keys    = new List<int>();
+			var records = mapping.SelectByForeignKey<T, int>( Connection, foreignKeyValue, keys );
+
+			primaryKeyValue = keys.First();
+
+			return records.First();
+		}
+		
 		public List<T> SelectByForeignKey<T>( object foreignKeyValue ) where T : class, new()
 		{
 			var mapping = GetMapping<T>();

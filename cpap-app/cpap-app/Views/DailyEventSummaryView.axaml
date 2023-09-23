@@ -17,7 +17,7 @@
           ColumnDefinitions="Auto,20,Auto,20,Auto,*"
           RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,10,Auto">
         <!--<TextBlock Grid.Column="0" Grid.Row="0" Text="Event" HorizontalAlignment="Left" Theme="{StaticResource BodyStrongTextBlockStyle}"/>-->
-        <TextBlock Grid.Column="2" Grid.Row="0" Text="Index" HorizontalAlignment="Center" Theme="{StaticResource BodyStrongTextBlockStyle}"/>
+        <TextBlock Grid.Column="2" Grid.Row="0" Text="#/Hour" HorizontalAlignment="Center" Theme="{StaticResource BodyStrongTextBlockStyle}"/>
         <TextBlock Grid.Column="4" Grid.Row="0" Text="Count" HorizontalAlignment="Center" Theme="{StaticResource BodyStrongTextBlockStyle}"/>
         <TextBlock Grid.Column="0" Grid.Row="1" Text="Apnea-Hypopnea Index (AHI)" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" />
         <TextBlock Grid.Column="2" Grid.Row="1" Text="{Binding AHI, Mode=OneWay, StringFormat={}{0:N2}}"

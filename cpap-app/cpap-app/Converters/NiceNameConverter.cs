@@ -11,7 +11,7 @@ public class NiceNameConverter : IValueConverter
 {
 	public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
 	{
-		return NiceNames.Format( value as string ?? string.Empty );
+		return value == null ? string.Empty : NiceNames.Format( value.ToString()! );
 	}
 
 	public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)

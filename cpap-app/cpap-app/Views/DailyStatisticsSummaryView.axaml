@@ -12,13 +12,14 @@
     <Grid Grid.IsSharedSizeScope="True" RowDefinitions="Auto,*">
         <Grid.Styles>
             <Style Selector="TextBlock">
-                <Setter Property="Padding" Value="0 0 10 0"></Setter>
+                <!-- <Setter Property="FontSize" Value="14"/> -->
+                <Setter Property="Padding" Value="2 0 8 2" />
             </Style>
         </Grid.Styles>
         <Grid Grid.Row="0" HorizontalAlignment="Stretch" RowDefinitions="Auto">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" SharedSizeGroup="C0" />
-                <ColumnDefinition Width="0" SharedSizeGroup="C1" />
+                <ColumnDefinition Width="Auto" SharedSizeGroup="C1" />
                 <ColumnDefinition Width="Auto" SharedSizeGroup="C2" />
                 <ColumnDefinition Width="Auto" SharedSizeGroup="C3" />
                 <ColumnDefinition Width="Auto" SharedSizeGroup="C4" />
