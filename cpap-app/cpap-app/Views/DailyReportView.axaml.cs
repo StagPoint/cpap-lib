@@ -20,6 +20,7 @@ public partial class DailyReportView : UserControl
 	public DailyReportView()
 	{
 		InitializeComponent();
+		
 		TabFrame.Content = new DailyDetailsView();
 	}
 

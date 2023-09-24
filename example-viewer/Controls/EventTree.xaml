@@ -21,7 +21,7 @@
             x:Name="tvwEvents"
             VerticalAlignment="Top"
             HorizontalAlignment="Stretch"
-            ItemsSource="{Binding Path=Items}" d:DataContext="{viewModels:EventViewModel}" Margin="0 10">
+            ItemsSource="{Binding Path=Items}" d:DataContext="{viewModels:DailyEventsViewModel}" Margin="0 10">
             <TreeView.ItemTemplate>
                 <HierarchicalDataTemplate ItemsSource="{Binding Events}">
                     <TextBlock FontWeight="Bold">

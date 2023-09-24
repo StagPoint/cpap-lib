@@ -8,10 +8,7 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="700"
              x:Class="cpap_app.Views.DailyReportView"
              x:DataType="cpaplib:DailyReport">
-    <Design.PreviewWith>
-        <Border Padding="20">
-        </Border>
-    </Design.PreviewWith>   <Grid>
+    <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition MinWidth="350" Width="375" />
             <ColumnDefinition Width="5" />
@@ -58,6 +55,7 @@
                 <TabItem Header="Events" Tag="DailyEvents" FontSize="18" Padding="0" />
                 <TabItem Header="SpO2" Tag="DailySpO2" FontSize="18" Padding="0" />
                 <TabItem Header="Notes" Tag="DailyNotes" FontSize="18" Padding="0" />
+                <TabItem Header="Sync" Tag="SyncFitbit" FontSize="18" Padding="0" />
             </TabStrip>
             <ui:Frame Name="TabFrame" Margin="0 10 0 1"
                       Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}"

@@ -7,11 +7,11 @@ using cpaplib;
 
 namespace cpapviewer.ViewModels;
 
-public class EventViewModel
+public class DailyEventsViewModel
 {
 	public List<EventTypeSummary> Items { get; } = new();
 	
-	public EventViewModel( DailyReport day )
+	public DailyEventsViewModel( DailyReport day )
 	{
 		var events = day.Events;
 		var types  = events.Select( x => x.Type ).Distinct();

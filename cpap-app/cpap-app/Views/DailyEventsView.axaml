@@ -2,7 +2,80 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="cpap_app.Views.DailyEventsView">
-    Daily Events
+             xmlns:viewModels="clr-namespace:cpap_app.ViewModels"
+             xmlns:converters="clr-namespace:cpap_app.Converters"
+             xmlns:cpaplib="clr-namespace:cpaplib;assembly=cpap-lib"
+             xmlns:controls="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+             xmlns:views="clr-namespace:cpap_app.Views"
+             mc:Ignorable="d" d:DesignWidth="350" d:DesignHeight="700"
+             x:Class="cpap_app.Views.DailyEventsView"
+             x:DataType="viewModels:DailyEventsViewModel">
+    <UserControl.Resources>
+        <converters:FormattedTimespanConverter x:Key="FormattedTimeSpan" />
+        <converters:NiceNameConverter x:Key="NiceNameConverter" />
+    </UserControl.Resources>
+    <ScrollViewer>
+        <StackPanel>
+            <Expander
+                ExpandDirection="Down"
+                IsExpanded="True"
+                VerticalAlignment="Top"
+                Margin="0 10 0 0"
+                Padding="10">
+                <Expander.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <controls:FontIcon Glyph="&#xE7C1;" FontSize="24"
+                                           FontFamily="{DynamicResource SymbolThemeFontFamily}" FontWeight="Normal"
+                                           FontStyle="Normal" Margin="0 0 10 0" />
+                        <TextBlock Text="Reported Events" FontSize="16"
+                                   Theme="{StaticResource BodyStrongTextBlockStyle}" />
+                    </StackPanel>
+                </Expander.Header>
+                <views:DailyEventSummaryView DataContext="{Binding Day.EventCounts}" />
+            </Expander>
+            <Expander
+                ExpandDirection="Down"
+                IsExpanded="True"
+                VerticalAlignment="Top"
+                Margin="0 10 0 0"
+                Padding="0">
+                <Expander.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <controls:FontIcon Glyph="&#xEC92;" FontSize="24"
+                                           FontFamily="{DynamicResource SymbolThemeFontFamily}" FontWeight="Normal"
+                                           FontStyle="Normal" Margin="0 0 10 0" />
+                        <TextBlock Text="Event Times" FontSize="16"
+                                   Theme="{StaticResource BodyStrongTextBlockStyle}" />
+                    </StackPanel>
+                </Expander.Header>
+                <TreeView Name="tvwEvents" ItemsSource="{Binding Items}">
+                    <TreeView.Styles>
+                        <Style Selector="TreeViewItem">
+                            <Setter Property="Padding" Value="0"/>
+                            <Setter Property="IsExpanded" Value="True" />
+                            <Style Selector="^ ContentPresenter">
+                                <Setter Property="MinHeight" Value="0" />
+                            </Style>
+                        </Style>   
+                        <Style Selector="TreeViewItem /template/ StackPanel">
+                            <Setter Property="Spacing" Value="-3"/>
+                            <Setter Property="Margin" Value="0"/>
+                        </Style>
+                    </TreeView.Styles>
+                    <TreeView.DataTemplates>
+                        <TreeDataTemplate DataType="viewModels:EventTypeSummary" ItemsSource="{Binding Events}">
+                            <TextBlock Text="{Binding Type, Mode=OneWay, Converter={StaticResource NiceNameConverter}}" />
+                        </TreeDataTemplate>
+                        <TreeDataTemplate DataType="cpaplib:ReportedEvent">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{Binding StartTime, Mode=OneWay, StringFormat={}{0:T}}" Width="100" />
+                                <TextBlock
+                                    Text="{Binding Duration, Mode=OneWay, Converter={StaticResource FormattedTimeSpan}, ConverterParameter=Short.Empty}" />
+                            </StackPanel>
+                        </TreeDataTemplate>
+                    </TreeView.DataTemplates>
+                </TreeView>
+            </Expander>
+        </StackPanel>
+    </ScrollViewer>
 </UserControl>

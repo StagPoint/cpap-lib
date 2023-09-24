@@ -12,7 +12,7 @@
     <Design.DataContext>
         <cpaplib:DailyReport />
     </Design.DataContext>
-    <ScrollViewer BorderBrush="Red" BorderThickness="4">
+    <ScrollViewer>
         <StackPanel>
             <StackPanel DataContext="{Binding MachineInfo}" Margin="4 8 0 0">
                 <TextBlock Theme="{StaticResource BodyStrongTextBlockStyle}">

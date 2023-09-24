@@ -17,8 +17,8 @@
                            IsSettingsVisible="True"
                            SelectionChanged="NavView_OnSelectionChanged">
             <ui:NavigationView.MenuItems>
-                <ui:NavigationViewItem Content="Home" Tag="Home" IconSource="Home" />
-                <ui:NavigationViewItem Content="Daily View" Tag="DailyReport">
+                <ui:NavigationViewItem Name="navHome" Content="Home" Tag="Home" IconSource="Home" />
+                <ui:NavigationViewItem Name="navDailyReport" Content="Daily View" Tag="DailyReport">
                     <ui:NavigationViewItem.IconSource>
                         <ui:FontIconSource Glyph="&#xE9D2;" FontFamily="Segoe MDL2 Assets"/>
                     </ui:NavigationViewItem.IconSource>
@@ -28,29 +28,29 @@
                             <ui:FontIconSource Glyph="&#xE8E5;" FontFamily="Segoe MDL2 Assets"/>
                     </ui:NavigationViewItem.IconSource>
                     <ui:NavigationViewItem.MenuItems>
-                        <ui:NavigationViewItem Content="CPAP Data" Tapped="Import_CPAP">
+                        <ui:NavigationViewItem Name="btnImportCPAP" Content="CPAP Data">
                             <ui:NavigationViewItem.IconSource>
                                 <ui:FontIconSource Glyph="&#xE7F1;" FontFamily="Segoe MDL2 Assets"/>
                             </ui:NavigationViewItem.IconSource>
                         </ui:NavigationViewItem>
-                        <ui:NavigationViewItem Content="Pulse Oximeter" Tapped="Import_SpO2">
+                        <ui:NavigationViewItem Content="Pulse Oximeter">
                             <ui:NavigationViewItem.IconSource>
                                 <ui:FontIconSource Glyph="&#xE8EA;" FontFamily="Segoe MDL2 Assets"/>
                             </ui:NavigationViewItem.IconSource>
                         </ui:NavigationViewItem>
                     </ui:NavigationViewItem.MenuItems>
                 </ui:NavigationViewItem>
-                <ui:NavigationViewItem Content="History" Tag="History">
+                <ui:NavigationViewItem Name="navHistory" Content="History" Tag="History">
                     <ui:NavigationViewItem.IconSource>
                         <ui:FontIconSource Glyph="&#xE81C;" FontFamily="Segoe MDL2 Assets"/>
                     </ui:NavigationViewItem.IconSource>
                 </ui:NavigationViewItem>
-                <ui:NavigationViewItem Content="Statistics" Tag="Statistics">
+                <ui:NavigationViewItem Name="navStatistics" Content="Statistics" Tag="Statistics">
                     <ui:NavigationViewItem.IconSource>
                         <ui:FontIconSource Glyph="&#xE8EF;" FontFamily="Segoe MDL2 Assets"/>
                     </ui:NavigationViewItem.IconSource>
                 </ui:NavigationViewItem>
-                <ui:NavigationViewItem Content="Reports" Tag="Reports">
+                <ui:NavigationViewItem Name="navReports" Content="Reports" Tag="Reports">
                     <ui:NavigationViewItem.IconSource>
                         <ui:FontIconSource Glyph="&#xE9F9;" FontFamily="Segoe MDL2 Assets"/>
                     </ui:NavigationViewItem.IconSource>
@@ -58,8 +58,8 @@
             </ui:NavigationView.MenuItems>
 
             <ui:NavigationView.FooterMenuItems>
-                <ui:NavigationViewItem Content="Profile" Tag="Profile" IconSource="Contact" />
-                <ui:NavigationViewItem Content="Backup" IconSource="SaveAs" />
+                <ui:NavigationViewItem Name="navProfile" Content="Profile" Tag="Profile" IconSource="Contact" IsEnabled="False" />
+                <ui:NavigationViewItem Name="navBackup" Content="Backup" IconSource="SaveAs" IsEnabled="False" />
             </ui:NavigationView.FooterMenuItems>
 
         </ui:NavigationView>

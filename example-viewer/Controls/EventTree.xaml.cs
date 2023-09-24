@@ -59,7 +59,7 @@ public partial class EventTree : UserControl
 		{
 			if( DataContext is DailyReport day )
 			{
-				tvwEvents.DataContext = new EventViewModel( day );
+				tvwEvents.DataContext = new DailyEventsViewModel( day );
 			}
 		}
 	}

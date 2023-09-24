@@ -6,9 +6,9 @@ using System.Windows.Navigation;
 
 using cpaplib;
 
-using Microsoft.Win32;
-
 using ModernWpf;
+
+using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
 
 namespace cpapviewer;
 
