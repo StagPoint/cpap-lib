@@ -8,7 +8,7 @@
     <Grid>
         <ui:NavigationView x:Name="NavView"
                            PaneDisplayMode="Left"
-                           OpenPaneLength="250"
+                           OpenPaneLength="275"
                            IsBackButtonVisible="False"
                            IsBackEnabled="False"
                            Header=""
@@ -16,6 +16,11 @@
                            PaneTitle="Navigation"
                            IsSettingsVisible="True"
                            SelectionChanged="NavView_OnSelectionChanged">
+            <ui:NavigationView.Styles>
+                <Style Selector="ui|NavigationView /template/ TextBlock#PaneTitleTextBlock">
+                    <Setter Property="Height" Value="20" />
+                </Style>
+            </ui:NavigationView.Styles>
             <ui:NavigationView.MenuItems>
                 <ui:NavigationViewItem Name="navHome" Content="Home" Tag="Home" IconSource="Home" />
                 <ui:NavigationViewItem Name="navDailyReport" Content="Daily View" Tag="DailyReport">

@@ -35,13 +35,13 @@ public partial class SignalChart
 
 	private static Dictionary<string, List<SignalChart>> _chartGroups = new();
 
-	private CustomChartStyle _chartStyle         = null;
-	private Tooltip          _tooltip            = null;
-	private VLine            _mouseTrackLine     = null;
-	private MarkerPlot       _currentValueMarker = null;
-	private DailyReport      _day                = null;
-	private List<ReportedEvent>  _events             = new();
-	private bool             _hasDataAvailable   = false;
+	private CustomChartStyle    _chartStyle         = null;
+	private Tooltip             _tooltip            = null;
+	private VLine               _mouseTrackLine     = null;
+	private MarkerPlot          _currentValueMarker = null;
+	private DailyReport         _day                = null;
+	private List<ReportedEvent> _events             = new();
+	private bool                _hasDataAvailable   = false;
 
 	public EventType[] FlagTypes
 	{
@@ -600,6 +600,5 @@ public partial class SignalChart
 
 		return (float)Math.Ceiling( formatted.Width );
 	}
-
 }
 

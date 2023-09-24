@@ -5,7 +5,7 @@
              xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
              xmlns:views="clr-namespace:cpap_app.Views"
              xmlns:cpaplib="clr-namespace:cpaplib;assembly=cpap-lib"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="700"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="700"
              x:Class="cpap_app.Views.DailyReportView"
              x:DataType="cpaplib:DailyReport">
     <Grid>
@@ -62,5 +62,6 @@
                       Foreground="{DynamicResource TextFillColorPrimaryBrush}">
             </ui:Frame>
         </DockPanel>
+        <views:SignalChartContainer Grid.Column="2" />
     </Grid>
 </UserControl>

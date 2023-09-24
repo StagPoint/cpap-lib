@@ -25,6 +25,8 @@
         <entry key="cpap-app/cpap-app/Views/ProfileView.axaml" value="cpap-app/cpap-app.Desktop/cpap-app.Desktop.csproj" />
         <entry key="cpap-app/cpap-app/Views/ReportedEventsView.axaml" value="cpap-app/cpap-app.Desktop/cpap-app.Desktop.csproj" />
         <entry key="cpap-app/cpap-app/Views/ReportsView.axaml" value="cpap-app/cpap-app.Desktop/cpap-app.Desktop.csproj" />
+        <entry key="cpap-app/cpap-app/Views/SignalChart.axaml" value="cpap-app/cpap-app.Desktop/cpap-app.Desktop.csproj" />
+        <entry key="cpap-app/cpap-app/Views/SignalChartContainer.axaml" value="cpap-app/cpap-app.Desktop/cpap-app.Desktop.csproj" />
         <entry key="cpap-app/cpap-app/Views/StatisticView.axaml" value="cpap-app/cpap-app.Desktop/cpap-app.Desktop.csproj" />
         <entry key="cpap-app/cpap-app/Views/StatisticsView.axaml" value="cpap-app/cpap-app.Desktop/cpap-app.Desktop.csproj" />
       </map>
