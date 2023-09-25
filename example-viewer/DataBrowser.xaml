@@ -207,9 +207,9 @@
                       VerticalScrollBarVisibility="Visible" VerticalContentAlignment="Top" VerticalAlignment="Stretch">
             <StackPanel Visibility="Visible" Name="pnlCharts" Orientation="Vertical"
                         VerticalAlignment="Stretch">
-                <controls:SignalChart SignalName="Flow Rate" RedLine="0" Title="Flow Rate"
+                <controls:SignalChart_WPF SignalName="Flow Rate" RedLine="0" Title="Flow Rate"
                                       TitleStyle="{DynamicResource SubtitleTextBlockStyle}">
-                    <controls:SignalChart.FlagTypes>
+                    <controls:SignalChart_WPF.FlagTypes>
                         <x:Array Type="cpap:EventType">
                             <cpap:EventType>LargeLeak</cpap:EventType>
                             <cpap:EventType>ObstructiveApnea</cpap:EventType>
@@ -220,48 +220,48 @@
                             <cpap:EventType>RERA</cpap:EventType>
                             <cpap:EventType>FlowLimitation</cpap:EventType>
                         </x:Array>
-                    </controls:SignalChart.FlagTypes>
-                </controls:SignalChart>
-                <controls:SignalChart SignalName="Mask Pressure" Title="Mask Pressure"
+                    </controls:SignalChart_WPF.FlagTypes>
+                </controls:SignalChart_WPF>
+                <controls:SignalChart_WPF SignalName="Mask Pressure" Title="Mask Pressure"
                                       TitleStyle="{DynamicResource SubtitleTextBlockStyle}" />
-                <controls:SignalChart SignalName="Tidal Volume" Title="Tidal Volume"
+                <controls:SignalChart_WPF SignalName="Tidal Volume" Title="Tidal Volume"
                                       TitleStyle="{DynamicResource SubtitleTextBlockStyle}" />
-                <controls:SignalChart SignalName="Minute Vent" Title="Minute Vent"
+                <controls:SignalChart_WPF SignalName="Minute Vent" Title="Minute Vent"
                                       TitleStyle="{DynamicResource SubtitleTextBlockStyle}">
-                    <controls:SignalChart.FlagTypes>
+                    <controls:SignalChart_WPF.FlagTypes>
                         <x:Array Type="cpap:EventType">
                             <cpap:EventType>ObstructiveApnea</cpap:EventType>
                             <cpap:EventType>Hypopnea</cpap:EventType>
                             <cpap:EventType>ClearAirway</cpap:EventType>
                             <cpap:EventType>RERA</cpap:EventType>
                         </x:Array>
-                    </controls:SignalChart.FlagTypes>
-                </controls:SignalChart>
-                <controls:SignalChart SignalName="Flow Limit" Title="Flow Limit" RedLine="0.2"
+                    </controls:SignalChart_WPF.FlagTypes>
+                </controls:SignalChart_WPF>
+                <controls:SignalChart_WPF SignalName="Flow Limit" Title="Flow Limit" RedLine="0.2"
                                       TitleStyle="{DynamicResource SubtitleTextBlockStyle}">
-                    <controls:SignalChart.FlagTypes>
+                    <controls:SignalChart_WPF.FlagTypes>
                         <x:Array Type="cpap:EventType">
                             <cpap:EventType>ObstructiveApnea</cpap:EventType>
                             <cpap:EventType>RERA</cpap:EventType>
                             <cpap:EventType>FlowLimitation</cpap:EventType>
                         </x:Array>
-                    </controls:SignalChart.FlagTypes>
-                </controls:SignalChart>
-                <controls:SignalChart SignalName="Pressure" Title="Pressure" FillBelow="False"
+                    </controls:SignalChart_WPF.FlagTypes>
+                </controls:SignalChart_WPF>
+                <controls:SignalChart_WPF SignalName="Pressure" Title="Pressure" FillBelow="False"
                                       TitleStyle="{DynamicResource SubtitleTextBlockStyle}" />
-                <controls:SignalChart SignalName="Leak Rate" Title="Leak Rate" RedLine="25"
+                <controls:SignalChart_WPF SignalName="Leak Rate" Title="Leak Rate" RedLine="25"
                                       TitleStyle="{DynamicResource SubtitleTextBlockStyle}">
-                    <controls:SignalChart.FlagTypes>
+                    <controls:SignalChart_WPF.FlagTypes>
                         <x:Array Type="cpap:EventType">
                             <cpap:EventType>LargeLeak</cpap:EventType>
                         </x:Array>
-                    </controls:SignalChart.FlagTypes>
-                </controls:SignalChart>
-                <controls:SignalChart SignalName="Respiration Rate" Title="Respiration Rate"
+                    </controls:SignalChart_WPF.FlagTypes>
+                </controls:SignalChart_WPF>
+                <controls:SignalChart_WPF SignalName="Respiration Rate" Title="Respiration Rate"
                                       TitleStyle="{DynamicResource SubtitleTextBlockStyle}" />
-                <controls:SignalChart SignalName="SpO2" Title="SpO2" RedLine="88" PlotColor="DodgerBlue"
+                <controls:SignalChart_WPF SignalName="SpO2" Title="SpO2" RedLine="88" PlotColor="DodgerBlue"
                                       FillBelow="False" TitleStyle="{DynamicResource SubtitleTextBlockStyle}" />
-                <controls:SignalChart SignalName="Pulse" Title="Pulse" RedLine="110" FillBelow="False"
+                <controls:SignalChart_WPF SignalName="Pulse" Title="Pulse" RedLine="110" FillBelow="False"
                                       PlotColor="OrangeRed" TitleStyle="{DynamicResource SubtitleTextBlockStyle}" />
             </StackPanel>
         </ScrollViewer>

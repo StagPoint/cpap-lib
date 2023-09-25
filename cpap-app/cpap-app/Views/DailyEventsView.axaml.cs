@@ -19,7 +19,7 @@ public partial class DailyEventsView : UserControl
 		InitializeComponent();
 	}
 
-	protected override async void OnPropertyChanged( AvaloniaPropertyChangedEventArgs change )
+	protected override void OnPropertyChanged( AvaloniaPropertyChangedEventArgs change )
 	{
 		base.OnPropertyChanged( change );
 

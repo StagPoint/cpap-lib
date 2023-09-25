@@ -14,9 +14,14 @@ public static class ColorExtensions
 		return Color.FromArgb( color.A, color.R, color.G, color.B );
 	}
 
-	public static System.Drawing.Color MultiplyAlpha( this System.Drawing.Color color, float alpha )
+	public static Avalonia.Media.Color MultiplyAlpha( this Avalonia.Media.Color color, float multiplier )
 	{
-		return Color.FromArgb( (int)(color.A * alpha), color.R, color.G, color.B );
+		return new Avalonia.Media.Color( (byte)(color.A * multiplier), color.R, color.G, color.B );
+	}
+
+	public static System.Drawing.Color MultiplyAlpha( this System.Drawing.Color color, float multiplier )
+	{
+		return Color.FromArgb( (int)(color.A * multiplier), color.R, color.G, color.B );
 	}
 
 	public static System.Drawing.Color SetAlpha( this System.Drawing.Color color, int alpha )

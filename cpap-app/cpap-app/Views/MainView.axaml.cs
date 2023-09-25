@@ -5,14 +5,11 @@ using System.Threading.Tasks;
 
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.ApplicationLifetimes;
-using Avalonia.Input;
+using Avalonia.Controls.Notifications;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
-
-using cpap_app.ViewModels;
 
 using cpap_db;
 
@@ -39,7 +36,7 @@ public partial class MainView : UserControl
 	public MainView()
 	{
 		InitializeComponent();
-
+		
 		NavView.Content = new HomeView();
 
 		AddHandler( ImportRequestEvent, HandleImportRequest );
@@ -80,6 +77,8 @@ public partial class MainView : UserControl
 
 	private async void HandleImportRequest( object? sender, RoutedEventArgs e )
 	{
+		string importPath = string.Empty;
+
 		var drives = DriveInfo.GetDrives();
 		foreach( var drive in drives )
 		{
@@ -107,42 +106,45 @@ public partial class MainView : UserControl
 
 				if( result == ButtonResult.Yes )
 				{
-					ImportFrom( drive.RootDirectory.FullName );
-					return;
+					importPath = drive.RootDirectory.FullName;
+					break;
 				}
 			}
 		}
 
-		var sp = TopLevel.GetTopLevel( this )?.StorageProvider;
-		if( sp == null )
+		if( string.IsNullOrEmpty( importPath ) )
 		{
-			throw new Exception( $"Failed to get a reference to a {nameof( IStorageProvider )} instance." );
+			var sp = TopLevel.GetTopLevel( this )?.StorageProvider;
+			if( sp == null )
+			{
+				throw new Exception( $"Failed to get a reference to a {nameof( IStorageProvider )} instance." );
+			}
+
+			var folder = await sp.OpenFolderPickerAsync( new FolderPickerOpenOptions
+			{
+				Title                  = "CPAP Data Import - Select the folder containing your CPAP data",
+				SuggestedStartLocation = null,
+				AllowMultiple          = false
+			} );
+
+			if( folder.Count == 0 )
+			{
+				return;
+			}
+
+			importPath = folder[ 0 ].Path.LocalPath;
 		}
 
-		var folder = await sp.OpenFolderPickerAsync( new FolderPickerOpenOptions
-		{
-			Title                  = "CPAP Data Import - Select the folder containing your CPAP data",
-			SuggestedStartLocation = null,
-			AllowMultiple          = false
-		} );
-
-		if( folder.Count == 0 )
+		if( !Directory.Exists( importPath ) )
 		{
 			return;
 		}
 
-		var path = folder[ 0 ].Path.LocalPath;
-
-		if( !Directory.Exists( path ) )
-		{
-			return;
-		}
-
-		if( !ResMedDataLoader.HasCorrectFolderStructure( path ) )
+		if( !ResMedDataLoader.HasCorrectFolderStructure( importPath ) )
 		{
 			var dialog = MessageBoxManager.GetMessageBoxStandard(
 				$"Import from folder",
-				$"Folder {path} does not appear to contain CPAP data",
+				$"Folder {importPath} does not appear to contain CPAP data",
 				ButtonEnum.Ok,
 				Icon.Database );
 
@@ -163,15 +165,19 @@ public partial class MainView : UserControl
 			}
 		};
 		
-		td.Opened += async ( sndr, evt ) =>
+		// ReSharper disable UnusedParameter.Local
+		td.Opened += async ( eventOrigin, eventArgs ) =>
 		{
+			// ReSharper enable UnusedParameter.Local
+			
+			// Show an animated indeterminate progress bar
 			td.SetProgressBarState( 0, TaskDialogProgressState.Indeterminate );
 
 			var startTime = Environment.TickCount;
 		
 			await Task.Run( async () =>
 			{
-				var mostRecentDay = ImportFrom( path );
+				var mostRecentDay = ImportFrom( importPath );
 		
 				// Sounds cheesy, but showing a progress bar for even a second serves to show 
 				// the user that the work was performed. It's otherwise often too fast for them 
@@ -190,10 +196,11 @@ public partial class MainView : UserControl
 						NavView.SelectedItem = navDailyReport;
 						DataContext          = store.LoadDailyReport( mostRecentDay );
 					}
+					
 				} );
 			} );
 		};
-		
+
 		td.XamlRoot = (Visual)VisualRoot!;
 		await td.ShowAsync();	
 	}
@@ -221,7 +228,7 @@ public partial class MainView : UserControl
 
 			var elapsed = Environment.TickCount - startTime;
 			Debug.WriteLine( $"Time to load CPAP data ({days.Count} days): {elapsed / 1000.0f:F3} seconds" );
-
+			
 			return storage.GetMostRecentStoredDate();
 		}
 		catch

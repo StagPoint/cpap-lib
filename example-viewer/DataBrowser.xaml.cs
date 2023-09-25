@@ -194,14 +194,14 @@ public partial class DataBrowser
 		var endTime   = time.AddMinutes( 1.5 );
 	
 		// Only need to zoom to the indicated time on the first chart, as it will synchronize all of the others
-		var chart = this.FindVisualChildren<SignalChart>().FirstOrDefault();
+		var chart = this.FindVisualChildren<SignalChart_WPF>().FirstOrDefault();
 		chart.ZoomToTime( startTime, endTime );
 	}
 	
 	private void SessionList_OnOnTimeSelected( object sender, DateTime startTime, DateTime endTime )
 	{
 		// Only need to zoom to the indicated time on the first chart, as it will synchronize all of the others
-		var chart = this.FindVisualChildren<SignalChart>().FirstOrDefault();
+		var chart = this.FindVisualChildren<SignalChart_WPF>().FirstOrDefault();
 		chart.ZoomToTime( startTime, endTime );
 	}
 	

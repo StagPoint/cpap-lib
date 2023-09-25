@@ -1,7 +1,7 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:controls="clr-namespace:cpapviewer.Controls">
-    <Style TargetType="{x:Type controls:SignalChart}">
+    <Style TargetType="{x:Type controls:SignalChart_WPF}">
         <Setter Property="Title" Value="Signal Name"/>
         <Setter Property="GroupName" Value="Default"/>
         <Setter Property="FillBelow" Value="True"/>

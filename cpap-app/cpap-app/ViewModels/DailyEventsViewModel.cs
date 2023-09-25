@@ -9,7 +9,7 @@ namespace cpap_app.ViewModels;
 
 public class DailyEventsViewModel
 {
-	public DailyReport            Day   { get; set; }
+	public DailyReport?           Day   { get; set; }
 	public List<EventTypeSummary> Items { get; set; } = new();
 
 	public DailyEventsViewModel()

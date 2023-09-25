@@ -25,9 +25,9 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Page Update="Controls\SignalChartResources.xaml">
+      <Page Update="Controls\SignalChart_WPFResources.xaml">
         <Generator>MSBuild:Compile</Generator>
-        <DependentUpon>SignalChart.xaml</DependentUpon>
+        <DependentUpon>SignalChart_WPF.xaml</DependentUpon>
       </Page>
     </ItemGroup>
 </Project>

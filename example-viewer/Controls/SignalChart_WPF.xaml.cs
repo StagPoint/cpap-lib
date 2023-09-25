@@ -22,26 +22,18 @@ using Style = System.Windows.Style;
 
 namespace cpapviewer.Controls;
 
-public partial class SignalChart
+public partial class SignalChart_WPF
 {
-	public static readonly DependencyProperty SignalNameProperty = DependencyProperty.Register( nameof( SignalName ), typeof( string ),               typeof( SignalChart ) );
-	public static readonly DependencyProperty GroupNameProperty  = DependencyProperty.Register( nameof( GroupName ),  typeof( string ),               typeof( SignalChart ) );
-	public static readonly DependencyProperty TitleProperty      = DependencyProperty.Register( nameof( Title ),      typeof( string ),               typeof( SignalChart ) );
-	public static readonly DependencyProperty TitleStyleProperty = DependencyProperty.Register( nameof( TitleStyle ), typeof( System.Windows.Style ), typeof( SignalChart ) );
-	public static readonly DependencyProperty PlotColorProperty  = DependencyProperty.Register( nameof( PlotColor ),  typeof( Brush ),                typeof( SignalChart ) );
-	public static readonly DependencyProperty FlagTypesProperty  = DependencyProperty.Register( nameof( FlagTypes ),  typeof( EventType[] ),          typeof( SignalChart ) );
-	public static readonly DependencyProperty RedLineProperty    = DependencyProperty.Register( nameof( RedLine ),    typeof( double ),               typeof( SignalChart ) );
-	public static readonly DependencyProperty FillBelowProperty  = DependencyProperty.Register( nameof( FillBelow ),  typeof( bool ),                 typeof( SignalChart ) );
-
-	private static Dictionary<string, List<SignalChart>> _chartGroups = new();
-
-	private CustomChartStyle    _chartStyle         = null;
-	private Tooltip             _tooltip            = null;
-	private VLine               _mouseTrackLine     = null;
-	private MarkerPlot          _currentValueMarker = null;
-	private DailyReport         _day                = null;
-	private List<ReportedEvent> _events             = new();
-	private bool                _hasDataAvailable   = false;
+	#region Public properties 
+	
+	public static readonly DependencyProperty SignalNameProperty = DependencyProperty.Register( nameof( SignalName ), typeof( string ),               typeof( SignalChart_WPF ) );
+	public static readonly DependencyProperty GroupNameProperty  = DependencyProperty.Register( nameof( GroupName ),  typeof( string ),               typeof( SignalChart_WPF ) );
+	public static readonly DependencyProperty TitleProperty      = DependencyProperty.Register( nameof( Title ),      typeof( string ),               typeof( SignalChart_WPF ) );
+	public static readonly DependencyProperty TitleStyleProperty = DependencyProperty.Register( nameof( TitleStyle ), typeof( System.Windows.Style ), typeof( SignalChart_WPF ) );
+	public static readonly DependencyProperty PlotColorProperty  = DependencyProperty.Register( nameof( PlotColor ),  typeof( Brush ),                typeof( SignalChart_WPF ) );
+	public static readonly DependencyProperty FlagTypesProperty  = DependencyProperty.Register( nameof( FlagTypes ),  typeof( EventType[] ),          typeof( SignalChart_WPF ) );
+	public static readonly DependencyProperty RedLineProperty    = DependencyProperty.Register( nameof( RedLine ),    typeof( double ),               typeof( SignalChart_WPF ) );
+	public static readonly DependencyProperty FillBelowProperty  = DependencyProperty.Register( nameof( FillBelow ),  typeof( bool ),                 typeof( SignalChart_WPF ) );
 
 	public EventType[] FlagTypes
 	{
@@ -99,13 +91,35 @@ public partial class SignalChart
 		get => (Style)GetValue( TitleStyleProperty );
 		set => SetValue( TitleStyleProperty, value );
 	}
+	
+	#endregion
+	
+	#region Private fields 
+	
+	private static Dictionary<string, List<SignalChart_WPF>> _chartGroups = new();
 
-	public SignalChart()
+	private CustomChartStyle    _chartStyle         = null;
+	private Tooltip             _tooltip            = null;
+	private VLine               _mouseTrackLine     = null;
+	private MarkerPlot          _currentValueMarker = null;
+	private DailyReport         _day                = null;
+	private List<ReportedEvent> _events             = new();
+	private bool                _hasDataAvailable   = false;
+
+	#endregion 
+	
+	#region Constructor 
+
+	public SignalChart_WPF()
 	{
 		InitializeComponent();
 
 		this.Unloaded += OnUnloaded;
 	}
+	
+	#endregion 
+	
+	#region Base class overrides 
 
 	public override void OnApplyTemplate()
 	{
@@ -116,6 +130,40 @@ public partial class SignalChart
 
 		InitializeChartProperties( Chart );
 	}
+	
+	protected override void OnInitialized( EventArgs e )
+	{
+		base.OnInitialized( e );
+
+		CurrentValue.Text = "";
+
+		Chart.MouseMove     += ChartOnMouseMove;
+		Chart.RightClicked  -= Chart.DefaultRightClickEvent;
+		Chart.AxesChanged   += ChartOnAxesChanged;
+		this.PreviewKeyDown += OnPreviewKeyDown;
+
+		AddToGroupList();
+	}
+	
+	protected override void OnPropertyChanged( DependencyPropertyChangedEventArgs e )
+	{
+		base.OnPropertyChanged( e );
+
+		if( e.Property.Name == nameof( DataContext ) )
+		{
+			if( DataContext is DailyReport day )
+			{
+				if( string.IsNullOrEmpty( SignalName ) )
+				{
+					throw new NullReferenceException( "No Signal name was provided" );
+				}
+
+				LoadData( day );
+			}
+		}
+	}
+	
+	#endregion 
 
 	public void ZoomToTime( DateTime startTime, DateTime endTime )
 	{
@@ -128,20 +176,6 @@ public partial class SignalChart
 		Chart.Refresh();
 	}
 
-	protected override void OnInitialized( EventArgs e )
-	{
-		base.OnInitialized( e );
-
-		CurrentValue.Text = "";
-
-		Chart.MouseMove    += ChartOnMouseMove;
-		Chart.RightClicked -= Chart.DefaultRightClickEvent;
-		Chart.AxesChanged  += ChartOnAxesChanged;
-		this.PreviewKeyDown += OnPreviewKeyDown;
-
-		AddToGroupList();
-	}
-	
 	private void OnPreviewKeyDown( object sender, KeyEventArgs args )
 	{
 		if( args.Key == Key.Left || args.Key == Key.Right )
@@ -175,7 +209,7 @@ public partial class SignalChart
 		var list = GetGroupList();
 		if( list == null )
 		{
-			list = new List<SignalChart>();
+			list = new List<SignalChart_WPF>();
 			_chartGroups.Add( GroupName, list );
 		}
 
@@ -196,9 +230,9 @@ public partial class SignalChart
 		}
 	}
 
-	private List<SignalChart> GetGroupList()
+	private List<SignalChart_WPF> GetGroupList()
 	{
-		if( _chartGroups.TryGetValue( GroupName, out List<SignalChart> groupList ) )
+		if( _chartGroups.TryGetValue( GroupName, out List<SignalChart_WPF> groupList ) )
 		{
 			return groupList;
 		}
@@ -255,11 +289,6 @@ public partial class SignalChart
 		if( !_hasDataAvailable )
 		{
 			return;
-		}
-		
-		if( SignalName == "SpO2" )
-		{
-			Debug.WriteLine( "TEsting" );
 		}
 		
 		_tooltip.IsVisible    = false;
@@ -324,24 +353,6 @@ public partial class SignalChart
 		Chart.Refresh();
 	}
 
-	protected override void OnPropertyChanged( DependencyPropertyChangedEventArgs e )
-	{
-		base.OnPropertyChanged( e );
-
-		if( e.Property.Name == nameof( DataContext ) )
-		{
-			if( DataContext is DailyReport day )
-			{
-				if( string.IsNullOrEmpty( SignalName ) )
-				{
-					throw new NullReferenceException( "No Signal name was provided" );
-				}
-
-				LoadData( day );
-			}
-		}
-	}
-	
 	private void LoadData( DailyReport day )
 	{
 		_day = day;

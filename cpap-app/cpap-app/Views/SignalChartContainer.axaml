@@ -3,18 +3,43 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:views="clr-namespace:cpap_app.Views"
+             xmlns:cpaplib="clr-namespace:cpaplib;assembly=cpap-lib"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="800"
-             x:Class="cpap_app.Views.SignalChartContainer">
+             x:Class="cpap_app.Views.SignalChartContainer"
+             x:DataType="cpaplib:DailyReport"
+             Background="Transparent">
     <DockPanel LastChildFill="True">
     <StackPanel Name="PinnedCharts" DockPanel.Dock="Top">
-        <views:SignalChart />
+        <views:SignalChart DataContext="{Binding}" RedLinePosition="0" />
+        <Separator Margin="0 8"/>
     </StackPanel>
     <ScrollViewer 
         DockPanel.Dock="Top" 
         HorizontalScrollBarVisibility="Disabled" 
         VerticalScrollBarVisibility="Auto">
         <StackPanel Name="UnPinnedCharts">
-            
+            <views:SignalChart SignalName="Mask Pressure" DataContext="{Binding}" RedLinePosition="0" />
+            <Separator Margin="0 8"/>
+
+            <TextBlock Text="PlaceHolder" HorizontalAlignment="Center" FontSize="48"></TextBlock>
+            <TextBlock Text="PlaceHolder" HorizontalAlignment="Center" FontSize="48"></TextBlock>
+            <TextBlock Text="PlaceHolder" HorizontalAlignment="Center" FontSize="48"></TextBlock>
+            <TextBlock Text="PlaceHolder" HorizontalAlignment="Center" FontSize="48"></TextBlock>
+            <TextBlock Text="PlaceHolder" HorizontalAlignment="Center" FontSize="48"></TextBlock>
+            <TextBlock Text="PlaceHolder" HorizontalAlignment="Center" FontSize="48"></TextBlock>
+            <TextBlock Text="PlaceHolder" HorizontalAlignment="Center" FontSize="48"></TextBlock>
+            <TextBlock Text="PlaceHolder" HorizontalAlignment="Center" FontSize="48"></TextBlock>
+            <TextBlock Text="PlaceHolder" HorizontalAlignment="Center" FontSize="48"></TextBlock>
+            <TextBlock Text="PlaceHolder" HorizontalAlignment="Center" FontSize="48"></TextBlock>
+            <TextBlock Text="PlaceHolder" HorizontalAlignment="Center" FontSize="48"></TextBlock>
+            <TextBlock Text="PlaceHolder" HorizontalAlignment="Center" FontSize="48"></TextBlock>
+            <TextBlock Text="PlaceHolder" HorizontalAlignment="Center" FontSize="48"></TextBlock>
+            <TextBlock Text="PlaceHolder" HorizontalAlignment="Center" FontSize="48"></TextBlock>
+            <TextBlock Text="PlaceHolder" HorizontalAlignment="Center" FontSize="48"></TextBlock>
+            <TextBlock Text="PlaceHolder" HorizontalAlignment="Center" FontSize="48"></TextBlock>
+            <TextBlock Text="PlaceHolder" HorizontalAlignment="Center" FontSize="48"></TextBlock>
+            <TextBlock Text="PlaceHolder" HorizontalAlignment="Center" FontSize="48"></TextBlock>
+            <TextBlock Text="PlaceHolder" HorizontalAlignment="Center" FontSize="48"></TextBlock>
         </StackPanel>
     </ScrollViewer>
     </DockPanel>

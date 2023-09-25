@@ -62,6 +62,6 @@
                       Foreground="{DynamicResource TextFillColorPrimaryBrush}">
             </ui:Frame>
         </DockPanel>
-        <views:SignalChartContainer Grid.Column="2" />
+        <views:SignalChartContainer Grid.Column="2" DataContext="{Binding}"/>
     </Grid>
 </UserControl>
