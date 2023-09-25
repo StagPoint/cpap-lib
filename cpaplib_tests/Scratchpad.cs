@@ -1,4 +1,6 @@
 ﻿using System.Diagnostics;
+using System.Numerics;
+using System.Reflection;
 using System.Text;
 
 using cpaplib;
@@ -10,6 +12,13 @@ namespace cpaplib_tests;
 [TestClass]
 public class Scratchpad
 {
+	[TestMethod]
+	public void IntegerTypes()
+	{
+		var numType = typeof(INumber<>);
+		var result  = typeof( int ).GetTypeInfo().GetInterfaces().Any( i => i.IsGenericType && (i.GetGenericTypeDefinition() == numType) );
+	}
+	
 	[TestMethod]
 	public void RadixSortIsActuallySorting()
 	{

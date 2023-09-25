@@ -134,6 +134,10 @@ public partial class SignalChart : UserControl
 
 	private void OnPointerWheelChanged( object? sender, PointerWheelEventArgs args )
 	{
+		// Because the charts are likely going to be used within a scrolling container, I've disabled the built-in mouse wheel 
+		// handling which performs zooming, and re-implemented it here with the additional requirement that the shift key be
+		// held down while scrolling the mouse wheel in order to zoom. If the shift key is held down, the chart will zooom in
+		// and out and the event will be marked Handled so that it doesn't cause scrolling in the parent container. 
 		if( (args.KeyModifiers & KeyModifiers.Shift) == KeyModifiers.Shift )
 		{
 			(double x, double y) = Chart.GetMouseCoordinates();

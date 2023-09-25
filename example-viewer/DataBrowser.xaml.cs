@@ -69,9 +69,10 @@ public partial class DataBrowser
 				
 				db.Connection.Commit();
 			}
-			catch( Exception err )
+			catch( Exception )
 			{
 				db.Connection.Rollback();
+				throw;
 			}
 		}
 

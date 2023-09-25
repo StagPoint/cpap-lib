@@ -151,17 +151,17 @@ namespace cpap_db
 			return new StorageService( GetApplicationDatabasePath() );
 		}
 		
-		public static DatabaseMapping GetMapping<T>()
+		public static DatabaseMapping<T> GetMapping<T>() where T: class, new()
 		{
 			if( _mappings.TryGetValue( typeof( T ), out DatabaseMapping mapping ) )
 			{
-				return mapping;
+				return (DatabaseMapping<T>)mapping;
 			}
 
 			return null;
 		}
 		
-		public static DatabaseMapping CreateMapping<T>( string tableName = null ) where T : new()
+		public static DatabaseMapping<T> CreateMapping<T>( string tableName = null ) where T : class, new()
 		{
 			var mapping = new DatabaseMapping<T>( tableName ?? typeof( T ).Name );
 			_mappings[ typeof( T ) ] = mapping;
@@ -254,7 +254,7 @@ namespace cpap_db
 		public List<T> SelectAll<T>() where T : class, new()
 		{
 			var mapping = GetMapping<T>();
-			return mapping.ExecuteQuery<T>( Connection, mapping.SelectAllQuery );
+			return mapping.ExecuteQuery( Connection, mapping.SelectAllQuery );
 		}
 
 		public List<T> SelectAll<T, P>( IList<P> primaryKeys ) 
@@ -263,13 +263,13 @@ namespace cpap_db
 		{
 			var mapping = GetMapping<T>();
 			
-			return mapping.ExecuteQuery<T>( Connection, mapping.SelectAllQuery, primaryKeys );
+			return mapping.ExecuteQuery( Connection, mapping.SelectAllQuery, primaryKeys );
 		}
 
 		public T SelectById<T>( object primaryKeyValue ) where T : class, new()
 		{
 			var mapping = GetMapping<T>();
-			return mapping.SelectByPrimaryKey<T>( Connection, primaryKeyValue );
+			return mapping.SelectByPrimaryKey( Connection, primaryKeyValue );
 		}
 
 		public T SelectByForeignKey<T>( object foreignKeyValue, out int primaryKeyValue ) where T : class, new()
@@ -277,7 +277,7 @@ namespace cpap_db
 			var mapping = GetMapping<T>();
 
 			var keys    = new List<int>();
-			var records = mapping.SelectByForeignKey<T, int>( Connection, foreignKeyValue, keys );
+			var records = mapping.SelectByForeignKey<int>( Connection, foreignKeyValue, keys );
 
 			primaryKeyValue = keys.First();
 
@@ -287,7 +287,7 @@ namespace cpap_db
 		public List<T> SelectByForeignKey<T>( object foreignKeyValue ) where T : class, new()
 		{
 			var mapping = GetMapping<T>();
-			return mapping.SelectByForeignKey<T>( Connection, foreignKeyValue );
+			return mapping.SelectByForeignKey( Connection, foreignKeyValue );
 		}
 		
 		public List<T> SelectByForeignKey<T, P>( object foreignKeyValue, IList<P> primaryKeys ) 
@@ -295,7 +295,7 @@ namespace cpap_db
 			where P : struct
 		{
 			var mapping = GetMapping<T>();
-			return mapping.SelectByForeignKey<T, P>( Connection, foreignKeyValue, primaryKeys );
+			return mapping.SelectByForeignKey<P>( Connection, foreignKeyValue, primaryKeys );
 		}
 		
 		/// <summary>
@@ -306,13 +306,13 @@ namespace cpap_db
 		/// <param name="foreignKeyValue">If a foreign key is defined in the table mapping, it must be supplied here</param>
 		/// <typeparam name="T">If the primary key is defined as AUTOINCREMENT, it will be returned. Otherwise, the number of records inserted (1) will be returned.</typeparam>
 		/// <returns></returns>
-		public int Insert<T>( T record, object primaryKeyValue = null, object foreignKeyValue = null ) where T : class
+		public int Insert<T>( T record, object primaryKeyValue = null, object foreignKeyValue = null ) where T : class, new()
 		{
 			var mapping = GetMapping<T>();
 			return mapping.Insert( Connection, record, primaryKeyValue, foreignKeyValue );
 		}
 
-		public bool CreateTable<T>()
+		public bool CreateTable<T>() where T : class, new()
 		{
 			var mapping = GetMapping<T>();
 			if( mapping == null )
@@ -326,7 +326,7 @@ namespace cpap_db
 		public List<DateTime> GetStoredDates()
 		{
 			var mapping = GetMapping<DailyReport>();
-			var days    = mapping.SelectAll<DailyReport>( Connection );
+			var days    = mapping.SelectAll( Connection );
 
 			return days.Select( x => x.ReportDate.Date ).ToList();
 		}

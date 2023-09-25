@@ -1,4 +1,6 @@
-﻿using System.Globalization;
+﻿using System.ComponentModel;
+using System.Globalization;
+using System.Numerics;
 using System.Reflection;
 using System.Text;
 
@@ -117,36 +119,9 @@ public class DatabaseMapping
 	private string _selectByForeignKeyQuery = String.Empty;
 
 	#endregion
-
-	#region Constructors
-
-	public DatabaseMapping( string tableName )
-	{
-		TableName = tableName;
-	}
-
-	public DatabaseMapping( string tableName, Type dataType ) : this( tableName )
-	{
-		ObjectType = dataType;
-
-		var properties = dataType.GetProperties( BindingFlags.Instance | BindingFlags.Public );
-
-		foreach( var property in properties )
-		{
-			if( property.CanRead && property.CanWrite )
-			{
-				if( property.PropertyType.IsValueType || property.PropertyType == typeof( string ) )
-				{
-					Columns.Add( new ColumnMapping( property.Name, property ) );
-				}
-			}
-		}
-	}
-
-	#endregion
-
-	#region Public functions
-
+	
+	#region Public functions 
+	
 	public ColumnMapping GetColumnByName( string name )
 	{
 		foreach( var column in Columns )
@@ -173,195 +148,9 @@ public class DatabaseMapping
 		return false;
 	}
 
-	internal List<T> ExecuteQuery<T, P>( SQLiteConnection connection, string query, IList<P> primaryKeys, params object[] arguments ) 
-		where T : new()
-		where P : struct
-	{
-		if( typeof( T ) != ObjectType )
-		{
-			throw new Exception( $"Type {typeof( T ).Name} does not match the mapping for type {ObjectType.Name}" );
-		}
-
-		List<T> result = new();
-
-		var stmt = SQLite3.Prepare2( connection.Handle, query );
-
-		int argumentIndex = 1;
-		foreach( var arg in arguments )
-		{
-			StorageService.BindParameter( stmt, argumentIndex++, arg );
-		}
-
-		try
-		{
-			while( SQLite3.Step( stmt ) == SQLite3.Result.Row )
-			{
-				var obj = Activator.CreateInstance<T>();
-
-				int columnCount = SQLite3.ColumnCount( stmt );
-				for( int index = 0; index < columnCount; ++index )
-				{
-					var columnName = SQLite3.ColumnName( stmt, index );
-					var columnType = SQLite3.ColumnType( stmt, index );
-					
-					var columnMapping = GetColumnByName( columnName );
-					if( columnMapping != null )
-					{
-						var val = StorageService.ReadColumn( connection, stmt, index, columnType, columnMapping.Type );
-
-						columnMapping.SetValue( obj, val );
-					}
-					else if( PrimaryKey != null && primaryKeys != null && columnName.Equals( PrimaryKey.ColumnName, StringComparison.OrdinalIgnoreCase ) )
-					{
-						var val = StorageService.ReadColumn( connection, stmt, index, columnType, PrimaryKey.Type );
-						primaryKeys.Add( (P)val );
-					}
-				}
-
-				result.Add( obj );
-			}
-		}
-		finally
-		{
-			SQLite3.Finalize( stmt );
-		}
-
-		return result;
-	}
-
-	internal List<T> ExecuteQuery<T>( SQLiteConnection connection, string query, params object[] arguments ) where T : new()
-	{
-		if( typeof( T ) != ObjectType )
-		{
-			throw new Exception( $"Type {typeof( T ).Name} does not match the mapping for type {ObjectType.Name}" );
-		}
-
-		List<T> result = new();
-
-		var stmt = SQLite3.Prepare2( connection.Handle, query );
-
-		int argumentIndex = 1;
-		foreach( var arg in arguments )
-		{
-			StorageService.BindParameter( stmt, argumentIndex++, arg );
-		}
-
-		try
-		{
-			while( SQLite3.Step( stmt ) == SQLite3.Result.Row )
-			{
-				var obj = Activator.CreateInstance<T>();
-
-				int columnCount = SQLite3.ColumnCount( stmt );
-				for( int index = 0; index < columnCount; ++index )
-				{
-					var columnName = SQLite3.ColumnName( stmt, index );
-					var columnType = SQLite3.ColumnType( stmt, index );
-					
-					var columnMapping  = GetColumnByName( columnName );
-					if( columnMapping != null )
-					{
-						var val = StorageService.ReadColumn( connection, stmt, index, columnType, columnMapping.Type );
-
-						columnMapping.SetValue( obj, val );
-					}
-				}
-
-				result.Add( obj );
-			}
-		}
-		finally
-		{
-			SQLite3.Finalize( stmt );
-		}
-
-		return result;
-	}
-
-	internal bool Delete( SQLiteConnection connection, object primaryKeyValue )
-	{
-		var rows = connection.Execute( DeleteQuery, primaryKeyValue );
-		
-		return rows > 0;
-	}
-
-	internal List<T> SelectAll<T>( SQLiteConnection connection ) where T: class, new()
-	{
-		return ExecuteQuery<T>( connection, SelectAllQuery );
-	}
-
-	internal T SelectByPrimaryKey<T>( SQLiteConnection connection, object primaryKeyValue ) where T: class, new()
-	{
-		var rows = ExecuteQuery<T>( connection, SelectByPrimaryKeyQuery, primaryKeyValue );
-
-		if( rows == null || rows.Count == 0 )
-		{
-			return null;
-		}
-
-		return rows[ 0 ];
-	}
-
-	internal List<T> SelectByForeignKey<T, P>( SQLiteConnection connection, object foreignKeyValue, IList<P> primaryKeys = null ) 
-		where T: class, new()
-		where P: struct
-	{
-		return ExecuteQuery<T, P>( connection, SelectByForeignKeyQuery, primaryKeys, foreignKeyValue );
-	}
-
-	internal List<T> SelectByForeignKey<T>( SQLiteConnection connection, object foreignKeyValue ) 
-		where T: class, new()
-	{
-		return ExecuteQuery<T>( connection, SelectByForeignKeyQuery, foreignKeyValue );
-	}
-
-	internal int Insert( SQLiteConnection connection, object data, object primaryKeyValue = null, object foreignKeyValue = null )
-	{
-		int columnCount = Columns.Count;
-		if( PrimaryKey != null && !PrimaryKey.AutoIncrement )
-		{
-			columnCount += 1;
-		}
-
-		if( ForeignKey != null )
-		{
-			columnCount += 1;
-		}
-
-		object[] args = new object[ columnCount ];
-
-		int nextColumnIndex = 0;
-
-		if( PrimaryKey is { AutoIncrement: false } )
-		{
-			args[ nextColumnIndex++ ] = primaryKeyValue ?? throw new Exception( $"You must provide a primary key value for {TableName}.{PrimaryKey.ColumnName}" );
-		}
-
-		if( ForeignKey != null )
-		{
-			args[ nextColumnIndex++ ] = foreignKeyValue ?? throw new Exception( $"You must provide a foreign key value for table {TableName}.{ForeignKey.ColumnName}" );
-		}
-
-		foreach( var column in Columns )
-		{
-			args[ nextColumnIndex++ ] = column.GetValue( data );
-		}
-
-		string query = InsertQuery;
-
-		int rowCount = connection.Execute( query, args );
-
-		if( PrimaryKey is { AutoIncrement: true } )
-		{
-			return (int)SQLite3.LastInsertRowid( connection.Handle );
-		}
-
-		return rowCount;
-	}
-
-	#endregion
-
-	#region Private functions
+	#endregion 
+	
+		#region Private functions
 
 	private string GenerateSelectByPrimaryKeyQuery()
 	{
@@ -632,9 +421,218 @@ public class DatabaseMapping
 	#endregion
 }
 
-public class DatabaseMapping<T> : DatabaseMapping
+public class DatabaseMapping<T> : DatabaseMapping 
+	where T: class, new()
 {
-	public DatabaseMapping( string tableName ) : base( tableName, typeof( T ) )
+	#region Constructors
+
+	public DatabaseMapping( string tableName = null ) 
 	{
+		ObjectType = typeof( T );
+		TableName  = tableName ?? typeof( T ).Name;
+
+		var properties = ObjectType.GetProperties( BindingFlags.Instance | BindingFlags.Public );
+
+		foreach( var property in properties )
+		{
+			if( property.CanRead && property.CanWrite )
+			{
+				if( property.PropertyType.IsValueType || property.PropertyType == typeof( string ) )
+				{
+					var fitsPrimaryKeyColumnNamingPattern =
+						property.Name.Equals( $"{ObjectType.Name}ID", StringComparison.OrdinalIgnoreCase ) ||
+						property.Name.Equals( "_id",                  StringComparison.OrdinalIgnoreCase );
+					
+					if( fitsPrimaryKeyColumnNamingPattern )
+					{
+						var isIntegerProperty = property.PropertyType.GetTypeInfo().GetInterfaces().Any( i => i.IsGenericType && (i.GetGenericTypeDefinition() == typeof( INumber<> )) );
+						PrimaryKey = new PrimaryKeyColumn( property.Name, property.PropertyType, isIntegerProperty );
+					}
+					else
+					{
+						Columns.Add( new ColumnMapping( property.Name, property ) );
+					}
+				}
+			}
+		}
 	}
+
+	#endregion
+
+	#region Public functions
+
+	internal List<T> ExecuteQuery<P>( SQLiteConnection connection, string query, IList<P> primaryKeys, params object[] arguments ) 
+		where P : struct
+	{
+		List<T> result = new();
+
+		var stmt = SQLite3.Prepare2( connection.Handle, query );
+
+		int argumentIndex = 1;
+		foreach( var arg in arguments )
+		{
+			StorageService.BindParameter( stmt, argumentIndex++, arg );
+		}
+
+		try
+		{
+			while( SQLite3.Step( stmt ) == SQLite3.Result.Row )
+			{
+				var obj = Activator.CreateInstance<T>();
+
+				int columnCount = SQLite3.ColumnCount( stmt );
+				for( int index = 0; index < columnCount; ++index )
+				{
+					var columnName = SQLite3.ColumnName( stmt, index );
+					var columnType = SQLite3.ColumnType( stmt, index );
+					
+					var columnMapping = GetColumnByName( columnName );
+					if( columnMapping != null )
+					{
+						var val = StorageService.ReadColumn( connection, stmt, index, columnType, columnMapping.Type );
+
+						columnMapping.SetValue( obj, val );
+					}
+					else if( PrimaryKey != null && primaryKeys != null && columnName.Equals( PrimaryKey.ColumnName, StringComparison.OrdinalIgnoreCase ) )
+					{
+						var val = StorageService.ReadColumn( connection, stmt, index, columnType, PrimaryKey.Type );
+						primaryKeys.Add( (P)val );
+					}
+				}
+
+				result.Add( obj );
+			}
+		}
+		finally
+		{
+			SQLite3.Finalize( stmt );
+		}
+
+		return result;
+	}
+
+	internal List<T> ExecuteQuery( SQLiteConnection connection, string query, params object[] arguments )
+	{
+		List<T> result = new();
+
+		var stmt = SQLite3.Prepare2( connection.Handle, query );
+
+		int argumentIndex = 1;
+		foreach( var arg in arguments )
+		{
+			StorageService.BindParameter( stmt, argumentIndex++, arg );
+		}
+
+		try
+		{
+			while( SQLite3.Step( stmt ) == SQLite3.Result.Row )
+			{
+				var obj = Activator.CreateInstance<T>();
+
+				int columnCount = SQLite3.ColumnCount( stmt );
+				for( int index = 0; index < columnCount; ++index )
+				{
+					var columnName = SQLite3.ColumnName( stmt, index );
+					var columnType = SQLite3.ColumnType( stmt, index );
+					
+					var columnMapping  = GetColumnByName( columnName );
+					if( columnMapping != null )
+					{
+						var val = StorageService.ReadColumn( connection, stmt, index, columnType, columnMapping.Type );
+
+						columnMapping.SetValue( obj, val );
+					}
+				}
+
+				result.Add( obj );
+			}
+		}
+		finally
+		{
+			SQLite3.Finalize( stmt );
+		}
+
+		return result;
+	}
+
+	internal bool Delete( SQLiteConnection connection, object primaryKeyValue )
+	{
+		var rows = connection.Execute( DeleteQuery, primaryKeyValue );
+		
+		return rows > 0;
+	}
+
+	internal List<T> SelectAll( SQLiteConnection connection )
+	{
+		return ExecuteQuery( connection, SelectAllQuery );
+	}
+
+	internal T SelectByPrimaryKey( SQLiteConnection connection, object primaryKeyValue )
+	{
+		var rows = ExecuteQuery( connection, SelectByPrimaryKeyQuery, primaryKeyValue );
+
+		if( rows == null || rows.Count == 0 )
+		{
+			return null;
+		}
+
+		return rows[ 0 ];
+	}
+
+	internal List<T> SelectByForeignKey<P>( SQLiteConnection connection, object foreignKeyValue, IList<P> primaryKeys = null ) 
+		where P: struct
+	{
+		return ExecuteQuery<P>( connection, SelectByForeignKeyQuery, primaryKeys, foreignKeyValue );
+	}
+
+	internal List<T> SelectByForeignKey( SQLiteConnection connection, object foreignKeyValue ) 
+	{
+		return ExecuteQuery( connection, SelectByForeignKeyQuery, foreignKeyValue );
+	}
+
+	internal int Insert( SQLiteConnection connection, object data, object primaryKeyValue = null, object foreignKeyValue = null )
+	{
+		int columnCount = Columns.Count;
+		if( PrimaryKey != null && !PrimaryKey.AutoIncrement )
+		{
+			columnCount += 1;
+		}
+
+		if( ForeignKey != null )
+		{
+			columnCount += 1;
+		}
+
+		object[] args = new object[ columnCount ];
+
+		int nextColumnIndex = 0;
+
+		if( PrimaryKey is { AutoIncrement: false } )
+		{
+			args[ nextColumnIndex++ ] = primaryKeyValue ?? throw new Exception( $"You must provide a primary key value for {TableName}.{PrimaryKey.ColumnName}" );
+		}
+
+		if( ForeignKey != null )
+		{
+			args[ nextColumnIndex++ ] = foreignKeyValue ?? throw new Exception( $"You must provide a foreign key value for table {TableName}.{ForeignKey.ColumnName}" );
+		}
+
+		foreach( var column in Columns )
+		{
+			args[ nextColumnIndex++ ] = column.GetValue( data );
+		}
+
+		string query = InsertQuery;
+
+		int rowCount = connection.Execute( query, args );
+
+		if( PrimaryKey is { AutoIncrement: true } )
+		{
+			return (int)SQLite3.LastInsertRowid( connection.Handle );
+		}
+
+		return rowCount;
+	}
+
+	#endregion
 }
