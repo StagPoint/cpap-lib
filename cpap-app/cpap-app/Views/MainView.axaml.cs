@@ -7,9 +7,13 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Interactivity;
+using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+
+using cpap_app.Configuration;
+using cpap_app.Converters;
 
 using cpap_db;
 

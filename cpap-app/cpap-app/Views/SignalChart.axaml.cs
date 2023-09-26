@@ -7,8 +7,10 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Media;
 
+using cpap_app.Configuration;
 using cpap_app.Styling;
 using cpap_app.Helpers;
 
@@ -28,21 +30,16 @@ public partial class SignalChart : UserControl
 	public static readonly StyledProperty<Brush> ChartGridLineColorProperty = AvaloniaProperty.Register<SignalChart, Brush>( nameof( ChartGridLineColor ) );
 	public static readonly StyledProperty<Brush> ChartForegroundProperty    = AvaloniaProperty.Register<SignalChart, Brush>( nameof( ChartForeground ) );
 	public static readonly StyledProperty<Brush> ChartBorderColorProperty   = AvaloniaProperty.Register<SignalChart, Brush>( nameof( ChartBorderColor ) );
-	public static readonly StyledProperty<double?> RedLinePositionProperty   = AvaloniaProperty.Register<SignalChart, double?>( nameof( RedLinePosition ) );
 
 	#endregion 
 	
 	#region Public properties
-	
-	public string? Title { get; set; }
 
-	public string SignalName { get; set; } = "Flow Rate";
-
-	public double? RedLinePosition
-	{
-		get => GetValue( RedLinePositionProperty );
-		set => SetValue( RedLinePositionProperty, value );
-	}
+	public string? Title           { get; set; }
+	public string  SignalName      { get; set; } = "";
+	public Color   PlotColor       { get; set; }
+	public double? RedLinePosition { get; set; }
+	public bool?   FillBelow       { get; set; }
 
 	public Brush ChartForeground
 	{
@@ -67,7 +64,7 @@ public partial class SignalChart : UserControl
 		get => GetValue( ChartBorderColorProperty );
 		set => SetValue( ChartBorderColorProperty, value );
 	}
-
+	
 	#endregion
 	
 	#region Private fields 
@@ -77,10 +74,10 @@ public partial class SignalChart : UserControl
 	private VLine?              _mouseTrackLine     = null;
 	private MarkerPlot?         _currentValueMarker = null;
 	private DailyReport?        _day                = null;
-	private List<ReportedEvent> _events             = new();
 	private bool                _hasDataAvailable   = false;
 	private bool                _chartInitialized   = false;
-
+	private List<ReportedEvent> _events             = new();
+	
 	#endregion 
 	
 	#region Constructor 
@@ -94,13 +91,13 @@ public partial class SignalChart : UserControl
 	
 	#endregion 
 	
-	#region Base class overrides 
+	#region Event Handlers
 
 	protected override void OnApplyTemplate( TemplateAppliedEventArgs e )
 	{
 		base.OnApplyTemplate( e );
 
-		ChartLabel.Text = Title;
+		ChartLabel.Text = Title ?? SignalName;
 
 		InitializeChartProperties( Chart );
 	}
@@ -122,15 +119,17 @@ public partial class SignalChart : UserControl
 				{
 					InitializeChartProperties( Chart );
 				}
-	
+
 				LoadData( day );
 			}
 		}
 	}
 
-	#endregion 
-	
-	#region Event handlers
+	protected override void OnPointerEntered( PointerEventArgs e )
+	{
+		base.OnPointerEntered( e );
+		Chart.Focus();
+	}
 
 	private void OnPointerWheelChanged( object? sender, PointerWheelEventArgs args )
 	{
@@ -264,63 +263,73 @@ public partial class SignalChart : UserControl
 	private void LoadData( DailyReport day )
 	{
 		_day = day;
-		
 		_events.Clear();
-		Chart.Plot.Clear();
 
-		// Check to see if there are any sessions with the named Signal. If not, display the "No Data Available" message and eject.
-		_hasDataAvailable = day.Sessions.FirstOrDefault( x => x.GetSignalByName( SignalName ) != null ) != null;
-		if( !_hasDataAvailable )
+		try
 		{
-			NoDataLabel.Text      = $"There is no {SignalName} data available";
-			NoDataLabel.IsVisible = true;
-			Chart.IsEnabled       = false;
-			
-			Chart.Refresh();
-			
-			return;
+			Chart.Configuration.AxesChangedEventEnabled = false;
+			Chart.Plot.Clear();
+
+			// Check to see if there are any sessions with the named Signal. If not, display the "No Data Available" message and eject.
+			_hasDataAvailable = day.Sessions.FirstOrDefault( x => x.GetSignalByName( SignalName ) != null ) != null;
+			if( !_hasDataAvailable )
+			{
+				NoDataLabel.Text      = $"There is no {SignalName} data available";
+				NoDataLabel.IsVisible = true;
+				Chart.IsEnabled       = false;
+				this.IsEnabled        = false;
+
+				Chart.Render();
+
+				return;
+			}
+			else
+			{
+				ChartLabel.Text       = SignalName;
+				NoDataLabel.IsVisible = false;
+				Chart.IsEnabled       = true;
+				this.IsEnabled        = true;
+
+				Chart.Render();
+			}
+
+			// If a RedLine position is specified, we want to add it before any signal data, as items are rendered in the 
+			// order in which they are added, and we want the redline rendered behind the signal data.
+			if( RedLinePosition.HasValue )
+			{
+				var redlineColor = Colors.Red.MultiplyAlpha( 0.6f );
+				Chart.Plot.AddHorizontalLine( RedLinePosition.Value, redlineColor.ToDrawingColor(), 1f, LineStyle.Dash );
+			}
+
+			ChartSignal( Chart, day, SignalName );
+			// CreateEventMarkers( day );
+
+			var lineColor = ((SolidColorBrush)ChartGridLineColor).Color.ToDrawingColor();
+
+			_tooltip                                = Chart.Plot.AddTooltip( "", 0, 0 );
+			_mouseTrackLine                         = Chart.Plot.AddVerticalLine( 0, lineColor, 1f, LineStyle.Dot );
+			_mouseTrackLine.PositionLabel           = false;
+			_mouseTrackLine.PositionLabelAxis       = Chart.Plot.XAxis;
+			_mouseTrackLine.DragEnabled             = false;
+			_mouseTrackLine.PositionLabel           = false;
+			_mouseTrackLine.PositionLabelBackground = Color.FromArgb( 255, 32, 32, 32 ).ToDrawingColor();
+			_mouseTrackLine.PositionFormatter       = x => DateTime.FromFileTime( (long)x ).ToString( "hh:mm:ss tt" );
+
+			_tooltip.FillColor   = _chartStyle.DataBackgroundColor;
+			_tooltip.BorderColor = _chartStyle.TickLabelColor;
+			_tooltip.BorderWidth = 0;
+			_tooltip.Font.Color  = _chartStyle.TickLabelColor;
+			_tooltip.Font.Bold   = true;
+			_tooltip.IsVisible   = false;
+
+			// TODO: The "Current Value" marker dot is currently not visible. 
+			_currentValueMarker           = Chart.Plot.AddMarker( -1, -1, MarkerShape.filledCircle, 8, Colors.White.ToDrawingColor(), null );
+			_currentValueMarker.IsVisible = false;
 		}
-		else
+		finally
 		{
-			ChartLabel.Text       = SignalName;
-			NoDataLabel.IsVisible = false;
-			Chart.IsEnabled       = true;
-			
-			Chart.Refresh();
+			Chart.Configuration.AxesChangedEventEnabled = true;
 		}
-
-		// If a RedLine position is specified, we want to add it before any signal data, as items are rendered in the 
-		// order in which they are added, and we want the redline rendered behind the signal data.
-		if( RedLinePosition.HasValue )
-		{
-			var redlineColor = Colors.Red.MultiplyAlpha( 0.6f );
-			Chart.Plot.AddHorizontalLine( RedLinePosition.Value, redlineColor.ToDrawingColor(), 1f, LineStyle.Dash );
-		}
-
-		ChartSignal( Chart, day, SignalName );
-		// CreateEventMarkers( day );
-
-		var lineColor = ((SolidColorBrush)ChartGridLineColor).Color.ToDrawingColor();
-
-		_tooltip                                = Chart.Plot.AddTooltip( "", 0, 0 );
-		_mouseTrackLine                         = Chart.Plot.AddVerticalLine( 0, lineColor, 1f, LineStyle.Dot );
-		_mouseTrackLine.PositionLabel           = false;
-		_mouseTrackLine.PositionLabelAxis       = Chart.Plot.XAxis;
-		_mouseTrackLine.DragEnabled             = false;
-		_mouseTrackLine.PositionLabel           = false;
-		_mouseTrackLine.PositionLabelBackground = Color.FromArgb( 255, 32, 32, 32 ).ToDrawingColor();
-		_mouseTrackLine.PositionFormatter       = x => DateTime.FromFileTime( (long)x ).ToString( "hh:mm:ss tt" );
-
-		_tooltip.FillColor   = _chartStyle.DataBackgroundColor;
-		_tooltip.BorderColor = _chartStyle.TickLabelColor;
-		_tooltip.BorderWidth = 0;
-		_tooltip.Font.Color  = _chartStyle.TickLabelColor;
-		_tooltip.Font.Bold   = true;
-		_tooltip.IsVisible   = false;
-
-		// TODO: The "Current Value" marker dot is currently not visible. 
-		_currentValueMarker           = Chart.Plot.AddMarker( -1, -1, MarkerShape.filledCircle, 8, Colors.White.ToDrawingColor(), null );
-		_currentValueMarker.IsVisible = false;
 		
 		Chart.Refresh();
 	}
@@ -360,14 +369,7 @@ public partial class SignalChart : UserControl
 			offset  = (signal.StartTime - day.RecordingStartTime).TotalSeconds;
 			endTime = (signal.EndTime - day.RecordingStartTime).TotalSeconds;
 
-			var chartColor = System.Drawing.Color.DodgerBlue;
-
-			// // If a custom color has been chosen, use that instead
-			// var plotColorSource = DependencyPropertyHelper.GetValueSource( this, PlotColorProperty );
-			// if( PlotColor is SolidColorBrush && plotColorSource.BaseValueSource != BaseValueSource.Default )
-			// {
-			// 	chartColor = ((SolidColorBrush)PlotColor).Color.ToDrawingColor();
-			// }
+			var chartColor = PlotColor.ToDrawingColor();
 
 			var graph = chart.Plot.AddSignal( signal.Samples.ToArray(), signal.FrequencyInHz, chartColor, firstSessionAdded ? signal.Name : null );
 			graph.OffsetX     = offset;
@@ -376,11 +378,11 @@ public partial class SignalChart : UserControl
 			graph.UseParallel = true;
 			// graph.StepDisplay = true;
 
-			// // "Fill Below" is only available on signals that do not cross a zero line
-			// if( signal.MinValue >= 0 && signal.MaxValue > 0 && FillBelow )
-			// {
-			// 	graph.FillBelow( chartColor, Colors.Transparent.ToDrawingColor(), 0.66 );
-			// }
+			// "Fill Below" is only available on signals that do not cross a zero line
+			if( signal is { MinValue: >= 0, MaxValue: > 0 } && FillBelow.HasValue && FillBelow.Value )
+			{
+				graph.FillBelow( chartColor, Colors.Transparent.ToDrawingColor(), 0.18 );
+			}
 
 			firstSessionAdded = false;
 		}
@@ -436,12 +438,12 @@ public partial class SignalChart : UserControl
 		var maximumLabelWidth = MeasureText( "88888.8", _chartStyle.TickLabelFontName, 12 );
 
 		chart.Configuration.ScrollWheelZoom                              = false;
-		chart.Configuration.Quality                                      = ScottPlot.Control.QualityMode.High;
-		chart.Configuration.QualityConfiguration.BenchmarkToggle         = RenderType.HighQuality;
-		chart.Configuration.QualityConfiguration.AutoAxis                = RenderType.HighQuality;
-		chart.Configuration.QualityConfiguration.MouseInteractiveDragged = RenderType.HighQuality;
-		chart.Configuration.QualityConfiguration.MouseInteractiveDropped = RenderType.HighQuality;
-		chart.Configuration.QualityConfiguration.MouseWheelScrolled      = RenderType.HighQuality;
+		chart.Configuration.Quality                                      = ScottPlot.Control.QualityMode.LowWhileDragging;
+		chart.Configuration.QualityConfiguration.BenchmarkToggle         = RenderType.LowQualityThenHighQualityDelayed;
+		chart.Configuration.QualityConfiguration.AutoAxis                = RenderType.LowQualityThenHighQualityDelayed;
+		chart.Configuration.QualityConfiguration.MouseInteractiveDragged = RenderType.LowQualityThenHighQualityDelayed;
+		chart.Configuration.QualityConfiguration.MouseInteractiveDropped = RenderType.LowQualityThenHighQualityDelayed;
+		chart.Configuration.QualityConfiguration.MouseWheelScrolled      = RenderType.LowQualityThenHighQualityDelayed;
 
 		plot.Style( _chartStyle );
 		//plot.LeftAxis.Label( label );

@@ -1,15 +1,19 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Runtime.InteropServices;
 
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
-using Avalonia.Markup.Xaml;
-using Avalonia.VisualTree;
+using Avalonia.Media;
+
+using cpap_app.Configuration;
+using cpap_app.ViewModels;
+
+using cpaplib;
 
 using ScottPlot;
 using ScottPlot.Avalonia;
@@ -18,9 +22,45 @@ namespace cpap_app.Views;
 
 public partial class SignalChartContainer : UserControl
 {
+	private SignalConfigurationViewModel _signalConfigs;
+	private List<SignalChart>            _charts = new();
+	
 	public SignalChartContainer()
 	{
 		InitializeComponent();
+
+		_signalConfigs = new SignalConfigurationViewModel();
+
+		foreach( var config in _signalConfigs.UnPinnedCharts )
+		{
+			if( !config.IsVisible )
+			{
+				continue;
+			}
+			
+			var chart = new SignalChart()
+			{
+				Title           = config.Title,
+				SignalName      = config.SignalName,
+				PlotColor       = config.PlotColor,
+				RedLinePosition = config.RedlinePosition,
+				FillBelow       = config.FillBelow
+			};
+
+			_charts.Add( chart );
+			
+			UnPinnedCharts.Children.Add( chart );
+		}
+	}
+
+	protected override void OnLoaded( RoutedEventArgs e )
+	{
+		base.OnLoaded( e );
+
+		foreach( var chart in _charts )
+		{
+			chart.Chart.AxesChanged += ChartOnAxesChanged;
+		}
 	}
 
 	protected override void OnPointerWheelChanged( PointerWheelEventArgs e )
@@ -31,17 +71,6 @@ public partial class SignalChartContainer : UserControl
 		Debug.WriteLine( e );
 	}
 
-	protected override void OnLoaded( RoutedEventArgs e )
-	{
-		base.OnLoaded( e );
-		
-		var charts = this.GetLogicalDescendants().OfType<SignalChart>().ToList();
-		foreach( var chart in charts )
-		{
-			chart.Chart.AxesChanged += ChartOnAxesChanged;
-		}
-	}
-	
 	protected override void OnUnloaded( RoutedEventArgs e )
 	{
 		base.OnUnloaded( e );
@@ -62,7 +91,7 @@ public partial class SignalChartContainer : UserControl
 		
 		foreach( var control in controls )
 		{
-			if( control.Chart == who )
+			if( control.Chart == who || !control.Chart.IsEnabled )
 			{
 				continue;
 			}

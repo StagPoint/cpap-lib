@@ -7,6 +7,8 @@ using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Interactivity;
 
+using cpap_app.ViewModels;
+
 using cpap_db;
 
 using cpaplib;

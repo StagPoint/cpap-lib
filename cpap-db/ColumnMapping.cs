@@ -1,23 +1,23 @@
 ﻿using System.Diagnostics;
 using System.Linq.Expressions;
+using System.Numerics;
 using System.Reflection;
 
 namespace cpap_db;
 
 public class KeyColumn
 {
-	public string ColumnName { get; set; }
-	public Type   Type       { get; set; }
-	public string DbType     { get; set; }
-	public object Value      { get; set; }
-	public bool   IsNullable { get; set; } = false;
+	public string       ColumnName { get; set; }
+	public Type         Type       { get; set; }
+	public string       DbType     { get; set; }
+	public PropertyInfo PropertyAccessor   { get; set; }
+	public bool         IsNullable { get; set; } = false;
 
 	protected KeyColumn( string name, Type type )
 	{
 		ColumnName = !string.IsNullOrEmpty( name ) ? name : throw new ArgumentNullException( "Name argument cannot be null or empty " );
 		Type       = type ?? throw new ArgumentNullException( $"Type argument cannot be null" );
 		DbType     = DatabaseMapping.GetSqlType( type );
-		Value      = null;
 	}
 }
 
@@ -65,7 +65,7 @@ public class ColumnMapping
 	public int?   MaxStringLength { get; set; }
 	public bool   IsUnique        { get; set; }
 	public bool   IsNullable      { get; set; }
-
+	
 	public Type Type
 	{
 		get => Converter != null ? typeof( byte[] ) : _propertyType;

@@ -2,6 +2,7 @@
 using System.Globalization;
 using System.Numerics;
 using System.Reflection;
+using System.Runtime.Intrinsics.X86;
 using System.Text;
 
 using SQLite;
@@ -135,7 +136,7 @@ public class DatabaseMapping
 		return null;
 	}
 
-	internal bool CreateTable( SQLiteConnection connection )
+	internal bool CreateTable( SQLiteConnection connection, bool updateTableSchema = true )
 	{
 		List<SQLiteConnection.ColumnInfo> tableInfo = connection.GetTableInfo( TableName );
 		if( tableInfo.Count == 0 )
@@ -145,7 +146,72 @@ public class DatabaseMapping
 			return true;
 		}
 
-		return false;
+		if( !updateTableSchema )
+		{
+			return false;
+		}
+
+		bool tableAltered = false;
+
+		// If the mapping contains columns that do not (yet) exist in the database, we will
+		// automatically issue ALTER TABLE commands to add them. We do not add primary or 
+		// foreign keys here, and any NOT NULL column must have a default value that can 
+		// be specified 
+		if( tableInfo.Count != ColumnCount )
+		{
+			foreach( var column in Columns )
+			{
+				// check to see if the mapped column exists in the tableInfo list 
+				if( !tableInfo.Any( x => x.Name.Equals( column.ColumnName, StringComparison.OrdinalIgnoreCase ) ) )
+				{
+					var sqlType = GetSqlType( column.Type, column.MaxStringLength );
+					var sql     = $"ALTER TABLE [{TableName}] ADD COLUMN [{column.ColumnName}] {sqlType}";
+
+					if( !column.IsNullable )
+					{
+						//string defaultValue = column.Type == typeof( string ) ? "''" : "0"; 
+						sql += $" NOT NULL";
+					}
+
+					connection.Execute( sql );
+					tableAltered = true;
+				}
+			}
+			
+			#region DROP COLUMN is not supported by all versions of SQLite 
+			
+			// TODO: Consider whether it's worthwhile to alter the table using the "SELECT INTO TEMP, DROP TABLE, RECREATE TABLE, REPOPULATE FROM TEMP" pattern to alter table structure.
+
+			// // Conversely, if there are columns in the database that no longer appear in the mapping, 
+			// // we will automatically issue ALTER TABLE commands to remove them. 
+			// foreach( var column in tableInfo )
+			// {
+			// 	if( Columns.Any( x => x.ColumnName.Equals( column.Name, StringComparison.OrdinalIgnoreCase ) ) )
+			// 	{
+			// 		continue;
+			// 	}
+			//
+			// 	if( PrimaryKey != null && PrimaryKey.ColumnName.Equals( column.Name, StringComparison.OrdinalIgnoreCase ) )
+			// 	{
+			// 		continue;
+			// 	}
+			//
+			// 	if( ForeignKey != null && ForeignKey.ColumnName.Equals( column.Name, StringComparison.OrdinalIgnoreCase ) )
+			// 	{
+			// 		continue;
+			// 	}
+			// 	
+			// 	var sql = $"ALTER TABLE [{TableName}] DROP [{column.Name}]";
+			// 	
+			// 	connection.Execute( sql );
+			// 	
+			// 	tableAltered = true;
+			// }
+			
+			#endregion 
+		}
+		
+		return tableAltered;
 	}
 
 	#endregion 
@@ -375,6 +441,12 @@ public class DatabaseMapping
 
 	internal static string GetSqlType( System.Type columnType, int? maxStringLength = null )
 	{
+		var underlyingType = Nullable.GetUnderlyingType( columnType );
+		if( underlyingType != null )
+		{
+			columnType = underlyingType;
+		}
+		
 		if( columnType == typeof( bool ) || columnType == typeof( byte ) || columnType == typeof( ushort ) || columnType == typeof( sbyte ) || columnType == typeof( short ) || columnType == typeof( int ) || columnType == typeof( uint ) || columnType == typeof( long ) )
 		{
 			return "INTEGER";
@@ -426,31 +498,43 @@ public class DatabaseMapping<T> : DatabaseMapping
 {
 	#region Constructors
 
-	public DatabaseMapping( string tableName = null ) 
+	public DatabaseMapping( string tableName ) 
 	{
 		ObjectType = typeof( T );
-		TableName  = tableName ?? typeof( T ).Name;
+		TableName  = tableName;
 
 		var properties = ObjectType.GetProperties( BindingFlags.Instance | BindingFlags.Public );
 
 		foreach( var property in properties )
 		{
+			if( property.GetCustomAttribute<IgnoreAttribute>() != null )
+			{
+				continue;
+			}
+			
 			if( property.CanRead && property.CanWrite )
 			{
 				if( property.PropertyType.IsValueType || property.PropertyType == typeof( string ) )
 				{
 					var fitsPrimaryKeyColumnNamingPattern =
 						property.Name.Equals( $"{ObjectType.Name}ID", StringComparison.OrdinalIgnoreCase ) ||
-						property.Name.Equals( "_id",                  StringComparison.OrdinalIgnoreCase );
+						property.Name.Equals( "_id",                  StringComparison.OrdinalIgnoreCase ) ||
+						property.Name.Equals( "id",                   StringComparison.OrdinalIgnoreCase );
 					
 					if( fitsPrimaryKeyColumnNamingPattern )
 					{
 						var isIntegerProperty = property.PropertyType.GetTypeInfo().GetInterfaces().Any( i => i.IsGenericType && (i.GetGenericTypeDefinition() == typeof( INumber<> )) );
-						PrimaryKey = new PrimaryKeyColumn( property.Name, property.PropertyType, isIntegerProperty );
+						PrimaryKey          = new PrimaryKeyColumn( property.Name, property.PropertyType, isIntegerProperty );
+						PrimaryKey.PropertyAccessor = property;
 					}
 					else
 					{
-						Columns.Add( new ColumnMapping( property.Name, property ) );
+						// TODO: This doesn't seem to handle nullable strings? Noticed at one point, don't have a repro unfortunately.
+						
+						var newColumn = new ColumnMapping( property.Name, property );
+						newColumn.IsNullable = Nullable.GetUnderlyingType( property.PropertyType ) != null;
+						
+						Columns.Add( newColumn );
 					}
 				}
 			}
@@ -532,15 +616,22 @@ public class DatabaseMapping<T> : DatabaseMapping
 				int columnCount = SQLite3.ColumnCount( stmt );
 				for( int index = 0; index < columnCount; ++index )
 				{
-					var columnName = SQLite3.ColumnName( stmt, index );
-					var columnType = SQLite3.ColumnType( stmt, index );
+					var columnName  = SQLite3.ColumnName( stmt, index );
+					var columnType  = SQLite3.ColumnType( stmt, index );
 					
 					var columnMapping  = GetColumnByName( columnName );
 					if( columnMapping != null )
 					{
-						var val = StorageService.ReadColumn( connection, stmt, index, columnType, columnMapping.Type );
-
-						columnMapping.SetValue( obj, val );
+						var columnValue = StorageService.ReadColumn( connection, stmt, index, columnType, columnMapping.Type );
+						columnMapping.SetValue( obj, columnValue );
+					}
+					else if( PrimaryKey != null && PrimaryKey.ColumnName.Equals( columnName, StringComparison.OrdinalIgnoreCase ) )
+					{
+						if( PrimaryKey.PropertyAccessor != null )
+						{
+							var columnValue = StorageService.ReadColumn( connection, stmt, index, columnType, PrimaryKey.Type );
+							PrimaryKey.PropertyAccessor.SetValue( obj, columnValue );
+						}
 					}
 				}
 

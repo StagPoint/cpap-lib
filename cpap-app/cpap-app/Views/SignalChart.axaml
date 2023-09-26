@@ -4,11 +4,11 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:ScottPlot="clr-namespace:ScottPlot.Avalonia;assembly=ScottPlot.Avalonia"
              xmlns:controls="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
-             mc:Ignorable="d" 
-             d:DesignWidth="800" 
+             xmlns:cpaplib="clr-namespace:cpaplib;assembly=cpap-lib"
+             mc:Ignorable="d"
+             d:DesignWidth="800"
              x:Class="cpap_app.Views.SignalChart"
              Height="200"
-             Title="Chart Title"
              ChartForeground="{DynamicResource TextFillColorPrimaryBrush}"
              ChartBackground="{DynamicResource SolidBackgroundFillColorSecondaryBrush}"
              ChartBorderColor="{DynamicResource ControlStrokeColorSecondaryBrush}"
@@ -23,42 +23,56 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="18" />
             <RowDefinition />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-        <TextBlock 
+        <TextBlock
             Name="CurrentValue"
-            Grid.Row="0" 
-            Grid.Column="1" 
+            Grid.Row="0"
+            Grid.Column="1"
             Grid.RowSpan="2"
-            Padding="45 4" 
+            Padding="45 4"
             Margin="0 0 0 0"
             Theme="{DynamicResource BodyStrongTextBlockStyle}"
             Text="Current value information goes here">
         </TextBlock>
-        <Button
-            Name="btnChartSettings"
-            Grid.Row="0" 
-            Grid.Column="2" 
-            Grid.RowSpan="2" 
-            BorderThickness="0"
-            Background="Transparent"
-            Margin="0 8 0 0"
-            Padding="0 0 8 0"
-            ZIndex="9999"
-            VerticalAlignment="Top">
-            <controls:SymbolIcon Symbol="Settings" />
-        </Button>
-        <Label 
-            Grid.Row="0" 
-            Grid.Column="0" 
+        <StackPanel Orientation="Horizontal"
+                    Grid.Row="0"
+                    Grid.Column="1"
+                    Grid.ColumnSpan="2"
+                    Grid.RowSpan="2"
+                    Margin="0 0 20 0"
+                    Spacing="2"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Top">
+            <Button
+                Name="btnChartPinUnpin"
+                BorderThickness="0"
+                Background="Transparent"
+                Padding="8 4"
+                ZIndex="9999">
+                <controls:SymbolIcon Symbol="UnPin" />
+            </Button>
+            <Button
+                Name="btnChartSettings"
+                BorderThickness="0"
+                Background="Transparent"
+                Padding="8 4"
+                ZIndex="9999">
+                <controls:SymbolIcon Symbol="Settings" />
+            </Button>
+        </StackPanel>
+        <Label
+            Grid.Row="0"
+            Grid.Column="0"
             Grid.RowSpan="2"
             Width="200"
             Height="200"
             HorizontalContentAlignment="Center"
-            VerticalContentAlignment="Center" 
+            VerticalContentAlignment="Center"
             VerticalAlignment="Center">
-            <TextBlock 
-                Name="ChartLabel" 
-                Text="Chart Label" 
+            <TextBlock
+                Name="ChartLabel"
+                Text="Chart Label"
                 VerticalAlignment="Center"
                 TextWrapping="NoWrap"
                 Theme="{DynamicResource SubtitleTextBlockStyle}">
@@ -69,25 +83,26 @@
                 </TextBlock.RenderTransform>
             </TextBlock>
         </Label>
-        <ScottPlot:AvaPlot 
-            Grid.Row="1" 
-            Grid.Column="1" 
+        <ScottPlot:AvaPlot
+            Grid.Row="1"
+            Grid.Column="1"
             Grid.ColumnSpan="2"
-            Name="Chart" 
-            HorizontalAlignment="Stretch" 
+            Name="Chart"
+            HorizontalAlignment="Stretch"
             Height="200"
             Margin="0 0 16 0">
         </ScottPlot:AvaPlot>
-        <TextBlock Name="NoDataLabel" 
-                   Grid.Column="0" 
-                   Grid.ColumnSpan="2" 
+        <TextBlock Name="NoDataLabel"
+                   Grid.Column="0"
+                   Grid.ColumnSpan="2"
                    Grid.Row="1"
                    Theme="{DynamicResource SubtitleTextBlockStyle}"
-                   Text="There is no data available to display" 
-                   VerticalAlignment="Center" 
-                   HorizontalAlignment="Center" 
-                   Margin="100 -30 0 0" 
+                   Text="There is no data available to display"
+                   VerticalAlignment="Center"
+                   HorizontalAlignment="Center"
+                   Margin="100 -30 0 0"
                    IsVisible="True">
         </TextBlock>
+        <Separator Name="BottomSeparator" Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="3" />
     </Grid>
 </UserControl>

@@ -48,7 +48,7 @@ public class CustomChartStyle : ScottPlot.Styles.Default
 		TitleFontColor = foreColor;
 		TickLabelColor = foreColor;
 
-		GridLineColor  = midColor.MultiplyAlpha( 0.85f );
+		GridLineColor  = midColor.MultiplyAlpha( 0.35f );
 		TickMajorColor = midColor;
 		TickMinorColor = midColor;
 

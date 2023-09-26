@@ -309,7 +309,14 @@ namespace cpap_db
 		public int Insert<T>( T record, object primaryKeyValue = null, object foreignKeyValue = null ) where T : class, new()
 		{
 			var mapping = GetMapping<T>();
-			return mapping.Insert( Connection, record, primaryKeyValue, foreignKeyValue );
+			var result = mapping.Insert( Connection, record, primaryKeyValue, foreignKeyValue );
+
+			if( mapping.PrimaryKey.AutoIncrement && mapping.PrimaryKey.PropertyAccessor != null )
+			{
+				mapping.PrimaryKey.PropertyAccessor.SetValue( record, result );
+			}
+
+			return result;
 		}
 
 		public bool CreateTable<T>() where T : class, new()
