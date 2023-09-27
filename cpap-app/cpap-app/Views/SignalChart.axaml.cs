@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 
@@ -7,10 +8,8 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
-using Avalonia.Interactivity;
 using Avalonia.Media;
 
-using cpap_app.Configuration;
 using cpap_app.Styling;
 using cpap_app.Helpers;
 
@@ -35,11 +34,15 @@ public partial class SignalChart : UserControl
 	
 	#region Public properties
 
-	public string? Title           { get; set; }
-	public string  SignalName      { get; set; } = "";
-	public Color   PlotColor       { get; set; }
-	public double? RedLinePosition { get; set; }
-	public bool?   FillBelow       { get; set; }
+	public string? Title               { get; set; }
+	public string  SignalName          { get; set; } = "";
+	public string  SecondarySignalName { get; set; } = "";
+	public Color   PlotColor           { get; set; }
+	public double? BaselineHigh        { get; set; }
+	public double? BaselineLow         { get; set; }
+	public bool?   FillBelow           { get; set; }
+	public double? AxisMinValue        { get; set; } = null;
+	public double? AxisMaxValue        { get; set; } = null;
 
 	public Brush ChartForeground
 	{
@@ -69,14 +72,16 @@ public partial class SignalChart : UserControl
 	
 	#region Private fields 
 	
-	private CustomChartStyle?   _chartStyle         = null;
-	private Tooltip?            _tooltip            = null;
-	private VLine?              _mouseTrackLine     = null;
-	private MarkerPlot?         _currentValueMarker = null;
-	private DailyReport?        _day                = null;
-	private bool                _hasDataAvailable   = false;
-	private bool                _chartInitialized   = false;
-	private List<ReportedEvent> _events             = new();
+	private CustomChartStyle? _chartStyle         = null;
+	private Tooltip?          _tooltip            = null;
+	private VLine?            _mouseTrackLine     = null;
+	private MarkerPlot?       _currentValueMarker = null;
+	private DailyReport?      _day                = null;
+	private bool              _hasDataAvailable   = false;
+	private bool              _chartInitialized   = false;
+	
+	private List<ReportedEvent> _events  = new();
+	private List<Signal>        _signals = new();
 	
 	#endregion 
 	
@@ -87,11 +92,17 @@ public partial class SignalChart : UserControl
 		InitializeComponent();
 
 		PointerWheelChanged += OnPointerWheelChanged;
+		Chart.RightClicked  -= Chart.DefaultRightClickEvent;
 	}
-	
+
 	#endregion 
 	
 	#region Event Handlers
+
+	private void ChartOnPointerMoved( object? sender, PointerEventArgs e )
+	{
+		throw new NotImplementedException();
+	}
 
 	protected override void OnApplyTemplate( TemplateAppliedEventArgs e )
 	{
@@ -108,7 +119,9 @@ public partial class SignalChart : UserControl
 	
 		if( change.Property.Name == nameof( DataContext ) )
 		{
-			if( DataContext is DailyReport day )
+			_signals.Clear();
+			
+			if( change.NewValue is DailyReport day )
 			{
 				if( string.IsNullOrEmpty( SignalName ) )
 				{
@@ -121,6 +134,10 @@ public partial class SignalChart : UserControl
 				}
 
 				LoadData( day );
+			}
+			else if( change.NewValue == null )
+			{
+				IndicateNoDataAvailable();
 			}
 		}
 	}
@@ -160,10 +177,10 @@ public partial class SignalChart : UserControl
 
 			var plot = Chart.Plot;
 
-			var axisLimits = plot.GetAxisLimits();
-			var bounds     = _day.TotalTimeSpan.TotalSeconds;
-			var axisRange  = axisLimits.XMax - axisLimits.XMin;
-			var scale      = axisRange / bounds;
+			// var axisLimits = plot.GetAxisLimits();
+			// var bounds     = _day.TotalTimeSpan.TotalSeconds;
+			// var axisRange  = axisLimits.XMax - axisLimits.XMin;
+			var scale      = 0.5;
 
 			if( scale < 0.99 )
 			{
@@ -172,7 +189,7 @@ public partial class SignalChart : UserControl
 
 			args.Handled = true;
 			
-			Chart.Refresh();
+			Chart.RenderRequest( RenderType.LowQualityThenHighQuality );
 		}
 		else if( args.Key is Key.Up or Key.Down )
 		{
@@ -183,7 +200,7 @@ public partial class SignalChart : UserControl
 
 			args.Handled = true;
 
-			Chart.Refresh();
+			Chart.RenderRequest( RenderType.LowQualityThenHighQuality );
 		}
 	}
 
@@ -198,38 +215,28 @@ public partial class SignalChart : UserControl
 			return;
 		}
 		
-		_tooltip.IsVisible    = false;
-		_mouseTrackLine.X     = time;
-		_currentValueMarker.X = time;
-		CurrentValue.Text     = "";
-
+		_tooltip!.IsVisible    = false;
+		_mouseTrackLine!.X     = time;
+		_currentValueMarker!.X = time;
+		CurrentValue.Text      = "";
+		
 		// Converting the "Number of seconds offset from the start of the chart" back to a DateTime makes it 
 		// much easier to locate which Session this time refers to, and to then calculate an offset into that
 		// session.
 		var asDateTime = _day.RecordingStartTime.AddSeconds( time );
 
-		foreach( var session in _day.Sessions )
+		foreach( var signal in _signals )
 		{
-			// Check to see if the time overlaps with a session
-			if( session.StartTime <= asDateTime && session.EndTime >= asDateTime )
+			// Signal start times may be slightly different than session start times, so need to check 
+			// the signal itself also 
+			if( signal.StartTime <= asDateTime && signal.EndTime >= asDateTime )
 			{
-				var signal = session.GetSignalByName( SignalName );
-				if( signal == null )
-				{
-					continue;
-				}
+				var value = signal.GetValueAtTime( asDateTime );
 
-                // Signal start times may be slightly different than session start times, so need to check 
-                // the signal itself also 
-                if ( signal.StartTime <= asDateTime && signal.EndTime >= asDateTime )
-				{
-					var value = signal.GetValueAtTime( asDateTime );
+				CurrentValue.Text     = $"{asDateTime:T}        {Title}: {value:N2} {signal.UnitOfMeasurement}";
+				_currentValueMarker.Y = value;
 
-					CurrentValue.Text = $"{asDateTime:T}        {Title}: {value:N2} {signal.UnitOfMeasurement}";
-					_currentValueMarker.Y = value;
-
-					break;
-				}
+				break;
 			}
 		}
 
@@ -257,13 +264,15 @@ public partial class SignalChart : UserControl
 			}
 		}
 		
-		Chart.Refresh();
+		Chart.RenderRequest( RenderType.LowQualityThenHighQualityDelayed );
 	}
 
 	private void LoadData( DailyReport day )
 	{
 		_day = day;
 		_events.Clear();
+
+		CurrentValue.Text = "";
 
 		try
 		{
@@ -274,40 +283,45 @@ public partial class SignalChart : UserControl
 			_hasDataAvailable = day.Sessions.FirstOrDefault( x => x.GetSignalByName( SignalName ) != null ) != null;
 			if( !_hasDataAvailable )
 			{
-				NoDataLabel.Text      = $"There is no {SignalName} data available";
-				NoDataLabel.IsVisible = true;
-				Chart.IsEnabled       = false;
-				this.IsEnabled        = false;
-
-				Chart.Render();
+				IndicateNoDataAvailable();
 
 				return;
 			}
 			else
 			{
-				ChartLabel.Text       = SignalName;
-				NoDataLabel.IsVisible = false;
-				Chart.IsEnabled       = true;
-				this.IsEnabled        = true;
-
-				Chart.Render();
+				ChartLabel.Text        = SignalName;
+				NoDataLabel.IsVisible  = false;
+				CurrentValue.IsVisible = true;
+				Chart.IsEnabled        = true;
+				this.IsEnabled         = true;
 			}
 
 			// If a RedLine position is specified, we want to add it before any signal data, as items are rendered in the 
 			// order in which they are added, and we want the redline rendered behind the signal data.
-			if( RedLinePosition.HasValue )
+			if( BaselineHigh.HasValue )
 			{
 				var redlineColor = Colors.Red.MultiplyAlpha( 0.6f );
-				Chart.Plot.AddHorizontalLine( RedLinePosition.Value, redlineColor.ToDrawingColor(), 1f, LineStyle.Dash );
+				Chart.Plot.AddHorizontalLine( BaselineHigh.Value, redlineColor.ToDrawingColor(), 1f, LineStyle.Dash );
 			}
 
-			ChartSignal( Chart, day, SignalName );
+			if( BaselineLow.HasValue )
+			{
+				var redlineColor = Colors.Red.MultiplyAlpha( 0.6f );
+				Chart.Plot.AddHorizontalLine( BaselineLow.Value, redlineColor.ToDrawingColor(), 1f, LineStyle.Dash );
+			}
+
+			if( AxisMinValue != null )
+			{
+				Debug.Write( $"Axis Min Value: {AxisMinValue}" );
+			}
+
+			ChartSignal( Chart, day, SignalName, 1f, AxisMinValue, AxisMaxValue );
 			// CreateEventMarkers( day );
 
 			var lineColor = ((SolidColorBrush)ChartGridLineColor).Color.ToDrawingColor();
 
 			_tooltip                                = Chart.Plot.AddTooltip( "", 0, 0 );
-			_mouseTrackLine                         = Chart.Plot.AddVerticalLine( 0, lineColor, 1f, LineStyle.Dot );
+			_mouseTrackLine                         = Chart.Plot.AddVerticalLine( 0, lineColor, 1.25f, LineStyle.Dot );
 			_mouseTrackLine.PositionLabel           = false;
 			_mouseTrackLine.PositionLabelAxis       = Chart.Plot.XAxis;
 			_mouseTrackLine.DragEnabled             = false;
@@ -330,11 +344,11 @@ public partial class SignalChart : UserControl
 		{
 			Chart.Configuration.AxesChangedEventEnabled = true;
 		}
-		
-		Chart.Refresh();
+
+		Chart.RenderRequest( RenderType.LowQualityThenHighQuality );
 	}
 	
-	private void ChartSignal( AvaPlot chart, DailyReport day, string signalName, float signalScale = 1f, float? axisMinValue = null, float? axisMaxValue = null, double[]? manualLabels = null )
+	private void ChartSignal( AvaPlot chart, DailyReport day, string signalName, float signalScale = 1f, double? axisMinValue = null, double? axisMaxValue = null, double[]? manualLabels = null )
 	{
 		var minValue = axisMinValue ?? double.MaxValue;
 		var maxValue = axisMaxValue ?? double.MinValue;
@@ -362,6 +376,10 @@ public partial class SignalChart : UserControl
 			{
 				continue;
 			}
+			
+			// Keep track of all of the signals that this graph displays. This is done partially so that we don't 
+			// have to search for the signals during time-sensitive operations such as mouse movement, etc. 
+			_signals.Add( signal );
 
 			minValue = Math.Min( minValue, signal.MinValue * signalScale );
 			maxValue = Math.Max( maxValue, signal.MaxValue * signalScale );
@@ -371,15 +389,35 @@ public partial class SignalChart : UserControl
 
 			var chartColor = PlotColor.ToDrawingColor();
 
-			var graph = chart.Plot.AddSignal( signal.Samples.ToArray(), signal.FrequencyInHz, chartColor, firstSessionAdded ? signal.Name : null );
+			SignalPlotBase<double> graph = default;
+			
+			if( signal.Samples.Count > 100000 )
+				graph = chart.Plot.AddSignalConst( signal.Samples.ToArray(), signal.FrequencyInHz, chartColor, firstSessionAdded ? signal.Name : null );
+			else
+				graph = chart.Plot.AddSignal( signal.Samples.ToArray(), signal.FrequencyInHz, chartColor, firstSessionAdded ? signal.Name : null );
+
+			if( !string.IsNullOrEmpty( SecondarySignalName ) )
+			{
+				var secondarySignal = session.GetSignalByName( SecondarySignalName );
+				if( secondarySignal != null )
+				{
+					var secondaryGraph = chart.Plot.AddSignal( secondarySignal.Samples.ToArray(), secondarySignal.FrequencyInHz, Colors.Yellow.ToDrawingColor(), null );
+					var secondaryOffset = (secondarySignal.StartTime - day.RecordingStartTime).TotalSeconds;
+					
+					secondaryGraph.OffsetX    = secondaryOffset;
+					secondaryGraph.MarkerSize = 0;
+				}
+			}
+			
 			graph.OffsetX     = offset;
 			graph.MarkerSize  = 0;
 			graph.ScaleY      = signalScale;
 			graph.UseParallel = true;
 			// graph.StepDisplay = true;
 
-			// "Fill Below" is only available on signals that do not cross a zero line
-			if( signal is { MinValue: >= 0, MaxValue: > 0 } && FillBelow.HasValue && FillBelow.Value )
+			// "Fill Below" is only available on signals that do not cross a zero line, do not have a secondary 
+			// signal, and is explicitly set in the configuration table. 
+			if( signal is { MinValue: >= 0, MaxValue: > 0 } && string.IsNullOrEmpty( SecondarySignalName ) && FillBelow.HasValue && FillBelow.Value )
 			{
 				graph.FillBelow( chartColor, Colors.Transparent.ToDrawingColor(), 0.18 );
 			}
@@ -390,7 +428,7 @@ public partial class SignalChart : UserControl
 		chart.Plot.XAxis.TickLabelFormat( x => $"{day.RecordingStartTime.AddSeconds( x ):hh:mm:ss tt}" );
 
 		// Set zoom and boundary limits
-		chart.Plot.YAxis.SetBoundary( minValue, maxValue );
+		chart.Plot.YAxis.SetBoundary( axisMinValue ?? minValue, axisMaxValue ?? maxValue );
 		chart.Plot.XAxis.SetBoundary( -1, day.TotalTimeSpan.TotalSeconds + 1 );
 		chart.Plot.SetAxisLimits( -1, day.TotalTimeSpan.TotalSeconds + 1, minValue, maxValue );
 
@@ -427,6 +465,19 @@ public partial class SignalChart : UserControl
 		}
 	}
 
+	private void IndicateNoDataAvailable()
+	{
+		Chart.Plot.Clear();
+		
+		NoDataLabel.Text       = $"There is no {SignalName} data available";
+		NoDataLabel.IsVisible  = true;
+		CurrentValue.IsVisible = false;
+		Chart.IsEnabled        = false;
+		this.IsEnabled         = false;
+
+		Chart.RenderRequest( RenderType.LowQualityThenHighQuality );
+	}
+
 	private void InitializeChartProperties( AvaPlot chart )
 	{
 		_chartInitialized = true;
@@ -439,11 +490,11 @@ public partial class SignalChart : UserControl
 
 		chart.Configuration.ScrollWheelZoom                              = false;
 		chart.Configuration.Quality                                      = ScottPlot.Control.QualityMode.LowWhileDragging;
-		chart.Configuration.QualityConfiguration.BenchmarkToggle         = RenderType.LowQualityThenHighQualityDelayed;
-		chart.Configuration.QualityConfiguration.AutoAxis                = RenderType.LowQualityThenHighQualityDelayed;
-		chart.Configuration.QualityConfiguration.MouseInteractiveDragged = RenderType.LowQualityThenHighQualityDelayed;
-		chart.Configuration.QualityConfiguration.MouseInteractiveDropped = RenderType.LowQualityThenHighQualityDelayed;
-		chart.Configuration.QualityConfiguration.MouseWheelScrolled      = RenderType.LowQualityThenHighQualityDelayed;
+		chart.Configuration.QualityConfiguration.BenchmarkToggle         = RenderType.LowQualityThenHighQuality;
+		chart.Configuration.QualityConfiguration.AutoAxis                = RenderType.LowQualityThenHighQuality;
+		chart.Configuration.QualityConfiguration.MouseInteractiveDragged = RenderType.LowQualityThenHighQuality;
+		chart.Configuration.QualityConfiguration.MouseInteractiveDropped = RenderType.LowQualityThenHighQuality;
+		chart.Configuration.QualityConfiguration.MouseWheelScrolled      = RenderType.LowQualityThenHighQuality;
 
 		plot.Style( _chartStyle );
 		//plot.LeftAxis.Label( label );
@@ -470,7 +521,7 @@ public partial class SignalChart : UserControl
 
 		chart.Configuration.LockVerticalAxis = true;
 		
-		chart.Refresh();
+		//chart.Refresh();
 	}
 	
 	private float MeasureText( string text, string fontFamily, float emSize )

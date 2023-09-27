@@ -311,7 +311,7 @@ namespace cpap_db
 			var mapping = GetMapping<T>();
 			var result = mapping.Insert( Connection, record, primaryKeyValue, foreignKeyValue );
 
-			if( mapping.PrimaryKey.AutoIncrement && mapping.PrimaryKey.PropertyAccessor != null )
+			if( mapping.PrimaryKey is { AutoIncrement: true } && mapping.PrimaryKey.PropertyAccessor != null )
 			{
 				mapping.PrimaryKey.PropertyAccessor.SetValue( record, result );
 			}

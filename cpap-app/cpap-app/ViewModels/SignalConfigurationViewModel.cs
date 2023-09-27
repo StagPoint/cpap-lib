@@ -68,6 +68,8 @@ public class SignalConfigurationViewModel
 		{
 			return;
 		}
+		
+		// The code below is intended to create reasonable defaults for the known signal types 
 
 		var signalNames = typeof( SignalNames ).GetAllPublicConstantValues<string>();
 		for( int i = 0; i < signalNames.Count; i++ )
@@ -79,7 +81,6 @@ public class SignalConfigurationViewModel
 			{
 				Title               = signalName,
 				SignalName          = signalName,
-				SecondarySignalName = (signalName == SignalNames.FlowRate) ? SignalNames.EPAP : "",
 				DisplayOrder        = i,
 				IsPinned            = false,
 				IsVisible           = (signalName != SignalNames.EPAP && signalName != SignalNames.MaskPressureLow),
@@ -90,23 +91,41 @@ public class SignalConfigurationViewModel
 			switch( signalName )
 			{
 				case SignalNames.FlowRate:
-					config.RedlinePosition = 0;
+					config.BaselineHigh = 0;
+					break;
+				
+				case SignalNames.Pressure:
+					config.SecondarySignalName = SignalNames.EPAP;
 					break;
 				
 				case SignalNames.SpO2:
-					config.RedlinePosition = 90;
+					config.BaselineLow = 90;
 					break;
 				
 				case SignalNames.Pulse:
-					config.RedlinePosition = 110;
+					config.BaselineHigh = 110;
+					config.BaselineLow  = 50;
 					break;
 				
 				case SignalNames.LeakRate:
-					config.RedlinePosition = 24;
+					config.BaselineHigh = 24;
+					config.AxisMinValue = 0;
+					config.AxisMaxValue = 60;
 					break;
 				
 				case SignalNames.FlowLimit:
-					config.RedlinePosition = 0.35;
+					config.BaselineHigh = 0.35;
+					break;
+				
+				case SignalNames.TidalVolume:
+					config.BaselineHigh = 500;
+					config.AxisMinValue = 0;
+					config.AxisMaxValue = 2500;
+					break;
+				
+				case SignalNames.MinuteVent:
+					config.BaselineHigh = 12;
+					config.BaselineLow  = 4;
 					break;
 			}
 

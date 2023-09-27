@@ -1,19 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
-using Avalonia.Media;
 
-using cpap_app.Configuration;
 using cpap_app.ViewModels;
-
-using cpaplib;
 
 using ScottPlot;
 using ScottPlot.Avalonia;
@@ -37,14 +31,18 @@ public partial class SignalChartContainer : UserControl
 			{
 				continue;
 			}
-			
+
 			var chart = new SignalChart()
 			{
-				Title           = config.Title,
-				SignalName      = config.SignalName,
-				PlotColor       = config.PlotColor,
-				RedLinePosition = config.RedlinePosition,
-				FillBelow       = config.FillBelow
+				Title               = config.Title,
+				SignalName          = config.SignalName,
+				SecondarySignalName = config.SecondarySignalName,
+				PlotColor           = config.PlotColor,
+				BaselineHigh        = config.BaselineHigh,
+				BaselineLow         = config.BaselineLow,
+				FillBelow           = config.FillBelow,
+				AxisMinValue        = config.AxisMinValue,
+				AxisMaxValue        = config.AxisMaxValue
 			};
 
 			_charts.Add( chart );
@@ -52,6 +50,8 @@ public partial class SignalChartContainer : UserControl
 			UnPinnedCharts.Children.Add( chart );
 		}
 	}
+	
+	#region Base class overrides 
 
 	protected override void OnLoaded( RoutedEventArgs e )
 	{
@@ -60,15 +60,15 @@ public partial class SignalChartContainer : UserControl
 		foreach( var chart in _charts )
 		{
 			chart.Chart.AxesChanged += ChartOnAxesChanged;
+			chart.Chart.PointerMoved += ChartOnPointerMoved;
 		}
 	}
-
+	
 	protected override void OnPointerWheelChanged( PointerWheelEventArgs e )
 	{
 		base.OnPointerWheelChanged( e );
 
 		e.Handled = true;
-		Debug.WriteLine( e );
 	}
 
 	protected override void OnUnloaded( RoutedEventArgs e )
@@ -78,7 +78,29 @@ public partial class SignalChartContainer : UserControl
 		var charts = this.GetLogicalDescendants().OfType<SignalChart>().ToList();
 		foreach( var chart in charts )
 		{
-			chart.Chart.AxesChanged -= ChartOnAxesChanged;
+			chart.Chart.AxesChanged  -= ChartOnAxesChanged;
+			chart.Chart.PointerMoved -= ChartOnPointerMoved;
+		}
+	}
+	
+	#endregion 
+
+	#region SignalChart event handlers
+
+	private void ChartOnPointerMoved( object? sender, PointerEventArgs e )
+	{
+		if( sender is not AvaPlot plot )
+		{
+			return;
+		}
+		
+		// Returns mouse coordinates as grid coordinates, taking pan and zoom into account
+		(double mouseCoordX, double mouseCoordY) = plot.GetMouseCoordinates();
+
+		// Synchronize the update of the vertical indicator in all charts in the group
+		foreach( var chart in _charts )
+		{
+			chart.UpdateSelectedTime( mouseCoordX );
 		}
 	}
 
@@ -105,10 +127,12 @@ public partial class SignalChartContainer : UserControl
 				var modifiedAxisLimits = new AxisLimits( newAxisLimits.XMin, newAxisLimits.XMax, currentAxisLimits.YMin, currentAxisLimits.YMax );
 
 				chart.Plot.SetAxisLimits( modifiedAxisLimits );
-				chart.Render();
+				chart.RenderRequest( RenderType.LowQualityThenHighQualityDelayed );
 			}
 			chart.Configuration.AxesChangedEventEnabled = true;
 		}
 	}
+	
+	#endregion 
 }
 

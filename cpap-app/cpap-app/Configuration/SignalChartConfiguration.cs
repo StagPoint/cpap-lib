@@ -12,9 +12,10 @@ public class SignalChartConfiguration
 	public int     DisplayOrder        { get; set; }
 	public bool    IsPinned            { get; set; }
 	public bool    IsVisible           { get; set; } = true;
-	public double? RedlinePosition     { get; set; }
-	public double? MinSignalValue      { get; set; }
-	public double? MaxSignalValue      { get; set; }
+	public double? BaselineHigh         { get; set; }
+	public double? BaselineLow          { get; set; }
+	public double? AxisMinValue        { get; set; }
+	public double? AxisMaxValue        { get; set; }
 	public bool?   FillBelow           { get; set; }
 	public Color   PlotColor           { get; set; } = Colors.DodgerBlue;
 	
