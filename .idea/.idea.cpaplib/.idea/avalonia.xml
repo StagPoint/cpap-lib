@@ -10,6 +10,8 @@
         <entry key="cpap-app/cpap-app/Views/AppSettingsView.axaml" value="cpap-app/cpap-app.Desktop/cpap-app.Desktop.csproj" />
         <entry key="cpap-app/cpap-app/Views/DailyDetailsView.axaml" value="cpap-app/cpap-app.Desktop/cpap-app.Desktop.csproj" />
         <entry key="cpap-app/cpap-app/Views/DailyEventSummaryView.axaml" value="cpap-app/cpap-app.Desktop/cpap-app.Desktop.csproj" />
+        <entry key="cpap-app/cpap-app/Views/DailyEventsList.axaml" value="cpap-app/cpap-app.Desktop/cpap-app.Desktop.csproj" />
+        <entry key="cpap-app/cpap-app/Views/DailyEventsListView.axaml" value="cpap-app/cpap-app.Desktop/cpap-app.Desktop.csproj" />
         <entry key="cpap-app/cpap-app/Views/DailyEventsView.axaml" value="cpap-app/cpap-app.Desktop/cpap-app.Desktop.csproj" />
         <entry key="cpap-app/cpap-app/Views/DailyNotesView.axaml" value="cpap-app/cpap-app.Desktop/cpap-app.Desktop.csproj" />
         <entry key="cpap-app/cpap-app/Views/DailyReportView.axaml" value="cpap-app/cpap-app.Desktop/cpap-app.Desktop.csproj" />

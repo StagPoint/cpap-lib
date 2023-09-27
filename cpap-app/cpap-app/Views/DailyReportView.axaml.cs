@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 using Avalonia;
@@ -7,6 +8,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Interactivity;
 
+using cpap_app.Events;
 using cpap_app.ViewModels;
 
 using cpap_db;
@@ -17,6 +19,21 @@ namespace cpap_app.Views;
 
 public partial class DailyReportView : UserControl
 {
+	public static readonly RoutedEvent<TimeRangeSelectedEventArgs> TimeRangeSelectedEvent = RoutedEvent.Register<DailyReportView, TimeRangeSelectedEventArgs>( nameof( TimeRangeSelected ), RoutingStrategies.Bubble );
+	public static readonly RoutedEvent<TimeSelectedEventArgs> TimeSelectedEvent = RoutedEvent.Register<DailyReportView, TimeSelectedEventArgs>( nameof( TimeSelected ), RoutingStrategies.Bubble );
+	
+	public event EventHandler<TimeRangeSelectedEventArgs> TimeRangeSelected
+	{
+		add => AddHandler( TimeRangeSelectedEvent, value );
+		remove => RemoveHandler( TimeRangeSelectedEvent, value );
+	}
+	
+	public event EventHandler<TimeSelectedEventArgs> TimeSelected
+	{
+		add => AddHandler( TimeSelectedEvent, value );
+		remove => RemoveHandler( TimeSelectedEvent, value );
+	}
+	
 	private List<DateTime> _datesWithData = new List<DateTime>();
 	
 	public DailyReportView()
@@ -39,6 +56,19 @@ public partial class DailyReportView : UserControl
 			DateSelector.DisplayDateStart = _datesWithData[ 0 ];
 			DateSelector.DisplayDateEnd = _datesWithData[ ^1 ];
 		}
+
+		AddHandler( TimeRangeSelectedEvent, OnTimeRangeSelected );
+		AddHandler( TimeSelectedEvent, OnTimeSelected  );
+	}
+	
+	private void OnTimeRangeSelected( object? sender, TimeRangeSelectedEventArgs e )
+	{
+		Charts.SelectTimeRange( e.StartTime, e.EndTime );
+	}
+
+	private void OnTimeSelected( object? sender, TimeSelectedEventArgs e )
+	{
+		Charts.SelectTimeRange( e.Time - TimeSpan.FromMinutes( 3 ), e.Time + TimeSpan.FromMinutes( 3 ) );
 	}
 
 	private void DetailTypes_OnSelectionChanged( object? sender, SelectionChangedEventArgs e )
@@ -53,15 +83,7 @@ public partial class DailyReportView : UserControl
 			return;
 		}
 
-		if( string.IsNullOrEmpty( selectedItem.Tag as string ) )
-		{
-			return;
-		}
-	
-		var typeName = $"{typeof( MainView ).Namespace}.{selectedItem.Tag}View";
-		var pageType = Type.GetType( typeName );
-	
-		if( pageType == null )
+		if( selectedItem.Tag is not System.Type pageType )
 		{
 			throw new Exception( $"Unhandled page type: {selectedItem.Tag}" );
 		}

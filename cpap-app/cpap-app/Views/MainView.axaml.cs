@@ -14,6 +14,7 @@ using Avalonia.VisualTree;
 
 using cpap_app.Configuration;
 using cpap_app.Converters;
+using cpap_app.Events;
 
 using cpap_db;
 
@@ -28,6 +29,8 @@ namespace cpap_app.Views;
 
 public partial class MainView : UserControl
 {
+	#region Public events
+
 	public static readonly RoutedEvent<RoutedEventArgs> ImportRequestEvent =
 		RoutedEvent.Register<MainView, RoutedEventArgs>( "ImportRequested", RoutingStrategies.Bubble );
 
@@ -37,6 +40,8 @@ public partial class MainView : UserControl
 		remove => RemoveHandler( ImportRequestEvent, value );
 	}
 
+	#endregion 
+	
 	public MainView()
 	{
 		InitializeComponent();
@@ -44,6 +49,7 @@ public partial class MainView : UserControl
 		NavView.Content = new HomeView();
 
 		AddHandler( ImportRequestEvent, HandleImportRequest );
+		
 		btnImportCPAP.Tapped += HandleImportRequest;
 	}
 

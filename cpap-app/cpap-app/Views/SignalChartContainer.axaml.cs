@@ -7,7 +7,10 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 
+using cpap_app.Events;
 using cpap_app.ViewModels;
+
+using cpaplib;
 
 using ScottPlot;
 using ScottPlot.Avalonia;
@@ -56,7 +59,7 @@ public partial class SignalChartContainer : UserControl
 	protected override void OnLoaded( RoutedEventArgs e )
 	{
 		base.OnLoaded( e );
-
+		
 		foreach( var chart in _charts )
 		{
 			chart.Chart.AxesChanged += ChartOnAxesChanged;
@@ -85,7 +88,7 @@ public partial class SignalChartContainer : UserControl
 	
 	#endregion 
 
-	#region SignalChart event handlers
+	#region Event handlers
 
 	private void ChartOnPointerMoved( object? sender, PointerEventArgs e )
 	{
@@ -109,9 +112,7 @@ public partial class SignalChartContainer : UserControl
 		var who           = sender as AvaPlot;
 		var newAxisLimits = who.Plot.GetAxisLimits();
 		
-		var controls = this.GetLogicalDescendants().OfType<SignalChart>().ToList();
-		
-		foreach( var control in controls )
+		foreach( var control in _charts )
 		{
 			if( control.Chart == who || !control.Chart.IsEnabled )
 			{
@@ -125,6 +126,38 @@ public partial class SignalChartContainer : UserControl
 			{
 				var currentAxisLimits  = chart.Plot.GetAxisLimits();
 				var modifiedAxisLimits = new AxisLimits( newAxisLimits.XMin, newAxisLimits.XMax, currentAxisLimits.YMin, currentAxisLimits.YMax );
+
+				chart.Plot.SetAxisLimits( modifiedAxisLimits );
+				chart.RenderRequest( RenderType.LowQualityThenHighQualityDelayed );
+			}
+			chart.Configuration.AxesChangedEventEnabled = true;
+		}
+	}
+
+	internal void SelectTimeRange( DateTime startTime, DateTime endTime )
+	{
+		if( DataContext is not DailyReport day || _charts.Count == 0 )
+		{
+			return;
+		}
+
+		var offsetStart   = (startTime - day.RecordingStartTime).TotalSeconds;
+		var offsetEnd     = (endTime - day.RecordingStartTime).TotalSeconds;
+
+		foreach( var control in _charts )
+		{
+			if( !control.Chart.IsEnabled )
+			{
+				continue;
+			}
+			
+			var chart = control.Chart;
+
+			// disable events briefly to avoid an infinite loop
+			chart.Configuration.AxesChangedEventEnabled = false;
+			{
+				var currentAxisLimits  = chart.Plot.GetAxisLimits();
+				var modifiedAxisLimits = new AxisLimits( offsetStart, offsetEnd, currentAxisLimits.YMin, currentAxisLimits.YMax );
 
 				chart.Plot.SetAxisLimits( modifiedAxisLimits );
 				chart.RenderRequest( RenderType.LowQualityThenHighQualityDelayed );

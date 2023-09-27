@@ -8,8 +8,10 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Media;
 
+using cpap_app.Events;
 using cpap_app.Styling;
 using cpap_app.Helpers;
 
@@ -140,12 +142,6 @@ public partial class SignalChart : UserControl
 				IndicateNoDataAvailable();
 			}
 		}
-	}
-
-	protected override void OnPointerEntered( PointerEventArgs e )
-	{
-		base.OnPointerEntered( e );
-		Chart.Focus();
 	}
 
 	private void OnPointerWheelChanged( object? sender, PointerWheelEventArgs args )
