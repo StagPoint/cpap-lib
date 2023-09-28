@@ -56,9 +56,6 @@ public partial class DailyReportView : UserControl
 			DateSelector.DisplayDateStart = _datesWithData[ 0 ];
 			DateSelector.DisplayDateEnd = _datesWithData[ ^1 ];
 		}
-
-		AddHandler( TimeRangeSelectedEvent, OnTimeRangeSelected );
-		AddHandler( TimeSelectedEvent, OnTimeSelected  );
 	}
 	
 	private void OnTimeRangeSelected( object? sender, TimeRangeSelectedEventArgs e )

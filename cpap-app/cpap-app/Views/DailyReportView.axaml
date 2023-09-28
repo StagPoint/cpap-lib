@@ -7,7 +7,9 @@
              xmlns:cpaplib="clr-namespace:cpaplib;assembly=cpap-lib"
              mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="700"
              x:Class="cpap_app.Views.DailyReportView"
-             x:DataType="cpaplib:DailyReport">
+             x:DataType="cpaplib:DailyReport"
+             TimeSelected="OnTimeSelected"
+             TimeRangeSelected="OnTimeRangeSelected">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition MinWidth="350" Width="375" />

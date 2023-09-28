@@ -42,17 +42,16 @@ public class DataColors
 		return Color.FromUInt32( colors[ index % colors.Length ] );
 	}
 
-	// public static Color GetMarkerColor( int index )
-	// {
-	// 	var palette = ScottPlot.Palette.Category20.Colors;
-	// 	
-	// 	var color = palette[ index % palette.Length ];
-	//
-	// 	if( ThemeManager.Current.ActualApplicationTheme == ApplicationTheme.Dark )
-	// 	{
-	// 		color = ColorTransforms.TransformBrightness( color, ColorTransforms.ColorTransformMode.Hsb, 1.1 );
-	// 	}
-	//
-	// 	return color;
-	// }
+	public static Color GetMarkerColor( int index )
+	{
+		var color = Color.FromUInt32( _markerColors[ index % _markerColors.Length ] );
+	
+		// var isDarkTheme = Application.Current?.ActualThemeVariant == ThemeVariant.Dark;
+		// if( isDarkTheme )
+		// {
+		// 	color = ColorTransforms.TransformBrightness( color, ColorTransforms.ColorTransformMode.Hsb, 1.1 );
+		// }
+	
+		return color;
+	}
 }

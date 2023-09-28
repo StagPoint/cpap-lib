@@ -10,12 +10,16 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.VisualTree;
 
+using cpap_app.Configuration;
 using cpap_app.Events;
 using cpap_app.Styling;
 using cpap_app.Helpers;
 
 using cpaplib;
+
+using FluentAvalonia.UI.Controls;
 
 using ScottPlot;
 using ScottPlot.Avalonia;
@@ -36,15 +40,8 @@ public partial class SignalChart : UserControl
 	
 	#region Public properties
 
-	public string? Title               { get; set; }
-	public string  SignalName          { get; set; } = "";
-	public string  SecondarySignalName { get; set; } = "";
-	public Color   PlotColor           { get; set; }
-	public double? BaselineHigh        { get; set; }
-	public double? BaselineLow         { get; set; }
-	public bool?   FillBelow           { get; set; }
-	public double? AxisMinValue        { get; set; } = null;
-	public double? AxisMaxValue        { get; set; } = null;
+	public SignalChartConfiguration  Configuration          { get; set; }
+	public SignalChartConfiguration? SecondaryConfiguration { get; set; }
 
 	public Brush ChartForeground
 	{
@@ -101,16 +98,21 @@ public partial class SignalChart : UserControl
 	
 	#region Event Handlers
 
-	private void ChartOnPointerMoved( object? sender, PointerEventArgs e )
+	protected override void OnLoaded( RoutedEventArgs e )
 	{
-		throw new NotImplementedException();
+		base.OnLoaded( e );
+
+		if( Configuration.IsPinned )
+		{
+			btnChartPinUnpin.GetVisualDescendants().OfType<SymbolIcon>().First().Symbol = Symbol.Pin;
+		}
 	}
 
 	protected override void OnApplyTemplate( TemplateAppliedEventArgs e )
 	{
 		base.OnApplyTemplate( e );
 
-		ChartLabel.Text = Title ?? SignalName;
+		ChartLabel.Text = Configuration.Title;
 
 		InitializeChartProperties( Chart );
 	}
@@ -125,7 +127,7 @@ public partial class SignalChart : UserControl
 			
 			if( change.NewValue is DailyReport day )
 			{
-				if( string.IsNullOrEmpty( SignalName ) )
+				if( string.IsNullOrEmpty( Configuration.SignalName ) )
 				{
 					throw new NullReferenceException( "No Signal name was provided" );
 				}
@@ -229,7 +231,7 @@ public partial class SignalChart : UserControl
 			{
 				var value = signal.GetValueAtTime( asDateTime );
 
-				CurrentValue.Text     = $"{asDateTime:T}        {Title}: {value:N2} {signal.UnitOfMeasurement}";
+				CurrentValue.Text     = $"{asDateTime:T}        {Configuration.Title}: {value:N2} {signal.UnitOfMeasurement}";
 				_currentValueMarker.Y = value;
 
 				break;
@@ -276,7 +278,7 @@ public partial class SignalChart : UserControl
 			Chart.Plot.Clear();
 
 			// Check to see if there are any sessions with the named Signal. If not, display the "No Data Available" message and eject.
-			_hasDataAvailable = day.Sessions.FirstOrDefault( x => x.GetSignalByName( SignalName ) != null ) != null;
+			_hasDataAvailable = day.Sessions.FirstOrDefault( x => x.GetSignalByName( Configuration.SignalName ) != null ) != null;
 			if( !_hasDataAvailable )
 			{
 				IndicateNoDataAvailable();
@@ -285,7 +287,7 @@ public partial class SignalChart : UserControl
 			}
 			else
 			{
-				ChartLabel.Text        = SignalName;
+				ChartLabel.Text        = Configuration.SignalName;
 				NoDataLabel.IsVisible  = false;
 				CurrentValue.IsVisible = true;
 				Chart.IsEnabled        = true;
@@ -294,25 +296,20 @@ public partial class SignalChart : UserControl
 
 			// If a RedLine position is specified, we want to add it before any signal data, as items are rendered in the 
 			// order in which they are added, and we want the redline rendered behind the signal data.
-			if( BaselineHigh.HasValue )
+			if( Configuration.BaselineHigh.HasValue )
 			{
 				var redlineColor = Colors.Red.MultiplyAlpha( 0.6f );
-				Chart.Plot.AddHorizontalLine( BaselineHigh.Value, redlineColor.ToDrawingColor(), 1f, LineStyle.Dash );
+				Chart.Plot.AddHorizontalLine( Configuration.BaselineHigh.Value, redlineColor.ToDrawingColor(), 1f, LineStyle.Dash );
 			}
 
-			if( BaselineLow.HasValue )
+			if( Configuration.BaselineLow.HasValue )
 			{
 				var redlineColor = Colors.Red.MultiplyAlpha( 0.6f );
-				Chart.Plot.AddHorizontalLine( BaselineLow.Value, redlineColor.ToDrawingColor(), 1f, LineStyle.Dash );
+				Chart.Plot.AddHorizontalLine( Configuration.BaselineLow.Value, redlineColor.ToDrawingColor(), 1f, LineStyle.Dash );
 			}
 
-			if( AxisMinValue != null )
-			{
-				Debug.Write( $"Axis Min Value: {AxisMinValue}" );
-			}
-
-			ChartSignal( Chart, day, SignalName, 1f, AxisMinValue, AxisMaxValue );
-			// CreateEventMarkers( day );
+			ChartSignal( Chart, day, Configuration.SignalName, 1f, Configuration.AxisMinValue, Configuration.AxisMaxValue );
+			CreateEventMarkers( day );
 
 			var lineColor = ((SolidColorBrush)ChartGridLineColor).Color.ToDrawingColor();
 
@@ -383,21 +380,40 @@ public partial class SignalChart : UserControl
 			offset  = (signal.StartTime - day.RecordingStartTime).TotalSeconds;
 			endTime = (signal.EndTime - day.RecordingStartTime).TotalSeconds;
 
-			var chartColor = PlotColor.ToDrawingColor();
+			var chartColor = Configuration.PlotColor.ToDrawingColor();
 
 			SignalPlotBase<double> graph = default;
-			
-			if( signal.Samples.Count > 100000 )
-				graph = chart.Plot.AddSignalConst( signal.Samples.ToArray(), signal.FrequencyInHz, chartColor, firstSessionAdded ? signal.Name : null );
-			else
-				graph = chart.Plot.AddSignal( signal.Samples.ToArray(), signal.FrequencyInHz, chartColor, firstSessionAdded ? signal.Name : null );
 
-			if( !string.IsNullOrEmpty( SecondarySignalName ) )
+			if( signal.Samples.Count > 100000 )
 			{
-				var secondarySignal = session.GetSignalByName( SecondarySignalName );
+				graph = chart.Plot.AddSignalConst(
+					signal.Samples.ToArray(),
+					signal.FrequencyInHz,
+					chartColor,
+					firstSessionAdded ? Configuration.Title : null
+				);
+			}
+			else
+			{
+				graph = chart.Plot.AddSignal(
+					signal.Samples.ToArray(),
+					signal.FrequencyInHz,
+					chartColor,
+					firstSessionAdded ? Configuration.Title : null
+				);
+			}
+
+			if( SecondaryConfiguration != null )
+			{
+				var secondarySignal = session.GetSignalByName( SecondaryConfiguration.SignalName );
 				if( secondarySignal != null )
 				{
-					var secondaryGraph = chart.Plot.AddSignal( secondarySignal.Samples.ToArray(), secondarySignal.FrequencyInHz, Colors.Yellow.ToDrawingColor(), null );
+					var secondaryGraph = chart.Plot.AddSignal( 
+						secondarySignal.Samples.ToArray(), 
+						secondarySignal.FrequencyInHz, 
+						SecondaryConfiguration.PlotColor.ToDrawingColor(), 
+						firstSessionAdded ? SecondaryConfiguration.Title : null );
+					
 					var secondaryOffset = (secondarySignal.StartTime - day.RecordingStartTime).TotalSeconds;
 					
 					secondaryGraph.OffsetX    = secondaryOffset;
@@ -411,9 +427,9 @@ public partial class SignalChart : UserControl
 			graph.UseParallel = true;
 			// graph.StepDisplay = true;
 
-			// "Fill Below" is only available on signals that do not cross a zero line, do not have a secondary 
-			// signal, and is explicitly set in the configuration table. 
-			if( signal is { MinValue: >= 0, MaxValue: > 0 } && string.IsNullOrEmpty( SecondarySignalName ) && FillBelow.HasValue && FillBelow.Value )
+			// "Fill Below" is only available on signals that do not cross a zero line and do not have a secondary 
+			// signal. 
+			if( signal is { MinValue: >= 0, MaxValue: > 0 } && SecondaryConfiguration == null && (Configuration.FillBelow ?? false) )
 			{
 				graph.FillBelow( chartColor, Colors.Transparent.ToDrawingColor(), 0.18 );
 			}
@@ -460,12 +476,56 @@ public partial class SignalChart : UserControl
 			chart.Plot.YAxis.ManualTickPositions( automaticLabels, labels );
 		}
 	}
+	
+	private void CreateEventMarkers( DailyReport day )
+	{
+		int[] typesSeen = new int[ 256 ];
+
+		var flagTypes = Configuration.DisplayedEvents;
+		if( flagTypes.Count == 0 )
+		{
+			return;
+		}
+		
+		foreach( var eventFlag in day.Events )
+		{
+			if( flagTypes.Contains( eventFlag.Type ) )
+			{
+				bool    seenBefore = typesSeen[ (int)eventFlag.Type ] != 0;
+				var     color      = DataColors.GetMarkerColor( (int)eventFlag.Type ).ToDrawingColor();
+				double  offset     = (eventFlag.StartTime - day.RecordingStartTime).TotalSeconds;
+				string? label      = seenBefore ? null : eventFlag.Type.ToName();
+				
+				// TODO: Currently not showing marker types in graph legend. Should we?
+				label = null;
+
+				var markerLine = Chart.Plot.AddVerticalLine( offset, color, 1f, LineStyle.Solid, label );
+				
+				if( eventFlag.Duration.TotalSeconds > 0 )
+				{
+					// Determine whether to consider the Duration as occurring before or after the marker flag
+					var bounds    = eventFlag.GetTimeBounds();
+					var startTime = (bounds.StartTime - _day.RecordingStartTime).TotalSeconds;
+					var endTime   = (bounds.EndTime - _day.RecordingStartTime).TotalSeconds;
+					
+					// This seems backwards, but it appears that ResMed CPAP machines will set Duration to include
+					// the period *before* the event, presumably because that period of time is a defining characteristic
+					// of said event (such as "a decrease in airflow lasting at least 10 seconds", etc).
+					Chart.Plot.AddHorizontalSpan( startTime, endTime, color.MultiplyAlpha( 0.2f ) );
+				}
+
+				_events.Add( eventFlag );
+
+				typesSeen[ (int)eventFlag.Type ] = 1;
+			}
+		}
+	}
 
 	private void IndicateNoDataAvailable()
 	{
 		Chart.Plot.Clear();
 		
-		NoDataLabel.Text       = $"There is no {SignalName} data available";
+		NoDataLabel.Text       = $"There is no {Configuration.Title} data available";
 		NoDataLabel.IsVisible  = true;
 		CurrentValue.IsVisible = false;
 		Chart.IsEnabled        = false;

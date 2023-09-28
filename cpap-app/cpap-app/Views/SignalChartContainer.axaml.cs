@@ -7,6 +7,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 
+using cpap_app.Configuration;
 using cpap_app.Events;
 using cpap_app.ViewModels;
 
@@ -19,38 +20,43 @@ namespace cpap_app.Views;
 
 public partial class SignalChartContainer : UserControl
 {
-	private SignalConfigurationViewModel _signalConfigs;
-	private List<SignalChart>            _charts = new();
+	private List<SignalChartConfiguration> _signalConfigs;
+	private List<SignalChart>              _charts = new();
 	
 	public SignalChartContainer()
 	{
 		InitializeComponent();
 
-		_signalConfigs = new SignalConfigurationViewModel();
+		_signalConfigs = SignalConfigurationStore.GetSignalConfigurations();
 
-		foreach( var config in _signalConfigs.UnPinnedCharts )
+		foreach( var config in _signalConfigs )
 		{
 			if( !config.IsVisible )
 			{
 				continue;
 			}
 
-			var chart = new SignalChart()
+			var chart = new SignalChart() { Configuration = config };
+
+			if( !string.IsNullOrEmpty( config.SecondarySignalName ) )
 			{
-				Title               = config.Title,
-				SignalName          = config.SignalName,
-				SecondarySignalName = config.SecondarySignalName,
-				PlotColor           = config.PlotColor,
-				BaselineHigh        = config.BaselineHigh,
-				BaselineLow         = config.BaselineLow,
-				FillBelow           = config.FillBelow,
-				AxisMinValue        = config.AxisMinValue,
-				AxisMaxValue        = config.AxisMaxValue
-			};
+				var secondaryConfig = _signalConfigs.FirstOrDefault( x => x.SignalName.Equals( config.SecondarySignalName, StringComparison.OrdinalIgnoreCase ) );
+				if( secondaryConfig != null )
+				{
+					chart.SecondaryConfiguration = secondaryConfig;
+				}
+			}
 
 			_charts.Add( chart );
-			
-			UnPinnedCharts.Children.Add( chart );
+
+			if( config.IsPinned )
+			{
+				PinnedCharts.Children.Add( chart );
+			}
+			else
+			{
+				UnPinnedCharts.Children.Add( chart );
+			}
 		}
 	}
 	

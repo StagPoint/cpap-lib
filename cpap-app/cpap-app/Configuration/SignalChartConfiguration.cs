@@ -1,4 +1,8 @@
-﻿using Avalonia.Media;
+﻿using System.Collections.Generic;
+
+using Avalonia.Media;
+
+using cpaplib;
 
 namespace cpap_app.Configuration;
 
@@ -18,6 +22,8 @@ public class SignalChartConfiguration
 	public double? AxisMaxValue        { get; set; }
 	public bool?   FillBelow           { get; set; }
 	public Color   PlotColor           { get; set; } = Colors.DodgerBlue;
+
+	public List<EventType> DisplayedEvents { get; set; } = new();
 	
 	public override string ToString()
 	{

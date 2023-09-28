@@ -13,53 +13,28 @@ using cpaplib;
 
 namespace cpap_app.ViewModels;
 
-public class SignalConfigurationViewModel
+public static class SignalConfigurationStore
 {
-	public List<SignalChartConfiguration> PinnedCharts { get; set; } = new();
-	public List<SignalChartConfiguration> UnPinnedCharts { get; set; } = new();
-
-	public SignalConfigurationViewModel()
+	public static List<SignalChartConfiguration> GetSignalConfigurations()
 	{
 		using( var store = StorageService.Connect() )
 		{
 			// TODO: Move SignalChartConfiguration initialization to application startup
-			EnsureConfigTableExists( store );
-			
-			var configs = store.SelectAll<SignalChartConfiguration>();
+			Initialize( store );
 
-			PinnedCharts = configs
-			               .Where( x => x.IsPinned )
-			               .OrderBy( x => x.DisplayOrder )
-			               .ToList();
-
-			UnPinnedCharts = configs
-			                 .Where( x => !x.IsPinned )
-			                 .OrderBy( x => x.DisplayOrder )
-			                 .ToList();
-
-			// foreach( var name in signalNames )
-			// {
-			// 	if( !configs.Any( x => x.SignalName.Equals( name, StringComparison.Ordinal ) ) )
-			// 	{
-			// 		var newConfig = new SignalChartConfiguration
-			// 		{
-			// 			SignalName      = name,
-			// 			DisplayOrder    = UnPinnedCharts.Count + 1,
-			// 			IsPinned        = false,
-			// 		};
-			// 		
-			// 		UnPinnedCharts.Add( newConfig );
-			//
-			// 		store.Insert( newConfig );
-			// 	}
-			// }
+			return store.SelectAll<SignalChartConfiguration>().OrderBy( x => x.DisplayOrder ).ToList();
 		}
 	}
 
-	private void EnsureConfigTableExists( StorageService store )
+	public static void Initialize( StorageService store )
 	{
 		var mapping = StorageService.CreateMapping<SignalChartConfiguration>( "chart_config" );
 		mapping.GetColumnByName( nameof( SignalChartConfiguration.PlotColor ) ).Converter = new ColorBlobConverter();
+
+		// Have to add the DisplayedEvents column manually, as CreateMapping only handles value types and strings. 
+		var eventsColumn = new ColumnMapping( nameof( SignalChartConfiguration.DisplayedEvents ), nameof( SignalChartConfiguration.DisplayedEvents ), typeof( SignalChartConfiguration ) );
+		eventsColumn.Converter = new EnumListBlobConverter<EventType>();
+		mapping.Columns.Add( eventsColumn );
 
 		store.CreateTable<SignalChartConfiguration>();
 
@@ -91,7 +66,18 @@ public class SignalConfigurationViewModel
 			switch( signalName )
 			{
 				case SignalNames.FlowRate:
-					config.BaselineHigh = 0;
+					config.BaselineHigh    = 0;
+					config.DisplayedEvents = new List<EventType>()
+					{
+						EventType.Arousal, 
+						EventType.Hypopnea, 
+						EventType.Unclassified, 
+						EventType.ClearAirway, 
+						EventType.ObstructiveApnea, 
+						EventType.PeriodicBreathing, 
+						EventType.CSR, 
+						EventType.RERA
+					};
 					break;
 				
 				case SignalNames.Pressure:
@@ -99,22 +85,40 @@ public class SignalConfigurationViewModel
 					break;
 				
 				case SignalNames.SpO2:
-					config.BaselineLow = 90;
+					config.BaselineLow     = 90;
+					config.DisplayedEvents = new List<EventType>()
+					{
+						EventType.Desaturation, 
+						EventType.Hypoxemia
+					};
 					break;
 				
 				case SignalNames.Pulse:
-					config.BaselineHigh = 110;
-					config.BaselineLow  = 50;
+					config.BaselineHigh    = 110;
+					config.BaselineLow     = 50;
+					config.DisplayedEvents = new List<EventType>()
+					{
+						EventType.Bradycardia, 
+						EventType.Tachycardia
+					};
 					break;
 				
 				case SignalNames.LeakRate:
 					config.BaselineHigh = 24;
 					config.AxisMinValue = 0;
 					config.AxisMaxValue = 60;
+					config.DisplayedEvents = new List<EventType>()
+					{
+						EventType.LargeLeak
+					};
 					break;
 				
 				case SignalNames.FlowLimit:
-					config.BaselineHigh = 0.35;
+					config.BaselineHigh = 0.3;
+					config.DisplayedEvents = new List<EventType>()
+					{
+						EventType.FlowLimitation
+					};
 					break;
 				
 				case SignalNames.TidalVolume:
@@ -126,6 +130,13 @@ public class SignalConfigurationViewModel
 				case SignalNames.MinuteVent:
 					config.BaselineHigh = 12;
 					config.BaselineLow  = 4;
+					break;
+				
+				case SignalNames.RespirationRate:
+					config.BaselineHigh = 20;
+					config.BaselineLow  = 10;
+					config.AxisMinValue = 0;
+					config.AxisMaxValue = 40;
 					break;
 			}
 
