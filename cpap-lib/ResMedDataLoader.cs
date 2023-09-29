@@ -14,7 +14,6 @@ namespace cpaplib
 {
 	public class ResMedDataLoader
 	{
-
 		private static string[] expectedFiles = new[]
 		{
 			"STR.edf",
@@ -393,7 +392,7 @@ namespace cpaplib
 		private void GenerateFlowLimitEvents( DailyReport day )
 		{
 			// TODO: Flow Limitation Redline needs to be a configurable value 
-			const double FlowLimitRedline = 0.2;
+			const double FlowLimitRedline = 0.3;
 			
 			foreach( var session in day.Sessions )
 			{

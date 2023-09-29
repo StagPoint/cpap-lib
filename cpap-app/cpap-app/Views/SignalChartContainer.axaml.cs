@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
+using Avalonia.VisualTree;
 
 using cpap_app.Configuration;
 using cpap_app.Events;
@@ -68,11 +70,12 @@ public partial class SignalChartContainer : UserControl
 		
 		foreach( var chart in _charts )
 		{
-			chart.Chart.AxesChanged += ChartOnAxesChanged;
-			chart.Chart.PointerMoved += ChartOnPointerMoved;
+			chart.Chart.AxesChanged    += ChartOnAxesChanged;
+			chart.Chart.PointerMoved   += ChartOnPointerMoved;
+			chart.Chart.PointerEntered += ChartOnPointerMoved;
+			chart.Chart.PointerExited  += ChartOnPointerExited;
 		}
 	}
-	
 	protected override void OnPointerWheelChanged( PointerWheelEventArgs e )
 	{
 		base.OnPointerWheelChanged( e );
@@ -84,11 +87,11 @@ public partial class SignalChartContainer : UserControl
 	{
 		base.OnUnloaded( e );
 		
-		var charts = this.GetLogicalDescendants().OfType<SignalChart>().ToList();
-		foreach( var chart in charts )
+		foreach( var chart in _charts )
 		{
-			chart.Chart.AxesChanged  -= ChartOnAxesChanged;
-			chart.Chart.PointerMoved -= ChartOnPointerMoved;
+			chart.Chart.AxesChanged   -= ChartOnAxesChanged;
+			chart.Chart.PointerMoved  -= ChartOnPointerMoved;
+			chart.Chart.PointerExited -= ChartOnPointerExited;
 		}
 	}
 	
@@ -96,21 +99,31 @@ public partial class SignalChartContainer : UserControl
 
 	#region Event handlers
 
+	private void ChartOnPointerExited( object? sender, PointerEventArgs e )
+	{
+		foreach( var chart in _charts )
+		{
+			chart.UpdateTrackedTime( double.NaN, e );
+		}
+	}
+
 	private void ChartOnPointerMoved( object? sender, PointerEventArgs e )
 	{
-		if( sender is not AvaPlot plot )
+		if( sender is not AvaPlot control || e.Handled )
 		{
 			return;
 		}
-		
-		// Returns mouse coordinates as grid coordinates, taking pan and zoom into account
-		(double mouseCoordX, double mouseCoordY) = plot.GetMouseCoordinates();
 
+		// Returns mouse coordinates as grid coordinates, taking pan and zoom into account
+		(double time, _) = control.GetMouseCoordinates();
+		
 		// Synchronize the update of the vertical indicator in all charts in the group
 		foreach( var chart in _charts )
 		{
-			chart.UpdateSelectedTime( mouseCoordX );
+			chart.UpdateTrackedTime( time, e );
 		}
+
+		e.Handled = true;
 	}
 
 	private void ChartOnAxesChanged( object? sender, EventArgs e )
@@ -120,6 +133,8 @@ public partial class SignalChartContainer : UserControl
 		
 		foreach( var control in _charts )
 		{
+			control.UpdateTrackedTime( double.NaN, null );
+			
 			if( control.Chart == who || !control.Chart.IsEnabled )
 			{
 				continue;

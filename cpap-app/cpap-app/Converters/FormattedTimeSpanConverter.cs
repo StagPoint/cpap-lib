@@ -29,7 +29,13 @@ public class FormattedTimespanConverter : IValueConverter
 			stringParameter = stringParameter.Replace( ".Empty", "", StringComparison.OrdinalIgnoreCase );
 		}
 
-		var format  = string.IsNullOrEmpty( stringParameter ) ? TimespanFormatType.Long : Enum.Parse<TimespanFormatType>( stringParameter );
+		var format = string.IsNullOrEmpty( stringParameter ) ? TimespanFormatType.Long : Enum.Parse<TimespanFormatType>( stringParameter );
+
+		return FormatTimeSpan( time, format, allowEmpty );
+	}
+	
+	public static string FormatTimeSpan( TimeSpan time, TimespanFormatType format, bool allowEmpty )
+	{
 		var builder = new StringBuilder();
 
 		if( time.Hours > 0 )
@@ -73,12 +79,12 @@ public class FormattedTimespanConverter : IValueConverter
 		}
 
 		return builder.ToString();
-		
+
 		string secondsText( int seconds )
 		{
 			if( seconds < 1 )
 				return "";
-			
+
 			switch( format )
 			{
 				case TimespanFormatType.Abbreviated:
@@ -90,12 +96,12 @@ public class FormattedTimespanConverter : IValueConverter
 					return seconds != 1 ? $"{seconds} seconds" : $"{seconds} second";
 			}
 		}
-		
+
 		string totalSecondsText( double seconds )
 		{
 			if( seconds < 1 )
 				return "";
-			
+
 			switch( format )
 			{
 				case TimespanFormatType.Abbreviated:
@@ -107,12 +113,12 @@ public class FormattedTimespanConverter : IValueConverter
 					return $"{seconds:F2} seconds";
 			}
 		}
-		
+
 		string minutesText( int minutes )
 		{
 			if( minutes < 1 )
 				return "";
-			
+
 			switch( format )
 			{
 				case TimespanFormatType.Abbreviated:
@@ -124,12 +130,12 @@ public class FormattedTimespanConverter : IValueConverter
 					return minutes != 1 ? $"{minutes} minutes" : $"{minutes} minute";
 			}
 		}
-		
+
 		string hoursText( int hours )
 		{
 			if( hours < 1 )
 				return "";
-			
+
 			switch( format )
 			{
 				case TimespanFormatType.Abbreviated:
@@ -138,7 +144,7 @@ public class FormattedTimespanConverter : IValueConverter
 					return $"{hours} hr";
 				case TimespanFormatType.Long:
 				default:
-                    return hours != 1 ? $"{hours} hours" : $"{hours} hour";
+					return hours != 1 ? $"{hours} hours" : $"{hours} hour";
 			}
 		}
 	}
