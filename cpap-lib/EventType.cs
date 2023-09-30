@@ -72,5 +72,7 @@
 		/// The vibratory snore index measures the strength of the snoring vibrations
 		/// </summary>
 		VibratorySnore,
+		VariableBreathing,
+		BreathingNotDetected,
 	}
 }

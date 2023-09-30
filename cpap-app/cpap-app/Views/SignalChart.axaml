@@ -24,7 +24,7 @@
             <RowDefinition />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-        <Line Name="MouseLine" IsEnabled="False" ZIndex="9999" Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="3" Grid.RowSpan="3" Stroke="{DynamicResource AccentFillColorDefaultBrush}" StrokeThickness="1" StartPoint="0,0" EndPoint="0,0"  />
+        <Line Name="TimeMarkerLine" IsEnabled="False" ZIndex="9999" Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="3" Grid.RowSpan="3" Stroke="{DynamicResource AccentFillColorDefaultBrush}" StrokeThickness="1" StartPoint="0,0" EndPoint="0,0"  />
         <Border Name="EventTooltip" CornerRadius="8" Margin="0 38" IsHitTestVisible="False" Tag="Event Tooltip" VerticalAlignment="Top" IsEnabled="False" ZIndex="10000" Grid.Column="1" Grid.Row="0" Grid.ColumnSpan="2" Grid.RowSpan="3" Background="Black" Width="250">
             <TextBlock Text="{Binding $parent.Tag, Mode=OneWay}" IsVisible="True" IsHitTestVisible="False" TextWrapping="NoWrap" HorizontalAlignment="Center" Theme="{DynamicResource CaptionTextBlockStyle}" Foreground="White" Padding="20 0 20 2" />
         </Border>

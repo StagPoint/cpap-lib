@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.Drawing;
 using System.Globalization;
 using System.Linq;
 
@@ -111,11 +108,12 @@ public partial class SignalChart : UserControl
 	#region Private fields
 
 	private CustomChartStyle _chartStyle;
-	private DailyReport?     _day              = null;
-	private bool             _hasDataAvailable = false;
-	private bool             _chartInitialized = false;
-	private bool             _isPointerDown    = false;
-	private double           _pointerDownTime  = 0;
+	private DailyReport?     _day                = null;
+	private bool             _hasDataAvailable   = false;
+	private bool             _chartInitialized   = false;
+	private bool             _isPointerDown      = false;
+	private double           _selectionStartTime = 0;
+	private double           _selectionEndTime   = 0;
 	private HSpan            _selectionSpan;
 	
 	private List<ReportedEvent> _events           = new();
@@ -143,116 +141,8 @@ public partial class SignalChart : UserControl
 
 	#endregion 
 	
-	#region Event Handlers
-
-	private void OnAxesChanged( object? sender, EventArgs e )
-	{
-		if( _day == null || !_hasDataAvailable || !IsEnabled )
-		{
-			return;
-		}
-		
-		var currentAxisLimits = Chart.Plot.GetAxisLimits();
-
-		var eventArgs = new TimeRangeRoutedEventArgs
-		{
-			RoutedEvent = DisplayedRangeChangedEvent,
-			Source      = this,
-			StartTime   = _day.RecordingStartTime.AddSeconds( currentAxisLimits.XMin ),
-			EndTime     = _day.RecordingStartTime.AddSeconds( currentAxisLimits.XMax )
-		};
-
-		RaiseEvent( eventArgs );
-	}
-
-	private void OnPointerEntered( object? sender, PointerEventArgs e )
-	{
-		if( _day == null || !IsEnabled )
-		{
-			return;
-		}
-		
-		var currentPoint = e.GetPosition( Chart );
-		var timeOffset   = Chart.Plot.XAxis.Dims.GetUnit( (float)currentPoint.X );
-		var time         = _day.RecordingStartTime.AddSeconds( timeOffset );
-		
-		UpdateTimeMarker( time );
-		RaiseTimeMarkerChanged( time );
-	}
-
-	private void OnPointerExited( object? sender, PointerEventArgs e )
-	{
-		HideTimeMarker();
-	}
-
-	private void OnPointerMoved( object? sender, PointerEventArgs eventArgs )
-	{
-		if( _day == null || !IsEnabled )
-		{
-			return;
-		}
-
-		(double timeOffset, _) = Chart.GetMouseCoordinates();
-
-		if( _isPointerDown )
-		{
-			if( timeOffset < _pointerDownTime )
-			{
-				_selectionSpan.X1 = Math.Max( 0, timeOffset );
-				_selectionSpan.X2 = _pointerDownTime;
-			}
-			else
-			{
-				_selectionSpan.X1 = _pointerDownTime;
-				_selectionSpan.X2 = Math.Min( timeOffset, _day.TotalTimeSpan.TotalSeconds );
-			}
-
-			var timeRangeSelected = TimeSpan.FromSeconds( _selectionSpan.X2 - _selectionSpan.X1 );
-			
-			EventTooltip.Tag       = FormattedTimespanConverter.FormatTimeSpan( timeRangeSelected, TimespanFormatType.Long, true );
-			EventTooltip.IsVisible = timeRangeSelected.TotalSeconds > double.Epsilon;
-				
-			eventArgs.Handled = true;
-			return;
-		}
-
-		var time = _day.RecordingStartTime.AddSeconds( timeOffset );
-		
-		UpdateTimeMarker( time );
-		RaiseTimeMarkerChanged( time );
-	}
-
-	private void OnPointerReleased( object? sender, PointerReleasedEventArgs e )
-	{
-		Debug.WriteLine( $"OnPointerReleased: {Environment.TickCount}" );
-		
-		_selectionSpan.IsVisible = false;
-		_isPointerDown           = false;
-		EventTooltip.IsVisible   = false;
-		
-		Chart.Plot.XAxis.LockLimits( false );
-		
-		Chart.RefreshRequest();
-	}
-
-	private void OnPointerPressed( object? sender, PointerPressedEventArgs e )
-	{
-		if( (e.KeyModifiers & KeyModifiers.Shift) != 0 )
-		{
-			_isPointerDown        = true;
-			(_pointerDownTime, _) = Chart.GetMouseCoordinates();
-			
-			HideTimeMarker();
-
-			_selectionSpan.X1        = _selectionSpan.X2 = _pointerDownTime;
-			_selectionSpan.IsVisible = true;
-			
-			Chart.Plot.XAxis.LockLimits( true );
-
-			e.Handled = true;
-		}
-	}
-
+	#region Base class overrides 
+	
 	protected override void OnLoaded( RoutedEventArgs e )
 	{
 		base.OnLoaded( e );
@@ -272,8 +162,8 @@ public partial class SignalChart : UserControl
 			ChartLabel.Text = Configuration.Title;
 		}
 
-		EventTooltip.IsVisible = false;
-		MouseLine.IsVisible    = false;
+		EventTooltip.IsVisible   = false;
+		TimeMarkerLine.IsVisible = false;
 
 		InitializeChartProperties( Chart );
 	}
@@ -308,13 +198,123 @@ public partial class SignalChart : UserControl
 		}
 	}
 
+	#endregion 
+	
+	#region Event Handlers
+
+	private void OnAxesChanged( object? sender, EventArgs e )
+	{
+		if( _day == null || !_hasDataAvailable || !IsEnabled )
+		{
+			return;
+		}
+		
+		var currentAxisLimits = Chart.Plot.GetAxisLimits();
+
+		var eventArgs = new TimeRangeRoutedEventArgs
+		{
+			RoutedEvent = DisplayedRangeChangedEvent,
+			Source      = this,
+			StartTime   = _day.RecordingStartTime.AddSeconds( currentAxisLimits.XMin ),
+			EndTime     = _day.RecordingStartTime.AddSeconds( currentAxisLimits.XMax )
+		};
+
+		RaiseEvent( eventArgs );
+	}
+
+	private void OnPointerEntered( object? sender, PointerEventArgs e )
+	{
+		Chart.Focus();
+		
+		if( _day == null || !IsEnabled )
+		{
+			return;
+		}
+		
+		var currentPoint = e.GetPosition( Chart );
+		var timeOffset   = Chart.Plot.XAxis.Dims.GetUnit( (float)currentPoint.X );
+		var time         = _day.RecordingStartTime.AddSeconds( timeOffset );
+		
+		UpdateTimeMarker( time );
+		RaiseTimeMarkerChanged( time );
+	}
+
+	private void OnPointerExited( object? sender, PointerEventArgs e )
+	{
+		HideTimeMarker();
+	}
+
+	private void OnPointerReleased( object? sender, PointerReleasedEventArgs e )
+	{
+		_selectionSpan.IsVisible = false;
+		_isPointerDown           = false;
+		EventTooltip.IsVisible   = false;
+		
+		Chart.Plot.XAxis.LockLimits( false );
+
+		if( _selectionStartTime > _selectionEndTime )
+		{
+			(_selectionStartTime, _selectionEndTime) = (_selectionEndTime, _selectionStartTime);
+		}
+
+		if( _day != null && _selectionEndTime > _selectionStartTime + 0.1 )
+		{
+			ZoomTo( _selectionStartTime, _selectionEndTime );
+			OnAxesChanged( this, EventArgs.Empty );
+		}
+		
+		Chart.RenderRequest();
+	}
+
+	private void OnPointerPressed( object? sender, PointerPressedEventArgs eventArgs )
+	{
+		if( eventArgs.Handled )
+		{
+			return;
+		}
+
+		_selectionStartTime = 0;
+		_selectionEndTime   = 0;
+		
+		HideTimeMarker();
+
+		var point = eventArgs.GetCurrentPoint( this );
+		if( point.Properties.IsRightButtonPressed || point.Properties.IsMiddleButtonPressed )
+		{
+			return;
+		}
+
+		// We will want to do different things depending on where the PointerPressed happens, such 
+		// as within the data area of the graph versus on the chart title, etc. 
+		var dataRect = GetDataBounds();
+		if( !dataRect.Contains( point.Position ) )
+		{
+			return;
+		}
+		
+		if( (eventArgs.KeyModifiers & KeyModifiers.Control) == 0 )
+		{
+			_isPointerDown           = true;
+			(_selectionStartTime, _) = Chart.GetMouseCoordinates();
+			_selectionEndTime        = _selectionStartTime;
+			_selectionSpan.X1        = _selectionStartTime;
+			_selectionSpan.X2        = _selectionStartTime;
+			_selectionSpan.IsVisible = true;
+			
+			// This is a hack to stop the built-in ScottPlot functionality from panning/zooming the graph
+			Chart.Plot.XAxis.LockLimits( true );
+
+			eventArgs.Handled = true;
+		}
+	}
+
 	private void OnPointerWheelChanged( object? sender, PointerWheelEventArgs args )
 	{
 		// Because the charts are likely going to be used within a scrolling container, I've disabled the built-in mouse wheel 
-		// handling which performs zooming, and re-implemented it here with the additional requirement that the shift key be
-		// held down while scrolling the mouse wheel in order to zoom. If the shift key is held down, the chart will zoom in
+		// handling which performs zooming, and re-implemented it here with the additional requirement that the Control key be
+		// held down while scrolling the mouse wheel in order to zoom. If the Control key is held down, the chart will zoom in
 		// and out and the event will be marked Handled so that it doesn't cause scrolling in the parent container. 
-		if( (args.KeyModifiers & KeyModifiers.Shift) == KeyModifiers.Shift )
+		if( (args.KeyModifiers & KeyModifiers.Control) != 0x00 )
 		{
 			(double x, double y) = Chart.GetMouseCoordinates();
 
@@ -323,7 +323,52 @@ public partial class SignalChart : UserControl
 
 			args.Handled = true;
 
-			Chart.RefreshRequest( RenderType.HighQuality );
+			Chart.RenderRequest();
+		}
+	}
+
+	private void OnPointerMoved( object? sender, PointerEventArgs eventArgs )
+	{
+		if( _day == null || !IsEnabled )
+		{
+			return;
+		}
+
+		(double timeOffset, _) = Chart.GetMouseCoordinates();
+
+		if( _isPointerDown )
+		{
+			_selectionEndTime = timeOffset;
+			
+			if( timeOffset < _selectionStartTime )
+			{
+				_selectionSpan.X1 = Math.Max( 0, timeOffset );
+				_selectionSpan.X2 = _selectionStartTime;
+			}
+			else
+			{
+				_selectionSpan.X1 = _selectionStartTime;
+				_selectionSpan.X2 = Math.Min( timeOffset, _day.TotalTimeSpan.TotalSeconds );
+			}
+
+			var timeRangeSelected = TimeSpan.FromSeconds( _selectionSpan.X2 - _selectionSpan.X1 );
+			
+			EventTooltip.Tag       = FormattedTimespanConverter.FormatTimeSpan( timeRangeSelected, TimespanFormatType.Long, true );
+			EventTooltip.IsVisible = timeRangeSelected.TotalSeconds > double.Epsilon;
+				
+			eventArgs.Handled = true;
+			
+			Chart.RenderRequest();
+			
+			return;
+		}
+
+		if( (eventArgs.KeyModifiers & KeyModifiers.Control) == 0x00 )
+		{
+			var time = _day.RecordingStartTime.AddSeconds( timeOffset );
+
+			UpdateTimeMarker( time );
+			RaiseTimeMarkerChanged( time );
 		}
 	}
 
@@ -342,7 +387,7 @@ public partial class SignalChart : UserControl
 
 			args.Handled = true;
 			
-			Chart.RefreshRequest( RenderType.HighQuality );
+			Chart.RenderRequest();
 		}
 		else if( args.Key is Key.Up or Key.Down )
 		{
@@ -353,7 +398,7 @@ public partial class SignalChart : UserControl
 
 			args.Handled = true;
 
-			Chart.RefreshRequest( RenderType.HighQuality );
+			Chart.RenderRequest();
 		}
 	}
 
@@ -374,13 +419,13 @@ public partial class SignalChart : UserControl
 		ZoomTo( offsetStart, offsetEnd );
 	}
 
-	public Rectangle GetDataBounds()
+	public Rect GetDataBounds()
 	{
 		var chartBounds = Chart.Bounds;
 		var xDims       = Chart.Plot.XAxis.Dims;
 		var yDims       = Chart.Plot.YAxis.Dims;
 		
-		var rect = new Rectangle(
+		var rect = new Rect(
 			(int)(chartBounds.X + xDims.DataOffsetPx),
 			(int)(chartBounds.Y + yDims.DataOffsetPx),
 			(int)xDims.DataSizePx, 
@@ -396,8 +441,11 @@ public partial class SignalChart : UserControl
 
 	private void HideTimeMarker()
 	{
-		UpdateTimeMarker( DateTime.MinValue );
-		RaiseTimeMarkerChanged( DateTime.MinValue );
+		if( TimeMarkerLine.IsVisible )
+		{
+			UpdateTimeMarker( DateTime.MinValue );
+			RaiseTimeMarkerChanged( DateTime.MinValue );
+		}
 	}
 	
 	private void RaiseTimeMarkerChanged( DateTime time )
@@ -424,7 +472,7 @@ public partial class SignalChart : UserControl
 			var modifiedAxisLimits = new AxisLimits( startTime, endTime, currentAxisLimits.YMin, currentAxisLimits.YMax );
 
 			Chart.Plot.SetAxisLimits( modifiedAxisLimits );
-			Chart.RenderRequest();
+			Chart.RefreshRequest();
 		}
 		Chart.Configuration.AxesChangedEventEnabled = true;
 	}
@@ -446,9 +494,9 @@ public partial class SignalChart : UserControl
 		var dims          = Chart.Plot.XAxis.Dims;
 		var mousePosition = dims.PxPerUnit * (timeOffset - dims.Min) + dataRect.Left;
 
-		MouseLine.IsVisible    = false;
-		EventTooltip.IsVisible = false;
-		CurrentValue.Text      = "";
+		TimeMarkerLine.IsVisible = false;
+		EventTooltip.IsVisible   = false;
+		CurrentValue.Text        = "";
 		
 		// If the time isn't valid then hide the marker and exit
 		if( time < _day.RecordingStartTime || time > _day.RecordingEndTime )
@@ -462,9 +510,9 @@ public partial class SignalChart : UserControl
 			return;
 		}
 
-		MouseLine.StartPoint = new Point( mousePosition, dataRect.Top );
-		MouseLine.EndPoint   = new Point( mousePosition, dataRect.Bottom );
-		MouseLine.IsVisible  = true;
+		TimeMarkerLine.StartPoint = new Point( mousePosition, dataRect.Top );
+		TimeMarkerLine.EndPoint   = new Point( mousePosition, dataRect.Bottom );
+		TimeMarkerLine.IsVisible  = true;
 
 		foreach( var signal in _signals )
 		{
@@ -580,7 +628,7 @@ public partial class SignalChart : UserControl
 			Chart.Configuration.AxesChangedEventEnabled = true;
 		}
 
-		Chart.RefreshRequest( RenderType.HighQuality );
+		Chart.RenderRequest();
 	}
 	
 	private void ChartSignal( AvaPlot chart, DailyReport day, string signalName, float signalScale = 1f, double? axisMinValue = null, double? axisMaxValue = null, double[]? manualLabels = null )
@@ -664,7 +712,7 @@ public partial class SignalChart : UserControl
 			firstSessionAdded = false;
 		}
 
-		chart.Plot.XAxis.TickLabelFormat( x => $"{day.RecordingStartTime.AddSeconds( x ):hh:mm:ss tt}" );
+		chart.Plot.XAxis.TickLabelFormat( x => $"{TimeSpan.FromSeconds( x ):c}" );
 
 		// Set zoom and boundary limits
 		maxValue = axisMaxValue ?? maxValue;
@@ -777,7 +825,7 @@ public partial class SignalChart : UserControl
 		Chart.IsEnabled        = false;
 		this.IsEnabled         = false;
 
-		Chart.RefreshRequest( RenderType.HighQuality );
+		Chart.RenderRequest();
 	}
 
 	private void InitializeChartProperties( AvaPlot chart )
@@ -790,7 +838,13 @@ public partial class SignalChart : UserControl
 		// Measure enough space for a vertical axis label, padding, and the longest anticipated tick label 
 		var maximumLabelWidth = MeasureText( "88888.8", _chartStyle.TickLabelFontName, 12 );
 
-		chart.Configuration.ScrollWheelZoom                              = false;
+		chart.Configuration.ScrollWheelZoom      = false;
+		chart.Configuration.LeftClickDragPan     = false;
+		chart.Configuration.AltLeftClickDragZoom = false;
+		chart.Configuration.MiddleClickAutoAxis  = false;
+		chart.Configuration.MiddleClickDragZoom  = false;
+		chart.Configuration.LockVerticalAxis     = true;
+		
 		chart.Configuration.Quality                                      = ScottPlot.Control.QualityMode.LowWhileDragging;
 		chart.Configuration.QualityConfiguration.BenchmarkToggle         = RenderType.LowQualityThenHighQualityDelayed;
 		chart.Configuration.QualityConfiguration.AutoAxis                = RenderType.LowQualityThenHighQualityDelayed;
@@ -824,7 +878,7 @@ public partial class SignalChart : UserControl
 
 		chart.Configuration.LockVerticalAxis = true;
 		
-		chart.RefreshRequest( RenderType.HighQuality );
+		chart.RenderRequest();
 	}
 	
 	private float MeasureText( string text, string fontFamily, float emSize )
