@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
@@ -14,6 +16,7 @@ using Avalonia.VisualTree;
 
 using cpap_app.Configuration;
 using cpap_app.Converters;
+using cpap_app.Events;
 using cpap_app.Styling;
 using cpap_app.Helpers;
 
@@ -27,6 +30,7 @@ using ScottPlot.Plottable;
 
 using Brush = Avalonia.Media.Brush;
 using Brushes = Avalonia.Media.Brushes;
+using Color = System.Drawing.Color;
 using Point = Avalonia.Point;
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
@@ -40,6 +44,36 @@ public partial class SignalChart : UserControl
 	public static readonly StyledProperty<Brush> ChartGridLineColorProperty = AvaloniaProperty.Register<SignalChart, Brush>( nameof( ChartGridLineColor ) );
 	public static readonly StyledProperty<Brush> ChartForegroundProperty    = AvaloniaProperty.Register<SignalChart, Brush>( nameof( ChartForeground ) );
 	public static readonly StyledProperty<Brush> ChartBorderColorProperty   = AvaloniaProperty.Register<SignalChart, Brush>( nameof( ChartBorderColor ) );
+
+	#endregion
+	
+	#region Event handlers 
+	
+	public static readonly RoutedEvent<TimeRangeRoutedEventArgs> DisplayedRangeChangedEvent = RoutedEvent.Register<SignalChart, TimeRangeRoutedEventArgs>( nameof( DisplayedRangeChanged ), RoutingStrategies.Bubble );
+
+	public static void AddDisplayedRangeChangedHandler( IInputElement element, EventHandler<TimeRangeRoutedEventArgs> handler )
+	{
+		element.AddHandler( DisplayedRangeChangedEvent, handler );
+	}
+
+	public event EventHandler<TimeRangeRoutedEventArgs> DisplayedRangeChanged
+	{
+		add => AddHandler( DisplayedRangeChangedEvent, value );
+		remove => RemoveHandler( DisplayedRangeChangedEvent, value );
+	}
+
+	public static readonly RoutedEvent<TimeRoutedEventArgs> TimeMarkerChangedEvent = RoutedEvent.Register<SignalChart, TimeRoutedEventArgs>( nameof( TimeMarkerChanged ), RoutingStrategies.Bubble );
+
+	public static void AddTimeMarkerChangedHandler( IInputElement element, EventHandler<TimeRoutedEventArgs> handler )
+	{
+		element.AddHandler( TimeMarkerChangedEvent, handler );
+	}
+
+	public event EventHandler<TimeRoutedEventArgs> TimeMarkerChanged
+	{
+		add => AddHandler( TimeMarkerChangedEvent, value );
+		remove => RemoveHandler( TimeMarkerChangedEvent, value );
+	}
 
 	#endregion 
 	
@@ -77,10 +111,12 @@ public partial class SignalChart : UserControl
 	#region Private fields
 
 	private CustomChartStyle _chartStyle;
-	private MarkerPlot?      _currentValueMarker = null;
-	private DailyReport?     _day                = null;
-	private bool             _hasDataAvailable   = false;
-	private bool             _chartInitialized   = false;
+	private DailyReport?     _day              = null;
+	private bool             _hasDataAvailable = false;
+	private bool             _chartInitialized = false;
+	private bool             _isPointerDown    = false;
+	private double           _pointerDownTime  = 0;
+	private HSpan            _selectionSpan;
 	
 	private List<ReportedEvent> _events           = new();
 	private List<Signal>        _signals          = new();
@@ -94,7 +130,13 @@ public partial class SignalChart : UserControl
 	{
 		InitializeComponent();
 
-		PointerWheelChanged += OnPointerWheelChanged;
+		PointerWheelChanged   += OnPointerWheelChanged;
+		Chart.PointerPressed  += OnPointerPressed;
+		Chart.PointerReleased += OnPointerReleased;
+		Chart.PointerMoved    += OnPointerMoved;
+		Chart.PointerExited   += OnPointerExited;
+		Chart.PointerEntered  += OnPointerEntered;
+		Chart.AxesChanged     += OnAxesChanged;
 
 		Chart.ContextMenu = null;
 	}
@@ -102,6 +144,114 @@ public partial class SignalChart : UserControl
 	#endregion 
 	
 	#region Event Handlers
+
+	private void OnAxesChanged( object? sender, EventArgs e )
+	{
+		if( _day == null || !_hasDataAvailable || !IsEnabled )
+		{
+			return;
+		}
+		
+		var currentAxisLimits = Chart.Plot.GetAxisLimits();
+
+		var eventArgs = new TimeRangeRoutedEventArgs
+		{
+			RoutedEvent = DisplayedRangeChangedEvent,
+			Source      = this,
+			StartTime   = _day.RecordingStartTime.AddSeconds( currentAxisLimits.XMin ),
+			EndTime     = _day.RecordingStartTime.AddSeconds( currentAxisLimits.XMax )
+		};
+
+		RaiseEvent( eventArgs );
+	}
+
+	private void OnPointerEntered( object? sender, PointerEventArgs e )
+	{
+		if( _day == null || !IsEnabled )
+		{
+			return;
+		}
+		
+		var currentPoint = e.GetPosition( Chart );
+		var timeOffset   = Chart.Plot.XAxis.Dims.GetUnit( (float)currentPoint.X );
+		var time         = _day.RecordingStartTime.AddSeconds( timeOffset );
+		
+		UpdateTimeMarker( time );
+		RaiseTimeMarkerChanged( time );
+	}
+
+	private void OnPointerExited( object? sender, PointerEventArgs e )
+	{
+		HideTimeMarker();
+	}
+
+	private void OnPointerMoved( object? sender, PointerEventArgs eventArgs )
+	{
+		if( _day == null || !IsEnabled )
+		{
+			return;
+		}
+
+		(double timeOffset, _) = Chart.GetMouseCoordinates();
+
+		if( _isPointerDown )
+		{
+			if( timeOffset < _pointerDownTime )
+			{
+				_selectionSpan.X1 = Math.Max( 0, timeOffset );
+				_selectionSpan.X2 = _pointerDownTime;
+			}
+			else
+			{
+				_selectionSpan.X1 = _pointerDownTime;
+				_selectionSpan.X2 = Math.Min( timeOffset, _day.TotalTimeSpan.TotalSeconds );
+			}
+
+			var timeRangeSelected = TimeSpan.FromSeconds( _selectionSpan.X2 - _selectionSpan.X1 );
+			
+			EventTooltip.Tag       = FormattedTimespanConverter.FormatTimeSpan( timeRangeSelected, TimespanFormatType.Long, true );
+			EventTooltip.IsVisible = timeRangeSelected.TotalSeconds > double.Epsilon;
+				
+			eventArgs.Handled = true;
+			return;
+		}
+
+		var time = _day.RecordingStartTime.AddSeconds( timeOffset );
+		
+		UpdateTimeMarker( time );
+		RaiseTimeMarkerChanged( time );
+	}
+
+	private void OnPointerReleased( object? sender, PointerReleasedEventArgs e )
+	{
+		Debug.WriteLine( $"OnPointerReleased: {Environment.TickCount}" );
+		
+		_selectionSpan.IsVisible = false;
+		_isPointerDown           = false;
+		EventTooltip.IsVisible   = false;
+		
+		Chart.Plot.XAxis.LockLimits( false );
+		
+		Chart.RefreshRequest();
+	}
+
+	private void OnPointerPressed( object? sender, PointerPressedEventArgs e )
+	{
+		if( (e.KeyModifiers & KeyModifiers.Shift) != 0 )
+		{
+			_isPointerDown        = true;
+			(_pointerDownTime, _) = Chart.GetMouseCoordinates();
+			
+			HideTimeMarker();
+
+			_selectionSpan.X1        = _selectionSpan.X2 = _pointerDownTime;
+			_selectionSpan.IsVisible = true;
+			
+			Chart.Plot.XAxis.LockLimits( true );
+
+			e.Handled = true;
+		}
+	}
 
 	protected override void OnLoaded( RoutedEventArgs e )
 	{
@@ -185,17 +335,10 @@ public partial class SignalChart : UserControl
 			var  direction   = (args.Key == Key.Left) ? -1.0 : 1.0;
 			var  amount      = isShiftDown ? 50 : 25;
 
-			var plot = Chart.Plot;
+			var plot  = Chart.Plot;
+			var scale = 0.5;
 
-			// var axisLimits = plot.GetAxisLimits();
-			// var bounds     = _day.TotalTimeSpan.TotalSeconds;
-			// var axisRange  = axisLimits.XMax - axisLimits.XMin;
-			var scale      = 0.5;
-
-			if( scale < 0.99 )
-			{
-				plot.AxisPan( (direction * amount) / (1.0 - scale), 0 );
-			}
+			plot.AxisPan( (direction * amount) / (1.0 - scale), 0 );
 
 			args.Handled = true;
 			
@@ -218,6 +361,19 @@ public partial class SignalChart : UserControl
 	
 	#region Public functions
 
+	public void SetDisplayedRange( DateTime startTime, DateTime endTime )
+	{
+		if( _day == null )
+		{
+			return;
+		}
+		
+		var offsetStart = (startTime - _day.RecordingStartTime).TotalSeconds;
+		var offsetEnd   = (endTime - _day.RecordingStartTime).TotalSeconds;
+
+		ZoomTo( offsetStart, offsetEnd );
+	}
+
 	public Rectangle GetDataBounds()
 	{
 		var chartBounds = Chart.Bounds;
@@ -236,9 +392,44 @@ public partial class SignalChart : UserControl
 	
 	#endregion 
 	
-	#region Private functions 
+	#region Private functions
+
+	private void HideTimeMarker()
+	{
+		UpdateTimeMarker( DateTime.MinValue );
+		RaiseTimeMarkerChanged( DateTime.MinValue );
+	}
 	
-	internal void UpdateTrackedTime( double time, PointerEventArgs? eventArgs )
+	private void RaiseTimeMarkerChanged( DateTime time )
+	{
+		RaiseEvent( new TimeRoutedEventArgs()
+		{
+			RoutedEvent = TimeMarkerChangedEvent,
+			Source      = this,
+			Time        = time
+		} );
+	}
+
+	private void ZoomTo( double startTime, double endTime )
+	{
+		if( !IsEnabled || !Chart.IsEnabled )
+		{
+			return;
+		}
+		
+		// disable events briefly to avoid an infinite loop
+		Chart.Configuration.AxesChangedEventEnabled = false;
+		{
+			var currentAxisLimits  = Chart.Plot.GetAxisLimits();
+			var modifiedAxisLimits = new AxisLimits( startTime, endTime, currentAxisLimits.YMin, currentAxisLimits.YMax );
+
+			Chart.Plot.SetAxisLimits( modifiedAxisLimits );
+			Chart.RenderRequest();
+		}
+		Chart.Configuration.AxesChangedEventEnabled = true;
+	}
+	
+	internal void UpdateTimeMarker( DateTime time )
 	{
 		if( !_hasDataAvailable || _day == null )
 		{
@@ -250,42 +441,40 @@ public partial class SignalChart : UserControl
 			throw new Exception( $"The {nameof( Configuration )} property has not been assigned" );
 		}
 
-		var mousePosition = eventArgs?.GetPosition( this ) ?? new Point();
+		var timeOffset    = (time - _day.RecordingStartTime).TotalSeconds; 
 		var dataRect      = GetDataBounds();
+		var dims          = Chart.Plot.XAxis.Dims;
+		var mousePosition = dims.PxPerUnit * (timeOffset - dims.Min) + dataRect.Left;
 
+		MouseLine.IsVisible    = false;
 		EventTooltip.IsVisible = false;
-		_currentValueMarker!.X = time;
 		CurrentValue.Text      = "";
-
-		// Double.NaN will be sent when the mouse cursor leaves the control, and is an opportunity to hide
-		// the mouse track line and other mouse-related visuals. 
-		if( double.IsNaN( time ) || dataRect.Left > mousePosition.X || dataRect.Right < mousePosition.X )
+		
+		// If the time isn't valid then hide the marker and exit
+		if( time < _day.RecordingStartTime || time > _day.RecordingEndTime )
 		{
-			MouseLine.IsVisible    = false;
-			EventTooltip.IsVisible = false;
-			
 			return;
 		}
 
-		MouseLine.StartPoint = new Point( mousePosition.X, dataRect.Top );
-		MouseLine.EndPoint   = new Point( mousePosition.X, dataRect.Bottom );
-		MouseLine.IsVisible  = true;
+		// If the time isn't visible within the displayed range, hide the marker and exit.
+		if( dataRect.Left > mousePosition || dataRect.Right < mousePosition )
+		{
+			return;
+		}
 
-		// Converting the "Number of seconds offset from the start of the chart" back to a DateTime makes it 
-		// much easier to locate which Session this time refers to, and to then calculate an offset into that
-		// session.
-		var asDateTime = _day.RecordingStartTime.AddSeconds( time );
+		MouseLine.StartPoint = new Point( mousePosition, dataRect.Top );
+		MouseLine.EndPoint   = new Point( mousePosition, dataRect.Bottom );
+		MouseLine.IsVisible  = true;
 
 		foreach( var signal in _signals )
 		{
 			// Signal start times may be slightly different than session start times, so need to check 
 			// the signal itself also 
-			if( signal.StartTime <= asDateTime && signal.EndTime >= asDateTime )
+			if( signal.StartTime <= time && signal.EndTime >= time )
 			{
-				var value = signal.GetValueAtTime( asDateTime );
+				var value = signal.GetValueAtTime( time );
 
-				CurrentValue.Text     = $"{asDateTime:T}        {Configuration.Title}: {value:N2} {signal.UnitOfMeasurement}";
-				_currentValueMarker.Y = value;
+				CurrentValue.Text = $"{time:T}        {Configuration.Title}: {value:N2} {signal.UnitOfMeasurement}";
 
 				break;
 			}
@@ -295,12 +484,11 @@ public partial class SignalChart : UserControl
 		{
 			foreach( var signal in _secondarySignals )
 			{
-				if( signal.StartTime <= asDateTime && signal.EndTime >= asDateTime )
+				if( signal.StartTime <= time && signal.EndTime >= time )
 				{
-					var value = signal.GetValueAtTime( asDateTime );
+					var value = signal.GetValueAtTime( time );
 
-					CurrentValue.Text     += $"        {SecondaryConfiguration.Title}: {value:N2} {signal.UnitOfMeasurement}";
-					_currentValueMarker.Y = value;
+					CurrentValue.Text += $"        {SecondaryConfiguration.Title}: {value:N2} {signal.UnitOfMeasurement}";
 
 					break;
 				}
@@ -316,7 +504,7 @@ public partial class SignalChart : UserControl
 			var startTime = (bounds.StartTime - _day.RecordingStartTime).TotalSeconds;
 			var endTime   = (bounds.EndTime - _day.RecordingStartTime).TotalSeconds;
 			
-			if( time >= startTime - highlightDistance && time <= endTime + highlightDistance )
+			if( timeOffset >= startTime - highlightDistance && timeOffset <= endTime + highlightDistance )
 			{
 				if( flag.Duration.TotalSeconds > 0 )
 					EventTooltip.Tag = $"{flag.Type.ToName()} ({FormattedTimespanConverter.FormatTimeSpan( flag.Duration, TimespanFormatType.Short, false )})";
@@ -382,9 +570,10 @@ public partial class SignalChart : UserControl
 			ChartSignal( Chart, day, Configuration.SignalName, 1f, Configuration.AxisMinValue, Configuration.AxisMaxValue );
 			CreateEventMarkers( day );
 
-			// TODO: The "Current Value" marker dot is currently not visible. 
-			_currentValueMarker           = Chart.Plot.AddMarker( -1, -1, MarkerShape.filledCircle, 8, Colors.White.ToDrawingColor(), null );
-			_currentValueMarker.IsVisible = false;
+			_selectionSpan                = Chart.Plot.AddHorizontalSpan( -1, -1, Color.Red.MultiplyAlpha( 0.2f ), null );
+			_selectionSpan.IgnoreAxisAuto = true;
+			_selectionSpan.IsVisible      = false;
+			_selectionSpan.DragEnabled    = true;
 		}
 		finally
 		{
@@ -483,7 +672,12 @@ public partial class SignalChart : UserControl
 		var extents = maxValue - minValue;
 		chart.Plot.YAxis.SetBoundary( minValue, maxValue + extents * 0.1 );
 		chart.Plot.XAxis.SetBoundary( -1, day.TotalTimeSpan.TotalSeconds + 1 );
-		chart.Plot.SetAxisLimits( -1, day.TotalTimeSpan.TotalSeconds + 1, minValue, maxValue + extents * 0.1 );
+		
+		Chart.Configuration.AxesChangedEventEnabled = false;
+		{
+			chart.Plot.SetAxisLimits( -1, day.TotalTimeSpan.TotalSeconds + 1, minValue, maxValue + extents * 0.1 );
+		}
+		Chart.Configuration.AxesChangedEventEnabled = true;
 
 		// If manual vertical axis tick positions were provided, set up the labels for them and force the chart
 		// to show those instead of the automatically-generated tick positions. 

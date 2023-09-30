@@ -19,16 +19,16 @@ namespace cpap_app.Views;
 
 public partial class DailyReportView : UserControl
 {
-	public static readonly RoutedEvent<TimeRangeSelectedEventArgs> TimeRangeSelectedEvent = RoutedEvent.Register<DailyReportView, TimeRangeSelectedEventArgs>( nameof( TimeRangeSelected ), RoutingStrategies.Bubble );
-	public static readonly RoutedEvent<TimeSelectedEventArgs> TimeSelectedEvent = RoutedEvent.Register<DailyReportView, TimeSelectedEventArgs>( nameof( TimeSelected ), RoutingStrategies.Bubble );
+	public static readonly RoutedEvent<TimeRangeRoutedEventArgs> TimeRangeSelectedEvent = RoutedEvent.Register<DailyReportView, TimeRangeRoutedEventArgs>( nameof( TimeRangeSelected ), RoutingStrategies.Bubble );
+	public static readonly RoutedEvent<TimeRoutedEventArgs> TimeSelectedEvent = RoutedEvent.Register<DailyReportView, TimeRoutedEventArgs>( nameof( TimeSelected ), RoutingStrategies.Bubble );
 	
-	public event EventHandler<TimeRangeSelectedEventArgs> TimeRangeSelected
+	public event EventHandler<TimeRangeRoutedEventArgs> TimeRangeSelected
 	{
 		add => AddHandler( TimeRangeSelectedEvent, value );
 		remove => RemoveHandler( TimeRangeSelectedEvent, value );
 	}
 	
-	public event EventHandler<TimeSelectedEventArgs> TimeSelected
+	public event EventHandler<TimeRoutedEventArgs> TimeSelected
 	{
 		add => AddHandler( TimeSelectedEvent, value );
 		remove => RemoveHandler( TimeSelectedEvent, value );
@@ -58,12 +58,12 @@ public partial class DailyReportView : UserControl
 		}
 	}
 	
-	private void OnTimeRangeSelected( object? sender, TimeRangeSelectedEventArgs e )
+	private void OnTimeRangeSelected( object? sender, TimeRangeRoutedEventArgs e )
 	{
 		Charts.SelectTimeRange( e.StartTime, e.EndTime );
 	}
 
-	private void OnTimeSelected( object? sender, TimeSelectedEventArgs e )
+	private void OnTimeSelected( object? sender, TimeRoutedEventArgs e )
 	{
 		Charts.SelectTimeRange( e.Time - TimeSpan.FromMinutes( 3 ), e.Time + TimeSpan.FromMinutes( 3 ) );
 	}

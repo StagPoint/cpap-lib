@@ -45,7 +45,7 @@ public partial class DailyEventsListView : UserControl
 			return;
 		}
 		
-		var eventArgs = new TimeSelectedEventArgs
+		var eventArgs = new TimeRoutedEventArgs
 		{
 			Route       = RoutingStrategies.Bubble | RoutingStrategies.Tunnel,
 			RoutedEvent = DailyReportView.TimeSelectedEvent,

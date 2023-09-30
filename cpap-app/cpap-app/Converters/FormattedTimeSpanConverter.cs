@@ -59,7 +59,7 @@ public class FormattedTimespanConverter : IValueConverter
 		if( format == TimespanFormatType.Long || time.Seconds > 0 )
 		{
 			if( format == TimespanFormatType.Long )
-				builder.Append( totalSecondsText( time.TotalSeconds ) );
+				builder.Append( totalSecondsText( time.TotalSeconds - (Math.Floor( time.TotalMinutes ) * 60.0) ) );
 			else
 				builder.Append( secondsText( time.Seconds ) );
 		}
@@ -80,7 +80,7 @@ public class FormattedTimespanConverter : IValueConverter
 
 		return builder.ToString();
 
-		string secondsText( int seconds )
+		string secondsText( double seconds )
 		{
 			if( seconds < 1 )
 				return "";
@@ -92,8 +92,9 @@ public class FormattedTimespanConverter : IValueConverter
 				case TimespanFormatType.Short:
 					return $"{seconds} sec";
 				case TimespanFormatType.Long:
+					return seconds > 1.0 ? $"{seconds:F2} seconds" : $"{seconds} second";
 				default:
-					return seconds != 1 ? $"{seconds} seconds" : $"{seconds} second";
+					return seconds > 1.0 ? $"{seconds} seconds" : $"{seconds} second";
 			}
 		}
 

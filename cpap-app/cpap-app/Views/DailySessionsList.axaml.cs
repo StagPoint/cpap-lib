@@ -28,7 +28,7 @@ public partial class DailySessionsList : UserControl
 	{
 		if( lstSessions.SelectedItem is Session session )
 		{
-			var eventArgs = new TimeRangeSelectedEventArgs
+			var eventArgs = new TimeRangeRoutedEventArgs
 			{
 				Route       = RoutingStrategies.Bubble | RoutingStrategies.Tunnel,
 				RoutedEvent = DailyReportView.TimeRangeSelectedEvent,

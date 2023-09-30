@@ -22,16 +22,15 @@ namespace cpap_app.Views;
 
 public partial class SignalChartContainer : UserControl
 {
-	private List<SignalChartConfiguration> _signalConfigs;
-	private List<SignalChart>              _charts = new();
+	private List<SignalChart> _charts = new();
 	
 	public SignalChartContainer()
 	{
 		InitializeComponent();
 
-		_signalConfigs = SignalConfigurationStore.GetSignalConfigurations();
+		List<SignalChartConfiguration> signalConfigs = SignalConfigurationStore.GetSignalConfigurations();
 
-		foreach( var config in _signalConfigs )
+		foreach( var config in signalConfigs )
 		{
 			if( !config.IsVisible )
 			{
@@ -42,7 +41,7 @@ public partial class SignalChartContainer : UserControl
 
 			if( !string.IsNullOrEmpty( config.SecondarySignalName ) )
 			{
-				var secondaryConfig = _signalConfigs.FirstOrDefault( x => x.SignalName.Equals( config.SecondarySignalName, StringComparison.OrdinalIgnoreCase ) );
+				var secondaryConfig = signalConfigs.FirstOrDefault( x => x.SignalName.Equals( config.SecondarySignalName, StringComparison.OrdinalIgnoreCase ) );
 				if( secondaryConfig != null )
 				{
 					chart.SecondaryConfiguration = secondaryConfig;
@@ -62,96 +61,27 @@ public partial class SignalChartContainer : UserControl
 		}
 	}
 	
-	#region Base class overrides 
-
-	protected override void OnLoaded( RoutedEventArgs e )
-	{
-		base.OnLoaded( e );
-		
-		foreach( var chart in _charts )
-		{
-			chart.Chart.AxesChanged    += ChartOnAxesChanged;
-			chart.Chart.PointerMoved   += ChartOnPointerMoved;
-			chart.Chart.PointerEntered += ChartOnPointerMoved;
-			chart.Chart.PointerExited  += ChartOnPointerExited;
-		}
-	}
-	protected override void OnPointerWheelChanged( PointerWheelEventArgs e )
-	{
-		base.OnPointerWheelChanged( e );
-
-		e.Handled = true;
-	}
-
-	protected override void OnUnloaded( RoutedEventArgs e )
-	{
-		base.OnUnloaded( e );
-		
-		foreach( var chart in _charts )
-		{
-			chart.Chart.AxesChanged   -= ChartOnAxesChanged;
-			chart.Chart.PointerMoved  -= ChartOnPointerMoved;
-			chart.Chart.PointerExited -= ChartOnPointerExited;
-		}
-	}
-	
-	#endregion 
-
 	#region Event handlers
 
-	private void ChartOnPointerExited( object? sender, PointerEventArgs e )
+	public void ChartDisplayedRangeChanged( object? sender, TimeRangeRoutedEventArgs e )
 	{
-		foreach( var chart in _charts )
-		{
-			chart.UpdateTrackedTime( double.NaN, e );
-		}
-	}
-
-	private void ChartOnPointerMoved( object? sender, PointerEventArgs e )
-	{
-		if( sender is not AvaPlot control || e.Handled )
-		{
-			return;
-		}
-
-		// Returns mouse coordinates as grid coordinates, taking pan and zoom into account
-		(double time, _) = control.GetMouseCoordinates();
-		
-		// Synchronize the update of the vertical indicator in all charts in the group
-		foreach( var chart in _charts )
-		{
-			chart.UpdateTrackedTime( time, e );
-		}
-
-		e.Handled = true;
-	}
-
-	private void ChartOnAxesChanged( object? sender, EventArgs e )
-	{
-		var who           = sender as AvaPlot;
-		var newAxisLimits = who.Plot.GetAxisLimits();
-		
 		foreach( var control in _charts )
 		{
-			control.UpdateTrackedTime( double.NaN, null );
-			
-			if( control.Chart == who || !control.Chart.IsEnabled )
+			if( control != sender )
 			{
-				continue;
+				control.SetDisplayedRange( e.StartTime, e.EndTime );
 			}
-			
-			var chart = control.Chart;
+		}
+	}
 
-			// disable events briefly to avoid an infinite loop
-			chart.Configuration.AxesChangedEventEnabled = false;
+	private void ChartOnTimeMarkerChanged( object? sender, TimeRoutedEventArgs e )
+	{
+		foreach( var control in _charts )
+		{
+			if( control != sender )
 			{
-				var currentAxisLimits  = chart.Plot.GetAxisLimits();
-				var modifiedAxisLimits = new AxisLimits( newAxisLimits.XMin, newAxisLimits.XMax, currentAxisLimits.YMin, currentAxisLimits.YMax );
-
-				chart.Plot.SetAxisLimits( modifiedAxisLimits );
-				chart.RenderRequest( RenderType.LowQualityThenHighQualityDelayed );
+				control.UpdateTimeMarker( e.Time );
 			}
-			chart.Configuration.AxesChangedEventEnabled = true;
 		}
 	}
 
@@ -162,31 +92,12 @@ public partial class SignalChartContainer : UserControl
 			return;
 		}
 
-		var offsetStart   = (startTime - day.RecordingStartTime).TotalSeconds;
-		var offsetEnd     = (endTime - day.RecordingStartTime).TotalSeconds;
-
 		foreach( var control in _charts )
 		{
-			if( !control.Chart.IsEnabled )
-			{
-				continue;
-			}
-			
-			var chart = control.Chart;
-
-			// disable events briefly to avoid an infinite loop
-			chart.Configuration.AxesChangedEventEnabled = false;
-			{
-				var currentAxisLimits  = chart.Plot.GetAxisLimits();
-				var modifiedAxisLimits = new AxisLimits( offsetStart, offsetEnd, currentAxisLimits.YMin, currentAxisLimits.YMax );
-
-				chart.Plot.SetAxisLimits( modifiedAxisLimits );
-				chart.RenderRequest( RenderType.LowQualityThenHighQualityDelayed );
-			}
-			chart.Configuration.AxesChangedEventEnabled = true;
+			control.SetDisplayedRange( startTime, endTime );
 		}
 	}
 	
-	#endregion 
+	#endregion
 }
 

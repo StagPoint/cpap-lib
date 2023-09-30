@@ -4,25 +4,38 @@
 	{
 		UNKNOWN = -1,
 		/// <summary>
-		/// Constant pressure delivered at a fixed set point
+		/// Constant Positive Air Pressure
 		/// </summary>
 		CPAP,
 		/// <summary>
-		/// Pressure will fluctuate between a set minimum and maximum value
+		/// Auto-titrating Positive Air Pressure
 		/// </summary>
 		APAP,
 		/// <summary>
-		/// Delivers a constant fixed pressure for both inhalation (IPAP) and exhalation (EPAP) separately.
-		/// The device senses when the patient is inhaling and exhaling and supplies the appropriate pressures accordingly.
+		/// Fixed Inspiratory Positive Airway Pressure (IPAP) and Expiratory Positive Airway Pressure (EPAP)
 		/// </summary>
 		BILEVEL_FIXED,
+		/// <summary>
+		/// Auto-titrated Inspiratory Positive Airway Pressure (IPAP) and Expiratory Positive Airway Pressure (EPAP)
+		/// with fixed Pressure Support
+		/// </summary>
 		BILEVEL_AUTO_FIXED_PS,
+		/// <summary>
+		/// Auto-titrated Inspiratory Positive Airway Pressure (IPAP) and Expiratory Positive Airway Pressure (EPAP)
+		/// with variable Pressure Support
+		/// </summary>
 		BILEVEL_AUTO_VARIABLE_PS,
 		/// <summary>
-		/// Adaptive Servo Ventilation mode
+		/// Adaptive Servo Ventilation
 		/// </summary>
 		ASV,
+		/// <summary>
+		/// Adaptive Servo Ventilation (ASV) with variable Expiratory Positive Airway Pressure (EPAP)
+		/// </summary>
 		ASV_VARIABLE_EPAP,
+		/// <summary>
+		/// Average Volume-Assured Pressure Support
+		/// </summary>
 		AVAPS,
 		MAX_VALUE = AVAPS + 1
 	};

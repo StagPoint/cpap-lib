@@ -133,7 +133,7 @@ public static class SignalConfigurationStore
 					break;
 				
 				case SignalNames.RespirationRate:
-					config.BaselineHigh = 20;
+					config.BaselineHigh = 24;
 					config.BaselineLow  = 10;
 					config.AxisMinValue = 0;
 					config.AxisMaxValue = 40;
