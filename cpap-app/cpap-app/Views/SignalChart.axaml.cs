@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 
@@ -20,6 +21,8 @@ using cpap_app.Helpers;
 using cpaplib;
 
 using FluentAvalonia.UI.Controls;
+
+using Microsoft.VisualBasic.CompilerServices;
 
 using ScottPlot;
 using ScottPlot.Avalonia;
@@ -107,14 +110,16 @@ public partial class SignalChart : UserControl
 	
 	#region Private fields
 
-	private CustomChartStyle _chartStyle;
-	private DailyReport?     _day                = null;
-	private bool             _hasDataAvailable   = false;
-	private bool             _chartInitialized   = false;
-	private bool             _isPointerDown      = false;
-	private double           _selectionStartTime = 0;
-	private double           _selectionEndTime   = 0;
-	private HSpan            _selectionSpan;
+	private CustomChartStyle     _chartStyle;
+	private DailyReport?         _day                = null;
+	private bool                 _hasDataAvailable   = false;
+	private bool                 _chartInitialized   = false;
+	private double               _selectionStartTime = 0;
+	private double               _selectionEndTime   = 0;
+	private GraphInteractionMode _interactionMode    = GraphInteractionMode.None;
+	private AxisLimits           _pointerDownAxisLimits;
+	private Point                _pointerDownPosition;
+	private HSpan                _selectionSpan;
 	
 	private List<ReportedEvent> _events           = new();
 	private List<Signal>        _signals          = new();
@@ -166,6 +171,62 @@ public partial class SignalChart : UserControl
 		TimeMarkerLine.IsVisible = false;
 
 		InitializeChartProperties( Chart );
+	}
+
+	protected override void OnKeyDown( KeyEventArgs args )
+	{
+		if( args.Key is Key.Left or Key.Right )
+		{
+			var  axisLimits  = Chart.Plot.GetAxisLimits();
+			var  startTime   = axisLimits.XMin;
+			var  endTime     = axisLimits.XMax;
+			bool isShiftDown = (args.KeyModifiers & KeyModifiers.Shift) != 0;
+			var  amount      = axisLimits.XSpan * (isShiftDown ? 0.25 : 0.10);
+
+			var plot  = Chart.Plot;
+
+			if( args.Key == Key.Left )
+			{
+				startTime -= amount;
+				endTime   =  startTime + axisLimits.XSpan;
+			}
+			else
+			{
+				endTime   += amount;
+				startTime =  endTime - axisLimits.XSpan;
+			}
+			
+			Chart.Plot.SetAxisLimits( startTime, endTime );
+			
+			HideTimeMarker();
+			Chart.RenderRequest();
+			
+			args.Handled = true;
+		}
+		else if( args.Key is Key.Up or Key.Down )
+		{
+			double increment = ((args.KeyModifiers & KeyModifiers.Shift) != 0) ? 0.25 : 0.1;
+			double amount    = (args.Key == Key.Up ? 1.0 : -1.0) * increment + 1.0;
+			
+			Chart.Plot.AxisZoom( amount, 1.0 );
+
+			args.Handled = true;
+
+			HideTimeMarker();
+			Chart.RenderRequest();
+		}
+		else if( args.Key == Key.Escape )
+		{
+			if( _interactionMode == GraphInteractionMode.Selecting )
+			{
+				_interactionMode         = GraphInteractionMode.None;
+				_selectionStartTime      = 0;
+				_selectionEndTime        = 0;
+				_selectionSpan.IsVisible = false;
+				
+				Chart.RenderRequest();
+			}
+		}
 	}
 
 	protected override void OnPropertyChanged( AvaloniaPropertyChangedEventArgs change )
@@ -224,19 +285,22 @@ public partial class SignalChart : UserControl
 
 	private void OnPointerEntered( object? sender, PointerEventArgs e )
 	{
-		Chart.Focus();
+		this.Focus();
 		
 		if( _day == null || !IsEnabled )
 		{
 			return;
 		}
-		
-		var currentPoint = e.GetPosition( Chart );
-		var timeOffset   = Chart.Plot.XAxis.Dims.GetUnit( (float)currentPoint.X );
-		var time         = _day.RecordingStartTime.AddSeconds( timeOffset );
-		
-		UpdateTimeMarker( time );
-		RaiseTimeMarkerChanged( time );
+
+		if( _interactionMode == GraphInteractionMode.None )
+		{
+			var currentPoint = e.GetPosition( Chart );
+			var timeOffset   = Chart.Plot.XAxis.Dims.GetUnit( (float)currentPoint.X );
+			var time         = _day.RecordingStartTime.AddSeconds( timeOffset );
+
+			UpdateTimeMarker( time );
+			RaiseTimeMarkerChanged( time );
+		}
 	}
 
 	private void OnPointerExited( object? sender, PointerEventArgs e )
@@ -247,28 +311,25 @@ public partial class SignalChart : UserControl
 	private void OnPointerReleased( object? sender, PointerReleasedEventArgs e )
 	{
 		_selectionSpan.IsVisible = false;
-		_isPointerDown           = false;
 		EventTooltip.IsVisible   = false;
-		
-		Chart.Plot.XAxis.LockLimits( false );
 
-		if( _selectionStartTime > _selectionEndTime )
+		if( _interactionMode == GraphInteractionMode.Selecting )
 		{
-			(_selectionStartTime, _selectionEndTime) = (_selectionEndTime, _selectionStartTime);
+			EndSelectionMode();
+		}
+		else if( _interactionMode == GraphInteractionMode.Panning )
+		{
+			// The chart was rendered in low quality while panning, so re-render in high quality now that we're done 
+			Chart.Configuration.Quality = ScottPlot.Control.QualityMode.LowWhileDragging;
+			Chart.RenderRequest();
 		}
 
-		if( _day != null && _selectionEndTime > _selectionStartTime + 0.1 )
-		{
-			ZoomTo( _selectionStartTime, _selectionEndTime );
-			OnAxesChanged( this, EventArgs.Empty );
-		}
-		
-		Chart.RenderRequest();
+		_interactionMode = GraphInteractionMode.None;
 	}
 
 	private void OnPointerPressed( object? sender, PointerPressedEventArgs eventArgs )
 	{
-		if( eventArgs.Handled )
+		if( eventArgs.Handled || _interactionMode != GraphInteractionMode.None )
 		{
 			return;
 		}
@@ -279,7 +340,7 @@ public partial class SignalChart : UserControl
 		HideTimeMarker();
 
 		var point = eventArgs.GetCurrentPoint( this );
-		if( point.Properties.IsRightButtonPressed || point.Properties.IsMiddleButtonPressed )
+		if( point.Properties.IsMiddleButtonPressed )
 		{
 			return;
 		}
@@ -292,19 +353,25 @@ public partial class SignalChart : UserControl
 			return;
 		}
 		
-		if( (eventArgs.KeyModifiers & KeyModifiers.Control) == 0 )
+		if( eventArgs.KeyModifiers == KeyModifiers.None && !point.Properties.IsRightButtonPressed )
 		{
-			_isPointerDown           = true;
 			(_selectionStartTime, _) = Chart.GetMouseCoordinates();
 			_selectionEndTime        = _selectionStartTime;
 			_selectionSpan.X1        = _selectionStartTime;
 			_selectionSpan.X2        = _selectionStartTime;
 			_selectionSpan.IsVisible = true;
-			
-			// This is a hack to stop the built-in ScottPlot functionality from panning/zooming the graph
-			Chart.Plot.XAxis.LockLimits( true );
 
+			_interactionMode = GraphInteractionMode.Selecting;
+			
 			eventArgs.Handled = true;
+		}
+		else if( (eventArgs.KeyModifiers & KeyModifiers.Control) != 0 || point.Properties.IsRightButtonPressed )
+		{
+			Chart.Configuration.Quality = ScottPlot.Control.QualityMode.Low;
+
+			_pointerDownPosition   = point.Position;
+			_pointerDownAxisLimits = Chart.Plot.GetAxisLimits();
+			_interactionMode       = GraphInteractionMode.Panning;
 		}
 	}
 
@@ -323,6 +390,7 @@ public partial class SignalChart : UserControl
 
 			args.Handled = true;
 
+			HideTimeMarker();
 			Chart.RenderRequest();
 		}
 	}
@@ -336,7 +404,7 @@ public partial class SignalChart : UserControl
 
 		(double timeOffset, _) = Chart.GetMouseCoordinates();
 
-		if( _isPointerDown )
+		if( _interactionMode == GraphInteractionMode.Selecting )
 		{
 			_selectionEndTime = timeOffset;
 			
@@ -363,42 +431,39 @@ public partial class SignalChart : UserControl
 			return;
 		}
 
-		if( (eventArgs.KeyModifiers & KeyModifiers.Control) == 0x00 )
+		if( _interactionMode == GraphInteractionMode.Panning )
+		{
+			var position  = eventArgs.GetCurrentPoint( this ).Position;
+			var panAmount = (_pointerDownPosition.X - position.X) / Chart.Plot.XAxis.Dims.PxPerUnit;
+			
+			double start = 0;
+			double end   = 0;
+			
+			if( position.X < _pointerDownPosition.X )
+			{
+				start = Math.Max( 0, _pointerDownAxisLimits.XMin + panAmount );
+				end   = start + _pointerDownAxisLimits.XSpan;
+			}
+			else
+			{
+				end   = Math.Min( _day.TotalTimeSpan.TotalSeconds, _pointerDownAxisLimits.XMax + panAmount );
+				start = end - _pointerDownAxisLimits.XSpan;
+			}
+			
+			Chart.Plot.SetAxisLimits( start, end );
+			Chart.RenderRequest( RenderType.LowQualityThenHighQualityDelayed );
+
+			eventArgs.Handled = true;
+
+			return;
+		}
+
+		if( _interactionMode == GraphInteractionMode.None )
 		{
 			var time = _day.RecordingStartTime.AddSeconds( timeOffset );
 
 			UpdateTimeMarker( time );
 			RaiseTimeMarkerChanged( time );
-		}
-	}
-
-	protected override void OnKeyDown( KeyEventArgs args )
-	{
-		if( args.Key is Key.Left or Key.Right )
-		{
-			bool isShiftDown = (args.KeyModifiers & KeyModifiers.Shift) != 0;
-			var  direction   = (args.Key == Key.Left) ? -1.0 : 1.0;
-			var  amount      = isShiftDown ? 50 : 25;
-
-			var plot  = Chart.Plot;
-			var scale = 0.5;
-
-			plot.AxisPan( (direction * amount) / (1.0 - scale), 0 );
-
-			args.Handled = true;
-			
-			Chart.RenderRequest();
-		}
-		else if( args.Key is Key.Up or Key.Down )
-		{
-			double increment = ((args.KeyModifiers & KeyModifiers.Shift) != 0) ? 0.15 : 0.05;
-			double amount    = (args.Key == Key.Up ? 1.0 : -1.0) * increment + 1.0;
-			
-			Chart.Plot.AxisZoom( amount, 1.0 );
-
-			args.Handled = true;
-
-			Chart.RenderRequest();
 		}
 	}
 
@@ -439,6 +504,24 @@ public partial class SignalChart : UserControl
 	
 	#region Private functions
 
+	private void EndSelectionMode()
+	{
+		_interactionMode = GraphInteractionMode.None;
+			
+		if( _selectionStartTime > _selectionEndTime )
+		{
+			(_selectionStartTime, _selectionEndTime) = (_selectionEndTime, _selectionStartTime);
+		}
+		
+		if( _day != null && _selectionEndTime > _selectionStartTime + 0.1 )
+		{
+			ZoomTo( _selectionStartTime, _selectionEndTime );
+			OnAxesChanged( this, EventArgs.Empty );
+		}
+
+		Chart.RenderRequest();
+	}
+
 	private void HideTimeMarker()
 	{
 		if( TimeMarkerLine.IsVisible )
@@ -465,6 +548,16 @@ public partial class SignalChart : UserControl
 			return;
 		}
 		
+		// Don't allow zooming in closer than one minute
+		if( endTime - startTime < 60 )
+		{
+			Debug.Assert( _day != null, nameof( _day ) + " != null" );
+			
+			var center = (endTime + startTime) * 0.5;
+			startTime = Math.Max( 0, center - 30 );
+			endTime   = Math.Min( _day.TotalTimeSpan.TotalSeconds, center + 30 );
+		}
+
 		// disable events briefly to avoid an infinite loop
 		Chart.Configuration.AxesChangedEventEnabled = false;
 		{
@@ -472,7 +565,7 @@ public partial class SignalChart : UserControl
 			var modifiedAxisLimits = new AxisLimits( startTime, endTime, currentAxisLimits.YMin, currentAxisLimits.YMax );
 
 			Chart.Plot.SetAxisLimits( modifiedAxisLimits );
-			Chart.RefreshRequest();
+			Chart.RenderRequest( RenderType.LowQualityThenHighQualityDelayed );
 		}
 		Chart.Configuration.AxesChangedEventEnabled = true;
 	}
@@ -838,22 +931,17 @@ public partial class SignalChart : UserControl
 		// Measure enough space for a vertical axis label, padding, and the longest anticipated tick label 
 		var maximumLabelWidth = MeasureText( "88888.8", _chartStyle.TickLabelFontName, 12 );
 
-		chart.Configuration.ScrollWheelZoom      = false;
-		chart.Configuration.LeftClickDragPan     = false;
-		chart.Configuration.AltLeftClickDragZoom = false;
-		chart.Configuration.MiddleClickAutoAxis  = false;
-		chart.Configuration.MiddleClickDragZoom  = false;
-		chart.Configuration.LockVerticalAxis     = true;
-		
-		chart.Configuration.Quality                                      = ScottPlot.Control.QualityMode.LowWhileDragging;
-		chart.Configuration.QualityConfiguration.BenchmarkToggle         = RenderType.LowQualityThenHighQualityDelayed;
-		chart.Configuration.QualityConfiguration.AutoAxis                = RenderType.LowQualityThenHighQualityDelayed;
-		chart.Configuration.QualityConfiguration.MouseInteractiveDragged = RenderType.LowQualityThenHighQualityDelayed;
-		chart.Configuration.QualityConfiguration.MouseInteractiveDropped = RenderType.LowQualityThenHighQualityDelayed;
-		chart.Configuration.QualityConfiguration.MouseWheelScrolled      = RenderType.LowQualityThenHighQualityDelayed;
+		// We will be replacing most of the built-in mouse interactivity with bespoke functionality
+		Chart.Configuration.ScrollWheelZoom      = false;
+		Chart.Configuration.AltLeftClickDragZoom = false;
+		Chart.Configuration.MiddleClickAutoAxis  = false;
+		Chart.Configuration.MiddleClickDragZoom  = false;
+		Chart.Configuration.LockVerticalAxis     = true;
+		Chart.Configuration.LeftClickDragPan     = false;
+		Chart.Configuration.RightClickDragZoom   = false;
+		Chart.Configuration.Quality              = ScottPlot.Control.QualityMode.LowWhileDragging;
 
 		plot.Style( _chartStyle );
-		//plot.LeftAxis.Label( label );
 		plot.Layout( 0, 0, 0, 0 );
 		plot.Margins( 0.0, 0.1 );
 		
@@ -895,6 +983,18 @@ public partial class SignalChart : UserControl
 		return (float)Math.Ceiling( formatted.Width );
 	}
 
+	#endregion 
+	
+	#region Nested types
+
+	private enum GraphInteractionMode
+	{
+		None,
+		Panning,
+		Zooming,
+		Selecting,
+	}
+	
 	#endregion 
 }
 
