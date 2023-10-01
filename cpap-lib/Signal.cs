@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 // ReSharper disable UseIndexFromEndExpression
@@ -73,6 +74,11 @@ namespace cpaplib
 			};
 
 			return clone;
+		}
+
+		public static bool TimesOverlap( Session a, Session b )
+		{
+			return DateHelper.RangesOverlap( a.StartTime, a.EndTime, b.StartTime, b.EndTime );
 		}
 
 		public void TrimToTime( DateTime minTime, DateTime maxTime )

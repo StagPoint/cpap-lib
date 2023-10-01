@@ -31,6 +31,7 @@ using ScottPlot.Plottable;
 using Brush = Avalonia.Media.Brush;
 using Brushes = Avalonia.Media.Brushes;
 using Color = System.Drawing.Color;
+using Cursor = Avalonia.Input.Cursor;
 using Point = Avalonia.Point;
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
@@ -312,6 +313,8 @@ public partial class SignalChart : UserControl
 	{
 		_selectionSpan.IsVisible = false;
 		EventTooltip.IsVisible   = false;
+		
+		Chart.Cursor = Cursor.Default;
 
 		if( _interactionMode == GraphInteractionMode.Selecting )
 		{
@@ -362,6 +365,7 @@ public partial class SignalChart : UserControl
 			_selectionSpan.IsVisible = true;
 
 			_interactionMode = GraphInteractionMode.Selecting;
+			Chart.Cursor     = new Avalonia.Input.Cursor( StandardCursorType.Cross );
 			
 			eventArgs.Handled = true;
 		}
@@ -372,6 +376,7 @@ public partial class SignalChart : UserControl
 			_pointerDownPosition   = point.Position;
 			_pointerDownAxisLimits = Chart.Plot.GetAxisLimits();
 			_interactionMode       = GraphInteractionMode.Panning;
+			Chart.Cursor           = new Avalonia.Input.Cursor( StandardCursorType.SizeWestEast );
 		}
 	}
 
@@ -404,66 +409,73 @@ public partial class SignalChart : UserControl
 
 		(double timeOffset, _) = Chart.GetMouseCoordinates();
 
-		if( _interactionMode == GraphInteractionMode.Selecting )
+		switch( _interactionMode )
 		{
-			_selectionEndTime = timeOffset;
-			
-			if( timeOffset < _selectionStartTime )
+			case GraphInteractionMode.Selecting:
 			{
-				_selectionSpan.X1 = Math.Max( 0, timeOffset );
-				_selectionSpan.X2 = _selectionStartTime;
-			}
-			else
-			{
-				_selectionSpan.X1 = _selectionStartTime;
-				_selectionSpan.X2 = Math.Min( timeOffset, _day.TotalTimeSpan.TotalSeconds );
-			}
+				_selectionEndTime = Math.Max( 0, Math.Min( timeOffset, _day.TotalTimeSpan.TotalSeconds ) );
 
-			var timeRangeSelected = TimeSpan.FromSeconds( _selectionSpan.X2 - _selectionSpan.X1 );
+				if( timeOffset < _selectionStartTime )
+				{
+					_selectionSpan.X1 = _selectionEndTime;
+					_selectionSpan.X2 = _selectionStartTime;
+				}
+				else
+				{
+					_selectionSpan.X1 = _selectionStartTime;
+					_selectionSpan.X2 = _selectionEndTime;
+				}
+
+				var timeRangeSelected = TimeSpan.FromSeconds( _selectionSpan.X2 - _selectionSpan.X1 );
+
+				if( timeRangeSelected.Minutes > 10 )
+				{
+					Debug.WriteLine( "wtf"  );
+				}
 			
-			EventTooltip.Tag       = FormattedTimespanConverter.FormatTimeSpan( timeRangeSelected, TimespanFormatType.Long, true );
-			EventTooltip.IsVisible = timeRangeSelected.TotalSeconds > double.Epsilon;
+				EventTooltip.Tag       = FormattedTimespanConverter.FormatTimeSpan( timeRangeSelected, TimespanFormatType.Long, true );
+				EventTooltip.IsVisible = timeRangeSelected.TotalSeconds > double.Epsilon;
 				
-			eventArgs.Handled = true;
+				eventArgs.Handled = true;
 			
-			Chart.RenderRequest();
+				Chart.RenderRequest();
 			
-			return;
-		}
-
-		if( _interactionMode == GraphInteractionMode.Panning )
-		{
-			var position  = eventArgs.GetCurrentPoint( this ).Position;
-			var panAmount = (_pointerDownPosition.X - position.X) / Chart.Plot.XAxis.Dims.PxPerUnit;
-			
-			double start = 0;
-			double end   = 0;
-			
-			if( position.X < _pointerDownPosition.X )
-			{
-				start = Math.Max( 0, _pointerDownAxisLimits.XMin + panAmount );
-				end   = start + _pointerDownAxisLimits.XSpan;
+				return;
 			}
-			else
+			case GraphInteractionMode.Panning:
 			{
-				end   = Math.Min( _day.TotalTimeSpan.TotalSeconds, _pointerDownAxisLimits.XMax + panAmount );
-				start = end - _pointerDownAxisLimits.XSpan;
-			}
+				var position  = eventArgs.GetCurrentPoint( this ).Position;
+				var panAmount = (_pointerDownPosition.X - position.X) / Chart.Plot.XAxis.Dims.PxPerUnit;
 			
-			Chart.Plot.SetAxisLimits( start, end );
-			Chart.RenderRequest( RenderType.LowQualityThenHighQualityDelayed );
+				double start = 0;
+				double end   = 0;
+			
+				if( position.X < _pointerDownPosition.X )
+				{
+					start = Math.Max( 0, _pointerDownAxisLimits.XMin + panAmount );
+					end   = start + _pointerDownAxisLimits.XSpan;
+				}
+				else
+				{
+					end   = Math.Min( _day.TotalTimeSpan.TotalSeconds, _pointerDownAxisLimits.XMax + panAmount );
+					start = end - _pointerDownAxisLimits.XSpan;
+				}
+			
+				Chart.Plot.SetAxisLimits( start, end );
+				Chart.RenderRequest( RenderType.LowQualityThenHighQualityDelayed );
 
-			eventArgs.Handled = true;
+				eventArgs.Handled = true;
 
-			return;
-		}
+				return;
+			}
+			case GraphInteractionMode.None:
+			{
+				var time = _day.RecordingStartTime.AddSeconds( timeOffset );
 
-		if( _interactionMode == GraphInteractionMode.None )
-		{
-			var time = _day.RecordingStartTime.AddSeconds( timeOffset );
-
-			UpdateTimeMarker( time );
-			RaiseTimeMarkerChanged( time );
+				UpdateTimeMarker( time );
+				RaiseTimeMarkerChanged( time );
+				break;
+			}
 		}
 	}
 
@@ -513,7 +525,7 @@ public partial class SignalChart : UserControl
 			(_selectionStartTime, _selectionEndTime) = (_selectionEndTime, _selectionStartTime);
 		}
 		
-		if( _day != null && _selectionEndTime > _selectionStartTime + 0.1 )
+		if( _day != null && _selectionEndTime > _selectionStartTime + 30 )
 		{
 			ZoomTo( _selectionStartTime, _selectionEndTime );
 			OnAxesChanged( this, EventArgs.Empty );
@@ -714,7 +726,6 @@ public partial class SignalChart : UserControl
 			_selectionSpan                = Chart.Plot.AddHorizontalSpan( -1, -1, Color.Red.MultiplyAlpha( 0.2f ), null );
 			_selectionSpan.IgnoreAxisAuto = true;
 			_selectionSpan.IsVisible      = false;
-			_selectionSpan.DragEnabled    = true;
 		}
 		finally
 		{
@@ -956,6 +967,12 @@ public partial class SignalChart : UserControl
 		plot.YAxis.TickDensity( 1f );
 		plot.YAxis.Layout( 0, maximumLabelWidth, maximumLabelWidth );
 		plot.YAxis2.Layout( 0, 5, 5 );
+
+		if( Configuration is { AxisMinValue: not null, AxisMaxValue: not null } )
+		{
+			var extents = Configuration.AxisMaxValue.Value - Configuration.AxisMinValue.Value;
+			plot.YAxis.SetBoundary( Configuration.AxisMinValue.Value, Configuration.AxisMaxValue.Value + extents * 0.1 );
+		}
 
 		var legend = plot.Legend();
 		legend.Location     = Alignment.UpperRight;

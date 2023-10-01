@@ -3,7 +3,10 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="700"
+             xmlns:views="clr-namespace:cpap_app.Views"
+             mc:Ignorable="d" 
+             d:DesignWidth="800" 
+             d:DesignHeight="700"
              x:Class="cpap_app.Views.MainView">
     <Grid>
         <ui:NavigationView x:Name="NavView"
@@ -22,8 +25,8 @@
                 </Style>
             </ui:NavigationView.Styles>
             <ui:NavigationView.MenuItems>
-                <ui:NavigationViewItem Name="navHome" Content="Home" Tag="Home" IconSource="Home" />
-                <ui:NavigationViewItem Name="navDailyReport" Content="Daily View" Tag="DailyReport">
+                <ui:NavigationViewItem Name="navHome" Content="Home" Tag="{x:Type views:HomeView}" IconSource="Home" />
+                <ui:NavigationViewItem Name="navDailyReport" Content="Daily View" Tag="{x:Type views:DailyReportView}">
                     <ui:NavigationViewItem.IconSource>
                         <ui:FontIconSource Glyph="&#xE9D2;" FontFamily="Segoe MDL2 Assets"/>
                     </ui:NavigationViewItem.IconSource>
@@ -38,24 +41,24 @@
                                 <ui:FontIconSource Glyph="&#xE7F1;" FontFamily="Segoe MDL2 Assets"/>
                             </ui:NavigationViewItem.IconSource>
                         </ui:NavigationViewItem>
-                        <ui:NavigationViewItem Content="Pulse Oximeter">
+                        <ui:NavigationViewItem Name="btnImportOximetry" Content="Pulse Oximeter">
                             <ui:NavigationViewItem.IconSource>
                                 <ui:FontIconSource Glyph="&#xE8EA;" FontFamily="Segoe MDL2 Assets"/>
                             </ui:NavigationViewItem.IconSource>
                         </ui:NavigationViewItem>
                     </ui:NavigationViewItem.MenuItems>
                 </ui:NavigationViewItem>
-                <ui:NavigationViewItem Name="navHistory" Content="History" Tag="History">
+                <ui:NavigationViewItem Name="navHistory" Content="History" Tag="{x:Type views:HistoryView}">
                     <ui:NavigationViewItem.IconSource>
                         <ui:FontIconSource Glyph="&#xE81C;" FontFamily="Segoe MDL2 Assets"/>
                     </ui:NavigationViewItem.IconSource>
                 </ui:NavigationViewItem>
-                <ui:NavigationViewItem Name="navStatistics" Content="Statistics" Tag="Statistics">
+                <ui:NavigationViewItem Name="navStatistics" Content="Statistics" Tag="{x:Type views:StatisticsView}">
                     <ui:NavigationViewItem.IconSource>
                         <ui:FontIconSource Glyph="&#xE8EF;" FontFamily="Segoe MDL2 Assets"/>
                     </ui:NavigationViewItem.IconSource>
                 </ui:NavigationViewItem>
-                <ui:NavigationViewItem Name="navReports" Content="Reports" Tag="Reports">
+                <ui:NavigationViewItem Name="navReports" Content="Reports" Tag="{x:Type views:ReportsView}">
                     <ui:NavigationViewItem.IconSource>
                         <ui:FontIconSource Glyph="&#xE9F9;" FontFamily="Segoe MDL2 Assets"/>
                     </ui:NavigationViewItem.IconSource>
@@ -63,7 +66,7 @@
             </ui:NavigationView.MenuItems>
 
             <ui:NavigationView.FooterMenuItems>
-                <ui:NavigationViewItem Name="navProfile" Content="Profile" Tag="Profile" IconSource="Contact" IsEnabled="False" />
+                <ui:NavigationViewItem Name="navProfile" Content="Profile" Tag="{x:Type views:ProfileView}" IconSource="Contact" IsEnabled="False" />
                 <ui:NavigationViewItem Name="navBackup" Content="Backup" IconSource="SaveAs" IsEnabled="False" />
             </ui:NavigationView.FooterMenuItems>
 

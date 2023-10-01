@@ -1,26 +1,28 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.Notifications;
+using Avalonia.Input;
 using Avalonia.Interactivity;
-using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 
-using cpap_app.Configuration;
-using cpap_app.Converters;
-using cpap_app.Events;
+using cpap_app.Helpers;
+using cpap_app.Importers;
 
 using cpap_db;
 
 using cpaplib;
 
 using FluentAvalonia.UI.Controls;
+using FluentAvalonia.UI.Windowing;
 
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
@@ -48,9 +50,18 @@ public partial class MainView : UserControl
 		
 		NavView.Content = new HomeView();
 
-		AddHandler( ImportRequestEvent, HandleImportRequest );
+		AddHandler( ImportRequestEvent, HandleImportRequestCPAP );
+
+		btnImportCPAP.Tapped += HandleImportRequestCPAP;
 		
-		btnImportCPAP.Tapped += HandleImportRequest;
+		foreach( var importer in OximetryImporterRegistry.RegisteredImporters )
+		{
+			btnImportOximetry.MenuItems.Add( new NavigationViewItem()
+			{
+				Content = importer.FriendlyName,
+				Tag = importer, 
+			} );
+		}
 	}
 
 	private void NavView_OnSelectionChanged( object? sender, NavigationViewSelectionChangedEventArgs e )
@@ -66,26 +77,174 @@ public partial class MainView : UserControl
 		}
 		else if( e.SelectedItem is NavigationViewItem navViewItem )
 		{
-			if( string.IsNullOrEmpty( navViewItem.Tag as string ) )
+			if( navViewItem.Tag == null )
 			{
 				return;
 			}
-
-			var typeName = $"{typeof( MainView ).Namespace}.{navViewItem.Tag}View";
-			var pageType = Type.GetType( typeName );
-
-			if( pageType == null )
+			
+			if( navViewItem.Tag is System.Type pageType )
 			{
-				throw new Exception( $"Unhandled page type: {navView.Tag}" );
+				var page = Activator.CreateInstance( pageType );
+				navView.Content         = page;
+				navView.PaneDisplayMode = NavigationViewPaneDisplayMode.LeftCompact;
+				
+				return;
 			}
 
-			var page = Activator.CreateInstance( pageType );
-			navView.Content         = page;
-			navView.PaneDisplayMode = NavigationViewPaneDisplayMode.LeftCompact;
+			if( navViewItem.Tag is IOximetryImporter importer )
+			{
+				HandleImportRequestOximetry( importer );
+			}
 		}
 	}
 
-	private async void HandleImportRequest( object? sender, RoutedEventArgs e )
+	private async void HandleImportRequestOximetry( IOximetryImporter importer )
+	{
+		var sp = TopLevel.GetTopLevel( this )?.StorageProvider;
+		if( sp == null )
+		{
+			throw new Exception( $"Failed to get a reference to a {nameof( IStorageProvider )} instance." );
+		}
+
+		var filePicker = await sp.OpenFilePickerAsync( new FilePickerOpenOptions()
+		{
+			Title                  = $"Import from {importer.FriendlyName}",
+			SuggestedStartLocation = null,
+			AllowMultiple          = true,
+			FileTypeFilter         = importer.FileTypeFilters
+		} );
+
+		if( filePicker.Count == 0 )
+		{
+			return;
+		}
+
+		var matcher = new Regex( importer.FilenameMatchPattern, RegexOptions.IgnoreCase );
+		List<ImportedData> importedData = new List<ImportedData>();
+
+		var td = new TaskDialog
+		{
+			Title           = $"Import from {importer.FriendlyName}",
+			ShowProgressBar = true,
+			IconSource      = new SymbolIconSource { Symbol = Symbol.Upload },
+			SubHeader       = "Performing Import",
+			Content         = "Please wait while your data is imported. This may take a few seconds.",
+			Buttons =
+			{
+				TaskDialogButton.CancelButton
+			}
+		};
+
+		var appWindow = TopLevel.GetTopLevel( this ) as AppWindow;
+		appWindow?.PlatformFeatures.SetTaskBarProgressBarState( TaskBarProgressBarState.Indeterminate );
+
+		td.Opened += async ( _, _ ) =>
+		{
+			// Show an animated indeterminate progress bar
+			td.SetProgressBarState( 0, TaskDialogProgressState.Indeterminate );
+
+			await Task.Run( async () =>
+			{
+				for( int i = 0; i < filePicker.Count; i++ )
+				{
+					var fileItem = filePicker[ i ];
+					if( !matcher.IsMatch( fileItem.Name ) )
+					{
+						// TODO: Need to log import failures and show them to the user
+						//Debug.WriteLine( $"File '{fileItem.Name}' does not match the file naming convention for '{importer.FriendlyName}'" );
+						continue;
+					}
+
+					Dispatcher.UIThread.Post( () =>
+					{
+						td.Content = $"Importing sessions and events from: \n{fileItem.Name}";
+					} );
+
+					using( var file = File.OpenRead( fileItem.Path.LocalPath ) )
+					{
+						var data = importer.Load( file );
+						if( data != null && data.Sessions.Count > 0 )
+						{
+							importedData.Add( data );
+						}
+					}
+				}
+
+				if( importedData.Count > 0 )
+				{
+					importedData.Sort( ( a, b ) => a.StartTime.CompareTo( b.StartTime ) );
+					var distinctDates = importedData
+					                    .Select( x => x.StartTime.Date )
+					                    .Concat( importedData.Select( x => x.EndTime.Date ) )
+					                    .Distinct()
+					                    .ToList();
+
+					foreach( var date in distinctDates )
+					{
+						Dispatcher.UIThread.Post( () =>
+						{
+							td.Content = $"Importing sessions and events for \n{date:D}";
+						} );
+
+						using var db  = StorageService.Connect();
+
+						var day = db.LoadDailyReport( date );
+						if( day == null )
+						{
+							continue;
+						}
+
+						var overlappingImports =
+							importedData
+								.Where( x => DateHelper.RangesOverlap( day.RecordingStartTime, day.RecordingEndTime, x.StartTime, x.EndTime ) )
+								.ToList();
+						
+						foreach( var data in overlappingImports )
+						{
+							foreach( var session in data.Sessions )
+							{
+								// If the day doesn't already contain a matching session, add it
+								if( !day.Sessions.Any( x => x.StartTime == session.StartTime && x.Source.Equals( session.Source, StringComparison.Ordinal ) ) )
+								{
+									// Add the Session to the Day's Session list. 
+									day.AddSession( session );
+									
+									// Add only the events that happened during this Session. In practice this 
+									// should be all of them, since at the time I wrote this all importers only 
+									// generated a single Session per file, and that is not expected to change. 
+									day.Events.AddRange( data.Events.Where( x => x.StartTime >= session.StartTime && x.StartTime <= session.EndTime ) );
+								}
+							}
+						}
+						
+						db.SaveDailyReport( day );
+					}
+				}
+
+				Dispatcher.UIThread.Post( () =>
+				{
+					td.Hide( TaskDialogStandardResult.OK );
+					appWindow?.PlatformFeatures.SetTaskBarProgressBarState( TaskBarProgressBarState.None );
+				} );
+			} );
+		};
+
+		td.XamlRoot = (Visual)VisualRoot!;
+		await td.ShowAsync();	
+
+		if( importedData.Count == 0 )
+		{
+			var dialog = MessageBoxManager.GetMessageBoxStandard(
+				$"Import from {importer.FriendlyName}",
+				$"There was no data imported. \nThe files you selected were not the correct format or could not be successfully imported.",
+				ButtonEnum.Ok,
+				Icon.Warning );
+
+			await dialog.ShowWindowDialogAsync( this.FindAncestorOfType<Window>() );
+		}
+	}
+
+	private async void HandleImportRequestCPAP( object? sender, RoutedEventArgs e )
 	{
 		string importPath = string.Empty;
 
@@ -174,12 +333,12 @@ public partial class MainView : UserControl
 				TaskDialogButton.CancelButton
 			}
 		};
-		
-		// ReSharper disable UnusedParameter.Local
-		td.Opened += async ( eventOrigin, eventArgs ) =>
+
+		var appWindow = TopLevel.GetTopLevel( this ) as AppWindow;
+		appWindow?.PlatformFeatures.SetTaskBarProgressBarState( TaskBarProgressBarState.Indeterminate );
+
+		td.Opened += async ( _, _ ) =>
 		{
-			// ReSharper enable UnusedParameter.Local
-			
 			// Show an animated indeterminate progress bar
 			td.SetProgressBarState( 0, TaskDialogProgressState.Indeterminate );
 
@@ -206,7 +365,8 @@ public partial class MainView : UserControl
 						NavView.SelectedItem = navDailyReport;
 						DataContext          = store.LoadDailyReport( mostRecentDay );
 					}
-					
+
+					appWindow?.PlatformFeatures.SetTaskBarProgressBarState( TaskBarProgressBarState.None );
 				} );
 			} );
 		};
@@ -246,5 +406,15 @@ public partial class MainView : UserControl
 			storage.Connection.Rollback();
 			throw;
 		}
+	}
+	
+	private void OximetryImportOptionTapped( object? sender, TappedEventArgs e )
+	{
+		if( sender is not NavigationViewItem item )
+		{
+			return;
+		}
+
+		Debug.WriteLine( item.Tag );
 	}
 }

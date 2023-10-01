@@ -281,7 +281,7 @@ namespace cpaplib
 							if( session.GetSignalByName( signalName ) == null )
 							{
 								// Add the signal to the current session
-								session.AddSignal( startTime, endTime, signal );
+								AddSignalToSession( session, startTime, endTime, signal );
 							}
 							else
 							{
@@ -302,7 +302,7 @@ namespace cpaplib
 								// If there is, add it. 
 								if( splitSession != null )
 								{
-									splitSession.AddSignal( startTime, endTime, signal );
+									AddSignalToSession( splitSession, startTime, endTime, signal );
 								}
 								else
 								{
@@ -313,8 +313,8 @@ namespace cpaplib
 										StartTime = session.StartTime,
 										EndTime   = session.EndTime,
 									};
-									
-									newSession.AddSignal( startTime, endTime, signal );
+
+									AddSignalToSession( newSession, startTime, endTime, signal );
 									
 									// Add the session to the DailyReport. We'll need to sort sessions afterward because of this. 
 									day.Sessions.Add( newSession );
@@ -947,5 +947,35 @@ namespace cpaplib
 				dayIndex += 1;
 			}
 		}
+		
+		private void AddSignalToSession( Session session, DateTime startTime, DateTime endTime, EdfStandardSignal fileSignal )
+		{
+			// Rename signals to their "standard" names. Among other things, this lets us standardize the 
+			// data even when there might be slight differences in signal names among various machine models.
+			var signalName = SignalNames.GetStandardName( fileSignal.Label.Value );
+
+			Signal signal = session.GetSignalByName( signalName, StringComparison.Ordinal );
+
+			if( signal != null )
+			{
+				throw new Exception( $"The session starting at {session.StartTime:g} already contains a Signal named '{signalName}'" );
+			}
+			
+			signal = new Signal
+			{
+				Name              = signalName,
+				StartTime         = startTime,
+				EndTime           = endTime,
+				FrequencyInHz     = fileSignal.FrequencyInHz,
+				MinValue          = fileSignal.PhysicalMinimum,
+				MaxValue          = fileSignal.PhysicalMaximum,
+				UnitOfMeasurement = fileSignal.PhysicalDimension,
+			};
+
+			signal.Samples.AddRange( fileSignal.Samples );
+
+			session.Signals.Add( signal );
+		}
+
 	}
 }

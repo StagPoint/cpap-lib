@@ -160,6 +160,11 @@ namespace cpaplib
 			UsageTime = RecordingEndTime - RecordingStartTime;
 		}
 
+		public static bool TimesOverlap( DailyReport day, Session session )
+		{
+			return DateHelper.RangesOverlap( day.RecordingStartTime, day.RecordingEndTime, session.StartTime, session.EndTime );
+		}
+
 		#endregion
 
 		#region Base class overrides
