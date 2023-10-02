@@ -9,6 +9,8 @@ namespace cpaplib
 {
 	public class Sorter
 	{
+		public int Count { get => _sortBuffer.Count; }
+
 		private ListEx<float> _sortBuffer;
 		private uint[]        _workBuffer;
 
@@ -57,6 +59,8 @@ namespace cpaplib
 
 		private static unsafe void RadixSort( float[] values, uint[] workBuffer, int length )
 		{
+			Debug.Assert( length <= values.Length && length <= workBuffer.Length, "Invalid buffer length passed" );
+			
 			fixed( float* dataPtr = &values[ 0 ] )
 			{
 				uint* encodedData = (uint*)dataPtr;

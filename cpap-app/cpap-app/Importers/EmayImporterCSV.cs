@@ -148,7 +148,7 @@ public class EmayImporterCSV : IOximetryImporter
 				StartTime = session.StartTime,
 				EndTime = session.EndTime,
 				Sessions = new List<Session>() { session },
-				Events   = new List<ReportedEvent>(),
+				Events   = OximetryEventGenerator.GenerateEvents( oxygen, pulse ),
 			};
 		}
 	}

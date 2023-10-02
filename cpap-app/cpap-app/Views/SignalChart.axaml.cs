@@ -413,6 +413,7 @@ public partial class SignalChart : UserControl
 		{
 			case GraphInteractionMode.Selecting:
 			{
+				// TODO: This still allows selecting areas of the Signal that are not in the graph's visible area. Leave it?
 				_selectionEndTime = Math.Max( 0, Math.Min( timeOffset, _day.TotalTimeSpan.TotalSeconds ) );
 
 				if( timeOffset < _selectionStartTime )

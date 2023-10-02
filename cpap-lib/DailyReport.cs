@@ -90,7 +90,11 @@ namespace cpaplib
 			var stats      = calculator.CalculateStats( signalName, Sessions );
 
 			Statistics.RemoveAll( x => x.SignalName.Equals( signalName ) );
-			Statistics.Add( stats );
+
+			if( stats != null )
+			{
+				Statistics.Add( stats );
+			}
 		}
 
 		/// <summary>

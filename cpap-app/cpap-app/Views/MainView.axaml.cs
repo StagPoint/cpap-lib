@@ -198,6 +198,8 @@ public partial class MainView : UserControl
 							importedData
 								.Where( x => DateHelper.RangesOverlap( day.RecordingStartTime, day.RecordingEndTime, x.StartTime, x.EndTime ) )
 								.ToList();
+
+						bool addedSessionToDay = false;
 						
 						foreach( var data in overlappingImports )
 						{
@@ -213,11 +215,19 @@ public partial class MainView : UserControl
 									// should be all of them, since at the time I wrote this all importers only 
 									// generated a single Session per file, and that is not expected to change. 
 									day.Events.AddRange( data.Events.Where( x => x.StartTime >= session.StartTime && x.StartTime <= session.EndTime ) );
+
+									addedSessionToDay = true;
 								}
 							}
 						}
-						
-						db.SaveDailyReport( day );
+
+						if( addedSessionToDay )
+						{
+							day.UpdateSignalStatistics( SignalNames.SpO2 );
+							day.UpdateSignalStatistics( SignalNames.Pulse );
+
+							db.SaveDailyReport( day );
+						}
 					}
 				}
 

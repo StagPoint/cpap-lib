@@ -33,6 +33,11 @@ namespace cpaplib
 				}
 			}
 
+			if( _sorter.Count == 0 )
+			{
+				return null;
+			}
+
 			// Sort the aggregated samples and calculate statistics on the results 
 			var sortedSamples = _sorter.Sort();
 			var bufferLength  = sortedSamples.Count;

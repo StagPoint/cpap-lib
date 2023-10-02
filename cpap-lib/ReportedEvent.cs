@@ -39,6 +39,11 @@ namespace cpaplib
 		
 		#region Public functions
 
+		public static bool TimesOverlap( ReportedEvent a, ReportedEvent b )
+		{
+			return DateHelper.RangesOverlap( a.StartTime, a.StartTime + a.Duration, b.StartTime, b.StartTime + b.Duration );
+		}
+
 		public TimeRange GetTimeBounds()
 		{
 			var markerPosition = GetOnsetPositionType( Type );
