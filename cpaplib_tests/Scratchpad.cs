@@ -12,6 +12,18 @@ namespace cpaplib_tests;
 [TestClass]
 public class Scratchpad
 {
+	public static double InverseLerp( double a, double b, double v )
+	{
+		return (v - a) / (b - a);
+	}
+
+	[TestMethod]
+	public void InverseLerpWorksInBothDirections()
+	{
+		Assert.AreEqual( 0.3, InverseLerp( 0,  10, 3 ), 0.01 );
+		Assert.AreEqual( 0.7, InverseLerp( 10, 0,  3 ), 0.01 );
+	}
+	
 	[TestMethod]
 	public void IntegerTypes()
 	{

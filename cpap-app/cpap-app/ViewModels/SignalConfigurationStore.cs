@@ -85,7 +85,7 @@ public static class SignalConfigurationStore
 					break;
 				
 				case SignalNames.SpO2:
-					config.BaselineLow     = 90;
+					config.BaselineLow     = 88;
 					config.DisplayedEvents = new List<EventType>()
 					{
 						EventType.Desaturation, 
@@ -94,12 +94,15 @@ public static class SignalConfigurationStore
 					break;
 				
 				case SignalNames.Pulse:
-					config.BaselineHigh    = 110;
-					config.BaselineLow     = 50;
+					config.BaselineHigh = 100;
+					config.BaselineLow  = 50;
+					config.AxisMinValue = 40;
+					config.AxisMaxValue = 140;
 					config.DisplayedEvents = new List<EventType>()
 					{
 						EventType.Bradycardia, 
-						EventType.Tachycardia
+						EventType.Tachycardia,
+						EventType.PulseRateChange
 					};
 					break;
 				

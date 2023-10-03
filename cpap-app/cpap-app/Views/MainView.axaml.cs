@@ -183,7 +183,7 @@ public partial class MainView : UserControl
 					{
 						Dispatcher.UIThread.Post( () =>
 						{
-							td.Content = $"Importing sessions and events for \n{date:D}";
+							td.Content = $"Merging sessions and events for \n{date:D}";
 						} );
 
 						using var db  = StorageService.Connect();

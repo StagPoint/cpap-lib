@@ -74,5 +74,9 @@
 		VibratorySnore,
 		VariableBreathing,
 		BreathingNotDetected,
+		/// <summary>
+		/// Pulse rate exceeded the threshold difference from baseline
+		/// </summary>
+		PulseRateChange,
 	}
 }
