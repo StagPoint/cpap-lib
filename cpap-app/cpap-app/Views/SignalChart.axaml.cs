@@ -817,8 +817,6 @@ public partial class SignalChart : UserControl
 			firstSessionAdded = false;
 		}
 
-		chart.Plot.XAxis.TickLabelFormat( x => $"{TimeSpan.FromSeconds( x ):c}" );
-
 		// Set zoom and boundary limits
 		maxValue = axisMaxValue ?? maxValue;
 		minValue = axisMinValue ?? minValue;
@@ -826,6 +824,8 @@ public partial class SignalChart : UserControl
 		chart.Plot.YAxis.SetBoundary( minValue, maxValue + extents * 0.1 );
 		chart.Plot.XAxis.SetBoundary( -1, day.TotalTimeSpan.TotalSeconds + 1 );
 		
+		chart.Plot.XAxis.TickLabelFormat( x => $"{_day.RecordingStartTime.AddSeconds( x ):hh:mm:ss tt}" );
+
 		Chart.Configuration.AxesChangedEventEnabled = false;
 		{
 			chart.Plot.SetAxisLimits( -1, day.TotalTimeSpan.TotalSeconds + 1, minValue, maxValue + extents * 0.1 );
@@ -957,6 +957,7 @@ public partial class SignalChart : UserControl
 		plot.Layout( 0, 0, 0, 0 );
 		plot.Margins( 0.0, 0.1 );
 		
+		plot.XAxis.TickLabelFormat( x => $"{TimeSpan.FromSeconds( x ):c}" );
 		plot.XAxis.MinimumTickSpacing( 1f );
 		plot.XAxis.SetZoomInLimit( 60 ); // Make smallest zoom window possible be 1 minute 
 		plot.XAxis.Layout( padding: 0 );

@@ -52,9 +52,9 @@ public partial class DailyReportView : UserControl
 			_datesWithData = store.GetStoredDates();
 
 			// TODO: Keep DisplayDateStart/DisplayDateEnd up to date (after importing, etc.)
-			DateSelector.SelectedDate = _datesWithData[ ^1 ];
-			DateSelector.DisplayDateStart = _datesWithData[ 0 ];
-			DateSelector.DisplayDateEnd = _datesWithData[ ^1 ];
+			DateSelector.DisplayDateStart = _datesWithData.Min();
+			DateSelector.DisplayDateEnd   = _datesWithData.Max();
+			DateSelector.SelectedDate     = _datesWithData.Max();
 		}
 	}
 	

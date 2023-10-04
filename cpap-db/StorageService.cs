@@ -335,7 +335,7 @@ namespace cpap_db
 			var mapping = GetMapping<DailyReport>();
 			var days    = mapping.SelectAll( Connection );
 
-			return days.Select( x => x.ReportDate.Date ).ToList();
+			return days.OrderBy( x => x.ReportDate ).Select( x => x.ReportDate.Date ).ToList();
 		}
 		
 		public DateTime GetMostRecentStoredDate()

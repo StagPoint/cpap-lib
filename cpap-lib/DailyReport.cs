@@ -31,7 +31,7 @@ namespace cpaplib
 		/// <summary>
 		/// Returns the number of "Mask Times" for the day
 		/// </summary>
-		public int MaskEvents { get; set; }
+		internal int MaskEvents { get; set; }
 
 		/// <summary>
 		/// The total amount of time the CPAP was used on the reported day (calculated)

@@ -6,7 +6,7 @@
         xmlns:views="clr-namespace:cpap_app.Views"
         mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="1024"
         x:Class="cpap_app.Views.MainWindow"
-        WindowState="Normal"
+        WindowState="Maximized"
         WindowStartupLocation="CenterScreen"
         Width="1280"
         Height="800"

@@ -18,7 +18,7 @@ public class EmayImporterCSV : IOximetryImporter
 	
 	#region Public properties 
 	
-	public string FriendlyName  { get => "EMAY Sleep Pulse Oximeter"; }
+	public string FriendlyName  { get => "EMAY Pulse Oximeter"; }
 
 	public string Source { get => "EMAY"; }
 

@@ -10,7 +10,7 @@ using cpaplib;
 
 namespace cpap_app.Importers;
 
-public class ViatomImporterCSV : IOximetryImporter
+public class ViatomDesktopImporterCSV : IOximetryImporter
 {
 	// NOTES:
 	// Sample filename: "Oxylink 1250_1692103555000.csv"
@@ -19,7 +19,7 @@ public class ViatomImporterCSV : IOximetryImporter
 	
 	#region Public properties 
 	
-	public string FriendlyName  { get => "Viatom Mobile CSV"; }
+	public string FriendlyName  { get => "Viatom Desktop CSV"; }
 
 	public string Source { get => "Viatom Pulse Oximeter"; }
 
@@ -27,21 +27,21 @@ public class ViatomImporterCSV : IOximetryImporter
 
 	public List<FilePickerFileType> FileTypeFilters { get; } = new()
 	{
-		new FilePickerFileType( "Viatom Mobile CSV File" )
+		new FilePickerFileType( "Viatom Desktop CSV File" )
 		{
-			Patterns                    = new[] { "OxyLink*.csv", "O2Ring*.csv" },
+			Patterns                    = new[] { "*OXIRecord.csv" },
 			AppleUniformTypeIdentifiers = new[] { "public.plain-text" },
 			MimeTypes                   = new[] { "text/plain" }
 		}
 	};
 
-	public string FilenameMatchPattern { get => @"\w+\s*\d{4}_\d{13}\.csv"; }
+	public string FilenameMatchPattern { get => @"\w+-\d{14}_OXIRecord\.csv"; }
 	
 	#endregion 
 	
 	#region Private fields 
 
-	private static string[] _expectedHeaders = { "Time", "Oxygen Level", "Pulse Rate", "Motion" };
+	private static string[] _expectedHeaders = { "Time", "SpO2(%)", "Pulse Rate(bpm)", "Motion", "SpO2 Reminder", "PR Reminder" };
 	
 	#endregion 
 	
@@ -57,7 +57,9 @@ public class ViatomImporterCSV : IOximetryImporter
 			return null;
 		}
 
-		var headers = firstLine.Split( ',' );
+		// NOTE: The O2 Insight app adds an additional erroneous comma to every line
+		var headers = firstLine.TrimEnd( ',' ).Split( ',' );
+		
 		if( !_expectedHeaders.SequenceEqual( headers ) )
 		{
 			return null;
@@ -113,14 +115,24 @@ public class ViatomImporterCSV : IOximetryImporter
 				return null;
 			}
 
-			var lineData = line.Split( ',' );
-				
-			if( !DateTime.TryParse( lineData[ 0 ], out DateTime dateTimeValue ) )
+			// NOTE: The O2 Insight app adds an additional erroneous comma to every line
+			line = line.TrimEnd( ',' );
+			
+			// The O2 Insight app stores the date/time as a quoted column
+			var quoteIndex = line.LastIndexOf( '"' );
+			var datePart   = line.Substring( 1, quoteIndex - 1 );
+
+			if( !DateTime.TryParse( datePart, out DateTime dateTimeValue ) )
 			{
 				return null;
 			}
-
+			
 			dateTimeValue = dateTimeValue.AddSeconds( timeAjustSeconds );
+
+			// Remove the quoted date column and leave the rest of the data (added 2 to skip the quote and the comma)
+			line = line.Substring( quoteIndex + 2 );
+
+			var lineData = line.Split( ',' );
 			
 			if( isStartRecord )
 			{
@@ -130,7 +142,7 @@ public class ViatomImporterCSV : IOximetryImporter
 
 			session.EndTime = dateTimeValue;
 
-			if( int.TryParse( lineData[ 1 ], out var oxy ) && oxy <= 100 )
+			if( int.TryParse( lineData[ 0 ], out var oxy ) && oxy <= 100 )
 			{
 				oxygen.Samples.Add( oxy );
 				lastGoodOxy = oxy;
@@ -142,7 +154,7 @@ public class ViatomImporterCSV : IOximetryImporter
 				oxygen.Samples.Add( lastGoodOxy );
 			}
 
-			if( int.TryParse( lineData[ 2 ], out var hr ) && hr <= 200 )
+			if( int.TryParse( lineData[ 1 ], out var hr ) && hr <= 200 )
 			{
 				pulse.Samples.Add( hr );
 				lastGoodHR = hr;
@@ -154,7 +166,7 @@ public class ViatomImporterCSV : IOximetryImporter
 				pulse.Samples.Add( lastGoodHR );
 			}
 
-			if( byte.TryParse( lineData[ 3 ], out var movementValue ) && movementValue <= 100 )
+			if( byte.TryParse( lineData[ 2 ], out var movementValue ) && movementValue <= 100 )
 			{
 				movement.Samples.Add( movementValue );
 				lastGoodMovement = movementValue;

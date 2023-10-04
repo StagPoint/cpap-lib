@@ -9,6 +9,7 @@ public static class OximetryImporterRegistry
 	static OximetryImporterRegistry()
 	{
 		RegisteredImporters.Add( new ViatomImporterCSV() );
+		RegisteredImporters.Add( new ViatomDesktopImporterCSV() );
 		RegisteredImporters.Add( new EmayImporterCSV() );
 		//RegisteredLoaders.Add( new EdfLoader() );
 	}

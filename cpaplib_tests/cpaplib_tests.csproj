@@ -754,6 +754,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\cpap-app\cpap-app\cpap-app.csproj" />
       <ProjectReference Include="..\cpap-db\cpap-db.csproj" />
       <ProjectReference Include="..\cpap-lib\cpap-lib.csproj" />
     </ItemGroup>

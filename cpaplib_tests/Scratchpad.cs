@@ -3,6 +3,8 @@ using System.Numerics;
 using System.Reflection;
 using System.Text;
 
+using cpap_app.Helpers;
+
 using cpaplib;
 
 using StagPoint.EDF.Net;
@@ -15,6 +17,28 @@ public class Scratchpad
 	public static double InverseLerp( double a, double b, double v )
 	{
 		return (v - a) / (b - a);
+	}
+
+	[TestMethod]
+	public void BinaryHeapSortsNumbers()
+	{
+		const int NUMBER_OF_ELEMENTS = 256000;
+
+		var heap = new BinaryHeap<double>( NUMBER_OF_ELEMENTS );
+		for( int i = 0; i < NUMBER_OF_ELEMENTS; i++ )
+		{
+			var sign = (Random.Shared.Next() % 2 == 0) ? 1.0 : -1.0;
+			heap.Enqueue( Random.Shared.NextDouble() * short.MaxValue * sign );
+		}
+
+		var lastValue = double.MinValue;
+		while( heap.Count > 0 )
+		{
+			var nextValue = heap.Dequeue();
+			Debug.Assert( nextValue >= lastValue );
+
+			lastValue = nextValue;
+		}
 	}
 
 	[TestMethod]

@@ -612,9 +612,16 @@ namespace cpaplib
 				}
 			}
 		}
-		
+
 		private void CalculateEventSummary( DailyReport day )
 		{
+			EventType[] ApneaTypes = {
+				EventType.ClearAirway,
+				EventType.Unclassified,
+				EventType.ObstructiveApnea,
+				EventType.Hypopnea,
+			};
+			
 			day.EventCounts.ObstructiveApneaCount  = day.Events.Count( x => x.Type == EventType.ObstructiveApnea );
 			day.EventCounts.HypopneaCount          = day.Events.Count( x => x.Type == EventType.Hypopnea );
 			day.EventCounts.UnclassifiedApneaCount = day.Events.Count( x => x.Type == EventType.Unclassified );
@@ -623,7 +630,12 @@ namespace cpaplib
 			day.EventCounts.FlowLimitCount         = day.Events.Count( x => x.Type == EventType.FlowLimitation );
 			day.EventCounts.FlowLimitIndex         = day.EventCounts.FlowLimitCount / day.UsageTime.TotalHours;
 
-			day.EventCounts.TotalTimeInApnea      = TimeSpan.FromSeconds( day.Events.Sum( x => x.Duration.TotalSeconds ) );
+			day.EventCounts.TotalTimeInApnea = TimeSpan.FromSeconds(
+				day.Events
+				   .Where( x => ApneaTypes.Contains( x.Type ) )
+				   .Sum( x => x.Duration.TotalSeconds )
+			);
+			
 			day.EventCounts.TotalTimeOfLargeLeaks = TimeSpan.FromSeconds( day.Events.Where( x => x.Type == EventType.LargeLeak ).Sum( x => x.Duration.TotalSeconds ) );
 		}
 

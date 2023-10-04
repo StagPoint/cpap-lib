@@ -138,6 +138,8 @@ public partial class MainView : UserControl
 		var appWindow = TopLevel.GetTopLevel( this ) as AppWindow;
 		appWindow?.PlatformFeatures.SetTaskBarProgressBarState( TaskBarProgressBarState.Indeterminate );
 
+		bool dataWasImported = false;
+
 		td.Opened += async ( _, _ ) =>
 		{
 			// Show an animated indeterminate progress bar
@@ -160,13 +162,21 @@ public partial class MainView : UserControl
 						td.Content = $"Importing sessions and events from: \n{fileItem.Name}";
 					} );
 
-					using( var file = File.OpenRead( fileItem.Path.LocalPath ) )
+					try
 					{
+						await using var file = File.OpenRead( fileItem.Path.LocalPath );
+
 						var data = importer.Load( file );
 						if( data != null && data.Sessions.Count > 0 )
 						{
 							importedData.Add( data );
 						}
+					}
+					catch( IOException e )
+					{
+						// TODO: Need to display a message to the user when a file cannot be opened
+						Console.WriteLine( e );
+						throw;
 					}
 				}
 
@@ -227,6 +237,8 @@ public partial class MainView : UserControl
 							day.UpdateSignalStatistics( SignalNames.Pulse );
 
 							db.SaveDailyReport( day );
+
+							dataWasImported = true;
 						}
 					}
 				}
@@ -242,11 +254,11 @@ public partial class MainView : UserControl
 		td.XamlRoot = (Visual)VisualRoot!;
 		await td.ShowAsync();	
 
-		if( importedData.Count == 0 )
+		if( importedData.Count == 0 || !dataWasImported )
 		{
 			var dialog = MessageBoxManager.GetMessageBoxStandard(
 				$"Import from {importer.FriendlyName}",
-				$"There was no data imported. \nThe files you selected were not the correct format or could not be successfully imported.",
+				$"There was no data imported. \nThe files you selected were not the correct format or did not match any existing sessions.",
 				ButtonEnum.Ok,
 				Icon.Warning );
 

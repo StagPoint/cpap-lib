@@ -24,60 +24,35 @@ public static class OximetryEventGenerator
 
 	private static void GeneratePulseChangeEvents( Signal signal, List<ReportedEvent> events )
 	{
-		const int    WINDOW_SIZE     = 60;
-		const double UPPER_THRESHOLD = 5;
-		const double LOWER_THRESHOLD = 1.5;
+		const int    WINDOW_LENGTH = 60;
+		const double THRESHOLD     = 4.5;
 
-		int    windowSize   = (int)Math.Ceiling( WINDOW_SIZE * signal.FrequencyInHz );
+		int    windowSize   = (int)Math.Ceiling( WINDOW_LENGTH * signal.FrequencyInHz );
 		double timeInterval = 1.0 / signal.FrequencyInHz;
 
-		var data              = signal.Samples;
+		var    data                  = signal.Samples;
+		double lastStandardDeviation = 0;
+
 		var calculator        = new MovingAverageCalculator( windowSize );
-		var standardDeviation = new double[ data.Count ];
-		var averages          = new double[ data.Count ];
+		var standardDeviation = new double[ signal.Samples.Count ];
+		var average           = new double[ signal.Samples.Count ];
 
 		for( int i = 0; i < data.Count; i++ )
 		{
 			calculator.AddObservation( data[ i ] );
 			
-			averages[ i ]          = calculator.Average;
+			average[ i ]           = calculator.Average;
 			standardDeviation[ i ] = calculator.StandardDeviation;
 		}
 
-		int eventStartIndex = windowSize;
-		int eventState      = 0;
-
-		for( int i = windowSize; i < data.Count - 1; i++ )
+		for( int i = windowSize; i < data.Count; i++ )
 		{
-			var sample = data[ i ];
-
-			if( standardDeviation[ i ] >= UPPER_THRESHOLD )
+			if( Math.Abs( standardDeviation[ i ] - lastStandardDeviation ) >= THRESHOLD )
 			{
-				if( eventState == 0 )
-				{
-					eventState      = 1;
-				}
-			}
-			else if( eventState != 0 && standardDeviation[ i ] >= LOWER_THRESHOLD )
-			{
-				double maxDelta      = 0.0;
-				int    maxDeltaIndex = eventStartIndex;
-				
-				// Find the peak delta within the window 
-				for( int j = eventStartIndex; j <= i; j++ )
-				{
-					var delta = Math.Abs( data[ j ] - averages[ j ] );
-					if( delta > maxDelta )
-					{
-						maxDelta      = delta;
-						maxDeltaIndex = j;
-					}
-				}
-
 				var annotation = new ReportedEvent
 				{
 					Type      = EventType.PulseRateChange,
-					StartTime = signal.StartTime.AddSeconds( maxDeltaIndex * timeInterval ),
+					StartTime = signal.StartTime.AddSeconds( i * timeInterval - timeInterval ),
 					Duration  = TimeSpan.Zero
 				};
 
@@ -86,8 +61,7 @@ public static class OximetryEventGenerator
 					events.Add( annotation );
 				}
 
-				eventState      = 0;
-				eventStartIndex = i + 1;
+				lastStandardDeviation = standardDeviation[ i ];
 			}
 		}
 	}
