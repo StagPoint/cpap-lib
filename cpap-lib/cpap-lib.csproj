@@ -24,13 +24,13 @@
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-      <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-      <DefineConstants>TRACE ALLOW_UNSAFE ALLOW_ASYNC</DefineConstants>
+      <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+      <DefineConstants>TRACE ALLOW_ASYNC</DefineConstants>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-      <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-      <DefineConstants>TRACE ALLOW_UNSAFE ALLOW_ASYNC</DefineConstants>
+      <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+      <DefineConstants>TRACE ALLOW_ASYNC</DefineConstants>
     </PropertyGroup>
 
     <ItemGroup>

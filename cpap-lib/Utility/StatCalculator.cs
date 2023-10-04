@@ -1,60 +1,95 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 
 namespace cpaplib
 {
 	public class StatCalculator
-	{
-		private Sorter _sorter;
+    {
+    	private List<Signal> _signals = new List<Signal>();
+    
+    	public void AddSignal( Signal signal )
+    	{
+    		_signals.Add( signal );
+    	}
 
-		public StatCalculator( int initialCapacity )
-		{
-			_sorter = new Sorter( initialCapacity );
-		}
+	    public SignalStatistics CalculateStats( string signalName, List<Session> sessions )
+	    {
+		    // Copy all available samples from all sessions into a single array that can be sorted and
+		    // used to calculate the statistics. 
+		    foreach( var session in sessions )
+		    {
+			    var signal = session.GetSignalByName( signalName );
+			    if( signal != null )
+			    {
+		    		AddSignal( signal );
+			    }
+		    }
 
-		public SignalStatistics CalculateStats( string signalName, List<Session> sessions )
-		{
-			// Reset the _sorter for the next iteration 
-			_sorter.Clear();
+		    return CalculateStats();
+	    }
+    
+    	public SignalStatistics CalculateStats()
+    	{
+    		var totalCount = _signals.Sum( x => x.Samples.Count );
+    		var windowSize = (int)Math.Ceiling( totalCount * 0.05 );
+    		var window     = new BinaryHeap( windowSize );
+    
+    		var result = new SignalStatistics
+    		{
+    			SignalName        = _signals[0].Name,
+    			UnitOfMeasurement = _signals[0].UnitOfMeasurement,
+    			Minimum           = double.MaxValue,
+    			Average           = double.MaxValue,
+    			Percentile95      = double.MaxValue,
+    			Percentile99      = double.MaxValue,
+    			Maximum           = double.MinValue
+    		};
+    
+    		decimal sum = 0;
+    
+    		foreach( var signal in _signals )
+    		{
+    			var data = signal.Samples;
+    			for( int i = 0; i < data.Count; i++ )
+    			{
+    				var sample = data[ i ];
 
-			string unitOfMeasurement = "";
+				    if( sample > 0 )
+				    {
+					    result.Minimum = Math.Min( result.Minimum, sample );
+				    }
 
-			// Copy all available samples from all sessions into a single array that can be sorted and
-			// used to calculate the statistics. 
-			foreach( var session in sessions )
-			{
-				var signal = session.GetSignalByName( signalName );
-				if( signal != null )
-				{
-					unitOfMeasurement = signal.UnitOfMeasurement;
-					_sorter.AddRange( signal.Samples );
-				}
-			}
+				    result.Maximum =  Math.Max( result.Maximum, sample );
 
-			if( _sorter.Count == 0 )
-			{
-				return null;
-			}
-
-			// Sort the aggregated samples and calculate statistics on the results 
-			var sortedSamples = _sorter.Sort();
-			var bufferLength  = sortedSamples.Count;
-
-			var stats = new SignalStatistics
-			{
-				SignalName        = signalName,
-				UnitOfMeasurement = unitOfMeasurement,
-				Minimum           = sortedSamples.Any( x => x > 0 ) ? sortedSamples.Where( x => x > 0 ).Min() : 0,
-				Average           = sortedSamples.Average(),
-				Maximum           = sortedSamples.Max(),
-				Median            = sortedSamples[ bufferLength / 2 ],
-				Percentile95      = sortedSamples[ (int)(bufferLength * 0.95) ],
-				Percentile99      = sortedSamples[ (int)(bufferLength * 0.995) ],
-			};
-				
-			return stats;
-		}
-	}
+				    sum += (decimal)sample;
+    				
+    				if( window.Count < window.Capacity )
+    				{
+    					window.Enqueue( sample );
+    					continue;
+    				}
+    
+    				if( sample > window.Peek() )
+    				{
+    					window.Dequeue();
+    					window.Enqueue( sample );
+    				}
+    			}
+    		}
+    
+    		result.Median       = (result.Minimum + result.Maximum) * 0.5;
+    		result.Average      = (double)(sum / totalCount);
+    		result.Percentile95 = window.Peek();
+    
+    		int nn = (int)(totalCount * 0.01);
+    		while( window.Count > nn )
+    		{
+    			window.Dequeue();
+    		}
+    		result.Percentile99 = window.Peek();
+    
+    		return result;
+    	}
+    }
 }

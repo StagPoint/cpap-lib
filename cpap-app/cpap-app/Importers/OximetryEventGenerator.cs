@@ -36,11 +36,12 @@ public static class OximetryEventGenerator
 		
 		// Looks for variations greater than one standard deviation from the running 30 second average,
 		// with a minimum difference of 10 beats per minute. 
-		var signals = PeakFinder.GenerateSignals( data, windowSize, THRESHOLD, PERSISTENCE, MIN_SIZE );
+		var peakSignals = PeakFinder.GenerateSignals( data, windowSize, THRESHOLD, PERSISTENCE, MIN_SIZE );
 
 		for( int i = 0; i < data.Count; i++ )
 		{
-			if( signals[ i ] == 0 )
+			var peakSignal = peakSignals[ i ];
+			if( peakSignal == 0 )
 			{
 				continue;
 			}
@@ -52,12 +53,20 @@ public static class OximetryEventGenerator
 				Duration  = TimeSpan.Zero
 			};
 
+			// Don't add any PulseRateChange events when there is already a Tachycardia or Bradycardia event at 
+			// that time period. You could add it, but then it becomes a mess for the user to understand, and 
+			// the other event types are probably more important. 
 			if( !events.Any( x => x.Type is EventType.Tachycardia or EventType.Bradycardia && ReportedEvent.TimesOverlap( x, annotation ) ) )
 			{
 				events.Add( annotation );
 			}
 
-			i += windowSize - 1;
+			// The peak finder generates a signal per sample for the entire duration of the peak. We only 
+			// need to know when the peak started, so skip ahead a bit. 
+			while( i < data.Count - 1 && peakSignals[ i + 1 ] == peakSignal )
+			{
+				i++;
+			}
 		}
 	}
 

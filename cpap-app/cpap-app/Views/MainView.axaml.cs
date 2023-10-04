@@ -374,7 +374,7 @@ public partial class MainView : UserControl
 				// the user that the work was performed. It's otherwise often too fast for them 
 				// to notice, and they're left with the feeling that "it didn't work" because
 				// they didn't see any visual feedback. 
-				await Task.Delay( Math.Max( 0, 1500 - (Environment.TickCount - startTime) ) );
+				await Task.Delay( Math.Max( 0, 1000 - (Environment.TickCount - startTime) ) );
 		
 				Dispatcher.UIThread.Post( () =>
 				{

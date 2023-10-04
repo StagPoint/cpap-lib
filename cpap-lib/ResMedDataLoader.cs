@@ -499,14 +499,12 @@ namespace cpaplib
 				maxBufferSize = Math.Max( maxBufferSize, signalSize );
 			}
 
-			// Allocate the buffer that we'll sort signal data in. 
-			var calculator = new StatCalculator( maxBufferSize );
-
 			foreach( var signal in day.Sessions[ 0 ].Signals )
 			{
 				// Automatically calculate statistics for all Signals whose value range is zero or above
 				if( signal.MinValue >= 0 && signal.MaxValue > signal.MinValue )
 				{
+					var calculator = new StatCalculator();
 					day.Statistics.Add( calculator.CalculateStats( signal.Name, day.Sessions ) );
 				}
 			}
