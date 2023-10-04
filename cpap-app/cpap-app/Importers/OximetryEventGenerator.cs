@@ -24,45 +24,40 @@ public static class OximetryEventGenerator
 
 	private static void GeneratePulseChangeEvents( Signal signal, List<ReportedEvent> events )
 	{
-		const int    WINDOW_LENGTH = 60;
-		const double THRESHOLD     = 4.5;
+		const int    WINDOW_LENGTH = 30;
+		const double THRESHOLD     = 1.0;
+		const double MIN_SIZE      = 10;
+		const double PERSISTENCE   = 0.1;
 
 		int    windowSize   = (int)Math.Ceiling( WINDOW_LENGTH * signal.FrequencyInHz );
 		double timeInterval = 1.0 / signal.FrequencyInHz;
 
-		var    data                  = signal.Samples;
-		double lastStandardDeviation = 0;
-
-		var calculator        = new MovingAverageCalculator( windowSize );
-		var standardDeviation = new double[ signal.Samples.Count ];
-		var average           = new double[ signal.Samples.Count ];
+		var data   = signal.Samples;
+		
+		// Looks for variations greater than one standard deviation from the running 30 second average,
+		// with a minimum difference of 10 beats per minute. 
+		var signals = PeakFinder.GenerateSignals( data, windowSize, THRESHOLD, PERSISTENCE, MIN_SIZE );
 
 		for( int i = 0; i < data.Count; i++ )
 		{
-			calculator.AddObservation( data[ i ] );
-			
-			average[ i ]           = calculator.Average;
-			standardDeviation[ i ] = calculator.StandardDeviation;
-		}
-
-		for( int i = windowSize; i < data.Count; i++ )
-		{
-			if( Math.Abs( standardDeviation[ i ] - lastStandardDeviation ) >= THRESHOLD )
+			if( signals[ i ] == 0 )
 			{
-				var annotation = new ReportedEvent
-				{
-					Type      = EventType.PulseRateChange,
-					StartTime = signal.StartTime.AddSeconds( i * timeInterval - timeInterval ),
-					Duration  = TimeSpan.Zero
-				};
-
-				if( !events.Any( x => x.Type is EventType.Tachycardia or EventType.Bradycardia && ReportedEvent.TimesOverlap( x, annotation ) ) )
-				{
-					events.Add( annotation );
-				}
-
-				lastStandardDeviation = standardDeviation[ i ];
+				continue;
 			}
+			
+			var annotation = new ReportedEvent
+			{
+				Type      = EventType.PulseRateChange,
+				StartTime = signal.StartTime.AddSeconds( i * timeInterval ),
+				Duration  = TimeSpan.Zero
+			};
+
+			if( !events.Any( x => x.Type is EventType.Tachycardia or EventType.Bradycardia && ReportedEvent.TimesOverlap( x, annotation ) ) )
+			{
+				events.Add( annotation );
+			}
+
+			i += windowSize - 1;
 		}
 	}
 

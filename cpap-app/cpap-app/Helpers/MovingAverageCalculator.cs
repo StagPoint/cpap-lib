@@ -10,7 +10,7 @@ public class MovingAverageCalculator
 
 	public double Average
 	{
-		get { return _average; }
+		get => _average;
 	}
 
 	public double StandardDeviation
@@ -31,19 +31,19 @@ public class MovingAverageCalculator
 	{
 		get
 		{
-			var n = N;
-			return n > 1 ? _variance_sum / (n - 1) : 0.0;
+			var n = Count;
+			return n > 1 ? _varianceSum / (n - 1) : 0.0;
 		}
 	}
 
 	public bool HasFullPeriod
 	{
-		get { return _num_added >= _period; }
+		get => _count >= _period;
 	}
 
-	public int N
+	public int Count
 	{
-		get { return Math.Min( _num_added, _period ); }
+		get => Math.Min( _count, _period );
 	}
 
     #endregion
@@ -52,9 +52,9 @@ public class MovingAverageCalculator
 
 	private readonly int      _period;
 	private readonly double[] _window;
-	private          int      _num_added;
+	private          int      _count;
 	private          double   _average;
-	private          double   _variance_sum;
+	private          double   _varianceSum;
 
     #endregion
 
@@ -73,24 +73,24 @@ public class MovingAverageCalculator
 	public void AddObservation( double observation )
 	{
 		// Window is treated as a circular buffer.
-		var ndx = _num_added % _period;
+		var ndx = _count % _period;
 		var old = _window[ ndx ];     // get value to remove from window
 		_window[ ndx ] = observation; // add new observation in its place.
-		_num_added++;
+		_count++;
 
 		// Update average and standard deviation using deltas
 		var old_avg = _average;
-		if( _num_added <= _period )
+		if( _count <= _period )
 		{
 			var delta = observation - old_avg;
-			_average      += delta / _num_added;
-			_variance_sum += (delta * (observation - _average));
+			_average     += delta / _count;
+			_varianceSum += (delta * (observation - _average));
 		}
 		else // use delta vs removed observation.
 		{
 			var delta = observation - old;
-			_average      += delta / _period;
-			_variance_sum += (delta * ((observation - _average) + (old - old_avg)));
+			_average     += delta / _period;
+			_varianceSum += (delta * ((observation - _average) + (old - old_avg)));
 		}
 	}
 
