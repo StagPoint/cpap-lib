@@ -4,7 +4,7 @@ using System.Numerics;
 
 namespace cpap_app.Helpers;
 
-public class BinaryHeap<T> where T : struct, INumber<T>
+internal class BinaryHeap<T> where T : struct, INumber<T>
 {
 	#region Public properties
 

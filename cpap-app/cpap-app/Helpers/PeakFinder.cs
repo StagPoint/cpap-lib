@@ -17,7 +17,7 @@ public static class PeakFinder
 			calculator.AddObservation( input[ i ] );
 		}
 
-		for( var i = lag; i < input.Count; i++ )
+		for( var i = lag + 1; i < input.Count; i++ )
 		{
 			var sample = input[ i ];
 			var delta  = Math.Abs( sample - calculator.Average );

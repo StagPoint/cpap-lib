@@ -6,6 +6,8 @@ using cpap_app.Helpers;
 
 using cpaplib;
 
+using MathUtil = cpap_app.Helpers.MathUtil;
+
 namespace cpap_app.Importers;
 
 public static class OximetryEventGenerator
@@ -61,7 +63,7 @@ public static class OximetryEventGenerator
 				events.Add( annotation );
 			}
 
-			// The peak finder generates a signal per sample for the entire duration of the peak. We only 
+			// The peak finder (may) generates a signal per sample for the entire duration of the peak. We only 
 			// need to know when the peak started, so skip ahead a bit. 
 			while( i < data.Count - 1 && peakSignals[ i + 1 ] == peakSignal )
 			{
@@ -116,8 +118,8 @@ public static class OximetryEventGenerator
 							// doesn't align directly on a sample's interval
 							var lastSample = sourceData[ i - 1 ];
 							var t          = MathUtil.InverseLerp( lastSample, sample, TACHYCARDIA_THRESHOLD );
-							eventStart = time - (1.0 - t) * timeInterval;
 
+							eventStart    = time - (1.0 - t) * timeInterval;
 							state         = 2;
 							eventDuration = 0;
 							break;

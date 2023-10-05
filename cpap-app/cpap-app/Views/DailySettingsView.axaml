@@ -62,7 +62,7 @@
         <TextBlock Grid.Column="0" Grid.Row="6" Text="Ramp Time" />
         <TextBlock Grid.Column="2" Grid.Row="6"
                    Text="{Binding RampTime, Mode=OneWay, StringFormat={}{0} Minutes}" />
-        <TextBlock Grid.Column="0" Grid.Row="7" Text="Starting Pressure" />
+        <TextBlock Grid.Column="0" Grid.Row="7" Text="Ramp Pressure" />
         <TextBlock Grid.Column="2" Grid.Row="7"
                    Text="{Binding RampStartingPressure, Mode=OneWay, StringFormat={}{0:N2} cmH2O}" />
         <TextBlock Grid.Column="0" Grid.Row="8" Text="EPR Enabled" />

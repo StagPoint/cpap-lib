@@ -399,7 +399,7 @@ namespace cpaplib
 				var signal = session.GetSignalByName( SignalNames.FlowLimit );
 				if( signal != null )
 				{
-					Annotate( day.Events, EventType.FlowLimitation, signal, 8, (sample, _) => sample >= FlowLimitRedline );
+					Annotate( day.Events, EventType.FlowLimitation, signal, 8, FlowLimitRedline );
 				}
 			}
 		}
@@ -414,12 +414,12 @@ namespace cpaplib
 				var signal = session.GetSignalByName( SignalNames.LeakRate );
 				if( signal != null )
 				{
-					Annotate( day.Events, EventType.LargeLeak, signal, 2, (sample, _) => sample > LeakRedline );
+					Annotate( day.Events, EventType.LargeLeak, signal, 2, LeakRedline );
 				}
 			}
 		}
 
-		private void Annotate( List<ReportedEvent> events, EventType eventType, Signal signal, double minDuration, Func<double, int, bool> predicate )
+		private void Annotate( List<ReportedEvent> events, EventType eventType, Signal signal, double minDuration, double redLine )
 		{
 			int    state      = 0;
 			double eventStart = -1;
@@ -427,7 +427,7 @@ namespace cpaplib
 			var sourceData     = signal.Samples;
 			var sampleInterval = 1.0 / signal.FrequencyInHz;
 			
-			for( int i = 0; i < sourceData.Count; i++ )
+			for( int i = 1; i < sourceData.Count; i++ )
 			{
 				var sample = sourceData[ i ];
 				var time   = i * sampleInterval;
@@ -435,19 +435,29 @@ namespace cpaplib
 				switch( state )
 				{
 					case 0:
-						if( predicate( sample, i ) )
+					{
+						if( sample >= redLine )
 						{
-							eventStart = time;
+							var lastSample = sourceData[ i - 1 ];
+							var t          = MathUtil.InverseLerp( lastSample, sample, redLine );
+
+							eventStart = time - (1.0 - t) * sampleInterval;
 							state      = 1;
 						}
+						
 						break;
+					}
 
 					case 1:
-						// Calculate the duration of the event.
-						// Note that we use the time of the *last* sample that didn't match the exit predicate.
-						double duration = Math.Max( 0.0, time - eventStart - sampleInterval );
-						
-						if( !predicate( sample, i ) )
+					{
+						// Find the specific time when the sample crossed the threshold, even if it 
+						// doesn't align directly on a sample's interval
+						var lastSample = sourceData[ i - 1 ];
+						var t          = MathUtil.InverseLerp( lastSample, sample, redLine );
+						var eventEnd   = time - (1.0 - t) * sampleInterval;
+						var duration   = eventEnd - eventStart;
+
+						if( sample < redLine )
 						{
 							if( duration >= minDuration )
 							{
@@ -463,7 +473,9 @@ namespace cpaplib
 
 							state = 0;
 						}
+						
 						break;
+					}
 				}
 			}
 

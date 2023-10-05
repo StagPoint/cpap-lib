@@ -27,12 +27,12 @@
             </Grid.ColumnDefinitions>
             <Border Grid.Column="0" Grid.ColumnSpan="6"
                     Background="{DynamicResource ControlAltFillColorSecondaryBrush}" HorizontalAlignment="Stretch" />
-            <TextBlock Grid.Column="0" Text="Name" Theme="{StaticResource BodyStrongTextBlockStyle}" />
-            <TextBlock Grid.Column="1" Text="Min" Theme="{StaticResource BodyStrongTextBlockStyle}" />
-            <TextBlock Grid.Column="3" Text="Med" Theme="{StaticResource BodyStrongTextBlockStyle}" />
-            <TextBlock Grid.Column="2" Text="Avg" Theme="{StaticResource BodyStrongTextBlockStyle}" />
-            <TextBlock Grid.Column="4" Text="95%" Theme="{StaticResource BodyStrongTextBlockStyle}" />
-            <TextBlock Grid.Column="5" Text="Max" Theme="{StaticResource BodyStrongTextBlockStyle}" />
+            <TextBlock Grid.Column="0" Text="Name" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+            <TextBlock Grid.Column="1" Text="Min" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+            <TextBlock Grid.Column="3" Text="Med" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+            <TextBlock Grid.Column="2" Text="Avg" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+            <TextBlock Grid.Column="4" Text="95%" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+            <TextBlock Grid.Column="5" Text="99%" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
         </Grid>
         <ItemsControl Grid.Row="1" ItemsSource="{Binding Statistics}">
             <ItemsControl.ItemTemplate>
@@ -51,7 +51,7 @@
                         <TextBlock Grid.Column="3" Text="{Binding Median, Mode=OneWay, StringFormat={}{0:f2}}" />
                         <TextBlock Grid.Column="2" Text="{Binding Average, Mode=OneWay, StringFormat={}{0:f2}}" />
                         <TextBlock Grid.Column="4" Text="{Binding Percentile95, Mode=OneWay, StringFormat={}{0:f2}}" />
-                        <TextBlock Grid.Column="5" Text="{Binding Maximum, Mode=OneWay, StringFormat={}{0:f2}}" />
+                        <TextBlock Grid.Column="5" Text="{Binding Percentile99, Mode=OneWay, StringFormat={}{0:f2}}" />
                     </Grid>
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
