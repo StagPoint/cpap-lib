@@ -1,9 +1,6 @@
-﻿using System;
-using System.Data;
-using System.Diagnostics;
-using System.IO;
+﻿using System.Diagnostics;
+using System.Drawing;
 using System.Reflection;
-using System.Security.Permissions;
 using System.Text;
 
 using cpaplib;
@@ -449,6 +446,9 @@ namespace cpap_db
 				case UriBuilder builder:
 					SQLite3.BindText( stmt, index, builder.ToString(), -1, new IntPtr( -1 ) );
 					break;
+				case Color color:
+					SQLite3.BindInt( stmt, index, color.ToArgb() );
+					break;
 				default:
 					int int32 = Convert.ToInt32( value );
 					SQLite3.BindInt( stmt, index, int32 );
@@ -588,6 +588,11 @@ namespace cpap_db
 				return new Uri( SQLite3.ColumnString( stmt, index ) );
 			}
 
+			if( clrType == typeof( Color ) )
+			{
+				return Color.FromArgb( SQLite3.ColumnInt( stmt, index ) );
+			}
+
 			throw new NotSupportedException( $"Unhandled type {clrType}" );
 		}
 
@@ -602,19 +607,6 @@ namespace cpap_db
 		}
 		
 		#endregion 
-		
-		#region Private functions
-
-		private void CreateTables( SQLiteConnection connection )
-		{
-			// List<SQLiteConnection.ColumnInfo> columns = connection.GetTableInfo( "Day");
-			// if( columns == null || columns.Count == 0 )
-			// {
-			// 	connection.CreateTable<DbDayRecord>();
-			// }
-		}
-		
-		#endregion
 		
 		#region Nested types
 

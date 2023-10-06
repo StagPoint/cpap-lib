@@ -189,6 +189,11 @@ public partial class MainView : UserControl
 					                    .Distinct()
 					                    .ToList();
 
+					// Extend the range of days by one day in either direction to ensure that all 
+					// applicable days get loaded.
+					distinctDates.Add( distinctDates[ ^1 ].AddDays( 1 ) );
+					distinctDates.Add( distinctDates[ 0 ].AddDays( -1 ) );
+
 					foreach( var date in distinctDates )
 					{
 						Dispatcher.UIThread.Post( () =>

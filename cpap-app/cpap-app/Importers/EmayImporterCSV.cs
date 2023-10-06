@@ -79,11 +79,12 @@ public class EmayImporterCSV : IOximetryImporter
 				MaxValue          = 120,
 				UnitOfMeasurement = "bpm",
 			};
-		
+
 			Session session = new()
 			{
 				Source  = this.Source,
-				Signals = { oxygen, pulse }
+				Signals = { oxygen, pulse },
+				Type    = SessionType.PulseOximetry
 			};
 
 			bool isStartRecord = true;

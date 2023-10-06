@@ -1,0 +1,91 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewModels="clr-namespace:cpap_app.ViewModels"
+             xmlns:converters="clr-namespace:cpap_app.Converters"
+             xmlns:views="clr-namespace:cpap_app.Views"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="450"
+             x:Class="cpap_app.Views.DataDistributionView"
+             x:DataType="viewModels:DataDistribution"
+             Title="Oxygen Saturation"
+             UnitOfMeasure="%">
+    <UserControl.Resources>
+        <converters:FormattedTimespanConverter x:Key="TimeConverter" />
+    </UserControl.Resources>
+    <StackPanel Orientation="Vertical">
+        <TextBlock Text="{Binding $parent[views:DataDistributionView].Title}"
+                   Theme="{DynamicResource SubtitleTextBlockStyle}" Margin="0 0 0 10"
+                   Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" FontSize="16" />
+        <Grid ColumnDefinitions="Auto,20,*" RowDefinitions="Auto,Auto">
+            <TextBlock Grid.Column="0" Grid.Row="0" Text="Average" />
+            <TextBlock Grid.Column="2" Grid.Row="0">
+                <TextBox.Text>
+                    <MultiBinding StringFormat="{}{0:F0} {1}">
+                        <Binding Path="Average" />
+                        <Binding Path="$parent[views:DataDistributionView].UnitOfMeasure" />
+                    </MultiBinding>
+                </TextBox.Text>
+            </TextBlock>
+            <TextBlock Grid.Column="0" Grid.Row="1" Text="Range" />
+            <TextBlock Grid.Column="2" Grid.Row="1">
+                <TextBox.Text>
+                    <MultiBinding StringFormat="{}{0:F0} - {1:F0}">
+                        <Binding Path="MinValue" />
+                        <Binding Path="MaxValue" />
+                        <!--<Binding Path="$parent[views:DataDistributionView].UnitOfMeasure"/>-->
+                    </MultiBinding>
+                </TextBox.Text>
+            </TextBlock>
+        </Grid>
+        <StackPanel Orientation="Vertical" Grid.IsSharedSizeScope="True">
+            <Grid RowDefinitions="Auto" Margin="0 10 0 0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition SharedSizeGroup="C0" />
+                    <ColumnDefinition Width="20" />
+                    <ColumnDefinition SharedSizeGroup="C1" />
+                    <ColumnDefinition Width="20" />
+                    <ColumnDefinition SharedSizeGroup="C2" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Grid.Row="0" Text="Range"
+                           Theme="{DynamicResource BodyStrongTextBlockStyle}"
+                           Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+                <TextBlock Grid.Column="2" Grid.Row="0" Text="Duration"
+                           Theme="{DynamicResource BodyStrongTextBlockStyle}"
+                           Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+                <TextBlock Grid.Column="4" Grid.Row="0" Text="Total"
+                           Theme="{DynamicResource BodyStrongTextBlockStyle}"
+                           Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+            </Grid>
+            <ItemsRepeater ItemsSource="{Binding Groupings}">
+                <ItemsRepeater.ItemTemplate>
+                    <DataTemplate DataType="{x:Type viewModels:DistributionGrouping}">
+                        <Grid RowDefinitions="Auto">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition SharedSizeGroup="C0" />
+                                <ColumnDefinition Width="20" />
+                                <ColumnDefinition SharedSizeGroup="C1" />
+                                <ColumnDefinition Width="20" />
+                                <ColumnDefinition SharedSizeGroup="C2" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0">
+                                <TextBox.Text>
+                                    <MultiBinding StringFormat="{}{0:F0} - {1:F0}">
+                                        <Binding Path="MinValue" />
+                                        <Binding Path="MaxValue" />
+                                        <!--<Binding Path="$parent[views:DataDistributionView].UnitOfMeasure"/>-->
+                                    </MultiBinding>
+                                </TextBox.Text>
+                            </TextBlock>
+                            <TextBlock Grid.Column="2" Text="{Binding TotalTime, StringFormat={}{0:g}}" />
+                            <TextBlock Grid.Column="4">
+                                <Run Text="{Binding Path=PercentOfTotal, Mode=OneWay, StringFormat={}{0:P0}}" />
+                            </TextBlock>
+                        </Grid>
+                    </DataTemplate>
+                </ItemsRepeater.ItemTemplate>
+            </ItemsRepeater>
+        </StackPanel>
+    </StackPanel>
+
+</UserControl>

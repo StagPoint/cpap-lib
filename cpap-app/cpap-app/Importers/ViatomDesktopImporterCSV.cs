@@ -94,7 +94,8 @@ public class ViatomDesktopImporterCSV : IOximetryImporter
 
 		Session session = new()
 		{
-			Source = this.Source,
+			Source  = this.Source,
+			Type    = SessionType.PulseOximetry,
 			Signals = { oxygen, pulse, movement }
 		};
 

@@ -172,6 +172,11 @@ public partial class SignalChart : UserControl
 		TimeMarkerLine.IsVisible = false;
 
 		InitializeChartProperties( Chart );
+
+		if( _day != null )
+		{
+			LoadData( _day );
+		}
 	}
 
 	protected override void OnKeyDown( KeyEventArgs args )
@@ -248,10 +253,12 @@ public partial class SignalChart : UserControl
 
 				if( !_chartInitialized )
 				{
-					InitializeChartProperties( Chart );
+					_day = day;
 				}
-
-				LoadData( day );
+				else
+				{
+					LoadData( day );
+				}
 			}
 			else if( change.NewValue == null )
 			{
@@ -772,7 +779,7 @@ public partial class SignalChart : UserControl
 
 			var offset = (signal.StartTime - day.RecordingStartTime).TotalSeconds;
 
-			var chartColor = Configuration.PlotColor.ToDrawingColor();
+			var chartColor = Configuration.PlotColor;
 
 			var graph = chart.Plot.AddSignal(
 				signal.Samples.ToArray(),
@@ -791,7 +798,7 @@ public partial class SignalChart : UserControl
 					var secondaryGraph = chart.Plot.AddSignal( 
 						secondarySignal.Samples.ToArray(), 
 						secondarySignal.FrequencyInHz, 
-						SecondaryConfiguration.PlotColor.ToDrawingColor(), 
+						SecondaryConfiguration.PlotColor, 
 						firstSessionAdded ? SecondaryConfiguration.Title : null );
 					
 					var secondaryOffset = (secondarySignal.StartTime - day.RecordingStartTime).TotalSeconds;

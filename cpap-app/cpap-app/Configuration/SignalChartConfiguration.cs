@@ -6,6 +6,8 @@ using cpaplib;
 
 namespace cpap_app.Configuration;
 
+using Color = System.Drawing.Color;
+
 public class SignalChartConfiguration
 {
 	public int ID { get; set; }
@@ -21,7 +23,7 @@ public class SignalChartConfiguration
 	public double? AxisMinValue        { get; set; }
 	public double? AxisMaxValue        { get; set; }
 	public bool?   FillBelow           { get; set; }
-	public Color   PlotColor           { get; set; } = Colors.DodgerBlue;
+	public Color   PlotColor           { get; set; } = System.Drawing.Color.DodgerBlue;
 
 	public List<EventType> DisplayedEvents { get; set; } = new();
 	

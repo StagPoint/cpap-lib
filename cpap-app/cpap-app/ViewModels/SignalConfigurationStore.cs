@@ -29,7 +29,6 @@ public static class SignalConfigurationStore
 	public static void Initialize( StorageService store )
 	{
 		var mapping = StorageService.CreateMapping<SignalChartConfiguration>( "chart_config" );
-		mapping.GetColumnByName( nameof( SignalChartConfiguration.PlotColor ) ).Converter = new ColorBlobConverter();
 
 		// Have to add the DisplayedEvents column manually, as CreateMapping only handles value types and strings. 
 		var eventsColumn = new ColumnMapping( nameof( SignalChartConfiguration.DisplayedEvents ), nameof( SignalChartConfiguration.DisplayedEvents ), typeof( SignalChartConfiguration ) );
@@ -60,7 +59,7 @@ public static class SignalConfigurationStore
 				IsPinned            = false,
 				IsVisible           = (signalName != SignalNames.EPAP && signalName != SignalNames.MaskPressureLow),
 				FillBelow           = true,
-				PlotColor           = plotColor
+				PlotColor           = plotColor.ToDrawingColor()
 			};
 
 			switch( signalName )

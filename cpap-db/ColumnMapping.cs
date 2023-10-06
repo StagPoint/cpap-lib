@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Drawing;
 using System.Linq.Expressions;
 using System.Numerics;
 using System.Reflection;
@@ -99,7 +100,15 @@ public class ColumnMapping
 			return Converter.ConvertToBlob( _property.GetValue( obj ) );
 		}
 		
-		return _property.GetValue( obj );
+		var columnValue = _property.GetValue( obj );
+
+		// TODO: Shouldn't be doing type conversion here, should we? Don't we already have other places that do this?
+		if( columnValue is Color color )
+		{
+			columnValue = color.ToArgb();
+		}
+
+		return columnValue;
 	}
 
 	public void SetValue( object obj, object value )
@@ -109,7 +118,7 @@ public class ColumnMapping
 			_property.SetValue( obj, Converter.ConvertFromBlob( value as byte[] ) );
 			return;
 		}
-		
+
 		_property.SetValue( obj, value );
 	}
 

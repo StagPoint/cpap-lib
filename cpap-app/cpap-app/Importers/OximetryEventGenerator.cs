@@ -56,7 +56,7 @@ public static class OximetryEventGenerator
 			};
 
 			// Don't add any PulseRateChange events when there is already a Tachycardia or Bradycardia event at 
-			// that time period. You could add it, but then it becomes a mess for the user to understand, and 
+			// that time period. You could add it, but then the UI becomes a mess for the user to understand and 
 			// the other event types are probably more important. 
 			if( !events.Any( x => x.Type is EventType.Tachycardia or EventType.Bradycardia && ReportedEvent.TimesOverlap( x, annotation ) ) )
 			{
@@ -65,7 +65,8 @@ public static class OximetryEventGenerator
 
 			// The peak finder (may) generates a signal per sample for the entire duration of the peak. We only 
 			// need to know when the peak started, so skip ahead a bit. 
-			while( i < data.Count - 1 && peakSignals[ i + 1 ] == peakSignal )
+			int eventStart = i;
+			while( i < data.Count - 1 && peakSignals[ i + 1 ] == peakSignal && i - eventStart < windowSize )
 			{
 				i++;
 			}
@@ -202,44 +203,38 @@ public static class OximetryEventGenerator
 	{
 		// TODO: Make window size configurable 
 		const int    WINDOW_SIZE            = 300;
-		const double MAX_EVENT_DURATION     = 120;
+		const double MAX_EVENT_DURATION     = 60;
 		const double MIN_EVENT_DURATION     = 1;
 		const double DESATURATION_THRESHOLD = 3;
-
-		if( signal.Samples.Count < WINDOW_SIZE * signal.FrequencyInHz )
-		{
-			return;
-		}
 
 		int    state        = 0;
 		int    windowSize   = (int)Math.Ceiling( WINDOW_SIZE * signal.FrequencyInHz );
 		double timeInterval = 1.0 / signal.FrequencyInHz;
 
+		if( signal.Samples.Count <= windowSize )
+		{
+			return;
+		}
+
 		double eventStart    = -1;
 		double eventDuration = 0.0;
 
 		var    sourceData  = signal.Samples;
-		double baseLine    = sourceData[ 0 ];
+		double baseline    = sourceData[ 0 ];
 		double baselineSum = 0.0;
 
-		for( int i = 0; i < sourceData.Count; i++ )
+		// Calculate a baseline average. A desaturation is a drop of 3% or more below the baseline. 
+		for( int i = 0; i < windowSize; i++ )
+		{
+			baselineSum += sourceData[ i ];
+		}
+		baseline /= windowSize;
+
+		for( int i = windowSize + 1; i < sourceData.Count; i++ )
 		{
 			var sample    = sourceData[ i ];
 			var time      = (i * timeInterval);
-			var threshold = baseLine - DESATURATION_THRESHOLD;
-
-			// Update the sliding window average used as a baseline 
-			{
-				if( i >= windowSize )
-				{
-					baselineSum -= sourceData[ i - windowSize ];
-				}
-
-				baselineSum += sample;
-
-				var count = Math.Min( i + 1, windowSize );
-				baseLine = baselineSum / count;
-			}
+			var threshold = baseline - DESATURATION_THRESHOLD;
 
 			switch( state )
 			{
@@ -286,7 +281,21 @@ public static class OximetryEventGenerator
 
 						state = 0;
 					}
+					else
+					{
+						// We don't want a desaturation to move the baseline average as quickly as a normal sample,
+						// since it's presumably a short term aberration. One way to accomplish that is to reduce
+						// the influence of new samples to the baseline while we're currently tracking a desaturation.
+						sample = MathUtil.Lerp( baseline, sample, 0.75 );
+					}
 					break;
+			}
+			
+			// Update the sliding window average used as a baseline 
+			{
+				baselineSum -= sourceData[ i - windowSize ];
+				baselineSum += sample;
+				baseline    =  baselineSum / windowSize;
 			}
 		}
 

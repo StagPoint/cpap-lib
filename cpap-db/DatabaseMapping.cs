@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.Drawing;
 using System.Globalization;
 using System.Numerics;
 using System.Reflection;
@@ -170,7 +171,7 @@ public class DatabaseMapping
 					if( !column.IsNullable )
 					{
 						//string defaultValue = column.Type == typeof( string ) ? "''" : "0"; 
-						sql += $" NOT NULL";
+						sql += $" NOT NULL DEFAULT (0)";
 					}
 
 					connection.Execute( sql );
@@ -216,7 +217,7 @@ public class DatabaseMapping
 
 	#endregion 
 	
-		#region Private functions
+	#region Private functions
 
 	private string GenerateSelectByPrimaryKeyQuery()
 	{
@@ -446,8 +447,11 @@ public class DatabaseMapping
 		{
 			columnType = underlyingType;
 		}
-		
-		if( columnType == typeof( bool ) || columnType == typeof( byte ) || columnType == typeof( ushort ) || columnType == typeof( sbyte ) || columnType == typeof( short ) || columnType == typeof( int ) || columnType == typeof( uint ) || columnType == typeof( long ) )
+
+		var isIntegerType = columnType == typeof( bool ) || columnType == typeof( byte ) || columnType == typeof( ushort ) ||
+		                    columnType == typeof( sbyte ) || columnType == typeof( short ) || columnType == typeof( int ) ||
+		                    columnType == typeof( uint ) || columnType == typeof( long ) || columnType == typeof( Color );
+		if( isIntegerType )
 		{
 			return "INTEGER";
 		}

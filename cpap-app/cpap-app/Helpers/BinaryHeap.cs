@@ -1,6 +1,7 @@
 ﻿// Copyright 2011-2023 StagPoint Software
 using System;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 
 namespace cpap_app.Helpers;
 
@@ -13,6 +14,7 @@ internal class BinaryHeap<T> where T : struct, INumber<T>
 	/// </summary>
 	public int Count
 	{
+		[MethodImpl( MethodImplOptions.AggressiveInlining )]
 		get => _count;
 	}
 
@@ -21,6 +23,7 @@ internal class BinaryHeap<T> where T : struct, INumber<T>
 	/// </summary>
 	public int Capacity
 	{
+		[MethodImpl( MethodImplOptions.AggressiveInlining )]
 		get => _capacity;
 	}
 
@@ -29,6 +32,7 @@ internal class BinaryHeap<T> where T : struct, INumber<T>
 	/// </summary>
 	public bool IsEmpty
 	{
+		[MethodImpl( MethodImplOptions.AggressiveInlining )]
 		get => _count == 0;
 	}
 
@@ -70,7 +74,7 @@ internal class BinaryHeap<T> where T : struct, INumber<T>
 	/// </summary>
 	public void Clear()
 	{
-		this._count = 0;
+		_count = 0;
 		Array.Clear( _items, 0, _items.Length );
 	}
 
@@ -78,9 +82,10 @@ internal class BinaryHeap<T> where T : struct, INumber<T>
 	/// Returns the first item in the heap without removing it from the heap
 	/// </summary>
 	/// <returns></returns>
+	[MethodImpl( MethodImplOptions.AggressiveInlining )]
 	public T Peek()
 	{
-		if( this._count == 0 )
+		if( _count == 0 )
 		{
 			throw new InvalidOperationException( "Cannot peek at first item when the heap is empty." );
 		}
@@ -96,7 +101,7 @@ internal class BinaryHeap<T> where T : struct, INumber<T>
 	{
 		if( _count == _capacity )
 		{
-			EnsureCapacity( _count + 1 );
+			ensureCapacity( _count + 1 );
 		}
 
 		_items[ _count ] = item;
@@ -112,7 +117,7 @@ internal class BinaryHeap<T> where T : struct, INumber<T>
 	/// <returns>The first value in the heap.</returns>
 	public T Dequeue()
 	{
-		if( this._count == 0 )
+		if( _count == 0 )
 		{
 			throw new InvalidOperationException( "Cannot remove item from an empty heap" );
 		}
@@ -133,24 +138,24 @@ internal class BinaryHeap<T> where T : struct, INumber<T>
 		return v;
 	}
 
+	#endregion
+
+	#region Private utility methods
+
 	/// <summary>
 	/// Ensures that there is large enough internal capacity to store the indicated number of
 	/// items without having to re-allocate the internal buffer.
 	/// </summary>
 	/// <param name="count"></param>
-	public void EnsureCapacity( int count )
+	private void ensureCapacity( int count )
 	{
-		while( count > this._capacity )
+		while( count > _capacity )
 		{
 			_capacity *= GROWTH_FACTOR;
 		}
 
 		Array.Resize( ref _items, _capacity );
 	}
-
-	#endregion
-
-	#region Private utility methods
 
 	private int heapifyUp( int index, T item )
 	{

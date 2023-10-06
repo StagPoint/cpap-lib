@@ -15,11 +15,11 @@
     <ScrollViewer>
         <StackPanel>
             <StackPanel DataContext="{Binding MachineInfo}" Margin="4 8 0 0">
-                <TextBlock Theme="{StaticResource BodyStrongTextBlockStyle}">
+                <TextBlock Theme="{DynamicResource BodyStrongTextBlockStyle}">
                     <Run>Model: </Run>
                     <Run Text="{Binding ProductName, Mode=OneWay}" />
                 </TextBlock>
-                <TextBlock Theme="{StaticResource BodyStrongTextBlockStyle}">
+                <TextBlock Theme="{DynamicResource BodyStrongTextBlockStyle}">
                     <Run>Serial: </Run>
                     <Run Text="{Binding SerialNumber, Mode=OneWay}" />
                 </TextBlock>
@@ -38,19 +38,19 @@
                     <RowDefinition />
                 </Grid.RowDefinitions>
                 <TextBlock Grid.Column="0" Grid.Row="0" Text="Date:"
-                           Theme="{StaticResource BodyStrongTextBlockStyle}" />
+                           Theme="{DynamicResource BodyStrongTextBlockStyle}" />
                 <TextBlock Grid.Column="2" Grid.Row="0"
                            Text="{Binding ReportDate, Mode=OneWay, StringFormat={}{0:D}}" />
                 <TextBlock Grid.Column="0" Grid.Row="1" Text="Start Time:"
-                           Theme="{StaticResource BodyStrongTextBlockStyle}" />
+                           Theme="{DynamicResource BodyStrongTextBlockStyle}" />
                 <TextBlock Grid.Column="2" Grid.Row="1"
                            Text="{Binding RecordingStartTime, Mode=OneWay, StringFormat={}{0:g}}" />
                 <TextBlock Grid.Column="0" Grid.Row="2" Text="End Time:"
-                           Theme="{StaticResource BodyStrongTextBlockStyle}" />
+                           Theme="{DynamicResource BodyStrongTextBlockStyle}" />
                 <TextBlock Grid.Column="2" Grid.Row="2"
                            Text="{Binding RecordingEndTime, Mode=OneWay, StringFormat={}{0:g}}" />
                 <TextBlock Grid.Column="0" Grid.Row="3" Text="Usage Hours:"
-                           Theme="{StaticResource BodyStrongTextBlockStyle}" />
+                           Theme="{DynamicResource BodyStrongTextBlockStyle}" />
                 <TextBlock Grid.Column="2" Grid.Row="3"
                            Text="{Binding UsageTime, Mode=OneWay, StringFormat={}{0:T}}" />
             </Grid>
@@ -65,7 +65,7 @@
                 <Expander.Header>
                     <StackPanel Orientation="Horizontal">
                         <controls:FontIcon Glyph="&#xE7C1;" FontSize="24" FontFamily="{DynamicResource SymbolThemeFontFamily}" FontWeight="Normal" FontStyle="Normal" Margin="0 0 10 0"/>
-                        <TextBlock Text="Reported Events" FontSize="16" Theme="{StaticResource BodyStrongTextBlockStyle}"/>
+                        <TextBlock Text="Reported Events" FontSize="16" Theme="{DynamicResource BodyStrongTextBlockStyle}"/>
                     </StackPanel>
                 </Expander.Header>
                 <views:DailyEventSummaryView DataContext="{Binding EventCounts}"/>
@@ -80,7 +80,7 @@
                 <Expander.Header>
                     <StackPanel Orientation="Horizontal">
                         <controls:FontIcon Glyph="&#xE8EF;" FontSize="24" FontFamily="{DynamicResource SymbolThemeFontFamily}" FontWeight="Normal" FontStyle="Normal" Margin="0 0 10 0"/>
-                        <TextBlock Text="Statistics" FontSize="16" Theme="{StaticResource BodyStrongTextBlockStyle}"/>
+                        <TextBlock Text="Statistics" FontSize="16" Theme="{DynamicResource BodyStrongTextBlockStyle}"/>
                     </StackPanel>
                 </Expander.Header>
                 <views:DailyStatisticsSummaryView Name="dailyStatistics" DataContext="{Binding}" />
@@ -95,7 +95,7 @@
                 <Expander.Header>
                     <StackPanel Orientation="Horizontal">
                         <controls:FontIcon Glyph="&#xE713;" FontSize="24" FontFamily="{DynamicResource SymbolThemeFontFamily}" FontWeight="Normal" FontStyle="Normal" Margin="0 0 10 0"/>
-                        <TextBlock Text="Settings" FontSize="16" Theme="{StaticResource BodyStrongTextBlockStyle}"/>
+                        <TextBlock Text="Settings" FontSize="16" Theme="{DynamicResource BodyStrongTextBlockStyle}"/>
                     </StackPanel>
                 </Expander.Header>
                 <views:DailySettingsView DataContext="{Binding}" />
@@ -110,7 +110,7 @@
                 <Expander.Header>
                     <StackPanel Orientation="Horizontal">
                         <controls:FontIcon Glyph="&#xEC92;" FontSize="24" FontFamily="{DynamicResource SymbolThemeFontFamily}" FontWeight="Normal" FontStyle="Normal" Margin="0 0 10 0"/>
-                        <TextBlock Text="Sessions" FontSize="16" Theme="{StaticResource BodyStrongTextBlockStyle}"/>
+                        <TextBlock Text="Sessions" FontSize="16" Theme="{DynamicResource BodyStrongTextBlockStyle}"/>
                     </StackPanel>
                 </Expander.Header>
                <views:DailySessionsList />
