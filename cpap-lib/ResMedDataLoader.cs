@@ -625,13 +625,6 @@ namespace cpaplib
 
 		private void CalculateEventSummary( DailyReport day )
 		{
-			EventType[] ApneaTypes = {
-				EventType.ClearAirway,
-				EventType.Unclassified,
-				EventType.ObstructiveApnea,
-				EventType.Hypopnea,
-			};
-			
 			day.EventCounts.ObstructiveApneaCount  = day.Events.Count( x => x.Type == EventType.ObstructiveApnea );
 			day.EventCounts.HypopneaCount          = day.Events.Count( x => x.Type == EventType.Hypopnea );
 			day.EventCounts.UnclassifiedApneaCount = day.Events.Count( x => x.Type == EventType.Unclassified );
@@ -642,7 +635,7 @@ namespace cpaplib
 
 			day.EventCounts.TotalTimeInApnea = TimeSpan.FromSeconds(
 				day.Events
-				   .Where( x => ApneaTypes.Contains( x.Type ) )
+				   .Where( x => EventTypes.Apneas.Contains( x.Type ) )
 				   .Sum( x => x.Duration.TotalSeconds )
 			);
 			

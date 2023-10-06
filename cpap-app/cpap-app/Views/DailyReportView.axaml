@@ -55,7 +55,7 @@
                 </TabStrip.Styles>
                 <TabItem Header="Details" Tag="{x:Type views:DailyDetailsView}" FontSize="18" Padding="0" />
                 <TabItem Header="Events" Tag="{x:Type views:DailyEventsListView}" FontSize="18" Padding="0" />
-                <TabItem Header="SpO2" Tag="{x:Type views:DailySpO2View}" FontSize="18" Padding="0" />
+                <TabItem Header="Oxygen" Tag="{x:Type views:DailySpO2View}" FontSize="18" Padding="0" />
                 <TabItem Header="Notes" Tag="{x:Type views:DailyNotesView}" FontSize="18" Padding="0" />
                 <!--<TabItem Header="Sync" Tag="SyncFitbit" FontSize="18" Padding="0" />-->
             </TabStrip>

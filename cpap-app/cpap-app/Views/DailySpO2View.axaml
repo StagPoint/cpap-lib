@@ -5,47 +5,78 @@
              xmlns:views="clr-namespace:cpap_app.Views"
              xmlns:controls="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
              xmlns:cpaplib="clr-namespace:cpaplib;assembly=cpap-lib"
-             xmlns:viewModels="clr-namespace:cpap_app.ViewModels"
-             xmlns:converters="clr-namespace:cpap_app.Converters"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="800"
              x:Class="cpap_app.Views.DailySpO2View"
              x:DataType="cpaplib:DailyReport">
-    <StackPanel Orientation="Vertical">
-        <Expander
-            ExpandDirection="Down"
-            IsExpanded="True"
-            VerticalAlignment="Top"
-            Margin="0 10 0 0"
-            Padding="10">
-            <Expander.Header>
-                <StackPanel Orientation="Horizontal">
-                    <controls:FontIcon Glyph="&#xE8EF;" FontSize="24"
-                                       FontFamily="{DynamicResource SymbolThemeFontFamily}"
-                                       FontWeight="Normal" FontStyle="Normal" Margin="0 0 10 0" />
-                    <TextBlock Text="Summary" FontSize="16" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+    <UserControl.Styles>
+        <Style Selector="TextBlock.ColumnHeader">
+            <Setter Property="Foreground" Value="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+        </Style>
+        <Style Selector="TextBlock.ColumnFooter">
+            <Setter Property="Foreground" Value="{DynamicResource SystemControlDisabledBaseMediumLowBrush}" />
+        </Style>
+    </UserControl.Styles>
+    <DockPanel LastChildFill="True">
+        <StackPanel Name="pnlNoInfoAvailable" DockPanel.Dock="Top">
+            <TextBlock Text="No pulse oximetry data available" Theme="{DynamicResource SubtitleTextBlockStyle}" Margin="10"/>
+            <TextBlock Text="There is no pulse oximetry data imported for this date." Margin="10" TextWrapping="Wrap"/>
+            <TextBlock Text="Please use the Import button on the Navigation menu to import pulse oximetry data." Margin="10" TextWrapping="Wrap"/>
+        </StackPanel>
+        <StackPanel Name="pnlOximetryInfo" Orientation="Vertical">
+            <Expander
+                ExpandDirection="Down"
+                IsExpanded="True"
+                VerticalAlignment="Top"
+                Margin="0 10 0 0"
+                Padding="10">
+                <Expander.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <controls:FontIcon Glyph="&#xE8EF;" FontSize="24"
+                                           FontFamily="{DynamicResource SymbolThemeFontFamily}"
+                                           FontWeight="Normal" FontStyle="Normal" Margin="0 0 10 0" />
+                        <TextBlock Text="Oxygen" FontSize="16" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                    </StackPanel>
+                </Expander.Header>
+                <StackPanel Orientation="Vertical">
+                    <views:DataDistributionView Name="OxygenSummary" UnitOfMeasure="%" />
+                    <views:OxygenEventsView Name="OxygenEvents" Margin="0 10 0 0" />
                 </StackPanel>
-            </Expander.Header>
-            <StackPanel Orientation="Vertical">
-                <views:DataDistributionView Name="OxygenSummary" Title="Oxygen Saturation" UnitOfMeasure="%"/>
-                <Separator Margin="0 10"/>
-                <views:DataDistributionView Name="PulseSummary" Title="Pulse Rate" UnitOfMeasure="bpm"/>
-            </StackPanel>
-        </Expander>
-        <Expander
-            ExpandDirection="Down"
-            IsExpanded="True"
-            VerticalAlignment="Top"
-            Margin="0 10 0 0"
-            Padding="10">
-            <Expander.Header>
-                <StackPanel Orientation="Horizontal">
-                    <controls:FontIcon Glyph="&#xEC92;" FontSize="24"
-                                       FontFamily="{DynamicResource SymbolThemeFontFamily}"
-                                       FontWeight="Normal" FontStyle="Normal" Margin="0 0 10 0" />
-                    <TextBlock Text="Sessions" FontSize="16" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+            </Expander>
+            <Expander
+                ExpandDirection="Down"
+                IsExpanded="True"
+                VerticalAlignment="Top"
+                Margin="0 10 0 0"
+                Padding="10">
+                <Expander.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <controls:FontIcon Glyph="&#xE8EF;" FontSize="24"
+                                           FontFamily="{DynamicResource SymbolThemeFontFamily}"
+                                           FontWeight="Normal" FontStyle="Normal" Margin="0 0 10 0" />
+                        <TextBlock Text="Pulse" FontSize="16" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                    </StackPanel>
+                </Expander.Header>
+                <StackPanel Orientation="Vertical">
+                    <views:DataDistributionView Name="PulseSummary" UnitOfMeasure="bpm" />
+                    <views:OxygenEventsView Name="PulseEvents" Margin="0 10 0 0" />
                 </StackPanel>
-            </Expander.Header>
-            <views:OximetrySessionsList />
-        </Expander>
-    </StackPanel>
+            </Expander>
+            <Expander
+                ExpandDirection="Down"
+                IsExpanded="True"
+                VerticalAlignment="Top"
+                Margin="0 10 0 0"
+                Padding="10">
+                <Expander.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <controls:FontIcon Glyph="&#xEC92;" FontSize="24"
+                                           FontFamily="{DynamicResource SymbolThemeFontFamily}"
+                                           FontWeight="Normal" FontStyle="Normal" Margin="0 0 10 0" />
+                        <TextBlock Text="Sessions" FontSize="16" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                    </StackPanel>
+                </Expander.Header>
+                <views:OximetrySessionsList />
+            </Expander>
+        </StackPanel>
+    </DockPanel>
 </UserControl>

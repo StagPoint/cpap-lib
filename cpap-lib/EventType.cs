@@ -79,4 +79,46 @@
 		/// </summary>
 		PulseRateChange,
 	}
+	
+	/// <summary>
+	/// Groups EventType values into logical groups 
+	/// </summary>
+	public static class EventTypes
+	{
+		public static readonly EventType[] Apneas =
+		{
+			EventType.ObstructiveApnea,
+			EventType.Hypopnea,
+			EventType.ClearAirway,
+			EventType.Unclassified,
+		};
+
+		public static readonly EventType[] RespiratoryDisturbance =
+		{
+			EventType.ObstructiveApnea,
+			EventType.Hypopnea,
+			EventType.ClearAirway,
+			EventType.Unclassified,
+			EventType.RERA,
+		};
+
+		public static readonly EventType[] OxygenSaturation =
+		{
+			EventType.Desaturation,
+			EventType.Hypoxemia,
+		};
+
+		public static readonly EventType[] Pulse =
+		{
+			EventType.Bradycardia,
+			EventType.Tachycardia,
+			EventType.PulseRateChange,
+		};
+
+		public static readonly EventType[] Breathing =
+		{
+			EventType.CSR,
+			EventType.PeriodicBreathing,
+		};
+	}
 }

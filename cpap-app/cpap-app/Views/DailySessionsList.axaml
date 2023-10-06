@@ -27,7 +27,7 @@
         </ListBox.Styles>
         <ListBox.ItemTemplate>
             <DataTemplate>
-                <Grid IsVisible="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static cpaplib:SessionType.CPAP}}">
+                <Grid IsVisible="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static cpaplib:SessionType.CPAP}}" IsEnabled="{Binding $self.IsVisible, Mode=OneWay}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" SharedSizeGroup="C0" />
                         <ColumnDefinition Width="10" />
@@ -37,7 +37,12 @@
                     </Grid.ColumnDefinitions>
                     <TextBlock Grid.Column="0" Text="{Binding StartTime, Mode=OneWay, StringFormat={}{0:d}}"></TextBlock>
                     <TextBlock Grid.Column="2">
-                        
+                        <TextBox.Text>
+                            <MultiBinding StringFormat="{}{0:T} 🠚 {1:T}">
+                                <Binding Path="StartTime" />
+                                <Binding Path="EndTime" />
+                            </MultiBinding>
+                        </TextBox.Text>
                     </TextBlock>
                     <TextBlock Grid.Column="4" Text="{Binding Duration, Mode=OneWay}" />
                 </Grid>

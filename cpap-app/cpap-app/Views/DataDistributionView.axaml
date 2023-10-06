@@ -7,13 +7,9 @@
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="450"
              x:Class="cpap_app.Views.DataDistributionView"
              x:DataType="viewModels:DataDistribution"
-             Title="Oxygen Saturation"
              UnitOfMeasure="%">
     <StackPanel Orientation="Vertical">
-        <TextBlock Text="{Binding $parent[views:DataDistributionView].Title}"
-                   Theme="{DynamicResource SubtitleTextBlockStyle}" Margin="0 0 0 4"
-                   Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" FontSize="16" />
-        <Grid ColumnDefinitions="Auto,20,*" RowDefinitions="Auto,Auto">
+        <Grid ColumnDefinitions="Auto,40,*" RowDefinitions="Auto,Auto">
             <TextBlock Grid.Column="0" Grid.Row="0" Text="Average" />
             <TextBlock Grid.Column="2" Grid.Row="0">
                 <TextBox.Text>
@@ -38,37 +34,32 @@
             <Grid RowDefinitions="Auto" Margin="0 10 0 0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition SharedSizeGroup="C0" />
-                    <ColumnDefinition Width="20" />
+                    <ColumnDefinition Width="30" />
                     <ColumnDefinition SharedSizeGroup="C1" />
-                    <ColumnDefinition Width="20" />
+                    <ColumnDefinition Width="30" />
                     <ColumnDefinition SharedSizeGroup="C2" />
                 </Grid.ColumnDefinitions>
-                <TextBlock Grid.Column="0" Grid.Row="0" Text="Range"
-                           Theme="{DynamicResource BodyStrongTextBlockStyle}"
-                           Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" />
-                <TextBlock Grid.Column="2" Grid.Row="0" Text="Duration"
-                           Theme="{DynamicResource BodyStrongTextBlockStyle}"
-                           Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" />
-                <TextBlock Grid.Column="4" Grid.Row="0" Text="Total"
-                           Theme="{DynamicResource BodyStrongTextBlockStyle}"
-                           Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+                <TextBlock Grid.Column="0" Grid.Row="0" Text="Range" Classes="ColumnHeader"
+                           Theme="{DynamicResource BodyStrongTextBlockStyle}"/>
+                <TextBlock Grid.Column="2" Grid.Row="0" Text="Duration" Classes="ColumnHeader"
+                           Theme="{DynamicResource BodyStrongTextBlockStyle}"/>
+                <TextBlock Grid.Column="4" Grid.Row="0" Text="Total" Classes="ColumnHeader"
+                           Theme="{DynamicResource BodyStrongTextBlockStyle}"/>
             </Grid>
             <ItemsRepeater ItemsSource="{Binding Groupings}">
                 <ItemsRepeater.ItemTemplate>
                     <DataTemplate DataType="{x:Type viewModels:DistributionGrouping}">
-                        <Grid RowDefinitions="Auto">
+                        <Grid RowDefinitions="Auto" IsVisible="{Binding TotalTime.TotalSeconds}">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition SharedSizeGroup="C0" />
-                                <ColumnDefinition Width="20" />
+                                <ColumnDefinition Width="30" />
                                 <ColumnDefinition SharedSizeGroup="C1" />
-                                <ColumnDefinition Width="20" />
+                                <ColumnDefinition Width="30" />
                                 <ColumnDefinition SharedSizeGroup="C2" />
                             </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="{Binding Label}" />
-                            <TextBlock Grid.Column="2" Text="{Binding TotalTime, StringFormat={}{0:g}}" />
-                            <TextBlock Grid.Column="4">
-                                <Run Text="{Binding Path=PercentOfTotal, Mode=OneWay, StringFormat={}{0:P1}}" />
-                            </TextBlock>
+                            <TextBlock Grid.Column="0" Text="{Binding Label}"/>
+                            <TextBlock Grid.Column="2" Text="{Binding TotalTime, StringFormat={}{0:g}}"/>
+                            <TextBlock Grid.Column="4" Text="{Binding Path=PercentOfTotal, Mode=OneWay, StringFormat={}{0:P1}}"/>
                         </Grid>
                     </DataTemplate>
                 </ItemsRepeater.ItemTemplate>
