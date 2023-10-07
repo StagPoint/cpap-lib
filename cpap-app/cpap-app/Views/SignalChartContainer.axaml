@@ -13,6 +13,7 @@
             <!-- Pinned charts will be added here by the code-behind -->
         </StackPanel>
         <ScrollViewer
+            Name="ScrollContainer"
             DockPanel.Dock="Top"
             HorizontalScrollBarVisibility="Disabled"
             VerticalScrollBarVisibility="Auto">

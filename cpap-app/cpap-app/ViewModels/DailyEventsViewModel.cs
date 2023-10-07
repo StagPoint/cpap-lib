@@ -9,19 +9,18 @@ namespace cpap_app.ViewModels;
 
 public class DailyEventsViewModel
 {
-	public int      TotalCount { get; set; }
-	public TimeSpan TotalTime  { get; set; }
-	public double   IndexValue { get; set; }
+	public DailyReport Day        { get; set; }
+	public int         TotalCount { get; set; }
+	public TimeSpan    TotalTime  { get; set; }
+	public double      IndexValue { get; set; }
 
 	public List<EventGroupSummary> Indexes    { get; set; } = new();
 	
 	public List<EventTypeSummary>  Items   { get; set; } = new();
-
-	private DailyReport _day;
-
+	
 	public DailyEventsViewModel( DailyReport day )
 	{
-		_day = day;
+		Day = day;
 		
 		var events = day.Events;
 		var types  = events.Select( x => x.Type ).Distinct();
@@ -36,14 +35,11 @@ public class DailyEventsViewModel
 		TotalCount = events.Count;
 		TotalTime  = TimeSpan.FromSeconds( events.Sum( x => x.Duration.TotalSeconds ) );
 		IndexValue = TotalCount / day.UsageTime.TotalHours;
-
-		// Sort the top level nodes alphabetically
-		Items.Sort( ( lhs, rhs ) => String.Compare( lhs.Type.ToString(), rhs.Type.ToString(), StringComparison.Ordinal ) );
 	}
 
 	public DailyEventsViewModel( DailyReport day, params EventType[] filter )
 	{
-		_day = day;
+		Day = day;
 		
 		var events = day.Events.Where( x => filter.Contains( x.Type ) ).ToList();
 		var types  = events.Select( x => x.Type ).Distinct();
@@ -58,13 +54,11 @@ public class DailyEventsViewModel
 		TotalCount = events.Count;
 		TotalTime  = TimeSpan.FromSeconds( events.Sum( x => x.Duration.TotalSeconds ) );
 		IndexValue = TotalCount / day.UsageTime.TotalHours;
-
-		Items.Sort( ( lhs, rhs ) => String.Compare( lhs.Type.ToString(), rhs.Type.ToString(), StringComparison.Ordinal ) );
 	}
 
 	public void AddGroupSummary( string name, EventType[] groupFilter )
 	{
-		Indexes.Add( new EventGroupSummary( name, groupFilter, _day.UsageTime, _day.Events ) );
+		Indexes.Add( new EventGroupSummary( name, groupFilter, Day.UsageTime, Day.Events ) );
 	}
 }
 

@@ -8,6 +8,7 @@
              mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="700"
              x:Class="cpap_app.Views.DailyReportView"
              x:DataType="cpaplib:DailyReport"
+             ReportedEventTypeSelected="DailyReportView_OnReportedEventTypeSelected"
              TimeSelected="OnTimeSelected"
              TimeRangeSelected="OnTimeRangeSelected">
     <Grid>
@@ -53,10 +54,10 @@
                         <Setter Property="Foreground" Value="{DynamicResource TabItemHeaderForegroundSelected}" />
                     </Style>
                 </TabStrip.Styles>
-                <TabItem Header="Details" Tag="{x:Type views:DailyDetailsView}" FontSize="18" Padding="0" />
-                <TabItem Header="Events" Tag="{x:Type views:DailyEventsListView}" FontSize="18" Padding="0" />
-                <TabItem Header="Oxygen" Tag="{x:Type views:DailySpO2View}" FontSize="18" Padding="0" />
-                <TabItem Header="Notes" Tag="{x:Type views:DailyNotesView}" FontSize="18" Padding="0" />
+                <TabItem Header="Details" Name="TabDetails" Tag="{x:Type views:DailyDetailsView}" FontSize="18" Padding="0" />
+                <TabItem Header="Events" Name="TabEvents" Tag="{x:Type views:DailyEventsListView}" FontSize="18" Padding="0" />
+                <TabItem Header="Oxygen" Name="TabOxygen" Tag="{x:Type views:DailySpO2View}" FontSize="18" Padding="0" />
+                <TabItem Header="Notes" Name="TabNotes" Tag="{x:Type views:DailyNotesView}" FontSize="18" Padding="0" />
                 <!--<TabItem Header="Sync" Tag="SyncFitbit" FontSize="18" Padding="0" />-->
             </TabStrip>
             <ui:Frame Name="TabFrame" Margin="0 10 0 1"

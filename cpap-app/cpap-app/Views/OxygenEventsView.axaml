@@ -10,46 +10,89 @@
              x:DataType="viewModels:DailyEventsViewModel">
     <UserControl.Resources>
         <converters:NiceNameConverter x:Key="NiceNameConverter" />
+        <GridLength x:Key="ColumnSpacing">20</GridLength>
     </UserControl.Resources>
+    <UserControl.Styles>
+        <Style Selector="Grid.SelectionRect">
+            <Setter Property="Background" Value="Transparent"></Setter>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="Grid.SelectionRect:pointerover">
+            <Setter Property="Background" Value="{DynamicResource LayerFillColorAltBrush}"></Setter>
+        </Style>
+        <Style Selector="TextBlock.EventGroup">
+            <Setter Property="Foreground" Value="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+        </Style>
+    </UserControl.Styles>
     <StackPanel Orientation="Vertical" Grid.IsSharedSizeScope="True" IsVisible="{Binding Items.Count}">
         <Grid RowDefinitions="Auto">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition SharedSizeGroup="C0" />
-                <ColumnDefinition Width="30" />
+                <ColumnDefinition Width="{StaticResource ColumnSpacing}" />
                 <ColumnDefinition SharedSizeGroup="C1" />
-                <ColumnDefinition Width="30" />
+                <ColumnDefinition Width="{StaticResource ColumnSpacing}" />
                 <ColumnDefinition SharedSizeGroup="C2" />
-                <ColumnDefinition Width="30" />
+                <ColumnDefinition Width="{StaticResource ColumnSpacing}" />
                 <ColumnDefinition SharedSizeGroup="C3" />
             </Grid.ColumnDefinitions>
             <TextBlock Grid.Column="0" Grid.Row="0" Text="Event" Classes="ColumnHeader"
                        Theme="{DynamicResource BodyStrongTextBlockStyle}" />
-            <TextBlock Grid.Column="2" Grid.Row="0" Text="#/Hour" Classes="ColumnHeader"
-                       Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+            <TextBlock Grid.Column="2" Grid.Row="0" Text="Index" Classes="ColumnHeader"
+                       Theme="{DynamicResource BodyStrongTextBlockStyle}" HorizontalAlignment="Center"/>
             <TextBlock Grid.Column="4" Grid.Row="0" Text="Total" Classes="ColumnHeader"
-                       Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                       Theme="{DynamicResource BodyStrongTextBlockStyle}" HorizontalAlignment="Center"/>
             <TextBlock Grid.Column="6" Grid.Row="0" Text="Time" Classes="ColumnHeader"
                        Theme="{DynamicResource BodyStrongTextBlockStyle}" />
         </Grid>
-        <ItemsRepeater ItemsSource="{Binding Items}">
+        <ItemsRepeater ItemsSource="{Binding Indexes}" IsVisible="{Binding Indexes.Count}">
             <ItemsRepeater.ItemTemplate>
-                <DataTemplate DataType="{x:Type viewModels:EventTypeSummary}">
+                <DataTemplate DataType="{x:Type viewModels:EventGroupSummary}">
                     <Grid RowDefinitions="Auto">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition SharedSizeGroup="C0" />
-                            <ColumnDefinition Width="30" />
+                            <ColumnDefinition Width="{StaticResource ColumnSpacing}" />
                             <ColumnDefinition SharedSizeGroup="C1" />
-                            <ColumnDefinition Width="30" />
+                            <ColumnDefinition Width="{StaticResource ColumnSpacing}" />
                             <ColumnDefinition SharedSizeGroup="C2" />
-                            <ColumnDefinition Width="30" />
+                            <ColumnDefinition Width="{StaticResource ColumnSpacing}" />
                             <ColumnDefinition SharedSizeGroup="C3" />
+                            <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="{Binding Name}" Classes="EventGroup" />
+                        <TextBlock Grid.Column="2" Text="{Binding IndexValue, Mode=OneWay, StringFormat={}{0:F1}}" Classes="EventGroup" HorizontalAlignment="Center"/>
+                        <TextBlock Grid.Column="4" Text="{Binding TotalCount}" Classes="EventGroup" HorizontalAlignment="Center"/>
+                        <TextBlock Grid.Column="6" IsVisible="{Binding TotalTime.TotalSeconds}"
+                                   Text="{Binding TotalTime, Mode=OneWay, StringFormat={}{0:hh}:{0:mm}:{0:ss}}" Classes="EventGroup"/>
+                    </Grid>
+                </DataTemplate>
+            </ItemsRepeater.ItemTemplate>
+        </ItemsRepeater>
+        <ItemsRepeater ItemsSource="{Binding Items}">
+            <ItemsRepeater.Styles>
+                <Style Selector="TextBlock">
+                    <Setter Property="IsHitTestVisible" Value="False" />
+                </Style>
+            </ItemsRepeater.Styles>
+            <ItemsRepeater.ItemTemplate>
+                <DataTemplate DataType="{x:Type viewModels:EventTypeSummary}">
+                    <Grid RowDefinitions="Auto" Cursor="Hand" Tapped="EventType_Tapped" Tag="{Binding Type}" Classes="SelectionRect">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition SharedSizeGroup="C0" />
+                            <ColumnDefinition Width="{StaticResource ColumnSpacing}" />
+                            <ColumnDefinition SharedSizeGroup="C1" />
+                            <ColumnDefinition Width="{StaticResource ColumnSpacing}" />
+                            <ColumnDefinition SharedSizeGroup="C2" />
+                            <ColumnDefinition Width="{StaticResource ColumnSpacing}" />
+                            <ColumnDefinition SharedSizeGroup="C3" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <!--<Border Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="8" HorizontalAlignment="Stretch"/>-->
                         <TextBlock Grid.Column="0"
                                    Text="{Binding Type, Mode=OneWay, Converter={StaticResource NiceNameConverter}}" />
-                        <TextBlock Grid.Column="2" Text="{Binding IndexValue, Mode=OneWay, StringFormat={}{0:F1}}" />
-                        <TextBlock Grid.Column="4" Text="{Binding TotalCount}" />
+                        <TextBlock Grid.Column="2" Text="{Binding IndexValue, Mode=OneWay, StringFormat={}{0:F1}}" HorizontalAlignment="Center"/>
+                        <TextBlock Grid.Column="4" Text="{Binding TotalCount}" HorizontalAlignment="Center"/>
                         <TextBlock Grid.Column="6" IsVisible="{Binding TotalTime.TotalSeconds}"
-                                   Text="{Binding TotalTime, Mode=OneWay, StringFormat={}{0:hh}:{0:mm}:{0:ss}}" />
+                                   Text="{Binding TotalTime, Mode=OneWay, StringFormat={}{0:hh}:{0:mm}:{0:ss}}" HorizontalAlignment="Center"/>
                     </Grid>
                 </DataTemplate>
             </ItemsRepeater.ItemTemplate>
@@ -57,19 +100,19 @@
         <Grid RowDefinitions="Auto" IsVisible="{Binding $parent[views:OxygenEventsView].IsFooterVisible}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition SharedSizeGroup="C0" />
-                <ColumnDefinition Width="30" />
+                <ColumnDefinition Width="{StaticResource ColumnSpacing}" />
                 <ColumnDefinition SharedSizeGroup="C1" />
-                <ColumnDefinition Width="30" />
+                <ColumnDefinition Width="{StaticResource ColumnSpacing}" />
                 <ColumnDefinition SharedSizeGroup="C2" />
-                <ColumnDefinition Width="30" />
+                <ColumnDefinition Width="{StaticResource ColumnSpacing}" />
                 <ColumnDefinition SharedSizeGroup="C3" />
             </Grid.ColumnDefinitions>
             <!--<TextBlock Grid.Column="0" Grid.Row="0" Text="Total" Classes="ColumnHeader"
                        Theme="{DynamicResource BodyStrongTextBlockStyle}" />-->
             <TextBlock Grid.Column="2" Grid.Row="0" Text="{Binding IndexValue, Mode=OneWay, StringFormat={}{0:F1}}" Classes="ColumnFooter"
-                       Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                       Theme="{DynamicResource BodyStrongTextBlockStyle}" HorizontalAlignment="Center"/>
             <TextBlock Grid.Column="4" Grid.Row="0" Text="{Binding TotalCount}" Classes="ColumnFooter"
-                       Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                       Theme="{DynamicResource BodyStrongTextBlockStyle}" HorizontalAlignment="Center"/>
             <TextBlock Grid.Column="6" Grid.Row="0" Text="{Binding TotalTime, Mode=OneWay, StringFormat={}{0:hh}:{0:mm}:{0:ss}}" Classes="ColumnFooter"
                        Theme="{DynamicResource BodyStrongTextBlockStyle}" />
         </Grid>

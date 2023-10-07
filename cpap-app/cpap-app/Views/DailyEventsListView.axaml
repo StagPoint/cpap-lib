@@ -27,7 +27,7 @@
                 <TreeView.Styles>
                     <Style Selector="TreeViewItem">
                         <Setter Property="Padding" Value="0" />
-                        <!--<Setter Property="IsExpanded" Value="True" />-->
+                        <Setter Property="IsExpanded" Value="{Binding $parent[TreeViewItem].IsSelected}" />
                         <Style Selector="^ ContentPresenter">
                             <Setter Property="MinHeight" Value="0" />
                         </Style>

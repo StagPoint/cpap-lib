@@ -99,5 +99,27 @@ public partial class SignalChartContainer : UserControl
 	}
 	
 	#endregion
+	
+	#region Public functions
+
+	public void ShowEventType( EventType eventType )
+	{
+		foreach( var chart in _charts )
+		{
+			if( chart.Configuration != null && chart.Configuration.DisplayedEvents.Contains( eventType ) )
+			{
+				if( !chart.Configuration.IsPinned )
+				{
+					chart.BringIntoView();
+				}
+
+				chart.Focus();
+
+				return;
+			}
+		}
+	}
+	
+	#endregion 
 }
 

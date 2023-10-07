@@ -19,8 +19,15 @@ namespace cpap_app.Views;
 
 public partial class DailyReportView : UserControl
 {
-	public static readonly RoutedEvent<TimeRangeRoutedEventArgs> TimeRangeSelectedEvent = RoutedEvent.Register<DailyReportView, TimeRangeRoutedEventArgs>( nameof( TimeRangeSelected ), RoutingStrategies.Bubble );
-	public static readonly RoutedEvent<TimeRoutedEventArgs> TimeSelectedEvent = RoutedEvent.Register<DailyReportView, TimeRoutedEventArgs>( nameof( TimeSelected ), RoutingStrategies.Bubble );
+	public static readonly RoutedEvent<ReportedEventTypeArgs>    ReportedEventTypeSelectedEvent = RoutedEvent.Register<DailyReportView, ReportedEventTypeArgs>( nameof( ReportedEventTypeSelected ), RoutingStrategies.Bubble );
+	public static readonly RoutedEvent<TimeRangeRoutedEventArgs> TimeRangeSelectedEvent         = RoutedEvent.Register<DailyReportView, TimeRangeRoutedEventArgs>( nameof( TimeRangeSelected ), RoutingStrategies.Bubble );
+	public static readonly RoutedEvent<TimeRoutedEventArgs>      TimeSelectedEvent              = RoutedEvent.Register<DailyReportView, TimeRoutedEventArgs>( nameof( TimeSelected ), RoutingStrategies.Bubble );
+	
+	public event EventHandler<ReportedEventTypeArgs> ReportedEventTypeSelected
+	{
+		add => AddHandler( ReportedEventTypeSelectedEvent, value );
+		remove => RemoveHandler( ReportedEventTypeSelectedEvent, value );
+	}
 	
 	public event EventHandler<TimeRangeRoutedEventArgs> TimeRangeSelected
 	{
@@ -145,6 +152,18 @@ public partial class DailyReportView : UserControl
 		{
 			DateSelector.SelectedDate = _datesWithData.Where( x => x.Date > day.ReportDate.Date ).Min();
 		}
+	}
+	
+	private void DailyReportView_OnReportedEventTypeSelected( object? sender, ReportedEventTypeArgs eventArgs )
+	{
+		DetailTypes.SelectedItem = TabEvents;
+		
+		if( TabFrame.Content is DailyEventsListView view )
+		{
+			view.SelectedEventType = eventArgs.Type;
+		}
+		
+		Charts.ShowEventType( eventArgs.Type );
 	}
 }
 
