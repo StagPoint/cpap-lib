@@ -84,7 +84,7 @@ public class EmayImporterCSV : IOximetryImporter
 			{
 				Source  = this.Source,
 				Signals = { oxygen, pulse },
-				Type    = SessionType.PulseOximetry
+				SourceType    = SourceType.PulseOximetry
 			};
 
 			bool isStartRecord = true;

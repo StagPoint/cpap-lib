@@ -27,7 +27,7 @@
         </ListBox.Styles>
         <ListBox.ItemTemplate>
             <DataTemplate>
-                <Grid IsVisible="{Binding Type, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static cpaplib:SessionType.PulseOximetry}}" IsEnabled="{Binding $self.IsVisible, Mode=OneWay}">
+                <Grid IsVisible="{Binding SourceType, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static cpaplib:SourceType.PulseOximetry}}" IsEnabled="{Binding $self.IsVisible, Mode=OneWay}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" SharedSizeGroup="C0" />
                         <ColumnDefinition Width="10" />

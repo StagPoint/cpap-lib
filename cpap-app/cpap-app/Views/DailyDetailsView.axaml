@@ -24,19 +24,7 @@
                     <Run Text="{Binding SerialNumber, Mode=OneWay}" />
                 </TextBlock>
             </StackPanel>
-            <Grid Margin="4 10">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"></ColumnDefinition>
-                    <ColumnDefinition Width="20"></ColumnDefinition>
-                    <ColumnDefinition Width="Auto"></ColumnDefinition>
-                    <ColumnDefinition Width="*"></ColumnDefinition>
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition />
-                    <RowDefinition />
-                    <RowDefinition />
-                    <RowDefinition />
-                </Grid.RowDefinitions>
+            <Grid Margin="4 10" ColumnDefinitions="Auto,20,Auto,*" RowDefinitions="Auto,Auto,Auto,Auto">
                 <TextBlock Grid.Column="0" Grid.Row="0" Text="Date:"
                            Theme="{DynamicResource BodyStrongTextBlockStyle}" />
                 <TextBlock Grid.Column="2" Grid.Row="0"
@@ -49,10 +37,10 @@
                            Theme="{DynamicResource BodyStrongTextBlockStyle}" />
                 <TextBlock Grid.Column="2" Grid.Row="2"
                            Text="{Binding RecordingEndTime, Mode=OneWay, StringFormat={}{0:g}}" />
-                <TextBlock Grid.Column="0" Grid.Row="3" Text="Usage Hours:"
+                <TextBlock Grid.Column="0" Grid.Row="3" Text="Total Sleep Time:"
                            Theme="{DynamicResource BodyStrongTextBlockStyle}" />
                 <TextBlock Grid.Column="2" Grid.Row="3"
-                           Text="{Binding UsageTime, Mode=OneWay, StringFormat={}{0:T}}" />
+                           Text="{Binding TotalSleepTime, Mode=OneWay, StringFormat={}{0:T}}" />
             </Grid>
 
             <Expander

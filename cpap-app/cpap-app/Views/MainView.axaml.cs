@@ -209,10 +209,8 @@ public partial class MainView : UserControl
 							continue;
 						}
 
-						var overlappingImports =
-							importedData
-								.Where( x => DateHelper.RangesOverlap( day.RecordingStartTime, day.RecordingEndTime, x.StartTime, x.EndTime ) )
-								.ToList();
+						// Obtain a list of import data that could potentially be merged with the current day
+						var overlappingImports = importedData.Where( x => OverlapsDay( day, x ) ).ToList();
 
 						bool addedSessionToDay = false;
 						
@@ -220,8 +218,15 @@ public partial class MainView : UserControl
 						{
 							foreach( var session in data.Sessions )
 							{
+								// If the session either overlaps the current day or is off by an hour or less then
+								// it can be merged. Otherwise skip it. 
+								if( !CanMergeSession( day, session ) )
+								{
+									continue;
+								}
+								
 								// If the day doesn't already contain a matching session, add it
-								if( !day.Sessions.Any( x => x.StartTime == session.StartTime && x.Source.Equals( session.Source, StringComparison.Ordinal ) ) )
+								if( !day.Sessions.Any( x => x.StartTime == session.StartTime && x.SourceType == session.SourceType ) )
 								{
 									// Add the Session to the Day's Session list. 
 									day.AddSession( session );
@@ -269,6 +274,31 @@ public partial class MainView : UserControl
 
 			await dialog.ShowWindowDialogAsync( this.FindAncestorOfType<Window>() );
 		}
+	}
+	
+	private bool CanMergeSession( DailyReport day, Session session )
+	{
+		if( DateHelper.RangesOverlap( day.RecordingStartTime, day.RecordingEndTime, session.StartTime, session.EndTime ) )
+		{
+			return true;
+		}
+
+		if( day.RecordingEndTime >= session.StartTime.AddHours( -1 ) && day.RecordingEndTime <= session.StartTime )
+		{
+			return true;
+		}
+
+		return day.RecordingEndTime >= session.EndTime && day.RecordingEndTime <= session.EndTime.AddHours( 1 );
+	}
+
+	private bool OverlapsDay( DailyReport day, ImportedData data )
+	{
+		if( day.RecordingStartTime.Date == data.StartTime.Date || day.RecordingEndTime.Date == data.StartTime.Date )
+		{
+			return true;
+		}
+
+		return day.RecordingEndTime.Date == data.StartTime.Date || day.RecordingEndTime.Date == data.EndTime.Date;
 	}
 
 	private async void HandleImportRequestCPAP( object? sender, RoutedEventArgs e )

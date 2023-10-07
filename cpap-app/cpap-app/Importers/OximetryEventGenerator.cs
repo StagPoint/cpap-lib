@@ -20,8 +20,17 @@ public static class OximetryEventGenerator
 		GenerateDesaturationEvents( oxygen, events );
 		GeneratePulseRateEvents( pulse, events );
 		GeneratePulseChangeEvents( pulse, events );
+		AssignEventSourceType( events );
 
 		return events;
+	}
+
+	private static void AssignEventSourceType( List<ReportedEvent> events )
+	{
+		foreach( var evt in events )
+		{
+			evt.SourceType = SourceType.PulseOximetry;
+		}
 	}
 
 	private static void GeneratePulseChangeEvents( Signal signal, List<ReportedEvent> events )

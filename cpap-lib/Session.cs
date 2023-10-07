@@ -7,13 +7,6 @@ using StagPoint.EDF.Net;
 
 namespace cpaplib
 {
-	public enum SessionType
-	{
-		CPAP,
-		PulseOximetry,
-		SleepStages
-	}
-	
 	public class Session
 	{
 		public DateTime StartTime { get; set; }
@@ -22,7 +15,7 @@ namespace cpaplib
 
 		public string Source { get; set; }
 
-		public SessionType Type   { get; set; } = SessionType.CPAP;
+		public SourceType SourceType   { get; set; } = SourceType.CPAP;
 
 		public List<Signal> Signals { get; set; } = new List<Signal>();
 

@@ -13,9 +13,8 @@ namespace cpap_app.Importers;
 public class ViatomDesktopImporterCSV : IOximetryImporter
 {
 	// NOTES:
-	// Sample filename: "Oxylink 1250_1692103555000.csv"
-	// Sample filename: "O2Ring 0009_1696377606000.csv"
-	// Header: "Time,Oxygen Level,Pulse Rate,Motion"
+	// Sample filename: "Oxylink-20231004051903_OXIRecord"
+	// Header: "Time,SpO2(%),Pulse Rate(bpm),Motion,SpO2 Reminder,PR Reminder,"
 	
 	#region Public properties 
 	
@@ -94,9 +93,9 @@ public class ViatomDesktopImporterCSV : IOximetryImporter
 
 		Session session = new()
 		{
-			Source  = this.Source,
-			Type    = SessionType.PulseOximetry,
-			Signals = { oxygen, pulse, movement }
+			Source     = this.Source,
+			Signals    = { oxygen, pulse, movement },
+			SourceType = SourceType.PulseOximetry,
 		};
 
 		bool isStartRecord    = true;
@@ -143,7 +142,7 @@ public class ViatomDesktopImporterCSV : IOximetryImporter
 
 			session.EndTime = dateTimeValue;
 
-			if( int.TryParse( lineData[ 0 ], out var oxy ) && oxy <= 100 )
+			if( byte.TryParse( lineData[ 0 ], out var oxy ) && oxy <= 100 )
 			{
 				oxygen.Samples.Add( oxy );
 				lastGoodOxy = oxy;
@@ -155,7 +154,7 @@ public class ViatomDesktopImporterCSV : IOximetryImporter
 				oxygen.Samples.Add( lastGoodOxy );
 			}
 
-			if( int.TryParse( lineData[ 1 ], out var hr ) && hr <= 200 )
+			if( byte.TryParse( lineData[ 1 ], out var hr ) && hr <= 200 )
 			{
 				pulse.Samples.Add( hr );
 				lastGoodHR = hr;

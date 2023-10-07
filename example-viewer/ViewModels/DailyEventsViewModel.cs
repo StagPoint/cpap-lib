@@ -18,7 +18,7 @@ public class DailyEventsViewModel
 		
 		foreach( var type in types )
 		{
-			Items.Add( new EventTypeSummary( type, day.UsageTime, events ) );
+			Items.Add( new EventTypeSummary( type, day.TotalSleepTime, events ) );
 		}
 	}
 }

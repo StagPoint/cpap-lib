@@ -92,9 +92,9 @@ public class ViatomImporterCSV : IOximetryImporter
 
 		Session session = new()
 		{
-			Source  = this.Source,
-			Signals = { oxygen, pulse, movement },
-			Type    = SessionType.PulseOximetry
+			Source     = this.Source,
+			Signals    = { oxygen, pulse, movement },
+			SourceType = SourceType.PulseOximetry
 		};
 
 		bool isStartRecord    = true;

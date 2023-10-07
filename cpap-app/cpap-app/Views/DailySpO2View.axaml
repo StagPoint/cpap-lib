@@ -5,6 +5,7 @@
              xmlns:views="clr-namespace:cpap_app.Views"
              xmlns:controls="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
              xmlns:cpaplib="clr-namespace:cpaplib;assembly=cpap-lib"
+             xmlns:viewModels="clr-namespace:cpap_app.ViewModels"
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="800"
              x:Class="cpap_app.Views.DailySpO2View"
              x:DataType="cpaplib:DailyReport">
@@ -18,9 +19,42 @@
     </UserControl.Styles>
     <DockPanel LastChildFill="True">
         <StackPanel Name="pnlNoInfoAvailable" DockPanel.Dock="Top">
-            <TextBlock Text="No pulse oximetry data available" Theme="{DynamicResource SubtitleTextBlockStyle}" Margin="10"/>
-            <TextBlock Text="There is no pulse oximetry data imported for this date." Margin="10" TextWrapping="Wrap"/>
-            <TextBlock Text="Please use the Import button on the Navigation menu to import pulse oximetry data." Margin="10" TextWrapping="Wrap"/>
+            <TextBlock Text="No pulse oximetry data available" Theme="{DynamicResource SubtitleTextBlockStyle}"
+                       Margin="10" />
+            <TextBlock Text="There is no pulse oximetry data imported for this date." Margin="10" TextWrapping="Wrap" />
+            <TextBlock Text="Please use the Import button on the Navigation menu to import pulse oximetry data."
+                       Margin="10" TextWrapping="Wrap" />
+        </StackPanel>
+        <StackPanel DockPanel.Dock="Top" Name="SourcesSummary" x:DataType="viewModels:DailySummaryViewModel">
+            <ItemsRepeater ItemsSource="{Binding Sources}">
+                <ItemsRepeater.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Source: " Theme="{DynamicResource BodyStrongTextBlockStyle}"
+                                       Margin="4 0 8 0" />
+                            <TextBlock Text="{Binding}" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ItemsRepeater.ItemTemplate>
+            </ItemsRepeater>
+            <Grid Margin="4 10" ColumnDefinitions="Auto,20,Auto,*" RowDefinitions="Auto,Auto,Auto,Auto">
+                <TextBlock Grid.Column="0" Grid.Row="0" Text="Date:"
+                           Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                <TextBlock Grid.Column="2" Grid.Row="0"
+                           Text="{Binding ReportDate, StringFormat={}{0:D}}" />
+                <TextBlock Grid.Column="0" Grid.Row="1" Text="Start Time:"
+                           Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                <TextBlock Grid.Column="2" Grid.Row="1"
+                           Text="{Binding RecordingStartTime, StringFormat={}{0:g}}" />
+                <TextBlock Grid.Column="0" Grid.Row="2" Text="End Time:"
+                           Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                <TextBlock Grid.Column="2" Grid.Row="2"
+                           Text="{Binding RecordingEndTime, StringFormat={}{0:g}}" />
+                <TextBlock Grid.Column="0" Grid.Row="3" Text="Total Sleep Time:"
+                           Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                <TextBlock Grid.Column="2" Grid.Row="3"
+                           Text="{Binding TotalSleepTime, StringFormat={}{0:T}}" />
+            </Grid>
         </StackPanel>
         <StackPanel Name="pnlOximetryInfo" Orientation="Vertical">
             <Expander

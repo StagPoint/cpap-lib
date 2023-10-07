@@ -11,7 +11,7 @@ namespace cpaplib
 		BeforeDuration,
 	}
 
-	public class ReportedEvent
+	public class ReportedEvent : IComparable, IComparable<ReportedEvent>
 	{
 		#region Public properties 
 		
@@ -19,6 +19,11 @@ namespace cpaplib
 		/// The descriptive name of the event being flagged 
 		/// </summary>
 		public EventType Type { get; set; }
+		
+		/// <summary>
+		/// The type of device or source that generated this event
+		/// </summary>
+		public SourceType SourceType { get; set; }
 
 		/// <summary>
 		/// Gets or sets whether the Event's position occurs logically before or after the Duration 
@@ -111,9 +116,6 @@ namespace cpaplib
 				case EventType.CSR:
 					markerPosition = EventMarkerPosition.AfterDuration;
 					break;
-				// case EventType.FlowLimitation:
-				// 	markerPosition = EventMarkerPosition.AfterDuration;
-				// 	break;
 				case EventType.VibratorySnore:
 					markerPosition = EventMarkerPosition.AfterDuration;
 					break;
@@ -127,8 +129,32 @@ namespace cpaplib
 		
 		#endregion 
 		
-		#region Base class overrides
+		#region IComparable interface implementation 
 
+		public int CompareTo( ReportedEvent other )
+		{
+			if( this.Type == other.Type )
+			{
+				return this.StartTime.CompareTo( other.StartTime );
+			}
+
+			return this.Type.CompareTo( other.Type );
+		}
+		
+		public int CompareTo( object obj )
+		{
+			if( obj is ReportedEvent other )
+			{
+				return CompareTo( other );
+			}
+
+			return 0;
+		}
+
+		#endregion
+		
+		#region Base class overrides
+		
 		public override string ToString()
 		{
 			return $"Start: {StartTime:t}  Duration: {Duration:T}  Description: {Type.ToName()}";

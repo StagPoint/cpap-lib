@@ -24,17 +24,25 @@ public class DailyEventsViewModel
 		
 		var events = day.Events;
 		var types  = events.Select( x => x.Type ).Distinct();
+
+		// Calculate the total time (in hours) for each SourceType
+		var totalSleepTime = new Dictionary<SourceType, double>();
+		foreach( var session in day.Sessions )
+		{
+			totalSleepTime.TryAdd( session.SourceType, 0 );
+			totalSleepTime[ session.SourceType ] += session.Duration.TotalHours;
+		}
 		
 		foreach( var type in types )
 		{
-			var summary = new EventTypeSummary( type, day.UsageTime, events );
+			var summary = new EventTypeSummary( type, totalSleepTime, events );
 			
 			Items.Add( summary );
 		}
 
 		TotalCount = events.Count;
 		TotalTime  = TimeSpan.FromSeconds( events.Sum( x => x.Duration.TotalSeconds ) );
-		IndexValue = TotalCount / day.UsageTime.TotalHours;
+		IndexValue = TotalCount / day.TotalSleepTime.TotalHours;
 	}
 
 	public DailyEventsViewModel( DailyReport day, params EventType[] filter )
@@ -44,21 +52,29 @@ public class DailyEventsViewModel
 		var events = day.Events.Where( x => filter.Contains( x.Type ) ).ToList();
 		var types  = events.Select( x => x.Type ).Distinct();
 		
+		// Calculate the total time (in hours) for each SourceType
+		var totalSleepTime = new Dictionary<SourceType, double>();
+		foreach( var session in day.Sessions )
+		{
+			totalSleepTime.TryAdd( session.SourceType, 0 );
+			totalSleepTime[ session.SourceType ] += session.Duration.TotalHours;
+		}
+		
 		foreach( var type in types )
 		{
-			var summary = new EventTypeSummary( type, day.UsageTime, events );
+			var summary = new EventTypeSummary( type, totalSleepTime, events );
 
 			Items.Add( summary );
 		}
 
 		TotalCount = events.Count;
 		TotalTime  = TimeSpan.FromSeconds( events.Sum( x => x.Duration.TotalSeconds ) );
-		IndexValue = TotalCount / day.UsageTime.TotalHours;
+		IndexValue = TotalCount / totalSleepTime[ events[ 0 ].SourceType ];
 	}
 
 	public void AddGroupSummary( string name, EventType[] groupFilter )
 	{
-		Indexes.Add( new EventGroupSummary( name, groupFilter, Day.UsageTime, Day.Events ) );
+		Indexes.Add( new EventGroupSummary( name, groupFilter, Day.TotalSleepTime, Day.Events ) );
 	}
 }
 
@@ -106,25 +122,28 @@ public class EventTypeSummary
 
 	public List<ReportedEvent> Events { get; } = new List<ReportedEvent>();
 
-	public EventTypeSummary( EventType type, TimeSpan dailyTotalTime, IEnumerable<ReportedEvent> events )
+	public EventTypeSummary( EventType type, Dictionary<SourceType, double> totalSleepTime, IEnumerable<ReportedEvent> events )
 	{
 		Type = type;
 
-		double totalSeconds = 0;
+		double totalSeconds   = 0;
+		double dailyTotalTime = 0;
 
 		foreach( var evt in events )
 		{
 			if( evt.Type == type )
 			{
+				dailyTotalTime = totalSleepTime[ evt.SourceType ];
+				
 				Events.Add( evt );
 				TotalCount   += 1;
 				totalSeconds += evt.Duration.TotalSeconds;
 			}
 		}
 
-		PercentTotal = (totalSeconds / dailyTotalTime.TotalSeconds);
+		PercentTotal = totalSeconds / (dailyTotalTime * 60);
 		TotalTime    = TimeSpan.FromSeconds( totalSeconds );
-		IndexValue   = TotalCount / dailyTotalTime.TotalHours;
+		IndexValue   = TotalCount / dailyTotalTime;
 	}
 
 	public override string ToString()

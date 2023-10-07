@@ -371,7 +371,7 @@ namespace cpaplib
 			// we'll use the *actual* recorded session times instead. 
 			day.RecordingStartTime = firstRecordedTime;
 			day.RecordingEndTime   = lastRecordedTime;
-			day.UsageTime           = TimeSpan.FromSeconds( day.Sessions.Sum( x => x.Duration.TotalSeconds ) );
+			day.TotalSleepTime     = TimeSpan.FromSeconds( day.Sessions.Sum( x => x.Duration.TotalSeconds ) );
 
 			// Calculate statistics (min, avg, median, max, etc) for each Signal
 			CalculateSignalStatistics( day );
@@ -586,7 +586,7 @@ namespace cpaplib
 			}
 
 			// "Time spent in CSR" is given as a percentage of the total time 
-			day.EventCounts.CSR = totalTimeInCSR / day.UsageTime.TotalSeconds;
+			day.EventCounts.CSR = totalTimeInCSR / day.TotalSleepTime.TotalSeconds;
 		}
 		
 		private void LoadEventsAndAnnotations( string logFolder, DailyReport day )
@@ -631,7 +631,7 @@ namespace cpaplib
 			day.EventCounts.ClearAirwayCount       = day.Events.Count( x => x.Type == EventType.ClearAirway );
 			day.EventCounts.RespiratoryEffortCount = day.Events.Count( x => x.Type == EventType.RERA );
 			day.EventCounts.FlowLimitCount         = day.Events.Count( x => x.Type == EventType.FlowLimitation );
-			day.EventCounts.FlowLimitIndex         = day.EventCounts.FlowLimitCount / day.UsageTime.TotalHours;
+			day.EventCounts.FlowLimitIndex         = day.EventCounts.FlowLimitCount / day.TotalSleepTime.TotalHours;
 
 			day.EventCounts.TotalTimeInApnea = TimeSpan.FromSeconds(
 				day.Events
@@ -689,7 +689,7 @@ namespace cpaplib
 			{
 				var day = days[ dayIndex ];
 
-				if( day.UsageTime.TotalMinutes < 5 )
+				if( day.TotalSleepTime.TotalMinutes < 5 )
 				{
 					continue;
 				}
@@ -755,8 +755,8 @@ namespace cpaplib
 			day.Settings = ReadMachineSettings( data );
 			day.EventCounts = ReadEventSummary( data );
 
-			day.MaskEvents = (int)(data[ "MaskEvents" ] / 2);
-			day.UsageTime  = TimeSpan.FromMinutes( data[ "Duration" ] );
+			day.MaskEvents     = (int)(data[ "MaskEvents" ] / 2);
+			day.TotalSleepTime = TimeSpan.FromMinutes( data[ "Duration" ] );
 			//OnDuration = TimeSpan.FromMinutes( data[ "OnDuration" ] );
 
 			day.PatientHours = getValue( "PatientHours" );
@@ -953,7 +953,7 @@ namespace cpaplib
 			int dayIndex = 0;
 			while( dayIndex < days.Count )
 			{
-				if( days[ dayIndex ].UsageTime.TotalMinutes <= 5 )
+				if( days[ dayIndex ].TotalSleepTime.TotalMinutes <= 5 )
 				{
 					days.RemoveAt( dayIndex );
 					continue;

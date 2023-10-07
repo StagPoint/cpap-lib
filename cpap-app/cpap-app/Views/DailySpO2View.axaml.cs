@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
 using Avalonia;
 using Avalonia.Controls;
@@ -12,10 +14,16 @@ namespace cpap_app.Views;
 
 public partial class DailySpO2View : UserControl
 {
+	#region Constructor 
+	
 	public DailySpO2View()
 	{
 		InitializeComponent();
 	}
+	
+	#endregion
+	
+	#region Base class overrides 
 
 	protected override void OnPropertyChanged( AvaloniaPropertyChangedEventArgs change )
 	{
@@ -27,12 +35,23 @@ public partial class DailySpO2View : UserControl
 				SetVisibility( pnlNoInfoAvailable, true );
 				SetVisibility( pnlOximetryInfo,    false );
 				return;
-			case DailyReport day when day.Sessions.All( x => x.Type != SessionType.PulseOximetry ):
+			case DailyReport day when day.Sessions.All( x => x.SourceType != SourceType.PulseOximetry ):
 				DataContext = null;
 				return;
 			case DailyReport day:
 				SetVisibility( pnlNoInfoAvailable, false );
 				SetVisibility( pnlOximetryInfo,    true );
+
+				var oximetrySessions = day.Sessions.Where( x => x.SourceType == SourceType.PulseOximetry ).ToArray();
+
+				SourcesSummary.DataContext = new DailySummaryViewModel()
+				{
+					ReportDate         = day.ReportDate,
+					RecordingStartTime = oximetrySessions.Select( x => x.StartTime ).Min(),
+					RecordingEndTime   = oximetrySessions.Select( x => x.EndTime ).Max(),
+					TotalSleepTime     = TimeSpan.FromSeconds( oximetrySessions.Sum( x => x.Duration.TotalSeconds ) ),
+					Sources            = day.Sessions.Where( x => x.SourceType == SourceType.PulseOximetry ).Select( x => x.Source ).Distinct().ToList(),
+				};
 				
 				OxygenEvents.DataContext = new DailyEventsViewModel( day, EventTypes.OxygenSaturation );
 				PulseEvents.DataContext  = new DailyEventsViewModel( day, EventTypes.Pulse );
@@ -42,6 +61,10 @@ public partial class DailySpO2View : UserControl
 				break;
 		}
 	}
+	
+	#endregion 
+	
+	#region Private functions 
 
 	private void SetVisibility( Control control, bool value )
 	{
@@ -50,6 +73,8 @@ public partial class DailySpO2View : UserControl
 			control.IsVisible = value;
 		}
 	}
+	
+	#endregion 
 }
 
 
