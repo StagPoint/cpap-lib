@@ -32,7 +32,7 @@ namespace cpaplib
     	public SignalStatistics CalculateStats()
     	{
     		var totalCount = _signals.Sum( x => x.Samples.Count );
-    		var windowSize = (int)Math.Ceiling( totalCount * 0.05 );
+		    var windowSize = (int)( totalCount * (1.0 - 0.95) );
     		var window     = new BinaryHeap( windowSize );
     
     		var result = new SignalStatistics
@@ -81,9 +81,9 @@ namespace cpaplib
     		result.Median       = (result.Minimum + result.Maximum) * 0.5;
     		result.Average      = (double)(sum / totalCount);
     		result.Percentile95 = window.Peek();
-    
-    		int nn = (int)(totalCount * 0.01);
-    		while( window.Count > nn )
+
+		    int nn = (int)( totalCount * (1.0 - 0.995) );
+    		while( window.Count > nn && window.Count > 1 )
     		{
     			window.Dequeue();
     		}

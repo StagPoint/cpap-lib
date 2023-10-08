@@ -60,11 +60,6 @@ namespace cpaplib
 		public MachineSettings Settings { get; set; } = new MachineSettings();
 
 		/// <summary>
-		/// The number of events of each type (Obstructive Apnea, Clear Airway, RERA, etc.) that occurred on this day.
-		/// </summary>
-		public ReportedEventCounts EventCounts { get; set; } = new ReportedEventCounts();
-
-		/// <summary>
 		/// The list of sessions  for this day
 		/// </summary>
 		public List<Session> Sessions { get; set; } = new List<Session>();

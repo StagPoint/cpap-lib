@@ -9,14 +9,6 @@
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="800"
              x:Class="cpap_app.Views.DailySpO2View"
              x:DataType="cpaplib:DailyReport">
-    <UserControl.Styles>
-        <Style Selector="TextBlock.ColumnHeader">
-            <Setter Property="Foreground" Value="{DynamicResource AccentTextFillColorPrimaryBrush}" />
-        </Style>
-        <Style Selector="TextBlock.ColumnFooter">
-            <Setter Property="Foreground" Value="{DynamicResource SystemControlDisabledBaseMediumLowBrush}" />
-        </Style>
-    </UserControl.Styles>
     <DockPanel LastChildFill="True">
         <StackPanel Name="pnlNoInfoAvailable" DockPanel.Dock="Top">
             <TextBlock Text="No pulse oximetry data available" Theme="{DynamicResource SubtitleTextBlockStyle}"
@@ -25,19 +17,18 @@
             <TextBlock Text="Please use the Import button on the Navigation menu to import pulse oximetry data."
                        Margin="10" TextWrapping="Wrap" />
         </StackPanel>
-        <StackPanel DockPanel.Dock="Top" Name="SourcesSummary" x:DataType="viewModels:DailySummaryViewModel">
+        <StackPanel DockPanel.Dock="Top" Name="SourcesSummary" x:DataType="viewModels:DailySummaryViewModel" Margin="4 8 0 0">
             <ItemsRepeater ItemsSource="{Binding Sources}">
                 <ItemsRepeater.ItemTemplate>
                     <DataTemplate>
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="Source: " Theme="{DynamicResource BodyStrongTextBlockStyle}"
-                                       Margin="4 0 8 0" />
+                            <TextBlock Text="Source: " Theme="{DynamicResource BodyStrongTextBlockStyle}" />
                             <TextBlock Text="{Binding}" />
                         </StackPanel>
                     </DataTemplate>
                 </ItemsRepeater.ItemTemplate>
             </ItemsRepeater>
-            <Grid Margin="4 10" ColumnDefinitions="Auto,20,Auto,*" RowDefinitions="Auto,Auto,Auto,Auto">
+            <Grid Margin="0 10" ColumnDefinitions="Auto,20,Auto,*" RowDefinitions="Auto,Auto,Auto,Auto">
                 <TextBlock Grid.Column="0" Grid.Row="0" Text="Date:"
                            Theme="{DynamicResource BodyStrongTextBlockStyle}" />
                 <TextBlock Grid.Column="2" Grid.Row="0"
@@ -73,7 +64,7 @@
                 </Expander.Header>
                 <StackPanel Orientation="Vertical">
                     <views:DataDistributionView Name="OxygenSummary" UnitOfMeasure="%" />
-                    <views:OxygenEventsView Name="OxygenEvents" Margin="0 10 0 0" />
+                    <views:EventSummaryView Name="OxygenEvents" Margin="0 10 0 0" />
                 </StackPanel>
             </Expander>
             <Expander
@@ -92,7 +83,7 @@
                 </Expander.Header>
                 <StackPanel Orientation="Vertical">
                     <views:DataDistributionView Name="PulseSummary" UnitOfMeasure="bpm" />
-                    <views:OxygenEventsView Name="PulseEvents" Margin="0 10 0 0" />
+                    <views:EventSummaryView Name="PulseEvents" Margin="0 10 0 0" />
                 </StackPanel>
             </Expander>
             <Expander

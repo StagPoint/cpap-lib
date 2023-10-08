@@ -1,5 +1,10 @@
 ﻿namespace cpaplib
 {
+	
+	/// <summary>
+	/// Note that the order in which these values are defined is also the order in which the associated
+	/// events are sorted. 
+	/// </summary>
 	public enum EventType
 	{
 		/// <summary>
@@ -10,10 +15,6 @@
 		/// Indicates the time when recording ends
 		/// </summary>
 		RecordingEnds,
-		/// <summary>
-		/// An apnea event whose classification could not be determined (neither obstructive nor central)
-		/// </summary>
-		Unclassified,
 		/// <summary>
 		/// An apnea caused by an airway obstruction 
 		/// </summary>
@@ -28,10 +29,6 @@
 		/// </summary>
 		ClearAirway,
 		/// <summary>
-		/// A full or partial arousal not related to respiratory effort
-		/// </summary>
-		Arousal,
-		/// <summary>
 		/// Respiratory Effort Related Arousal (RERA) is a period of increased respiratory effort leading to an arousal
 		/// </summary>
 		RERA,
@@ -44,21 +41,13 @@
 		/// </summary>
 		FlowLimitation,
 		/// <summary>
-		/// A period of low blood oxygen saturation (less than 90%) lasting for at least 1 second
+		/// An apnea event whose classification could not be determined (neither obstructive nor central)
 		/// </summary>
-		Hypoxemia,
+		Unclassified,
 		/// <summary>
-		/// A drop in blood oxygen saturation of at least 4% below baseline, lasting at least 10 seconds
+		/// A full or partial arousal not related to respiratory effort
 		/// </summary>
-		Desaturation,
-		/// <summary>
-		/// A period of pulse rate below 50 beats/minute
-		/// </summary>
-		Bradycardia,
-		/// <summary>
-		/// A period of pulse rate above 100 beat/minute
-		/// </summary>
-		Tachycardia,
+		Arousal,
 		/// <summary>
 		/// A period of pressure leakage above 20 L/min lasting at least one second 
 		/// </summary>
@@ -68,12 +57,28 @@
 		/// separated by no more than 20 seconds of normal breathing. 
 		/// </summary>
 		PeriodicBreathing,
+		VariableBreathing,
+		BreathingNotDetected,
 		/// <summary>
 		/// The vibratory snore index measures the strength of the snoring vibrations
 		/// </summary>
 		VibratorySnore,
-		VariableBreathing,
-		BreathingNotDetected,
+		/// <summary>
+		/// A period of low blood oxygen saturation (less than 90%) lasting for at least 1 second
+		/// </summary>
+		Hypoxemia,
+		/// <summary>
+		/// A drop in blood oxygen saturation of at least 4% below baseline, lasting at least 10 seconds
+		/// </summary>
+		Desaturation,
+		/// <summary>
+		/// A period of pulse rate above 100 beat/minute
+		/// </summary>
+		Tachycardia,
+		/// <summary>
+		/// A period of pulse rate below 50 beats/minute
+		/// </summary>
+		Bradycardia,
 		/// <summary>
 		/// Pulse rate exceeded the threshold difference from baseline
 		/// </summary>
@@ -119,6 +124,8 @@
 		{
 			EventType.CSR,
 			EventType.PeriodicBreathing,
+			EventType.VariableBreathing,
+			EventType.BreathingNotDetected,
 		};
 	}
 }

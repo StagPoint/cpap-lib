@@ -56,7 +56,7 @@
                         <TextBlock Text="Reported Events" FontSize="16" Theme="{DynamicResource BodyStrongTextBlockStyle}"/>
                     </StackPanel>
                 </Expander.Header>
-                <views:DailyEventSummaryView DataContext="{Binding EventCounts}"/>
+                <views:DailyEventSummaryView />
             </Expander>
 
             <Expander

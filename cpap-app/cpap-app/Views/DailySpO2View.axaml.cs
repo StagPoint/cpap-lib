@@ -29,6 +29,11 @@ public partial class DailySpO2View : UserControl
 	{
 		base.OnPropertyChanged( change );
 
+		if( change.Property.Name != nameof( DataContext ) )
+		{
+			return;
+		}
+
 		switch( change.NewValue )
 		{
 			case null:

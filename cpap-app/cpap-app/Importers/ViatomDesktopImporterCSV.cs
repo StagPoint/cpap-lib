@@ -103,11 +103,16 @@ public class ViatomDesktopImporterCSV : IOximetryImporter
 		int  lastGoodHR       = 0;
 		int  lastGoodMovement = 0;
 
+		DateTime currentDateTime = DateTime.MinValue;
+		DateTime lastDateTime  = DateTime.MinValue;
+
 		// TODO: Figure out how to add configuration options to importers 
 		double timeAjustSeconds = 0;
 
 		while( !reader.EndOfStream )
 		{
+			lastDateTime = currentDateTime;
+			
 			var line = reader.ReadLine();
 
 			if( string.IsNullOrEmpty( line ) )
@@ -122,12 +127,12 @@ public class ViatomDesktopImporterCSV : IOximetryImporter
 			var quoteIndex = line.LastIndexOf( '"' );
 			var datePart   = line.Substring( 1, quoteIndex - 1 );
 
-			if( !DateTime.TryParse( datePart, out DateTime dateTimeValue ) )
+			if( !DateTime.TryParse( datePart, out currentDateTime ) )
 			{
 				return null;
 			}
 			
-			dateTimeValue = dateTimeValue.AddSeconds( timeAjustSeconds );
+			currentDateTime = currentDateTime.AddSeconds( timeAjustSeconds );
 
 			// Remove the quoted date column and leave the rest of the data (added 2 to skip the quote and the comma)
 			line = line.Substring( quoteIndex + 2 );
@@ -136,11 +141,11 @@ public class ViatomDesktopImporterCSV : IOximetryImporter
 			
 			if( isStartRecord )
 			{
-				session.StartTime = dateTimeValue;
+				session.StartTime = currentDateTime;
 				isStartRecord    = false;
 			}
 
-			session.EndTime = dateTimeValue;
+			session.EndTime = currentDateTime;
 
 			if( byte.TryParse( lineData[ 0 ], out var oxy ) && oxy <= 100 )
 			{
@@ -178,6 +183,11 @@ public class ViatomDesktopImporterCSV : IOximetryImporter
 				movement.Samples.Add( lastGoodMovement );
 			}
 		}
+
+		var frequency = 1.0 / (currentDateTime - lastDateTime).TotalSeconds;
+		oxygen.FrequencyInHz   = frequency;
+		pulse.FrequencyInHz    = frequency;
+		movement.FrequencyInHz = frequency;
 
 		oxygen.StartTime = pulse.StartTime = movement.StartTime = session.StartTime;
 		oxygen.EndTime   = pulse.EndTime   = movement.EndTime   = session.EndTime;

@@ -7,7 +7,7 @@ using StagPoint.EDF.Net;
 
 namespace cpaplib
 {
-	public class Session
+	public class Session : IComparable<Session>
 	{
 		public DateTime StartTime { get; set; }
 		public DateTime EndTime   { get; set; }
@@ -83,6 +83,15 @@ namespace cpaplib
 		}
 		
 		#endregion
+		
+		#region IComparable<Session> interface implementation 
+		
+		public int CompareTo( Session other )
+		{
+			return SourceType == other.SourceType ? StartTime.CompareTo( other.StartTime ) : SourceType.CompareTo( other.SourceType );
+		}
+		
+		#endregion 
 
 		#region Base class overrides
 

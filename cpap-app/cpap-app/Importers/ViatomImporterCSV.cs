@@ -97,16 +97,21 @@ public class ViatomImporterCSV : IOximetryImporter
 			SourceType = SourceType.PulseOximetry
 		};
 
-		bool isStartRecord    = true;
-		int  lastGoodOxy      = 0;
-		int  lastGoodHR       = 0;
-		int  lastGoodMovement = 0;
+		bool     isStartRecord    = true;
+		int      lastGoodOxy      = 0;
+		int      lastGoodHR       = 0;
+		int      lastGoodMovement = 0;
+
+		DateTime currentDateTime = DateTime.MinValue;
+		DateTime lastDateTime    = DateTime.MinValue;
 
 		// TODO: Figure out how to add configuration options to importers 
 		double timeAjustSeconds = 0;
 
 		while( !reader.EndOfStream )
 		{
+			lastDateTime = currentDateTime;
+			
 			var line = reader.ReadLine();
 
 			if( string.IsNullOrEmpty( line ) )
@@ -116,20 +121,20 @@ public class ViatomImporterCSV : IOximetryImporter
 
 			var lineData = line.Split( ',' );
 				
-			if( !DateTime.TryParse( lineData[ 0 ], out DateTime dateTimeValue ) )
+			if( !DateTime.TryParse( lineData[ 0 ], out currentDateTime ) )
 			{
 				return null;
 			}
 
-			dateTimeValue = dateTimeValue.AddSeconds( timeAjustSeconds );
+			currentDateTime = currentDateTime.AddSeconds( timeAjustSeconds );
 			
 			if( isStartRecord )
 			{
-				session.StartTime = dateTimeValue;
+				session.StartTime = currentDateTime;
 				isStartRecord    = false;
 			}
 
-			session.EndTime = dateTimeValue;
+			session.EndTime = currentDateTime;
 
 			if( int.TryParse( lineData[ 1 ], out var oxy ) && oxy <= 100 )
 			{
@@ -167,6 +172,11 @@ public class ViatomImporterCSV : IOximetryImporter
 				movement.Samples.Add( lastGoodMovement );
 			}
 		}
+
+		var frequency = 1.0 / (currentDateTime - lastDateTime).TotalSeconds;
+		oxygen.FrequencyInHz   = frequency;
+		pulse.FrequencyInHz    = frequency;
+		movement.FrequencyInHz = frequency;
 
 		oxygen.StartTime = pulse.StartTime = movement.StartTime = session.StartTime;
 		oxygen.EndTime   = pulse.EndTime   = movement.EndTime   = session.EndTime;

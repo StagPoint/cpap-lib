@@ -11,6 +11,14 @@
              ReportedEventTypeSelected="DailyReportView_OnReportedEventTypeSelected"
              TimeSelected="OnTimeSelected"
              TimeRangeSelected="OnTimeRangeSelected">
+    <UserControl.Styles>
+        <Style Selector="TextBlock.ColumnHeader">
+            <Setter Property="Foreground" Value="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+        </Style>
+        <Style Selector="TextBlock.ColumnFooter">
+            <Setter Property="Foreground" Value="{DynamicResource SystemControlDisabledBaseMediumLowBrush}" />
+        </Style>
+    </UserControl.Styles>
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition MinWidth="350" Width="375" />

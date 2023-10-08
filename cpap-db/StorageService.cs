@@ -19,7 +19,6 @@ namespace cpap_db
 		public const string FaultMapping        = "fault";
 		public const string ReportedEvent       = "event";
 		public const string SignalStatistics    = "signal_stats";
-		public const string ReportedEventCounts = "event_counts";
 		
 		public const string MachineSettings = "machine_settings";
 		public const string MachineInfo     = "machine_info";
@@ -58,9 +57,6 @@ namespace cpap_db
 			var faultInfoMapping = CreateMapping<FaultInfo>( TableNames.FaultMapping );
 			faultInfoMapping.PrimaryKey = new PrimaryKeyColumn( "id", typeof( int ), true );
 			faultInfoMapping.ForeignKey = new ForeignKeyColumn( dayMapping );
-
-			var eventCountMapping = CreateMapping<ReportedEventCounts>( TableNames.ReportedEventCounts );
-			eventCountMapping.ForeignKey = new ForeignKeyColumn( dayMapping );
 
 			var eventMapping = CreateMapping<ReportedEvent>( TableNames.ReportedEvent );
 			eventMapping.ForeignKey = new ForeignKeyColumn( dayMapping );
@@ -178,13 +174,10 @@ namespace cpap_db
 				return null;
 			}
 			
-			day.MachineInfo = SelectByForeignKey<MachineIdentification>( date ).First();
-			day.Fault       = SelectByForeignKey<FaultInfo>( date ).First();
-			day.Statistics  = SelectByForeignKey<SignalStatistics>( date );
-			
-			day.EventCounts = SelectByForeignKey<ReportedEventCounts>( date ).First();
-			day.Events      = SelectByForeignKey<ReportedEvent>( date );
-
+			day.MachineInfo      = SelectByForeignKey<MachineIdentification>( date ).First();
+			day.Fault            = SelectByForeignKey<FaultInfo>( date ).First();
+			day.Statistics       = SelectByForeignKey<SignalStatistics>( date );
+			day.Events           = SelectByForeignKey<ReportedEvent>( date );
 			day.Settings         = SelectByForeignKey<MachineSettings>( date, out int settingsID );
 			day.Settings.AutoSet = SelectByForeignKey<AutoSetSettings>( settingsID ).First();
 			day.Settings.CPAP    = SelectByForeignKey<CpapSettings>( settingsID ).First();
@@ -200,6 +193,10 @@ namespace cpap_db
 			{
 				day.Sessions[ i ].Signals = SelectByForeignKey<Signal>( sessionKeys[ i ] );
 			}
+			
+			day.Statistics.Sort();
+			day.Events.Sort();
+			day.Sessions.Sort();
 
 			return day;
 		}
@@ -216,9 +213,8 @@ namespace cpap_db
 
 			Insert( day, dayID, -1 );
 			
-			Insert( day.EventCounts, foreignKeyValue: dayID );
-			Insert( day.MachineInfo,  foreignKeyValue: dayID );
-			Insert( day.Fault,        foreignKeyValue: dayID );
+			Insert( day.MachineInfo, foreignKeyValue: dayID );
+			Insert( day.Fault,       foreignKeyValue: dayID );
 
 			int settingsID = Insert( day.Settings, foreignKeyValue: dayID );
 			Insert( day.Settings.AutoSet, foreignKeyValue: settingsID );
