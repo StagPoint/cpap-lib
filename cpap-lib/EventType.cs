@@ -1,4 +1,6 @@
-﻿namespace cpaplib
+﻿using System.Linq;
+
+namespace cpaplib
 {
 	
 	/// <summary>
@@ -84,7 +86,7 @@
 		/// </summary>
 		PulseRateChange,
 	}
-	
+
 	/// <summary>
 	/// Groups EventType values into logical groups 
 	/// </summary>
@@ -127,5 +129,15 @@
 			EventType.VariableBreathing,
 			EventType.BreathingNotDetected,
 		};
+
+		public static readonly EventType[] CPAP =
+			RespiratoryDisturbance
+				.Concat( new EventType[]
+				{
+					EventType.CSR
+				} )
+				.Concat( OxygenSaturation )
+				.Concat( Pulse )
+				.ToArray();
 	}
 }

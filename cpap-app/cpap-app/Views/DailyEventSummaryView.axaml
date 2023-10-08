@@ -11,5 +11,11 @@
     <Design.DataContext>
         <cpaplib:DailyReport />
     </Design.DataContext>
+    <UserControl.Styles>
+        <Style Selector="Grid.EventGroup > TextBlock">
+            <Setter Property="Theme" Value="{DynamicResource SubtitleTextBlockStyle}" />
+            <Setter Property="FontSize" Value="16" />
+        </Style>
+    </UserControl.Styles>
     <views:EventSummaryView Name="Events" />
 </UserControl>

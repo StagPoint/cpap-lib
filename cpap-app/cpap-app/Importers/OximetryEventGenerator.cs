@@ -212,7 +212,7 @@ public static class OximetryEventGenerator
 	{
 		// TODO: Make window size configurable 
 		const int    WINDOW_SIZE            = 300;
-		const double MAX_EVENT_DURATION     = 60;
+		const double MAX_EVENT_DURATION     = 120;
 		const double MIN_EVENT_DURATION     = 1;
 		const double DESATURATION_THRESHOLD = 3;
 

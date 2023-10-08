@@ -42,7 +42,7 @@
                         <TextBlock Text="{Binding Type, Mode=OneWay, Converter={StaticResource NiceNameConverter}}" />
                     </TreeDataTemplate>
                     <TreeDataTemplate DataType="cpaplib:ReportedEvent">
-                        <StackPanel Background="Transparent" Orientation="Horizontal" HorizontalAlignment="Stretch">
+                        <StackPanel Background="Transparent" Orientation="Horizontal" HorizontalAlignment="Stretch" Cursor="Hand">
                             <TextBlock Text="{Binding StartTime, Mode=OneWay, StringFormat={}{0:T}}" Width="100" />
                             <TextBlock
                                 Text="{Binding Duration, Mode=OneWay, Converter={StaticResource FormattedTimeSpan}, ConverterParameter=Short.Empty}" />

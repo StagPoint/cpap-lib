@@ -46,7 +46,8 @@ namespace cpaplib
     			Maximum           = double.MinValue
     		};
     
-    		decimal sum = 0;
+    		decimal sum          = 0;
+		    bool    foundMinimum = false;
     
     		foreach( var signal in _signals )
     		{
@@ -58,6 +59,7 @@ namespace cpaplib
 				    if( sample > 0 )
 				    {
 					    result.Minimum = Math.Min( result.Minimum, sample );
+					    foundMinimum   = true;
 				    }
 
 				    result.Maximum =  Math.Max( result.Maximum, sample );
@@ -77,6 +79,13 @@ namespace cpaplib
     				}
     			}
     		}
+
+		    // Because minimum is defined as "Minimum value above zero", it's possible that we've never 
+		    // found a minimum value. If that's the case, assign zero explicitly (default value is double.MaxValue).
+		    if( !foundMinimum )
+		    {
+			    result.Minimum = 0;
+		    }
     
     		result.Median       = (result.Minimum + result.Maximum) * 0.5;
     		result.Average      = (double)(sum / totalCount);

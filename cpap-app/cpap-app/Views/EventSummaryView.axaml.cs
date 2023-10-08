@@ -15,14 +15,6 @@ namespace cpap_app.Views;
 
 public partial class EventSummaryView : UserControl
 {
-	public static readonly StyledProperty<bool> IsFooterVisibleProperty = AvaloniaProperty.Register<DataDistributionView, bool>( nameof( IsFooterVisible ) );
-
-	public bool IsFooterVisible
-	{
-		get => GetValue( IsFooterVisibleProperty );
-		set => SetValue( IsFooterVisibleProperty, value );
-	}
-
 	public EventSummaryView()
 	{
 		InitializeComponent();

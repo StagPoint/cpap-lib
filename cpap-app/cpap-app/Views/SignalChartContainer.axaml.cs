@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
-using Avalonia.Interactivity;
-using Avalonia.LogicalTree;
-using Avalonia.VisualTree;
 
 using cpap_app.Configuration;
 using cpap_app.Events;
@@ -15,14 +12,16 @@ using cpap_app.ViewModels;
 
 using cpaplib;
 
-using ScottPlot;
-using ScottPlot.Avalonia;
-
 namespace cpap_app.Views;
 
 public partial class SignalChartContainer : UserControl
 {
 	private List<SignalChart> _charts = new();
+
+	// TODO: Disable sync while loading, re-enable after data loading is complete
+	private bool _synchronizeActive = false;
+	
+	#region Constructor 
 	
 	public SignalChartContainer()
 	{
@@ -61,13 +60,41 @@ public partial class SignalChartContainer : UserControl
 		}
 	}
 	
+	#endregion
+	
+	#region Base class overrides
+
+	protected override void OnPointerEntered( PointerEventArgs e )
+	{
+		base.OnPointerEntered( e );
+		_synchronizeActive = true;
+	}
+
+	protected override void OnGotFocus( GotFocusEventArgs e )
+	{
+		base.OnGotFocus( e );
+		_synchronizeActive = true;
+	}
+
+	protected override void OnPropertyChanged( AvaloniaPropertyChangedEventArgs change )
+	{
+		base.OnPropertyChanged( change );
+
+		if( change.Property.Name == nameof( DataContext ) )
+		{
+			_synchronizeActive = false;
+		}
+	}
+
+	#endregion 
+	
 	#region Event handlers
 
 	public void ChartDisplayedRangeChanged( object? sender, TimeRangeRoutedEventArgs e )
 	{
-		foreach( var control in _charts )
+		if( _synchronizeActive )
 		{
-			if( control != sender )
+			foreach( var control in _charts.Where( control => control != sender ) )
 			{
 				control.SetDisplayedRange( e.StartTime, e.EndTime );
 			}

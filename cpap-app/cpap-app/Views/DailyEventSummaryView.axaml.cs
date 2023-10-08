@@ -34,7 +34,7 @@ public partial class DailyEventSummaryView : UserControl
 			case DailyReport day:
 			{
 				var viewModel = new DailyEventsViewModel( day );
-				viewModel.Indexes.Add( new EventGroupSummary( "Apnea/Hypopnea (AHI)", EventTypes.Apneas, day.TotalSleepTime, day.Events ) );
+				viewModel.Indexes.Add( new EventGroupSummary( "Apnea/Hypopnea Index (AHI)", EventTypes.Apneas, day.TotalSleepTime, day.Events ) );
 
 				if( day.Events.Any( x => x.Type == EventType.RERA ) )
 				{

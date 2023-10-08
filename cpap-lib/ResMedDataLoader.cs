@@ -180,12 +180,15 @@ namespace cpaplib
 
 				// EVE and CSL files are handled separately
 				var ignoreThisFile =
-					baseFilename.EndsWith( "_CSL", StringComparison.InvariantCultureIgnoreCase ) ||
-					baseFilename.EndsWith( "_EVE", StringComparison.InvariantCultureIgnoreCase );
+					baseFilename.EndsWith( "_CSL", StringComparison.OrdinalIgnoreCase ) ||
+					baseFilename.EndsWith( "_EVE", StringComparison.OrdinalIgnoreCase );
 				if( ignoreThisFile )
 				{
 					continue;
 				}
+
+				// TODO: Need to keep pulse oximetry data in a separate Session from the rest of CPAP data, even when imported directly from CPAP
+				var isPulseOximetryFile = baseFilename.EndsWith( "_SAD", StringComparison.OrdinalIgnoreCase );
 
 				// The file's date, extracted from the filename, will be used to search for the correct session.
 				// The date/time is incorrect for any other purpose (I think)
@@ -338,9 +341,40 @@ namespace cpaplib
 				maskSession.Signals.RemoveAll( x => !x.Samples.Any( value => value >= x.MinValue ) );
 			}
 			
+			// If there is SpO2 and Pulse data, split those signals off into separate sessions for more logical grouping
+			int sessionCount = day.Sessions.Count;
+			for( int i = 0; i < sessionCount; i++ )
+			{
+				var session   = day.Sessions[ i ];
+				var oxySignal = session.GetSignalByName( SignalNames.SpO2 );
+				
+				if( oxySignal != null )
+				{
+					var newSession = new Session
+					{
+						StartTime  = session.StartTime,
+						EndTime    = session.EndTime,
+						Source     = session.Source,
+						SourceType = SourceType.PulseOximetry,
+					};
+					
+					newSession.AddSignal( oxySignal );
+					session.Signals.Remove( oxySignal );
+
+					var pulseSignal = session.GetSignalByName( SignalNames.Pulse );
+					if( pulseSignal != null )
+					{
+						newSession.AddSignal( pulseSignal );
+						session.Signals.Remove( pulseSignal );
+					}
+					
+					day.AddSession( newSession );
+				}
+			}
+			
 			// Sort the sessions by start time. This is only actually needed when we split a session above during
 			// signal matching, but doesn't hurt anything when no sessions are split. 
-			day.Sessions.Sort( ( lhs, rhs ) => lhs.StartTime.CompareTo( rhs.StartTime ) );
+			day.Sessions.Sort();
 			
 			var firstRecordedTime = DateTime.MaxValue;
 			var lastRecordedTime  = DateTime.MinValue;
@@ -378,9 +412,6 @@ namespace cpaplib
 			
 			// Generate events that are of interest which are not reported by the ResMed machine
 			GenerateEvents( day );
-			
-			// Generate a summary of all reported events
-			//CalculateEventSummary( day );
 		}
 
 		private void GenerateEvents( DailyReport day )
@@ -524,9 +555,6 @@ namespace cpaplib
 
 		private void LoadCheyneStokesEvents( string logFolder, DailyReport day )
 		{
-			// Need to keep track of the total time spent in CSR
-			double totalTimeInCSR = 0;
-
 			var filenames = Directory.GetFiles( logFolder, "*_CSL.edf" );
 			foreach( var filename in filenames )
 			{
@@ -569,8 +597,6 @@ namespace cpaplib
 								Duration    = TimeSpan.FromSeconds( annotation.Onset - csrStartTime ),
 								Type        = EventType.CSR,
 							};
-
-							totalTimeInCSR += newEvent.Duration.TotalSeconds;
 
 							day.Events.Add( newEvent );
 

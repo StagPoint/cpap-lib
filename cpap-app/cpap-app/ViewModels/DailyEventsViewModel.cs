@@ -50,7 +50,6 @@ public class DailyEventsViewModel
 		Day = day;
 		
 		var events = day.Events.Where( x => filter.Contains( x.Type ) ).ToList();
-		var types  = events.Select( x => x.Type ).Distinct();
 		
 		// Calculate the total time (in hours) for each SourceType
 		var totalSleepTime = new Dictionary<SourceType, double>();
@@ -60,7 +59,7 @@ public class DailyEventsViewModel
 			totalSleepTime[ session.SourceType ] += session.Duration.TotalHours;
 		}
 		
-		foreach( var type in types )
+		foreach( var type in filter )
 		{
 			var summary = new EventTypeSummary( type, totalSleepTime, events );
 
@@ -69,7 +68,7 @@ public class DailyEventsViewModel
 
 		TotalCount = events.Count;
 		TotalTime  = TimeSpan.FromSeconds( events.Sum( x => x.Duration.TotalSeconds ) );
-		IndexValue = TotalCount / totalSleepTime[ events[ 0 ].SourceType ];
+		IndexValue = TotalCount > 0 ? TotalCount / totalSleepTime[ events[ 0 ].SourceType ] : 0;
 	}
 
 	public void AddGroupSummary( string name, EventType[] groupFilter )
@@ -83,7 +82,7 @@ public class EventGroupSummary
 	public string   Name         { get; set; }
 	public int      TotalCount   { get; set; }
 	public double   IndexValue   { get; set; }
-	public double   PercentTotal { get; set; }
+	public double   PercentTime { get; set; }
 	public TimeSpan TotalTime    { get; set; }
 
 	public EventGroupSummary( string name, EventType[] groupFilter, TimeSpan dailyTotalTime, IEnumerable<ReportedEvent> events )
@@ -101,9 +100,9 @@ public class EventGroupSummary
 			}
 		}
 
-		PercentTotal = (totalSeconds / dailyTotalTime.TotalSeconds);
-		TotalTime    = TimeSpan.FromSeconds( totalSeconds );
-		IndexValue   = TotalCount / dailyTotalTime.TotalHours;
+		PercentTime = TotalCount > 0 ? (totalSeconds / dailyTotalTime.TotalSeconds) : 0;
+		IndexValue  = TotalCount > 0 ? TotalCount / dailyTotalTime.TotalHours : 0;
+		TotalTime   = TimeSpan.FromSeconds( totalSeconds );
 	}
 
 	public override string ToString()
@@ -117,7 +116,7 @@ public class EventTypeSummary
 	public EventType Type         { get; set; }
 	public int       TotalCount   { get; set; }
 	public double    IndexValue   { get; set; }
-	public double    PercentTotal { get; set; }
+	public double    PercentTime { get; set; }
 	public TimeSpan  TotalTime    { get; set; }
 
 	public List<ReportedEvent> Events { get; } = new List<ReportedEvent>();
@@ -141,9 +140,9 @@ public class EventTypeSummary
 			}
 		}
 
-		PercentTotal = totalSeconds / (dailyTotalTime * 60);
-		TotalTime    = TimeSpan.FromSeconds( totalSeconds );
-		IndexValue   = TotalCount / dailyTotalTime;
+		PercentTime = TotalCount > 0 ? totalSeconds / (dailyTotalTime * 60) : 0;
+		IndexValue  = TotalCount > 0 ? TotalCount / dailyTotalTime : 0;
+		TotalTime   = TimeSpan.FromSeconds( totalSeconds );
 	}
 
 	public override string ToString()

@@ -833,11 +833,7 @@ public partial class SignalChart : UserControl
 		
 		chart.Plot.XAxis.TickLabelFormat( x => $"{_day.RecordingStartTime.AddSeconds( x ):hh:mm:ss tt}" );
 
-		Chart.Configuration.AxesChangedEventEnabled = false;
-		{
-			chart.Plot.SetAxisLimits( -1, day.TotalTimeSpan.TotalSeconds + 1, minValue, maxValue + extents * 0.1 );
-		}
-		Chart.Configuration.AxesChangedEventEnabled = true;
+		chart.Plot.SetAxisLimits( -1, day.TotalTimeSpan.TotalSeconds + 1, minValue, maxValue + extents * 0.1 );
 
 		// If manual vertical axis tick positions were provided, set up the labels for them and force the chart
 		// to show those instead of the automatically-generated tick positions. 
@@ -850,33 +846,6 @@ public partial class SignalChart : UserControl
 			}
 			
 			chart.Plot.YAxis.ManualTickPositions( manualLabels, labels );
-		}
-		else
-		{
-			// int labelCount     = 5;
-			// var range          = maxValue - minValue;
-			// var labelPositions = new List<double>();
-			// var labels         = new List<string>();
-			//
-			// if( minValue < 0 && maxValue > 0 )
-			// {
-			// 	labelPositions.Add( 0 );
-			// 	labelCount -= 1;
-			// }
-			//
-			// for( int i = 0; i < labelCount; i++ )
-			// {
-			// 	labelPositions.Add( minValue + i * range * (1.0 / labelCount) );
-			// }
-			//
-			// labelPositions.Sort();
-			//
-			// for( int i = 0; i < labelPositions.Count; i++ )
-			// {
-			// 	labels.Add( $"{labelPositions[i]:F1}" );
-			// }
-			//
-			// chart.Plot.YAxis.ManualTickPositions( labelPositions.ToArray(), labels.ToArray() );
 		}
 	}
 	
