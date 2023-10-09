@@ -28,6 +28,7 @@ public partial class SignalChartContainer : UserControl
 		InitializeComponent();
 
 		List<SignalChartConfiguration> signalConfigs = SignalConfigurationStore.GetSignalConfigurations();
+		List<EventMarkerConfiguration> eventConfigs  = EventMarkerConfigurationStore.GetEventMarkerConfigurations();
 
 		foreach( var config in signalConfigs )
 		{
@@ -36,7 +37,7 @@ public partial class SignalChartContainer : UserControl
 				continue;
 			}
 
-			var chart = new SignalChart() { Configuration = config };
+			var chart = new SignalChart() { ChartConfiguration = config, MarkerConfiguration = eventConfigs };
 
 			if( !string.IsNullOrEmpty( config.SecondarySignalName ) )
 			{
@@ -133,9 +134,9 @@ public partial class SignalChartContainer : UserControl
 	{
 		foreach( var chart in _charts )
 		{
-			if( chart.Configuration != null && chart.Configuration.DisplayedEvents.Contains( eventType ) )
+			if( chart.ChartConfiguration != null && chart.ChartConfiguration.DisplayedEvents.Contains( eventType ) )
 			{
-				if( !chart.Configuration.IsPinned )
+				if( !chart.ChartConfiguration.IsPinned )
 				{
 					chart.BringIntoView();
 				}

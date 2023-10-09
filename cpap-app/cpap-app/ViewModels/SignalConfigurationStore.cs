@@ -17,16 +17,15 @@ public static class SignalConfigurationStore
 {
 	public static List<SignalChartConfiguration> GetSignalConfigurations()
 	{
-		using( var store = StorageService.Connect() )
-		{
-			// TODO: Move SignalChartConfiguration initialization to application startup
-			Initialize( store );
+		using var store = StorageService.Connect();
+		
+		// TODO: Move SignalChartConfiguration initialization to application startup
+		Initialize( store );
 
-			return store.SelectAll<SignalChartConfiguration>().OrderBy( x => x.DisplayOrder ).ToList();
-		}
+		return store.SelectAll<SignalChartConfiguration>().OrderBy( x => x.DisplayOrder ).ToList();
 	}
 
-	public static void Initialize( StorageService store )
+	private static void Initialize( StorageService store )
 	{
 		var mapping = StorageService.CreateMapping<SignalChartConfiguration>( "chart_config" );
 
