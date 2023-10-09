@@ -20,7 +20,7 @@ public partial class OximetrySessionsList : UserControl
 	{
 		if( lstSessions.SelectedItem is Session session )
 		{
-			var eventArgs = new TimeRangeRoutedEventArgs
+			var eventArgs = new DateTimeRangeRoutedEventArgs
 			{
 				Route       = RoutingStrategies.Bubble | RoutingStrategies.Tunnel,
 				RoutedEvent = DailyReportView.TimeRangeSelectedEvent,

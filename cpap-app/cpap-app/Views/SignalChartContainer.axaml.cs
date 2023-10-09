@@ -18,9 +18,6 @@ public partial class SignalChartContainer : UserControl
 {
 	private List<SignalChart> _charts = new();
 
-	// TODO: Disable sync while loading, re-enable after data loading is complete
-	private bool _synchronizeActive = false;
-	
 	#region Constructor 
 	
 	public SignalChartContainer()
@@ -63,52 +60,23 @@ public partial class SignalChartContainer : UserControl
 	
 	#endregion
 	
-	#region Base class overrides
-
-	protected override void OnPointerEntered( PointerEventArgs e )
-	{
-		base.OnPointerEntered( e );
-		_synchronizeActive = true;
-	}
-
-	protected override void OnGotFocus( GotFocusEventArgs e )
-	{
-		base.OnGotFocus( e );
-		_synchronizeActive = true;
-	}
-
-	protected override void OnPropertyChanged( AvaloniaPropertyChangedEventArgs change )
-	{
-		base.OnPropertyChanged( change );
-
-		if( change.Property.Name == nameof( DataContext ) )
-		{
-			_synchronizeActive = false;
-		}
-	}
-
-	#endregion 
-	
 	#region Event handlers
 
-	public void ChartDisplayedRangeChanged( object? sender, TimeRangeRoutedEventArgs e )
+	public void ChartDisplayedRangeChanged( object? sender, DateTimeRangeRoutedEventArgs e )
 	{
-		if( _synchronizeActive )
+		foreach( var control in _charts.Where( control => control != sender ) )
 		{
-			foreach( var control in _charts.Where( control => control != sender ) )
-			{
-				control.SetDisplayedRange( e.StartTime, e.EndTime );
-			}
+			control.SetDisplayedRange( e.StartTime, e.EndTime );
 		}
 	}
 
-	private void ChartOnTimeMarkerChanged( object? sender, TimeRoutedEventArgs e )
+	private void ChartOnTimeMarkerChanged( object? sender, DateTimeRoutedEventArgs e )
 	{
 		foreach( var control in _charts )
 		{
 			if( control != sender )
 			{
-				control.UpdateTimeMarker( e.Time );
+				control.UpdateTimeMarker( e.DateTime );
 			}
 		}
 	}

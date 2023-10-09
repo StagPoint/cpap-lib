@@ -86,6 +86,7 @@ public static class OximetryEventGenerator
 	{
 		const double TACHYCARDIA_THRESHOLD = 100;
 		const double BRADYCARDIA_THRESHOLD = 50;
+		const double MIN_EVENT_TIME        = 10;
 
 		if( signal.Samples.Count == 0 )
 		{
@@ -149,7 +150,7 @@ public static class OximetryEventGenerator
 
 						eventDuration = eventEnd - eventStart;
 
-						if( eventDuration > 0 )
+						if( eventDuration >= MIN_EVENT_TIME )
 						{
 							var annotation = new ReportedEvent
 							{
@@ -177,7 +178,7 @@ public static class OximetryEventGenerator
 
 						eventDuration = eventEnd - eventStart;
 
-						if( eventDuration > 0 )
+						if( eventDuration >= MIN_EVENT_TIME )
 						{
 							var annotation = new ReportedEvent
 							{
@@ -195,7 +196,7 @@ public static class OximetryEventGenerator
 			}
 		}
 
-		if( state != 0 && eventDuration > 0 )
+		if( state != 0 && eventDuration >= MIN_EVENT_TIME )
 		{
 			var annotation = new ReportedEvent
 			{
@@ -213,7 +214,7 @@ public static class OximetryEventGenerator
 		// TODO: Make window size configurable 
 		const int    WINDOW_SIZE            = 300;
 		const double MAX_EVENT_DURATION     = 120;
-		const double MIN_EVENT_DURATION     = 1;
+		const double MIN_EVENT_DURATION     = 10;
 		const double DESATURATION_THRESHOLD = 3;
 
 		int    state        = 0;
@@ -327,7 +328,7 @@ public static class OximetryEventGenerator
 	private static void GenerateHypoxemiaEvents( Signal signal, List<ReportedEvent> events )
 	{
 		const double HYPOXEMIA_THRESHOLD = 88;
-		const double MIN_EVENT_DURATION  = 1;
+		const double MIN_EVENT_DURATION  = 10;
 
 		if( signal.Samples.Count == 0 )
 		{

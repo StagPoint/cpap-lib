@@ -4,13 +4,14 @@ using Avalonia.Interactivity;
 
 namespace cpap_app.Events;
 
-public class TimeRoutedEventArgs : RoutedEventArgs
+public class DateTimeRoutedEventArgs : RoutedEventArgs
 {
-	public DateTime Time { get; set; }
+	public DateTime DateTime { get; set; }
 }
 
-public class TimeRangeRoutedEventArgs : RoutedEventArgs
+public class DateTimeRangeRoutedEventArgs : RoutedEventArgs
 {
 	public DateTime StartTime { get; set; }
 	public DateTime EndTime   { get; set; }
 }
+

@@ -164,7 +164,7 @@ namespace cpap_db
 
 		#endregion 
 		
-		#region Public functions
+		#region Public functions (cpap-lib specific)
 		
 		public DailyReport LoadDailyReport( DateTime date )
 		{
@@ -243,6 +243,54 @@ namespace cpap_db
 				}
 			}
 		}
+		
+		public DateTime GetMostRecentStoredDate()
+		{
+			var mapping = GetMapping<DailyReport>();
+			var query   = $"SELECT IFNULL( [{mapping.PrimaryKey.ColumnName}], datetime('now','-180 day','localtime') ) FROM [{mapping.TableName}] ORDER BY ReportDate DESC LIMIT 1";
+			
+			return Connection.ExecuteScalar<DateTime>( query );
+		}
+
+		public List<DateTime> GetStoredDates()
+		{
+			var mapping = GetMapping<DailyReport>();
+			var days    = mapping.SelectAll( Connection );
+
+			return days.OrderBy( x => x.ReportDate ).Select( x => x.ReportDate.Date ).ToList();
+		}
+
+		public bool DeleteDay( DateTime day )
+		{
+			var mapping = GetMapping<DailyReport>();
+			return mapping.Delete( Connection, day );
+		}
+
+		public bool DeletePulseOximetryData( DateTime day )
+		{
+			Connection.BeginTransaction();
+			try
+			{
+				var eventMapping   = GetMapping<ReportedEvent>();
+				var sessionMapping = GetMapping<Session>();
+
+				int eventsDeleted   = Execute( $"DELETE FROM [{eventMapping.TableName}] WHERE [{eventMapping.ForeignKey.ColumnName}] = ? AND [SourceType] = ?",     day, SourceType.PulseOximetry );
+				int sessionsDeleted = Execute( $"DELETE FROM [{sessionMapping.TableName}] WHERE [{sessionMapping.ForeignKey.ColumnName}] = ? AND [SourceType] = ?", day, SourceType.PulseOximetry );
+				
+				Connection.Commit();
+
+				return eventsDeleted > 0 && sessionsDeleted > 0;
+			}
+			catch( Exception e )
+			{
+				Connection.Rollback();
+				throw;
+			}
+		}
+		
+		#endregion
+		
+		#region General-purpose public functions 
 
 		public List<T> SelectAll<T>() where T : class, new()
 		{
@@ -321,22 +369,6 @@ namespace cpap_db
 			}
 
 			return mapping.CreateTable( Connection );
-		}
-
-		public List<DateTime> GetStoredDates()
-		{
-			var mapping = GetMapping<DailyReport>();
-			var days    = mapping.SelectAll( Connection );
-
-			return days.OrderBy( x => x.ReportDate ).Select( x => x.ReportDate.Date ).ToList();
-		}
-		
-		public DateTime GetMostRecentStoredDate()
-		{
-			var mapping = GetMapping<DailyReport>();
-			var query   = $"SELECT IFNULL( [{mapping.PrimaryKey.ColumnName}], datetime('now','-180 day','localtime') ) FROM [{mapping.TableName}] ORDER BY ReportDate DESC LIMIT 1";
-			
-			return Connection.ExecuteScalar<DateTime>( query );
 		}
 
 		public int Execute( string query, params object[] arguments )

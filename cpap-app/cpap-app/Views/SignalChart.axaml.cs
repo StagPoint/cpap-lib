@@ -48,27 +48,27 @@ public partial class SignalChart : UserControl
 	
 	#region Event handlers 
 	
-	public static readonly RoutedEvent<TimeRangeRoutedEventArgs> DisplayedRangeChangedEvent = RoutedEvent.Register<SignalChart, TimeRangeRoutedEventArgs>( nameof( DisplayedRangeChanged ), RoutingStrategies.Bubble );
+	public static readonly RoutedEvent<DateTimeRangeRoutedEventArgs> DisplayedRangeChangedEvent = RoutedEvent.Register<SignalChart, DateTimeRangeRoutedEventArgs>( nameof( DisplayedRangeChanged ), RoutingStrategies.Bubble );
 
-	public static void AddDisplayedRangeChangedHandler( IInputElement element, EventHandler<TimeRangeRoutedEventArgs> handler )
+	public static void AddDisplayedRangeChangedHandler( IInputElement element, EventHandler<DateTimeRangeRoutedEventArgs> handler )
 	{
 		element.AddHandler( DisplayedRangeChangedEvent, handler );
 	}
 
-	public event EventHandler<TimeRangeRoutedEventArgs> DisplayedRangeChanged
+	public event EventHandler<DateTimeRangeRoutedEventArgs> DisplayedRangeChanged
 	{
 		add => AddHandler( DisplayedRangeChangedEvent, value );
 		remove => RemoveHandler( DisplayedRangeChangedEvent, value );
 	}
 
-	public static readonly RoutedEvent<TimeRoutedEventArgs> TimeMarkerChangedEvent = RoutedEvent.Register<SignalChart, TimeRoutedEventArgs>( nameof( TimeMarkerChanged ), RoutingStrategies.Bubble );
+	public static readonly RoutedEvent<DateTimeRoutedEventArgs> TimeMarkerChangedEvent = RoutedEvent.Register<SignalChart, DateTimeRoutedEventArgs>( nameof( TimeMarkerChanged ), RoutingStrategies.Bubble );
 
-	public static void AddTimeMarkerChangedHandler( IInputElement element, EventHandler<TimeRoutedEventArgs> handler )
+	public static void AddTimeMarkerChangedHandler( IInputElement element, EventHandler<DateTimeRoutedEventArgs> handler )
 	{
 		element.AddHandler( TimeMarkerChangedEvent, handler );
 	}
 
-	public event EventHandler<TimeRoutedEventArgs> TimeMarkerChanged
+	public event EventHandler<DateTimeRoutedEventArgs> TimeMarkerChanged
 	{
 		add => AddHandler( TimeMarkerChangedEvent, value );
 		remove => RemoveHandler( TimeMarkerChangedEvent, value );
@@ -277,7 +277,7 @@ public partial class SignalChart : UserControl
 		
 		var currentAxisLimits = Chart.Plot.GetAxisLimits();
 
-		var eventArgs = new TimeRangeRoutedEventArgs
+		var eventArgs = new DateTimeRangeRoutedEventArgs
 		{
 			RoutedEvent = DisplayedRangeChangedEvent,
 			Source      = this,
@@ -550,11 +550,11 @@ public partial class SignalChart : UserControl
 	
 	private void RaiseTimeMarkerChanged( DateTime time )
 	{
-		RaiseEvent( new TimeRoutedEventArgs()
+		RaiseEvent( new DateTimeRoutedEventArgs()
 		{
 			RoutedEvent = TimeMarkerChangedEvent,
 			Source      = this,
-			Time        = time
+			DateTime        = time
 		} );
 	}
 
@@ -734,10 +734,9 @@ public partial class SignalChart : UserControl
 		}
 		finally
 		{
+			Chart.RenderRequest();
 			Chart.Configuration.AxesChangedEventEnabled = true;
 		}
-
-		Chart.RenderRequest();
 	}
 	
 	private void ChartSignal( AvaPlot chart, DailyReport day, string signalName, float signalScale = 1f, double? axisMinValue = null, double? axisMaxValue = null, double[]? manualLabels = null )
@@ -878,13 +877,15 @@ public partial class SignalChart : UserControl
 				switch( markerConfig.EventMarkerType )
 				{
 					case EventMarkerType.Flag:
-						Chart.Plot.AddVerticalLine( endOffset, color, 1f, LineStyle.Solid, null );
+						Chart.Plot.AddVerticalLine( endOffset, color, 1.5f, LineStyle.Solid, null );
 						break;
 					case EventMarkerType.TickTop:
-						Chart.Plot.AddMarker( centerOffset, limits.YMax, MarkerShape.verticalBar, 32, markerConfig.Color, null );
+						var topLine = Chart.Plot.AddMarker( centerOffset, limits.YMax, MarkerShape.verticalBar, 32, markerConfig.Color, null );
+						topLine.MarkerLineWidth = 1.5f;
 						break;
 					case EventMarkerType.TickBottom:
-						Chart.Plot.AddMarker( centerOffset, limits.YMin, MarkerShape.verticalBar, 32, markerConfig.Color, null );
+						var bottomLine = Chart.Plot.AddMarker( centerOffset, limits.YMin, MarkerShape.verticalBar, 32, markerConfig.Color, null );
+						bottomLine.MarkerLineWidth = 1.5f;
 						break;
 					case EventMarkerType.ArrowTop:
 						Chart.Plot.AddMarker( centerOffset, limits.YMax, MarkerShape.filledTriangleDown, 16, markerConfig.Color, null );
@@ -940,7 +941,7 @@ public partial class SignalChart : UserControl
 	private void InitializeChartProperties( AvaPlot chart )
 	{
 		_chartInitialized = true;
-		_chartStyle       = new CustomChartStyle( this, ChartForeground, ChartBackground, ChartBorderColor, ChartGridLineColor );
+		_chartStyle       = new CustomChartStyle( ChartForeground, ChartBackground, ChartBorderColor, ChartGridLineColor );
 		
 		var plot = chart.Plot;
 		

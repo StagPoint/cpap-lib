@@ -4,8 +4,10 @@ using System.Linq;
 
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 
+using cpap_app.Events;
 using cpap_app.ViewModels;
 
 using cpaplib;
@@ -14,6 +16,19 @@ namespace cpap_app.Views;
 
 public partial class DailySpO2View : UserControl
 {
+	#region Events 
+	
+	public static readonly RoutedEvent<DateTimeRoutedEventArgs> DeletionRequestedEvent = 
+		RoutedEvent.Register<DailySpO2View, DateTimeRoutedEventArgs>( nameof( DeletionRequested ), RoutingStrategies.Bubble );
+
+	public event EventHandler<DateTimeRoutedEventArgs> DeletionRequested
+	{
+		add => AddHandler( DeletionRequestedEvent, value );
+		remove => RemoveHandler( DeletionRequestedEvent, value );
+	}
+		
+	#endregion 
+	
 	#region Constructor 
 	
 	public DailySpO2View()
@@ -39,6 +54,7 @@ public partial class DailySpO2View : UserControl
 			case null:
 				SetVisibility( pnlNoInfoAvailable, true );
 				SetVisibility( pnlOximetryInfo,    false );
+				SetVisibility( SourcesSummary,     false );
 				return;
 			case DailyReport day when day.Sessions.All( x => x.SourceType != SourceType.PulseOximetry ):
 				DataContext = null;
@@ -46,6 +62,7 @@ public partial class DailySpO2View : UserControl
 			case DailyReport day:
 				SetVisibility( pnlNoInfoAvailable, false );
 				SetVisibility( pnlOximetryInfo,    true );
+				SetVisibility( SourcesSummary,     true );
 
 				var oximetrySessions = day.Sessions.Where( x => x.SourceType == SourceType.PulseOximetry ).ToArray();
 
@@ -69,6 +86,25 @@ public partial class DailySpO2View : UserControl
 	
 	#endregion 
 	
+	#region Event handlers 
+	
+	private void DeleteOximetryData_OnClick( object? sender, RoutedEventArgs e )
+	{
+		if( DataContext is not DailyReport day )
+		{
+			throw new Exception( $"Cannot request deletion of data for {DataContext}" );
+		}
+		
+		RaiseEvent( new DateTimeRoutedEventArgs
+		{
+			RoutedEvent = DeletionRequestedEvent,
+			Source      = this,
+			DateTime    = day.ReportDate.Date
+		} );
+	}
+
+	#endregion 
+	
 	#region Private functions 
 
 	private void SetVisibility( Control control, bool value )
@@ -79,7 +115,7 @@ public partial class DailySpO2View : UserControl
 		}
 	}
 	
-	#endregion 
+	#endregion
 }
 
 

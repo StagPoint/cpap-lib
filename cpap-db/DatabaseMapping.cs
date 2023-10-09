@@ -226,7 +226,7 @@ public class DatabaseMapping
 			throw new Exception( $"No primary key has been defined for table {TableName}" );
 		}
 
-		return SelectAllQuery + $"\n WHERE \n\t[{PrimaryKey.ColumnName}] = ?;";
+		return SelectAllQuery + $"\n WHERE \n\t[{PrimaryKey.ColumnName}] = ?";
 	}
 
 	private string GenerateSelectByForeignKeyQuery()
@@ -236,7 +236,7 @@ public class DatabaseMapping
 			throw new Exception( $"No foreign key has been defined for table {TableName}" );
 		}
 
-		return SelectAllQuery + $"\n WHERE \n\t[{ForeignKey.ColumnName}] = ?;";
+		return SelectAllQuery + $"\n WHERE \n\t[{ForeignKey.ColumnName}] = ?";
 	}
 
 	private string GenerateDeleteQuery()
@@ -246,7 +246,7 @@ public class DatabaseMapping
 			throw new Exception( $"No primary key has been defined for table {TableName}" );
 		}
 
-		return $"DELETE FROM [{TableName}] WHERE [{PrimaryKey.ColumnName}] = ?;";
+		return $"DELETE FROM [{TableName}] WHERE [{PrimaryKey.ColumnName}] = ?";
 	}
 
 	private string GenerateSelectAllQuery()
@@ -334,7 +334,7 @@ public class DatabaseMapping
 			hasPreviousColumn = true;
 		}
 
-		builder.Append( $" ) VALUES ( {parameters} );" );
+		builder.Append( $" ) VALUES ( {parameters} )" );
 
 		return builder.ToString();
 	}
@@ -435,7 +435,7 @@ public class DatabaseMapping
 			}
 		}
 
-		builder.Append( " );" );
+		builder.Append( " )" );
 
 		return builder.ToString();
 	}

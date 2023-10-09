@@ -28,7 +28,9 @@ public class EventMarkerConfigurationStore
 	
 	private static void Initialize( StorageService store )
 	{
-		StorageService.CreateMapping<EventMarkerConfiguration>( "event_marker_config" );
+		var mapping = StorageService.CreateMapping<EventMarkerConfiguration>( "event_marker_config" );
+		mapping.PrimaryKey = new PrimaryKeyColumn( "id", typeof( int ), false );
+		
 		store.CreateTable<EventMarkerConfiguration>();
 		
 		var records = store.SelectAll<EventMarkerConfiguration>();
@@ -99,7 +101,7 @@ public class EventMarkerConfigurationStore
 				Color           = eventColor
 			};
 
-			store.Insert( config );
+			store.Insert( config, primaryKeyValue: config.EventType );
 		}
 	}
 }

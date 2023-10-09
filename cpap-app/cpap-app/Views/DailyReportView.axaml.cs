@@ -19,9 +19,14 @@ namespace cpap_app.Views;
 
 public partial class DailyReportView : UserControl
 {
-	public static readonly RoutedEvent<ReportedEventTypeArgs>    ReportedEventTypeSelectedEvent = RoutedEvent.Register<DailyReportView, ReportedEventTypeArgs>( nameof( ReportedEventTypeSelected ), RoutingStrategies.Bubble );
-	public static readonly RoutedEvent<TimeRangeRoutedEventArgs> TimeRangeSelectedEvent         = RoutedEvent.Register<DailyReportView, TimeRangeRoutedEventArgs>( nameof( TimeRangeSelected ), RoutingStrategies.Bubble );
-	public static readonly RoutedEvent<TimeRoutedEventArgs>      TimeSelectedEvent              = RoutedEvent.Register<DailyReportView, TimeRoutedEventArgs>( nameof( TimeSelected ), RoutingStrategies.Bubble );
+	public static readonly RoutedEvent<ReportedEventTypeArgs> ReportedEventTypeSelectedEvent =
+		RoutedEvent.Register<DailyReportView, ReportedEventTypeArgs>( nameof( ReportedEventTypeSelected ), RoutingStrategies.Bubble );
+
+	public static readonly RoutedEvent<DateTimeRangeRoutedEventArgs> TimeRangeSelectedEvent =
+		RoutedEvent.Register<DailyReportView, DateTimeRangeRoutedEventArgs>( nameof( TimeRangeSelected ), RoutingStrategies.Bubble );
+
+	public static readonly RoutedEvent<DateTimeRoutedEventArgs> TimeSelectedEvent =
+		RoutedEvent.Register<DailyReportView, DateTimeRoutedEventArgs>( nameof( TimeSelected ), RoutingStrategies.Bubble );
 	
 	public event EventHandler<ReportedEventTypeArgs> ReportedEventTypeSelected
 	{
@@ -29,13 +34,13 @@ public partial class DailyReportView : UserControl
 		remove => RemoveHandler( ReportedEventTypeSelectedEvent, value );
 	}
 	
-	public event EventHandler<TimeRangeRoutedEventArgs> TimeRangeSelected
+	public event EventHandler<DateTimeRangeRoutedEventArgs> TimeRangeSelected
 	{
 		add => AddHandler( TimeRangeSelectedEvent, value );
 		remove => RemoveHandler( TimeRangeSelectedEvent, value );
 	}
 	
-	public event EventHandler<TimeRoutedEventArgs> TimeSelected
+	public event EventHandler<DateTimeRoutedEventArgs> TimeSelected
 	{
 		add => AddHandler( TimeSelectedEvent, value );
 		remove => RemoveHandler( TimeSelectedEvent, value );
@@ -77,15 +82,30 @@ public partial class DailyReportView : UserControl
 			}
 		}
 	}
-	
-	private void OnTimeRangeSelected( object? sender, TimeRangeRoutedEventArgs e )
+
+	protected override void OnPropertyChanged( AvaloniaPropertyChangedEventArgs change )
+	{
+		base.OnPropertyChanged( change );
+
+		if( change.NewValue is DailyReport day )
+		{
+			// I don't know why setting DataContext doesn't cascade down in Avalonia like it did in WPF, 
+			// but apparently I need to handle that manually.
+			if( TabFrame.Content is StyledElement childView )
+			{
+				childView.DataContext = day;
+			}
+		}
+	}
+
+	private void OnTimeRangeSelected( object? sender, DateTimeRangeRoutedEventArgs e )
 	{
 		Charts.SelectTimeRange( e.StartTime, e.EndTime );
 	}
 
-	private void OnTimeSelected( object? sender, TimeRoutedEventArgs e )
+	private void OnTimeSelected( object? sender, DateTimeRoutedEventArgs e )
 	{
-		Charts.SelectTimeRange( e.Time - TimeSpan.FromMinutes( 3 ), e.Time + TimeSpan.FromMinutes( 3 ) );
+		Charts.SelectTimeRange( e.DateTime - TimeSpan.FromMinutes( 3 ), e.DateTime + TimeSpan.FromMinutes( 3 ) );
 	}
 
 	private void DetailTypes_OnSelectionChanged( object? sender, SelectionChangedEventArgs e )

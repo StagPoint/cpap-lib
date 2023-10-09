@@ -32,7 +32,7 @@ public class CustomChartStyle : ScottPlot.Styles.Default
 	
 	#region Constructor 
 	
-	public CustomChartStyle( IResourceHost control, Brush foreground, Brush background, Brush borderColor, Brush gridLineColor )
+	public CustomChartStyle( Brush foreground, Brush background, Brush borderColor, Brush gridLineColor )
 	{
 		var foreColor       = ((SolidColorBrush)foreground).Color.ToDrawingColor();
 		var border          = ((SolidColorBrush)borderColor).Color.ToDrawingColor();

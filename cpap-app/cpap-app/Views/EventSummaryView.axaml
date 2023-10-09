@@ -48,7 +48,7 @@
         </Grid>
 
         <!-- Column headers for event list -->
-        <Grid RowDefinitions="Auto" Classes="Table, ColumnHeader">
+        <Grid RowDefinitions="Auto" Classes="Table, ColumnHeader" IsVisible="{Binding Items.Count}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition SharedSizeGroup="C0" />
                 <ColumnDefinition SharedSizeGroup="C1" />

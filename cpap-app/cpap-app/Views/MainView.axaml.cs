@@ -14,6 +14,7 @@ using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 
+using cpap_app.Events;
 using cpap_app.Helpers;
 using cpap_app.Importers;
 
@@ -34,7 +35,7 @@ public partial class MainView : UserControl
 	#region Public events
 
 	public static readonly RoutedEvent<RoutedEventArgs> ImportRequestEvent =
-		RoutedEvent.Register<MainView, RoutedEventArgs>( "ImportRequested", RoutingStrategies.Bubble );
+		RoutedEvent.Register<MainView, RoutedEventArgs>( nameof( ImportRequested ), RoutingStrategies.Bubble );
 
 	public event EventHandler<RoutedEventArgs> ImportRequested
 	{
@@ -50,7 +51,8 @@ public partial class MainView : UserControl
 		
 		NavView.Content = new HomeView();
 
-		AddHandler( ImportRequestEvent, HandleImportRequestCPAP );
+		AddHandler( ImportRequestEvent,                   HandleImportRequestCPAP );
+		AddHandler( DailySpO2View.DeletionRequestedEvent, DailySpO2View_OnDeletionRequested );
 
 		btnImportCPAP.Tapped += HandleImportRequestCPAP;
 		
@@ -138,7 +140,8 @@ public partial class MainView : UserControl
 		var appWindow = TopLevel.GetTopLevel( this ) as AppWindow;
 		appWindow?.PlatformFeatures.SetTaskBarProgressBarState( TaskBarProgressBarState.Indeterminate );
 
-		bool dataWasImported = false;
+		bool dataWasImported        = false;
+		bool operationWasCanccelled = false;
 
 		td.Opened += async ( _, _ ) =>
 		{
@@ -159,15 +162,15 @@ public partial class MainView : UserControl
 
 					Dispatcher.UIThread.Post( () =>
 					{
-						td.Content = $"Importing sessions and events from: \n{fileItem.Name}";
+						td.Content = $"Scanning data file: \n{fileItem.Name}";
 					} );
-
+					
 					try
 					{
 						await using var file = File.OpenRead( fileItem.Path.LocalPath );
 
 						var data = importer.Load( file );
-						if( data != null && data.Sessions.Count > 0 )
+						if( data is { Sessions.Count: > 0 } )
 						{
 							importedData.Add( data );
 						}
@@ -231,9 +234,9 @@ public partial class MainView : UserControl
 									// Add the Session to the Day's Session list. 
 									day.AddSession( session );
 									
-									// Add only the events that happened during this Session. In practice this 
-									// should be all of them, since at the time I wrote this all importers only 
-									// generated a single Session per file, and that is not expected to change. 
+									// Add only the events that happened during this Session. Note that In practice this 
+									// should be all of them, since at the time I wrote this all importers only generated
+									// a single Session per file, and that is not expected to change.
 									day.Events.AddRange( data.Events.Where( x => x.StartTime >= session.StartTime && x.StartTime <= session.EndTime ) );
 
 									addedSessionToDay = true;
@@ -264,7 +267,7 @@ public partial class MainView : UserControl
 		td.XamlRoot = (Visual)VisualRoot!;
 		await td.ShowAsync();	
 
-		if( importedData.Count == 0 || !dataWasImported )
+		if( !operationWasCanccelled && importedData.Count == 0 || !dataWasImported )
 		{
 			var dialog = MessageBoxManager.GetMessageBoxStandard(
 				$"Import from {importer.FriendlyName}",
@@ -273,6 +276,15 @@ public partial class MainView : UserControl
 				Icon.Warning );
 
 			await dialog.ShowWindowDialogAsync( this.FindAncestorOfType<Window>() );
+		}
+		else
+		{
+			if( NavView.Content is DailyReportView { DataContext: DailyReport dailyReport } dailyReportView )
+			{
+				using var db = StorageService.Connect();
+					
+				dailyReportView.DataContext = db.LoadDailyReport( dailyReport.ReportDate.Date );
+			}
 		}
 	}
 	
@@ -473,5 +485,43 @@ public partial class MainView : UserControl
 		}
 
 		Debug.WriteLine( item.Tag );
+	}
+	
+	private async void DailySpO2View_OnDeletionRequested( object? sender, DateTimeRoutedEventArgs e )
+	{
+		var dialog = MessageBoxManager.GetMessageBoxStandard(
+			"Delete Pulse Oximetry Data",
+			$"Are you sure you wish to delete pulse oximetry data for {e.DateTime:D}?",
+			ButtonEnum.YesNo,
+			Icon.Warning
+		);
+		
+		var result = await dialog.ShowWindowDialogAsync( this.FindAncestorOfType<Window>() );
+
+		if( result != ButtonResult.Yes )
+		{
+			return;
+		}
+
+		using var connection = StorageService.Connect();
+		if( connection.DeletePulseOximetryData( e.DateTime ) )
+		{
+			dialog = MessageBoxManager.GetMessageBoxStandard(
+				"Delete Pulse Oximetry Data",
+				$"Pulse oximetry data for {e.DateTime:D} has been deleted",
+				ButtonEnum.Ok,
+				Icon.Info
+			);
+			
+			await dialog.ShowWindowDialogAsync( this.FindAncestorOfType<Window>() );
+
+			if( NavView.Content is DailyReportView { DataContext: DailyReport day } dailyReportView )
+			{
+				if( day.ReportDate.Date == e.DateTime.Date )
+				{
+					dailyReportView.DataContext = connection.LoadDailyReport( e.DateTime );
+				}
+			}
+		}
 	}
 }

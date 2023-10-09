@@ -76,11 +76,11 @@ public partial class DailyEventsListView : UserControl
 			return;
 		}
 		
-		var eventArgs = new TimeRoutedEventArgs
+		var eventArgs = new DateTimeRoutedEventArgs
 		{
 			Route       = RoutingStrategies.Bubble | RoutingStrategies.Tunnel,
 			RoutedEvent = DailyReportView.TimeSelectedEvent,
-			Time        = evt.StartTime
+			DateTime        = evt.StartTime
 		};
 			
 		RaiseEvent( eventArgs  );
