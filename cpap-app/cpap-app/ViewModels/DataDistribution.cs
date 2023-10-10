@@ -26,7 +26,7 @@ public class DataDistribution
 	
     #region Factory functions
 
-	public static DataDistribution GetDataDistribution( List<Session> sessions, string signalName, string[] labels, int[] limits )
+	public static DataDistribution GetDataDistribution( List<Session> sessions, string signalName, string[] labels, double[] limits )
 	{
 		IEnumerable<double> data = Array.Empty<double>();
 
@@ -50,7 +50,7 @@ public class DataDistribution
 		return new DataDistribution();
 	}
 
-	public static DataDistribution GetDataDistribution( IEnumerable<double> data, string[] labels, int[] limits, double sampleFrequency )
+	public static DataDistribution GetDataDistribution( IEnumerable<double> data, string[] labels, double[] limits, double sampleFrequency )
 	{
 		if( limits == null || limits.Length == 0 || labels == null )
 		{

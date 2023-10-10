@@ -46,7 +46,7 @@ public class EmayImporterCSV : IOximetryImporter
 	
 	#region Public functions 
 
-	public ImportedData? Load( Stream stream )
+	public ImportedData? Load( string filename, Stream stream )
 	{
 		using( var reader = new StreamReader( stream, Encoding.Default, leaveOpen: true ) )
 		{

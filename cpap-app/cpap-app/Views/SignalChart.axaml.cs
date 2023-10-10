@@ -138,11 +138,11 @@ public partial class SignalChart : UserControl
 		InitializeComponent();
 
 		PointerWheelChanged   += OnPointerWheelChanged;
+		PointerEntered        += OnPointerEntered;
+		PointerExited         += OnPointerExited;
 		Chart.PointerPressed  += OnPointerPressed;
 		Chart.PointerReleased += OnPointerReleased;
 		Chart.PointerMoved    += OnPointerMoved;
-		Chart.PointerExited   += OnPointerExited;
-		Chart.PointerEntered  += OnPointerEntered;
 		Chart.AxesChanged     += OnAxesChanged;
 
 		Chart.ContextMenu = null;
@@ -314,7 +314,10 @@ public partial class SignalChart : UserControl
 
 	private void OnPointerExited( object? sender, PointerEventArgs e )
 	{
-		HideTimeMarker();
+		if( object.ReferenceEquals( sender, this ) )
+		{
+			HideTimeMarker();
+		}
 	}
 
 	private void OnPointerReleased( object? sender, PointerReleasedEventArgs e )
@@ -728,10 +731,11 @@ public partial class SignalChart : UserControl
 			
 			if( timeOffset >= startTime - highlightDistance && timeOffset <= endTime + highlightDistance )
 			{
+				EventTooltip.Tag = $"{flag.Type.ToName()}";
 				if( flag.Duration.TotalSeconds > 0 )
-					EventTooltip.Tag = $"{flag.Type.ToName()} ({FormattedTimespanConverter.FormatTimeSpan( flag.Duration, TimespanFormatType.Short, false )})";
-				else
-					EventTooltip.Tag = $"{flag.Type.ToName()}";
+				{
+					EventTooltip.Tag += $" ({FormattedTimespanConverter.FormatTimeSpan( flag.Duration, TimespanFormatType.Short, false )})";
+				}
 				
 				EventTooltip.IsVisible = true;
 				
@@ -863,6 +867,12 @@ public partial class SignalChart : UserControl
 				firstSessionAdded ? ChartConfiguration.Title : null
 			);
 
+			if( ChartConfiguration.ShowStepped )
+			{
+				graph.StepDisplay      = true;
+				graph.StepDisplayRight = ChartConfiguration.StepRight;
+			}
+
 			if( SecondaryConfiguration != null )
 			{
 				var secondarySignal = session.GetSignalByName( SecondaryConfiguration.SignalName );
@@ -880,6 +890,12 @@ public partial class SignalChart : UserControl
 					
 					secondaryGraph.OffsetX    = secondaryOffset;
 					secondaryGraph.MarkerSize = 0;
+					
+					if( ChartConfiguration.ShowStepped )
+					{
+						secondaryGraph.StepDisplay      = true;
+						secondaryGraph.StepDisplayRight = ChartConfiguration.StepRight;
+					}
 				}
 			}
 			

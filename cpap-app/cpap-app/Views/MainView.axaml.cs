@@ -169,7 +169,7 @@ public partial class MainView : UserControl
 					{
 						await using var file = File.OpenRead( fileItem.Path.LocalPath );
 
-						var data = importer.Load( file );
+						var data = importer.Load( fileItem.Name, file );
 						if( data is { Sessions.Count: > 0 } )
 						{
 							importedData.Add( data );
@@ -477,16 +477,6 @@ public partial class MainView : UserControl
 		}
 	}
 	
-	private void OximetryImportOptionTapped( object? sender, TappedEventArgs e )
-	{
-		if( sender is not NavigationViewItem item )
-		{
-			return;
-		}
-
-		Debug.WriteLine( item.Tag );
-	}
-	
 	private async void DailySpO2View_OnDeletionRequested( object? sender, DateTimeRoutedEventArgs e )
 	{
 		var dialog = MessageBoxManager.GetMessageBoxStandard(
@@ -506,15 +496,6 @@ public partial class MainView : UserControl
 		using var connection = StorageService.Connect();
 		connection.DeletePulseOximetryData( e.DateTime );
 		
-		dialog = MessageBoxManager.GetMessageBoxStandard(
-			"Delete Pulse Oximetry Data",
-			$"Pulse oximetry data for {e.DateTime:D} has been deleted",
-			ButtonEnum.Ok,
-			Icon.Info
-		);
-		
-		await dialog.ShowWindowDialogAsync( this.FindAncestorOfType<Window>() );
-
 		if( NavView.Content is DailyReportView { DataContext: DailyReport day } dailyReportView )
 		{
 			if( day.ReportDate.Date == e.DateTime.Date )

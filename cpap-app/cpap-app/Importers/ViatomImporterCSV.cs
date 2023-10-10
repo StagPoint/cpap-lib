@@ -47,7 +47,7 @@ public class ViatomImporterCSV : IOximetryImporter
 	
 	#region Public functions 
 
-	public ImportedData? Load( Stream stream )
+	public ImportedData? Load( string filename, Stream stream )
 	{
 		using var reader = new StreamReader( stream, Encoding.Default, leaveOpen: true );
 
@@ -97,10 +97,18 @@ public class ViatomImporterCSV : IOximetryImporter
 			SourceType = SourceType.PulseOximetry
 		};
 
-		bool     isStartRecord    = true;
-		int      lastGoodOxy      = 0;
-		int      lastGoodHR       = 0;
-		int      lastGoodMovement = 0;
+		// Attempt to extract the device name from the filename (Viatom/Wellue devices prepend the device name)
+		var baseFilename = filename = Path.GetFileName( filename );
+		int nameEndIndex = baseFilename.IndexOf( '_' );
+		if( nameEndIndex != -1 )
+		{
+			session.Source = baseFilename[ ..nameEndIndex ];
+		}
+
+		bool isStartRecord    = true;
+		int  lastGoodOxy      = 0;
+		int  lastGoodHR       = 0;
+		int  lastGoodMovement = 0;
 
 		DateTime currentDateTime = DateTime.MinValue;
 		DateTime lastDateTime    = DateTime.MinValue;

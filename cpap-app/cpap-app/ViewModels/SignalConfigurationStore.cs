@@ -57,7 +57,7 @@ public static class SignalConfigurationStore
 				DisplayOrder        = i,
 				IsPinned            = false,
 				IsVisible           = (signalName != SignalNames.EPAP && signalName != SignalNames.MaskPressureLow),
-				FillBelow           = true,
+				FillBelow           = false,
 				PlotColor           = plotColor.ToDrawingColor()
 			};
 
@@ -80,6 +80,10 @@ public static class SignalConfigurationStore
 				
 				case SignalNames.Pressure:
 					config.SecondarySignalName = SignalNames.EPAP;
+					break;
+				
+				case SignalNames.MaskPressure:
+					config.AxisMaxValue = 20;
 					break;
 				
 				case SignalNames.SpO2:
