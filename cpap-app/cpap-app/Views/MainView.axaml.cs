@@ -229,7 +229,7 @@ public partial class MainView : UserControl
 								}
 								
 								// If the day doesn't already contain a matching session, add it
-								if( !day.Sessions.Any( x => x.StartTime == session.StartTime && x.SourceType == session.SourceType ) )
+								if( !day.Sessions.Any( x => Session.TimesOverlap( x, session ) && x.SourceType == session.SourceType ) )
 								{
 									// Add the Session to the Day's Session list. 
 									day.AddSession( session );
@@ -271,7 +271,7 @@ public partial class MainView : UserControl
 		{
 			var dialog = MessageBoxManager.GetMessageBoxStandard(
 				$"Import from {importer.FriendlyName}",
-				$"There was no data imported. \nThe files you selected were not the correct format or did not match any existing sessions.",
+				$"There was no data imported. \nThe files you selected were not the correct format or could not be matched to any existing sessions.",
 				ButtonEnum.Ok,
 				Icon.Warning );
 
@@ -287,7 +287,7 @@ public partial class MainView : UserControl
 			}
 		}
 	}
-	
+
 	private bool CanMergeSession( DailyReport day, Session session )
 	{
 		if( DateHelper.RangesOverlap( day.RecordingStartTime, day.RecordingEndTime, session.StartTime, session.EndTime ) )
@@ -504,23 +504,22 @@ public partial class MainView : UserControl
 		}
 
 		using var connection = StorageService.Connect();
-		if( connection.DeletePulseOximetryData( e.DateTime ) )
-		{
-			dialog = MessageBoxManager.GetMessageBoxStandard(
-				"Delete Pulse Oximetry Data",
-				$"Pulse oximetry data for {e.DateTime:D} has been deleted",
-				ButtonEnum.Ok,
-				Icon.Info
-			);
-			
-			await dialog.ShowWindowDialogAsync( this.FindAncestorOfType<Window>() );
+		connection.DeletePulseOximetryData( e.DateTime );
+		
+		dialog = MessageBoxManager.GetMessageBoxStandard(
+			"Delete Pulse Oximetry Data",
+			$"Pulse oximetry data for {e.DateTime:D} has been deleted",
+			ButtonEnum.Ok,
+			Icon.Info
+		);
+		
+		await dialog.ShowWindowDialogAsync( this.FindAncestorOfType<Window>() );
 
-			if( NavView.Content is DailyReportView { DataContext: DailyReport day } dailyReportView )
+		if( NavView.Content is DailyReportView { DataContext: DailyReport day } dailyReportView )
+		{
+			if( day.ReportDate.Date == e.DateTime.Date )
 			{
-				if( day.ReportDate.Date == e.DateTime.Date )
-				{
-					dailyReportView.DataContext = connection.LoadDailyReport( e.DateTime );
-				}
+				dailyReportView.DataContext = connection.LoadDailyReport( e.DateTime );
 			}
 		}
 	}

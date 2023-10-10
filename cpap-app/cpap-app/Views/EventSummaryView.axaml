@@ -56,7 +56,7 @@
                 <ColumnDefinition SharedSizeGroup="C3" />
             </Grid.ColumnDefinitions>
             <TextBlock Grid.Column="0" Grid.Row="0" Text="Event" />
-            <TextBlock Grid.Column="1" Grid.Row="0" Text="Index" HorizontalAlignment="Center" />
+            <TextBlock Grid.Column="1" Grid.Row="0" Text="#/Hour" HorizontalAlignment="Center" />
             <TextBlock Grid.Column="2" Grid.Row="0" Text="Total" HorizontalAlignment="Center" />
             <TextBlock Grid.Column="3" Grid.Row="0" Text="Time" />
         </Grid>

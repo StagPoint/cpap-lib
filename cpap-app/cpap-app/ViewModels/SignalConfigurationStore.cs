@@ -95,7 +95,7 @@ public static class SignalConfigurationStore
 					config.BaselineHigh = 100;
 					config.BaselineLow  = 50;
 					config.AxisMinValue = 40;
-					config.AxisMaxValue = 140;
+					config.AxisMaxValue = 130;
 					config.DisplayedEvents = new List<EventType>()
 					{
 						EventType.Bradycardia, 

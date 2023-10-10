@@ -10,7 +10,8 @@
              x:DataType="cpaplib:DailyReport"
              ReportedEventTypeSelected="DailyReportView_OnReportedEventTypeSelected"
              TimeSelected="OnTimeSelected"
-             TimeRangeSelected="OnTimeRangeSelected">
+             TimeRangeSelected="OnTimeRangeSelected"
+             views:DailySessionsList.SessionSelected="OnTimeRangeSelected">
     <UserControl.Styles>
         <Style Selector="Border.SelectionRect">
             <Setter Property="Background" Value="Transparent" />

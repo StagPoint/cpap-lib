@@ -204,43 +204,54 @@ namespace cpap_db
 		public void SaveDailyReport( DailyReport day )
 		{
 			var dayID = day.ReportDate.Date;
-
-			// Delete any existing record first. This will not cause any exception if the record does
-			// not already exist, and there's no convenient way to update existing records with this 
-			// many nested dependencies, so just get rid of it if it already exists. 
-			var mapping = GetMapping<DailyReport>();
-			mapping.Delete( Connection, dayID );
-
-			Insert( day, dayID, -1 );
 			
-			Insert( day.MachineInfo, foreignKeyValue: dayID );
-			Insert( day.Fault,       foreignKeyValue: dayID );
-
-			int settingsID = Insert( day.Settings, foreignKeyValue: dayID );
-			Insert( day.Settings.AutoSet, foreignKeyValue: settingsID );
-			Insert( day.Settings.ASV, foreignKeyValue: settingsID );
-			Insert( day.Settings.CPAP, foreignKeyValue: settingsID );
-			Insert( day.Settings.EPR, foreignKeyValue: settingsID );
-			Insert( day.Settings.Avap, foreignKeyValue: settingsID );
-
-			foreach( var evt in day.Events )
+			Connection.BeginTransaction();
+			try
 			{
-				Insert( evt, foreignKeyValue: dayID );
-			}
+				// Delete any existing record first. This will not cause any exception if the record does
+				// not already exist, and there's no convenient way to update existing records with this 
+				// many nested dependencies, so just get rid of it if it already exists. 
+				var mapping = GetMapping<DailyReport>();
+				mapping.Delete( Connection, dayID );
 
-			foreach( var stat in day.Statistics )
-			{
-				Insert( stat, foreignKeyValue: dayID );
-			}
-			
-			foreach( var session in day.Sessions )
-			{
-				var sessionID = Insert( session, foreignKeyValue: dayID );
+				Insert( day, dayID, -1 );
 
-				foreach( var signal in session.Signals )
+				Insert( day.MachineInfo, foreignKeyValue: dayID );
+				Insert( day.Fault,       foreignKeyValue: dayID );
+
+				int settingsID = Insert( day.Settings, foreignKeyValue: dayID );
+				Insert( day.Settings.AutoSet, foreignKeyValue: settingsID );
+				Insert( day.Settings.ASV,     foreignKeyValue: settingsID );
+				Insert( day.Settings.CPAP,    foreignKeyValue: settingsID );
+				Insert( day.Settings.EPR,     foreignKeyValue: settingsID );
+				Insert( day.Settings.Avap,    foreignKeyValue: settingsID );
+
+				foreach( var evt in day.Events )
 				{
-					Insert( signal, foreignKeyValue: sessionID );
+					Insert( evt, foreignKeyValue: dayID );
 				}
+
+				foreach( var stat in day.Statistics )
+				{
+					Insert( stat, foreignKeyValue: dayID );
+				}
+
+				foreach( var session in day.Sessions )
+				{
+					var sessionID = Insert( session, foreignKeyValue: dayID );
+
+					foreach( var signal in session.Signals )
+					{
+						Insert( signal, foreignKeyValue: sessionID );
+					}
+				}
+
+				Connection.Commit();
+			}
+			catch( Exception e )
+			{
+				Connection.Rollback();
+				throw;
 			}
 		}
 		
@@ -266,26 +277,16 @@ namespace cpap_db
 			return mapping.Delete( Connection, day );
 		}
 
-		public bool DeletePulseOximetryData( DateTime day )
+		public void DeletePulseOximetryData( DateTime date )
 		{
-			Connection.BeginTransaction();
-			try
-			{
-				var eventMapping   = GetMapping<ReportedEvent>();
-				var sessionMapping = GetMapping<Session>();
+			var day = LoadDailyReport( date );
 
-				int eventsDeleted   = Execute( $"DELETE FROM [{eventMapping.TableName}] WHERE [{eventMapping.ForeignKey.ColumnName}] = ? AND [SourceType] = ?",     day, SourceType.PulseOximetry );
-				int sessionsDeleted = Execute( $"DELETE FROM [{sessionMapping.TableName}] WHERE [{sessionMapping.ForeignKey.ColumnName}] = ? AND [SourceType] = ?", day, SourceType.PulseOximetry );
-				
-				Connection.Commit();
-
-				return eventsDeleted > 0 && sessionsDeleted > 0;
-			}
-			catch( Exception e )
-			{
-				Connection.Rollback();
-				throw;
-			}
+			day.Events.RemoveAll( x => x.SourceType == SourceType.PulseOximetry );
+			day.Sessions.RemoveAll( x => x.SourceType == SourceType.PulseOximetry );
+			
+			day.UpdateSessionTimes();
+			
+			SaveDailyReport( day );
 		}
 		
 		#endregion

@@ -37,7 +37,7 @@
                            Theme="{DynamicResource BodyStrongTextBlockStyle}" />
                 <TextBlock Grid.Column="2" Grid.Row="2"
                            Text="{Binding RecordingEndTime, Mode=OneWay, StringFormat={}{0:g}}" />
-                <TextBlock Grid.Column="0" Grid.Row="3" Text="Total Sleep Time:"
+                <TextBlock Grid.Column="0" Grid.Row="3" Text="Recorded Time:"
                            Theme="{DynamicResource BodyStrongTextBlockStyle}" />
                 <TextBlock Grid.Column="2" Grid.Row="3"
                            Text="{Binding TotalSleepTime, Mode=OneWay, StringFormat={}{0:T}}" />

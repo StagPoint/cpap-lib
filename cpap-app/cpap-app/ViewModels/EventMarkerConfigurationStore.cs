@@ -44,10 +44,11 @@ public class EventMarkerConfigurationStore
 		var eventTypes = (EventType[])typeof( EventType ).GetEnumValues();
 		for( int i = 0; i < eventTypes.Length; i++ )
 		{
-			var eventType       = eventTypes[ i ];
-			var eventTypeLabel  = eventType.ToString();
-			var eventMarkerType = EventMarkerType.Flag;
-			var eventColor      = DataColors.GetMarkerColor( i ).ToDrawingColor();
+			var eventType           = eventTypes[ i ];
+			var eventTypeLabel      = eventType.ToString();
+			var eventMarkerType     = EventMarkerType.Flag;
+			var eventMarkerPosition = EventMarkerPosition.AtEnd;
+			var eventColor          = DataColors.GetMarkerColor( i ).ToDrawingColor();
 
 			switch( eventType )
 			{
@@ -57,33 +58,40 @@ public class EventMarkerConfigurationStore
 				case EventType.RERA:
 				case EventType.Unclassified:
 				case EventType.CSR:
-					eventMarkerType = EventMarkerType.Flag;
+					eventMarkerType     = EventMarkerType.Flag;
+					eventMarkerPosition = EventMarkerPosition.AtEnd;
 					break;
 				case EventType.Arousal:
-					eventMarkerType = EventMarkerType.TickBottom;
+					eventMarkerType     = EventMarkerType.TickBottom;
+					eventMarkerPosition = EventMarkerPosition.AtEnd;
 					break;
 				case EventType.FlowLimitation:
 				case EventType.LargeLeak:
 				case EventType.PeriodicBreathing:
 				case EventType.VariableBreathing:
 				case EventType.BreathingNotDetected:
-					eventMarkerType = EventMarkerType.Span;
+					eventMarkerType     = EventMarkerType.Span;
+					eventMarkerPosition = EventMarkerPosition.AtEnd;
 					break;
 				case EventType.VibratorySnore:
-					eventMarkerType = EventMarkerType.TickTop;
+					eventMarkerType     = EventMarkerType.TickTop;
+					eventMarkerPosition = EventMarkerPosition.AtBeginning;
 					break;
 				case EventType.Desaturation:
-					eventMarkerType = EventMarkerType.ArrowBottom;
-					eventColor      = Color.Orange;
+					eventMarkerType     = EventMarkerType.ArrowBottom;
+					eventColor          = Color.Orange;
+					eventMarkerPosition = EventMarkerPosition.InCenter;
 					break;
 				case EventType.PulseRateChange:
-					eventMarkerType = EventMarkerType.TickBottom;
-					eventColor      = Color.Yellow;
+					eventMarkerType     = EventMarkerType.TickBottom;
+					eventColor          = Color.Yellow;
+					eventMarkerPosition = EventMarkerPosition.AtBeginning;
 					break;
 				case EventType.Hypoxemia:
 				case EventType.Tachycardia:
 				case EventType.Bradycardia:
-					eventMarkerType = EventMarkerType.Span;
+					eventMarkerType     = EventMarkerType.Span;
+					eventMarkerPosition = EventMarkerPosition.AtBeginning;
 					break;
 				case EventType.RecordingStarts:
 				case EventType.RecordingEnds:
@@ -98,7 +106,8 @@ public class EventMarkerConfigurationStore
 				EventType       = eventType,
 				EventMarkerType = eventMarkerType,
 				Label           = eventTypeLabel,
-				Color           = eventColor
+				Color           = eventColor,
+				MarkerPosition  = eventMarkerPosition,
 			};
 
 			store.Insert( config, primaryKeyValue: config.EventType );

@@ -15,10 +15,18 @@ public enum EventMarkerType
 	None,
 }
 
+public enum EventMarkerPosition
+{
+	AtEnd,
+	AtBeginning,
+	InCenter,
+}
+
 public class EventMarkerConfiguration
 {
-	public EventType  EventType  { get; set; }
-	public EventMarkerType EventMarkerType { get; set; }
-	public string     Label      { get; set; } = "";
-	public Color      Color      { get; set; }
+	public EventType           EventType       { get; set; }
+	public EventMarkerType     EventMarkerType { get; set; }
+	public EventMarkerPosition MarkerPosition  { get; set; }
+	public string              Label           { get; set; } = "";
+	public Color               Color           { get; set; }
 }

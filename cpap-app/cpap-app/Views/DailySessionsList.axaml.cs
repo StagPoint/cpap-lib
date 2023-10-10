@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
@@ -16,6 +17,24 @@ namespace cpap_app.Views;
 
 public partial class DailySessionsList : UserControl
 {
+	#region Events 
+	
+	public static readonly RoutedEvent<DateTimeRangeRoutedEventArgs> SessionSelectedEvent =
+		RoutedEvent.Register<DailyReportView, DateTimeRangeRoutedEventArgs>( nameof( SessionSelected ), RoutingStrategies.Bubble );
+
+	public static void AddSessionSelectedHandler( IInputElement element, EventHandler<DateTimeRangeRoutedEventArgs> handler )
+	{
+		element.AddHandler( SessionSelectedEvent, handler );
+	}
+
+	public event EventHandler<DateTimeRangeRoutedEventArgs> SessionSelected
+	{
+		add => AddHandler( SessionSelectedEvent, value );
+		remove => RemoveHandler( SessionSelectedEvent, value );
+	}
+
+	#endregion 
+	
 	#region Constructor 
 	
 	public DailySessionsList()
@@ -24,21 +43,22 @@ public partial class DailySessionsList : UserControl
 	}
 	
 	#endregion
+	
 	private void SelectingItemsControl_OnSelectionChanged( object? sender, SelectionChangedEventArgs e )
 	{
-		if( lstSessions.SelectedItem is Session session )
+		if( sender is ListBox { SelectedItem: Session session } listBox )
 		{
 			var eventArgs = new DateTimeRangeRoutedEventArgs
 			{
-				Route       = RoutingStrategies.Bubble | RoutingStrategies.Tunnel,
-				RoutedEvent = DailyReportView.TimeRangeSelectedEvent,
+				Route       = RoutingStrategies.Bubble,
+				RoutedEvent = SessionSelectedEvent,
 				StartTime   = session.StartTime,
 				EndTime     = session.EndTime
 			};
 			
 			RaiseEvent( eventArgs  );
 			
-			lstSessions.SelectedItem = null;
+			listBox.SelectedItem = null;
 		}
 	}
 }

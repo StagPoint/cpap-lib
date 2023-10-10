@@ -6,18 +6,18 @@ namespace cpap_app.Helpers;
 
 public static class PeakFinder
 {
-	public static int[] GenerateSignals( List<double> input, int lag, double threshold, double influence, double minDelta )
+	public static int[] GenerateSignals( List<double> input, int windowSize, double threshold, double peakInfluence, double minDelta )
 	{
 		var signals = new int[ input.Count ];
 
 		// Prime the moving average/stdev window first
-		var calculator = new MovingAverageCalculator( lag );
-		for( var i = 0; i < lag; i++ )
+		var calculator = new MovingAverageCalculator( windowSize );
+		for( var i = 0; i < windowSize; i++ )
 		{
 			calculator.AddObservation( input[ i ] );
 		}
 
-		for( var i = lag + 1; i < input.Count; i++ )
+		for( var i = windowSize + 1; i < input.Count; i++ )
 		{
 			var sample = input[ i ];
 			var delta  = Math.Abs( sample - calculator.Average );
@@ -27,7 +27,7 @@ public static class PeakFinder
 				signals[ i ] = sample > calculator.Average ? 1 : -1;
 
 				// Linear interpolation between running average and new sample
-				calculator.AddObservation( sample * influence + calculator.Average * (1.0 - influence) );
+				calculator.AddObservation( sample * peakInfluence + calculator.Average * (1.0 - peakInfluence) );
 			}
 			else
 			{

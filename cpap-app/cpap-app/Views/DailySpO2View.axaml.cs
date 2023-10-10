@@ -78,8 +78,8 @@ public partial class DailySpO2View : UserControl
 				OxygenEvents.DataContext = new DailyEventsViewModel( day, EventTypes.OxygenSaturation );
 				PulseEvents.DataContext  = new DailyEventsViewModel( day, EventTypes.Pulse );
 				
-				OxygenSummary.DataContext = DataDistribution.GetDataDistribution( day.Sessions, SignalNames.SpO2,  new[] { "> 95 %", "95 - 90 %", "< 90 %" },         new[] { 100, 96, 95, 90, 89, 0 } );
-				PulseSummary.DataContext  = DataDistribution.GetDataDistribution( day.Sessions, SignalNames.Pulse, new[] { "> 110 bpm", "110 - 60 bpm", "< 60 bpm" }, new[] { 250, 111, 110, 60, 59, 0 } );
+				OxygenSummary.DataContext = DataDistribution.GetDataDistribution( day.Sessions, SignalNames.SpO2,  new[] { "> 95 %", "90 - 95 %", "< 90 %" },         new[] { 100, 96, 95, 90, 89, 0 } );
+				PulseSummary.DataContext  = DataDistribution.GetDataDistribution( day.Sessions, SignalNames.Pulse, new[] { "> 110 bpm", "50 - 110 bpm", "< 50 bpm" }, new[] { 250, 111, 110, 50, 49, 0 } );
 				break;
 		}
 	}

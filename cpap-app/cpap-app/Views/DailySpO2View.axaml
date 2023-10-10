@@ -41,7 +41,7 @@
                            Theme="{DynamicResource BodyStrongTextBlockStyle}" />
                 <TextBlock Grid.Column="2" Grid.Row="2"
                            Text="{Binding RecordingEndTime, StringFormat={}{0:g}}" />
-                <TextBlock Grid.Column="0" Grid.Row="3" Text="Total Sleep Time:"
+                <TextBlock Grid.Column="0" Grid.Row="3" Text="Recorded Time:"
                            Theme="{DynamicResource BodyStrongTextBlockStyle}" />
                 <TextBlock Grid.Column="2" Grid.Row="3"
                            Text="{Binding TotalSleepTime, StringFormat={}{0:T}}" />
@@ -102,8 +102,11 @@
                 </Expander.Header>
                 <views:OximetrySessionsList />
             </Expander>
-            <Button HorizontalAlignment="Right" Margin="0 12" ToolTip.Tip="{Binding ReportDate.Date, StringFormat={}Delete Pulse Oximetry Data for {0:d}}" Click="DeleteOximetryData_OnClick">
-                <controls:SymbolIcon Symbol="Delete" />
+            <Button HorizontalAlignment="Stretch" Margin="1 12" Click="DeleteOximetryData_OnClick">
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                    <controls:SymbolIcon Symbol="Delete" />
+                    <TextBlock Text="Delete Pulse Oximetry Data" />
+                </StackPanel>
             </Button>
         </StackPanel>
     </DockPanel>

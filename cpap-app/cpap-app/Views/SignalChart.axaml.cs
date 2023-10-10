@@ -29,11 +29,11 @@ using ScottPlot.Plottable;
 using Brush = Avalonia.Media.Brush;
 using Brushes = Avalonia.Media.Brushes;
 using Color = System.Drawing.Color;
-using Cursor = Avalonia.Input.Cursor;
 using Point = Avalonia.Point;
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
 namespace cpap_app.Views;
+
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
 public partial class SignalChart : UserControl
 {
@@ -46,7 +46,7 @@ public partial class SignalChart : UserControl
 
 	#endregion
 	
-	#region Event handlers 
+	#region Events 
 	
 	public static readonly RoutedEvent<DateTimeRangeRoutedEventArgs> DisplayedRangeChangedEvent = RoutedEvent.Register<SignalChart, DateTimeRangeRoutedEventArgs>( nameof( DisplayedRangeChanged ), RoutingStrategies.Bubble );
 
@@ -119,7 +119,11 @@ public partial class SignalChart : UserControl
 	private GraphInteractionMode _interactionMode    = GraphInteractionMode.None;
 	private AxisLimits           _pointerDownAxisLimits;
 	private Point                _pointerDownPosition;
-	private HSpan                _selectionSpan;
+
+	private HSpan          _selectionSpan;
+	private VLine          _hoverMarkerLine;
+	private HSpan          _hoverMarkerSpan;
+	private ReportedEvent? _hoverEvent = null;
 	
 	private List<ReportedEvent> _events           = new();
 	private List<Signal>        _signals          = new();
@@ -318,17 +322,16 @@ public partial class SignalChart : UserControl
 		_selectionSpan.IsVisible = false;
 		EventTooltip.IsVisible   = false;
 		
-		Chart.Cursor = Cursor.Default;
-
-		if( _interactionMode == GraphInteractionMode.Selecting )
+		switch( _interactionMode )
 		{
-			EndSelectionMode();
-		}
-		else if( _interactionMode == GraphInteractionMode.Panning )
-		{
-			// The chart was rendered in low quality while panning, so re-render in high quality now that we're done 
-			Chart.Configuration.Quality = ScottPlot.Control.QualityMode.LowWhileDragging;
-			Chart.RenderRequest();
+			case GraphInteractionMode.Selecting:
+				EndSelectionMode();
+				break;
+			case GraphInteractionMode.Panning:
+				// The chart was rendered in low quality while panning, so re-render in high quality now that we're done 
+				Chart.Configuration.Quality = ScottPlot.Control.QualityMode.LowWhileDragging;
+				Chart.RenderRequest();
+				break;
 		}
 
 		_interactionMode = GraphInteractionMode.None;
@@ -369,7 +372,6 @@ public partial class SignalChart : UserControl
 			_selectionSpan.IsVisible = true;
 
 			_interactionMode = GraphInteractionMode.Selecting;
-			Chart.Cursor     = new Avalonia.Input.Cursor( StandardCursorType.Cross );
 			
 			eventArgs.Handled = true;
 		}
@@ -380,7 +382,6 @@ public partial class SignalChart : UserControl
 			_pointerDownPosition   = point.Position;
 			_pointerDownAxisLimits = Chart.Plot.GetAxisLimits();
 			_interactionMode       = GraphInteractionMode.Panning;
-			Chart.Cursor           = new Avalonia.Input.Cursor( StandardCursorType.SizeWestEast );
 		}
 	}
 
@@ -545,9 +546,71 @@ public partial class SignalChart : UserControl
 		{
 			UpdateTimeMarker( DateTime.MinValue );
 			RaiseTimeMarkerChanged( DateTime.MinValue );
+
+			HideEventHoverMarkers();
 		}
 	}
+
+	private void ShowEventHoverMarkers( ReportedEvent hoverEvent )
+	{
+		if( _day == null || object.ReferenceEquals( _hoverEvent, hoverEvent ) )
+		{
+			return;
+		}
+		
+		_hoverEvent = hoverEvent;
+
+		var config = MarkerConfiguration.FirstOrDefault( x => x.EventType == hoverEvent.Type );
+		if( config != null )
+		{
+			if( config.EventMarkerType == EventMarkerType.Span )
+			{
+				return;
+			}
+
+			var    bounds       = hoverEvent.GetTimeBounds();
+			double startOffset  = (bounds.StartTime - _day.RecordingStartTime).TotalSeconds;
+			double endOffset    = (bounds.EndTime - _day.RecordingStartTime).TotalSeconds;
+			double centerOffset = (startOffset + endOffset) / 2.0;
+
+			if( config.EventMarkerType != EventMarkerType.Flag && config.MarkerPosition != EventMarkerPosition.InCenter )
+			{
+				_hoverMarkerLine.X = config.MarkerPosition switch
+				{
+					EventMarkerPosition.AtEnd       => endOffset,
+					EventMarkerPosition.AtBeginning => startOffset,
+					EventMarkerPosition.InCenter    => centerOffset,
+					_                               => -1
+				};
+				
+				_hoverMarkerLine.Color     = config.Color;
+				_hoverMarkerLine.IsVisible = true;
+			}
+
+			if( hoverEvent.Duration.TotalSeconds > 0 )
+			{
+				_hoverMarkerSpan.X1        = startOffset;
+				_hoverMarkerSpan.X2        = endOffset;
+				_hoverMarkerSpan.Color     = config.Color.MultiplyAlpha( 0.2f );
+				_hoverMarkerSpan.IsVisible = true;
+			}
+		}
+		
+		Chart.RenderRequest();
+	}
 	
+	private void HideEventHoverMarkers()
+	{
+		if( _hoverEvent != null )
+		{
+			_hoverMarkerSpan.IsVisible = false;
+			_hoverMarkerLine.IsVisible = false;
+			_hoverEvent                = null;
+			
+			Chart.RenderRequest();
+		}
+	}
+
 	private void RaiseTimeMarkerChanged( DateTime time )
 	{
 		RaiseEvent( new DateTimeRoutedEventArgs()
@@ -653,7 +716,8 @@ public partial class SignalChart : UserControl
 			}
 		}
 
-		double highlightDistance = 5.0 / Chart.Plot.XAxis.Dims.PxPerUnit;
+		double highlightDistance = 8.0 / Chart.Plot.XAxis.Dims.PxPerUnit;
+		bool   hoveringOverEvent = false;
 		
 		// Find any events the mouse might be hovering over
 		foreach( var flag in _events )
@@ -671,10 +735,17 @@ public partial class SignalChart : UserControl
 				
 				EventTooltip.IsVisible = true;
 				
+				ShowEventHoverMarkers( flag );
+				hoveringOverEvent = true;
+				
 				break;
 			}
 		}
-		
+
+		if( !hoveringOverEvent )
+		{
+			HideEventHoverMarkers();
+		}
 	}
 
 	private void LoadData( DailyReport day )
@@ -731,6 +802,14 @@ public partial class SignalChart : UserControl
 			_selectionSpan                = Chart.Plot.AddHorizontalSpan( -1, -1, Color.Red.MultiplyAlpha( 0.2f ), null );
 			_selectionSpan.IgnoreAxisAuto = true;
 			_selectionSpan.IsVisible      = false;
+
+			_hoverMarkerLine                = Chart.Plot.AddVerticalLine( -1, Color.Transparent, 1.5f, LineStyle.Solid, null );
+			_hoverMarkerLine.IgnoreAxisAuto = true;
+			_hoverMarkerLine.IsVisible      = false;
+
+			_hoverMarkerSpan                = Chart.Plot.AddHorizontalSpan( -1, -1, Color.Transparent, null );
+			_hoverMarkerSpan.IgnoreAxisAuto = true;
+			_hoverMarkerSpan.IsVisible      = false;
 		}
 		finally
 		{
@@ -872,49 +951,43 @@ public partial class SignalChart : UserControl
 
 				double startOffset  = (bounds.StartTime - day.RecordingStartTime).TotalSeconds;
 				double endOffset    = (bounds.EndTime - day.RecordingStartTime).TotalSeconds;
-				var    centerOffset = (startOffset + endOffset) / 2.0;
+				double centerOffset = (startOffset + endOffset) / 2.0;
+
+				double markerOffset = markerConfig.MarkerPosition switch
+				{
+					EventMarkerPosition.AtEnd       => endOffset,
+					EventMarkerPosition.AtBeginning => startOffset,
+					EventMarkerPosition.InCenter    => centerOffset,
+					_                               => throw new ArgumentOutOfRangeException( $"Unhandled {nameof( EventMarkerPosition )} value {markerConfig.MarkerPosition}" )
+				};
 
 				switch( markerConfig.EventMarkerType )
 				{
 					case EventMarkerType.Flag:
-						Chart.Plot.AddVerticalLine( endOffset, color, 1.5f, LineStyle.Solid, null );
+						Chart.Plot.AddVerticalLine( markerOffset, color, 1.5f, LineStyle.Solid, null );
 						break;
 					case EventMarkerType.TickTop:
-						var topLine = Chart.Plot.AddMarker( centerOffset, limits.YMax, MarkerShape.verticalBar, 32, markerConfig.Color, null );
+						var topLine = Chart.Plot.AddMarker( markerOffset, limits.YMax, MarkerShape.verticalBar, 32, markerConfig.Color, null );
 						topLine.MarkerLineWidth = 1.5f;
 						break;
 					case EventMarkerType.TickBottom:
-						var bottomLine = Chart.Plot.AddMarker( centerOffset, limits.YMin, MarkerShape.verticalBar, 32, markerConfig.Color, null );
+						var bottomLine = Chart.Plot.AddMarker( markerOffset, limits.YMin, MarkerShape.verticalBar, 32, markerConfig.Color, null );
 						bottomLine.MarkerLineWidth = 1.5f;
 						break;
 					case EventMarkerType.ArrowTop:
-						Chart.Plot.AddMarker( centerOffset, limits.YMax, MarkerShape.filledTriangleDown, 16, markerConfig.Color, null );
+						Chart.Plot.AddMarker( markerOffset, limits.YMax, MarkerShape.filledTriangleDown, 16, markerConfig.Color, null );
 						break;
 					case EventMarkerType.ArrowBottom:
-						Chart.Plot.AddMarker( centerOffset, limits.YMin, MarkerShape.filledTriangleUp, 16, markerConfig.Color, null );
+						Chart.Plot.AddMarker( markerOffset, limits.YMin, MarkerShape.filledTriangleUp, 16, markerConfig.Color, null );
 						break;
 					case EventMarkerType.Span:
-						// This seems backwards, but it appears that ResMed CPAP machines will set Duration to include
-						// the period *before* the event, presumably because that period of time is a defining characteristic
-						// of said event (such as "a decrease in airflow lasting at least 10 seconds", etc).
 						Chart.Plot.AddHorizontalSpan( startOffset, endOffset, color.MultiplyAlpha( 0.35f ) );
 						break;
+					case EventMarkerType.None:
+						continue;
 					default:
-						throw new ArgumentOutOfRangeException();
+						throw new ArgumentOutOfRangeException( $"Unhandled {nameof( EventMarkerType )} value {markerConfig.EventMarkerType}" );
 				}
-
-				// if( eventFlag.Duration.TotalSeconds > 0 )
-				// {
-				// 	// Determine whether to consider the Duration as occurring before or after the marker flag
-				// 	var bounds    = eventFlag.GetTimeBounds();
-				// 	var startTime = (bounds.StartTime - day.RecordingStartTime).TotalSeconds;
-				// 	var endTime   = (bounds.EndTime - day.RecordingStartTime).TotalSeconds;
-				// 	
-				// 	// This seems backwards, but it appears that ResMed CPAP machines will set Duration to include
-				// 	// the period *before* the event, presumably because that period of time is a defining characteristic
-				// 	// of said event (such as "a decrease in airflow lasting at least 10 seconds", etc).
-				// 	Chart.Plot.AddHorizontalSpan( startTime, endTime, color.MultiplyAlpha( 0.2f ) );
-				// }
 
 				_events.Add( eventFlag );
 
