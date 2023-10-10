@@ -9,105 +9,113 @@
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="800"
              x:Class="cpap_app.Views.DailySpO2View"
              x:DataType="cpaplib:DailyReport">
-    <DockPanel LastChildFill="True">
-        <StackPanel Name="pnlNoInfoAvailable" DockPanel.Dock="Top">
-            <TextBlock Text="No pulse oximetry data available" Theme="{DynamicResource SubtitleTextBlockStyle}"
-                       Margin="10" />
-            <TextBlock Text="There is no pulse oximetry data imported for this date." Margin="10" TextWrapping="Wrap" />
-            <TextBlock Text="Please use the Import button on the Navigation menu to import pulse oximetry data."
-                       Margin="10" TextWrapping="Wrap" />
-        </StackPanel>
-        <StackPanel DockPanel.Dock="Top" Name="SourcesSummary" x:DataType="viewModels:DailySummaryViewModel" Margin="4 8 0 0">
-            <ItemsRepeater ItemsSource="{Binding Sources}">
-                <ItemsRepeater.ItemTemplate>
-                    <DataTemplate>
+    <ScrollViewer>
+        <StackPanel Orientation="Vertical">
+            <StackPanel Name="pnlNoInfoAvailable">
+                <TextBlock Text="No pulse oximetry data available" Theme="{DynamicResource SubtitleTextBlockStyle}"
+                           Margin="10" />
+                <TextBlock Text="There is no pulse oximetry data imported for this date." Margin="10"
+                           TextWrapping="Wrap" />
+                <TextBlock
+                    Text="Please use the Import button on the Navigation menu to import pulse oximetry data."
+                    Margin="10" TextWrapping="Wrap" />
+            </StackPanel>
+            <StackPanel Name="SourcesSummary" x:DataType="viewModels:DailySummaryViewModel"
+                        Margin="4 8 0 0">
+                <ItemsRepeater ItemsSource="{Binding Sources}">
+                    <ItemsRepeater.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Source: " Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                                <TextBlock Text="{Binding}" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ItemsRepeater.ItemTemplate>
+                </ItemsRepeater>
+                <Grid Margin="0 10" ColumnDefinitions="Auto,20,Auto,*" RowDefinitions="Auto,Auto,Auto,Auto">
+                    <TextBlock Grid.Column="0" Grid.Row="0" Text="Date:"
+                               Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                    <TextBlock Grid.Column="2" Grid.Row="0"
+                               Text="{Binding ReportDate, StringFormat={}{0:D}}" />
+                    <TextBlock Grid.Column="0" Grid.Row="1" Text="Start Time:"
+                               Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                    <TextBlock Grid.Column="2" Grid.Row="1"
+                               Text="{Binding RecordingStartTime, StringFormat={}{0:g}}" />
+                    <TextBlock Grid.Column="0" Grid.Row="2" Text="End Time:"
+                               Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                    <TextBlock Grid.Column="2" Grid.Row="2"
+                               Text="{Binding RecordingEndTime, StringFormat={}{0:g}}" />
+                    <TextBlock Grid.Column="0" Grid.Row="3" Text="Recorded Time:"
+                               Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                    <TextBlock Grid.Column="2" Grid.Row="3"
+                               Text="{Binding TotalSleepTime, StringFormat={}{0:T}}" />
+                </Grid>
+            </StackPanel>
+            <StackPanel Name="pnlOximetryInfo" Orientation="Vertical">
+                <Expander
+                    ExpandDirection="Down"
+                    IsExpanded="True"
+                    VerticalAlignment="Top"
+                    Margin="0 10 0 0"
+                    Padding="10">
+                    <Expander.Header>
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="Source: " Theme="{DynamicResource BodyStrongTextBlockStyle}" />
-                            <TextBlock Text="{Binding}" />
+                            <controls:FontIcon Glyph="&#xE8EF;" FontSize="24"
+                                               FontFamily="{DynamicResource SymbolThemeFontFamily}"
+                                               FontWeight="Normal" FontStyle="Normal" Margin="0 0 10 0" />
+                            <TextBlock Text="Oxygen" FontSize="16"
+                                       Theme="{DynamicResource BodyStrongTextBlockStyle}" />
                         </StackPanel>
-                    </DataTemplate>
-                </ItemsRepeater.ItemTemplate>
-            </ItemsRepeater>
-            <Grid Margin="0 10" ColumnDefinitions="Auto,20,Auto,*" RowDefinitions="Auto,Auto,Auto,Auto">
-                <TextBlock Grid.Column="0" Grid.Row="0" Text="Date:"
-                           Theme="{DynamicResource BodyStrongTextBlockStyle}" />
-                <TextBlock Grid.Column="2" Grid.Row="0"
-                           Text="{Binding ReportDate, StringFormat={}{0:D}}" />
-                <TextBlock Grid.Column="0" Grid.Row="1" Text="Start Time:"
-                           Theme="{DynamicResource BodyStrongTextBlockStyle}" />
-                <TextBlock Grid.Column="2" Grid.Row="1"
-                           Text="{Binding RecordingStartTime, StringFormat={}{0:g}}" />
-                <TextBlock Grid.Column="0" Grid.Row="2" Text="End Time:"
-                           Theme="{DynamicResource BodyStrongTextBlockStyle}" />
-                <TextBlock Grid.Column="2" Grid.Row="2"
-                           Text="{Binding RecordingEndTime, StringFormat={}{0:g}}" />
-                <TextBlock Grid.Column="0" Grid.Row="3" Text="Recorded Time:"
-                           Theme="{DynamicResource BodyStrongTextBlockStyle}" />
-                <TextBlock Grid.Column="2" Grid.Row="3"
-                           Text="{Binding TotalSleepTime, StringFormat={}{0:T}}" />
-            </Grid>
+                    </Expander.Header>
+                    <StackPanel Orientation="Vertical">
+                        <views:DataDistributionView Name="OxygenSummary" UnitOfMeasure="%" />
+                        <views:EventSummaryView Name="OxygenEvents" Margin="0 10 0 0" />
+                    </StackPanel>
+                </Expander>
+                <Expander
+                    ExpandDirection="Down"
+                    IsExpanded="True"
+                    VerticalAlignment="Top"
+                    Margin="0 10 0 0"
+                    Padding="10">
+                    <Expander.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <controls:FontIcon Glyph="&#xE8EF;" FontSize="24"
+                                               FontFamily="{DynamicResource SymbolThemeFontFamily}"
+                                               FontWeight="Normal" FontStyle="Normal" Margin="0 0 10 0" />
+                            <TextBlock Text="Pulse" FontSize="16"
+                                       Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                        </StackPanel>
+                    </Expander.Header>
+                    <StackPanel Orientation="Vertical">
+                        <views:DataDistributionView Name="PulseSummary" UnitOfMeasure="bpm" />
+                        <views:EventSummaryView Name="PulseEvents" Margin="0 10 0 0" />
+                    </StackPanel>
+                </Expander>
+                <Expander
+                    ExpandDirection="Down"
+                    IsExpanded="True"
+                    VerticalAlignment="Top"
+                    Margin="0 10 0 0"
+                    Padding="10">
+                    <Expander.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <controls:FontIcon Glyph="&#xEC92;" FontSize="24"
+                                               FontFamily="{DynamicResource SymbolThemeFontFamily}"
+                                               FontWeight="Normal" FontStyle="Normal" Margin="0 0 10 0" />
+                            <TextBlock Text="Sessions" FontSize="16"
+                                       Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                        </StackPanel>
+                    </Expander.Header>
+                    <views:OximetrySessionsList />
+                </Expander>
+                <Button HorizontalAlignment="Stretch" Margin="1 12" Click="DeleteOximetryData_OnClick">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <controls:SymbolIcon Symbol="Delete" />
+                        <TextBlock Text="Delete Pulse Oximetry Data" />
+                    </StackPanel>
+                </Button>
+            </StackPanel>
         </StackPanel>
-        <StackPanel Name="pnlOximetryInfo" Orientation="Vertical">
-            <Expander
-                ExpandDirection="Down"
-                IsExpanded="True"
-                VerticalAlignment="Top"
-                Margin="0 10 0 0"
-                Padding="10">
-                <Expander.Header>
-                    <StackPanel Orientation="Horizontal">
-                        <controls:FontIcon Glyph="&#xE8EF;" FontSize="24"
-                                           FontFamily="{DynamicResource SymbolThemeFontFamily}"
-                                           FontWeight="Normal" FontStyle="Normal" Margin="0 0 10 0" />
-                        <TextBlock Text="Oxygen" FontSize="16" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
-                    </StackPanel>
-                </Expander.Header>
-                <StackPanel Orientation="Vertical">
-                    <views:DataDistributionView Name="OxygenSummary" UnitOfMeasure="%" />
-                    <views:EventSummaryView Name="OxygenEvents" Margin="0 10 0 0" />
-                </StackPanel>
-            </Expander>
-            <Expander
-                ExpandDirection="Down"
-                IsExpanded="True"
-                VerticalAlignment="Top"
-                Margin="0 10 0 0"
-                Padding="10">
-                <Expander.Header>
-                    <StackPanel Orientation="Horizontal">
-                        <controls:FontIcon Glyph="&#xE8EF;" FontSize="24"
-                                           FontFamily="{DynamicResource SymbolThemeFontFamily}"
-                                           FontWeight="Normal" FontStyle="Normal" Margin="0 0 10 0" />
-                        <TextBlock Text="Pulse" FontSize="16" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
-                    </StackPanel>
-                </Expander.Header>
-                <StackPanel Orientation="Vertical">
-                    <views:DataDistributionView Name="PulseSummary" UnitOfMeasure="bpm" />
-                    <views:EventSummaryView Name="PulseEvents" Margin="0 10 0 0" />
-                </StackPanel>
-            </Expander>
-            <Expander
-                ExpandDirection="Down"
-                IsExpanded="True"
-                VerticalAlignment="Top"
-                Margin="0 10 0 0"
-                Padding="10">
-                <Expander.Header>
-                    <StackPanel Orientation="Horizontal">
-                        <controls:FontIcon Glyph="&#xEC92;" FontSize="24"
-                                           FontFamily="{DynamicResource SymbolThemeFontFamily}"
-                                           FontWeight="Normal" FontStyle="Normal" Margin="0 0 10 0" />
-                        <TextBlock Text="Sessions" FontSize="16" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
-                    </StackPanel>
-                </Expander.Header>
-                <views:OximetrySessionsList />
-            </Expander>
-            <Button HorizontalAlignment="Stretch" Margin="1 12" Click="DeleteOximetryData_OnClick">
-                <StackPanel Orientation="Horizontal" Spacing="12">
-                    <controls:SymbolIcon Symbol="Delete" />
-                    <TextBlock Text="Delete Pulse Oximetry Data" />
-                </StackPanel>
-            </Button>
-        </StackPanel>
-    </DockPanel>
+    </ScrollViewer>
 </UserControl>

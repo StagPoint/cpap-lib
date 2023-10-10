@@ -696,7 +696,7 @@ public partial class SignalChart : UserControl
 			// the signal itself also 
 			if( signal.StartTime <= time && signal.EndTime >= time )
 			{
-				var value = signal.GetValueAtTime( time );
+				var value = signal.GetValueAtTime( time, !ChartConfiguration.ShowStepped );
 
 				CurrentValue.Text = $"{time:T}        {ChartConfiguration.Title}: {value:N2} {signal.UnitOfMeasurement}";
 
@@ -790,14 +790,14 @@ public partial class SignalChart : UserControl
 			// order in which they are added, and we want the redline rendered behind the signal data.
 			if( ChartConfiguration.BaselineHigh.HasValue )
 			{
-				var redlineColor = Colors.Red.MultiplyAlpha( 0.6f );
-				Chart.Plot.AddHorizontalLine( ChartConfiguration.BaselineHigh.Value, redlineColor.ToDrawingColor(), 1f, LineStyle.Dash );
+				var redlineColor = Colors.Red.MultiplyAlpha( 0.75f );
+				Chart.Plot.AddHorizontalLine( ChartConfiguration.BaselineHigh.Value, redlineColor.ToDrawingColor(), 1f, LineStyle.Dot );
 			}
 
 			if( ChartConfiguration.BaselineLow.HasValue )
 			{
-				var redlineColor = Colors.Red.MultiplyAlpha( 0.6f );
-				Chart.Plot.AddHorizontalLine( ChartConfiguration.BaselineLow.Value, redlineColor.ToDrawingColor(), 1f, LineStyle.Dash );
+				var redlineColor = Colors.Red.MultiplyAlpha( 0.75f );
+				Chart.Plot.AddHorizontalLine( ChartConfiguration.BaselineLow.Value, redlineColor.ToDrawingColor(), 1f, LineStyle.Dot );
 			}
 
 			ChartSignal( Chart, day, ChartConfiguration.SignalName, 1f, ChartConfiguration.AxisMinValue, ChartConfiguration.AxisMaxValue );
@@ -870,7 +870,7 @@ public partial class SignalChart : UserControl
 			if( ChartConfiguration.ShowStepped )
 			{
 				graph.StepDisplay      = true;
-				graph.StepDisplayRight = ChartConfiguration.StepRight;
+				graph.StepDisplayRight = true;
 			}
 
 			if( SecondaryConfiguration != null )
@@ -894,7 +894,7 @@ public partial class SignalChart : UserControl
 					if( ChartConfiguration.ShowStepped )
 					{
 						secondaryGraph.StepDisplay      = true;
-						secondaryGraph.StepDisplayRight = ChartConfiguration.StepRight;
+						secondaryGraph.StepDisplayRight = true;
 					}
 				}
 			}

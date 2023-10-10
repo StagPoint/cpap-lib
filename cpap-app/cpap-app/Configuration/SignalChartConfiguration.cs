@@ -25,7 +25,6 @@ public class SignalChartConfiguration
 	public bool?   FillBelow           { get; set; }
 	public Color   PlotColor           { get; set; } = System.Drawing.Color.DodgerBlue;
 	public bool    ShowStepped         { get; set; }
-	public bool    StepRight           { get; set; }
 
 	public List<EventType> DisplayedEvents { get; set; } = new();
 	

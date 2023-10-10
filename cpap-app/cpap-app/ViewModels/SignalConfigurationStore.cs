@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 using cpap_app.Configuration;
 using cpap_app.Converters;
 using cpap_app.Helpers;
-using cpap_app.Views;
 
 using cpap_db;
 
@@ -86,32 +84,11 @@ public static class SignalConfigurationStore
 					config.AxisMaxValue = 20;
 					break;
 				
-				case SignalNames.SpO2:
-					config.BaselineLow     = 88;
-					config.DisplayedEvents = new List<EventType>()
-					{
-						EventType.Desaturation, 
-						EventType.Hypoxemia
-					};
-					break;
-				
-				case SignalNames.Pulse:
-					config.BaselineHigh = 100;
-					config.BaselineLow  = 50;
-					config.AxisMinValue = 40;
-					config.AxisMaxValue = 130;
-					config.DisplayedEvents = new List<EventType>()
-					{
-						EventType.Bradycardia, 
-						EventType.Tachycardia,
-						EventType.PulseRateChange
-					};
-					break;
-				
 				case SignalNames.LeakRate:
+					config.ShowStepped  = true;
 					config.BaselineHigh = 24;
 					config.AxisMinValue = 0;
-					config.AxisMaxValue = 60;
+					config.AxisMaxValue = 40;
 					config.DisplayedEvents = new List<EventType>()
 					{
 						EventType.LargeLeak
@@ -119,6 +96,7 @@ public static class SignalConfigurationStore
 					break;
 				
 				case SignalNames.FlowLimit:
+					config.ShowStepped  = true;
 					config.BaselineHigh = 0.3;
 					config.DisplayedEvents = new List<EventType>()
 					{
@@ -129,7 +107,7 @@ public static class SignalConfigurationStore
 				case SignalNames.TidalVolume:
 					config.BaselineHigh = 500;
 					config.AxisMinValue = 0;
-					config.AxisMaxValue = 2500;
+					config.AxisMaxValue = 2000;
 					break;
 				
 				case SignalNames.MinuteVent:
@@ -142,6 +120,23 @@ public static class SignalConfigurationStore
 					config.BaselineLow  = 10;
 					config.AxisMinValue = 0;
 					config.AxisMaxValue = 40;
+					break;
+				
+				case SignalNames.SpO2:
+					config.BaselineLow     = 88;
+					config.DisplayedEvents = EventTypes.OxygenSaturation.ToList();
+					break;
+				
+				case SignalNames.Pulse:
+					config.BaselineHigh    = 100;
+					config.BaselineLow     = 50;
+					config.AxisMinValue    = 40;
+					config.AxisMaxValue    = 130;
+					config.DisplayedEvents = EventTypes.Pulse.ToList();
+					break;
+				
+				case SignalNames.Movement:
+					config.ShowStepped     = true;
 					break;
 			}
 

@@ -110,7 +110,9 @@ namespace cpaplib
 		/// <summary>
 		/// Returns the value of the signal at the given time
 		/// </summary>
-		public double GetValueAtTime( DateTime time )
+		/// <param name="interpolate">If TRUE, will interpolate between the two surrounding signal values to return
+		/// the exact value at the given time. Will otherwise return the value that is closest to the given time.</param>
+		public double GetValueAtTime( DateTime time, bool interpolate = true )
 		{
 			if( time <= StartTime )
 				return Samples[ 0 ];
@@ -122,6 +124,7 @@ namespace cpaplib
 			int    leftIndex  = (int)Math.Floor( offset * FrequencyInHz );
 			int    rightIndex = (int)Math.Ceiling( offset * FrequencyInHz );
 
+			// If the time is at (or just barely past) the end of the Signal, return the last sample. 
 			if( rightIndex >= Samples.Count )
 			{
 				return Samples[ Samples.Count - 1 ];
@@ -130,6 +133,12 @@ namespace cpaplib
 			// Grab the samples on either side of the given time
 			double a = Samples[ leftIndex ];
 			double b = Samples[ rightIndex ];
+
+			// If not interpolating, then just return the sample that is closest to the given time
+			if( !interpolate )
+			{
+				return a;
+			}
 			
 			// Calculate the quantized time of each bounding sample 
 			double timeA = leftIndex / FrequencyInHz;
