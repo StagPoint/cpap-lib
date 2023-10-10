@@ -204,8 +204,14 @@ namespace cpap_db
 		public void SaveDailyReport( DailyReport day )
 		{
 			var dayID = day.ReportDate.Date;
+
+			var wasInTransaction = Connection.IsInTransaction;
+
+			if( !wasInTransaction )
+			{
+				Connection.BeginTransaction();
+			}
 			
-			Connection.BeginTransaction();
 			try
 			{
 				// Delete any existing record first. This will not cause any exception if the record does
@@ -246,11 +252,17 @@ namespace cpap_db
 					}
 				}
 
-				Connection.Commit();
+				if( !wasInTransaction )
+				{
+					Connection.Commit();
+				}
 			}
 			catch( Exception e )
 			{
-				Connection.Rollback();
+				if( !wasInTransaction )
+				{
+					Connection.Rollback();
+				}
 				throw;
 			}
 		}

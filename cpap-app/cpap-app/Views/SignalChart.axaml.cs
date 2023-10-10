@@ -527,6 +527,14 @@ public partial class SignalChart : UserControl
 
 	private void EndSelectionMode()
 	{
+		const double MINIMUM_TIME_WINDOW = 30;
+
+		// Sanity check
+		if( _day == null )
+		{
+			return;
+		}
+		
 		_interactionMode = GraphInteractionMode.None;
 			
 		if( _selectionStartTime > _selectionEndTime )
@@ -534,11 +542,16 @@ public partial class SignalChart : UserControl
 			(_selectionStartTime, _selectionEndTime) = (_selectionEndTime, _selectionStartTime);
 		}
 		
-		if( _day != null && _selectionEndTime > _selectionStartTime + 30 )
+		// Enforce maximum zoom
+		if( _selectionEndTime < _selectionStartTime + MINIMUM_TIME_WINDOW )
 		{
-			ZoomTo( _selectionStartTime, _selectionEndTime );
-			OnAxesChanged( this, EventArgs.Empty );
+			var center = (_selectionStartTime + _selectionEndTime) / 2.0;
+			_selectionStartTime = center - MINIMUM_TIME_WINDOW / 2.0;
+			_selectionEndTime   = center + MINIMUM_TIME_WINDOW / 2.0;
 		}
+		
+		ZoomTo( _selectionStartTime, _selectionEndTime );
+		OnAxesChanged( this, EventArgs.Empty );
 
 		Chart.RenderRequest();
 	}
