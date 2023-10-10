@@ -1117,7 +1117,6 @@ public partial class SignalChart : UserControl
 	{
 		None,
 		Panning,
-		Zooming,
 		Selecting,
 	}
 	
