@@ -20,10 +20,10 @@ public class EventTimespanConverter : IValueConverter
 		{
 			if( summary.Type == EventType.LargeLeak || EventTypes.Breathing.Contains( summary.Type ) )
 			{
-				return $"{summary.PercentTime:F2}%";
+				return $"{summary.PercentTime:P2}";
 			}
 
-			return $"{summary.TotalTime:hh\\:mm\\:ss}";
+			return $@"{summary.TotalTime:hh\:mm\:ss}";
 		}
 
 		return value?.ToString();

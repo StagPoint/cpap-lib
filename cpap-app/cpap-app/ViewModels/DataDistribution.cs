@@ -6,7 +6,7 @@ using cpaplib;
 
 namespace cpap_app.ViewModels;
 
-public class DistributionGrouping
+public class DistributionGrouping : IComparable<DistributionGrouping>
 {
 	public string   Label          { get; set; } = "";
 	public double   MinValue       { get; set; } = double.MaxValue;
@@ -14,6 +14,11 @@ public class DistributionGrouping
 	public int      TotalCount     { get; set; } = 0;
 	public TimeSpan TotalTime      { get; set; }
 	public float    PercentOfTotal { get; set; }
+
+	public int CompareTo( DistributionGrouping? other )
+	{
+		return MinValue.CompareTo( other?.MinValue ) * -1;
+	}
 }
 
 public class DataDistribution
@@ -26,7 +31,7 @@ public class DataDistribution
 	
     #region Factory functions
 
-	public static DataDistribution GetDataDistribution( List<Session> sessions, string signalName, string[] labels, double[] limits )
+	public static DataDistribution GetDataDistribution( List<Session> sessions, string signalName, RangeDefinition[] ranges )
 	{
 		IEnumerable<double> data = Array.Empty<double>();
 
@@ -44,61 +49,58 @@ public class DataDistribution
 
 		if( representativeSignal != null )
 		{
-			return GetDataDistribution( data, labels, limits, representativeSignal.FrequencyInHz );
+			return GetDataDistribution( data, ranges, representativeSignal.FrequencyInHz );
 		}
 
 		return new DataDistribution();
 	}
 
-	public static DataDistribution GetDataDistribution( IEnumerable<double> data, string[] labels, double[] limits, double sampleFrequency )
+	public static DataDistribution GetDataDistribution( IEnumerable<double> data, RangeDefinition[] ranges, double sampleFrequency )
 	{
-		if( limits == null || limits.Length == 0 || labels == null )
+		if( ranges == null || ranges.Length == 0 )
 		{
-			throw new ArgumentException( "No limit data provided", nameof( limits ) );
-		}
-
-		if( limits.Length % 2 != 0 )
-		{
-			throw new ArgumentException( $"The {nameof( limits )} array should contain matched pairs of data boundaries. An odd number of values was submitted.", nameof( limits ) );
-		}
-
-		if( labels.Length != limits.Length / 2 )
-		{
-			throw new Exception( $"The {nameof( labels )} array should contain one string per distribution group" );
+			throw new ArgumentException( "No range data provided", nameof( ranges ) );
 		}
 
 		var result = new DataDistribution();
 
-		int labelIndex = 0;
-		for( int i = 0; i < limits.Length; i += 2, labelIndex += 1 )
-		{
-			var maxValue = limits[ i ];
-			var minValue = limits[ i + 1 ];
+		Array.Sort( ranges );
+		double minimumValue = double.MinValue;
 
-			result.Groupings.Add( new DistributionGrouping() { Label = labels[ labelIndex ], MinValue = minValue, MaxValue = maxValue } );
+		for( int i = 0; i < ranges.Length; i++ )
+		{
+			var range = ranges[ i ];
+
+			result.Groupings.Add( new DistributionGrouping() { Label = range.Label, MinValue = minimumValue, MaxValue = range.MaximumValue } );
+
+			minimumValue = range.MaximumValue + double.Epsilon;
 		}
+
+		var samples = data.ToArray();
 
 		var sum   = 0.0;
 		int count = 0;
-		foreach( var sample in data )
+		foreach( var sample in samples )
 		{
-			sum   += sample;
+			double floored = Math.Floor( sample );
+			
+			sum   += floored;
 			count += 1;
 			
-			result.MinValue =  Math.Min( result.MinValue, sample );
-			result.MaxValue =  Math.Max( result.MaxValue, sample );
+			result.MinValue = Math.Min( result.MinValue, floored );
+			result.MaxValue = Math.Max( result.MaxValue, floored );
 		}
 
 		result.Average = sum / count;
 
 		count = 0;
-		foreach( var reading in data )
+		foreach( var reading in samples )
 		{
 			count += 1;
 	        
 			foreach( var grouping in result.Groupings )
 			{
-				if( reading >= grouping.MinValue && reading <= grouping.MaxValue )
+				if( reading <= grouping.MaxValue )
 				{
 					grouping.TotalCount += 1;
 					break;
@@ -111,10 +113,33 @@ public class DataDistribution
 			grouping.PercentOfTotal = (float)grouping.TotalCount / count;
 			grouping.TotalTime      = TimeSpan.FromSeconds( grouping.TotalCount / sampleFrequency );
 		}
+		
+		result.Groupings.Sort();
 
 		return result;
 	}
 	
 	#endregion
+	
+	#region Nested types
+
+	public struct RangeDefinition : IComparable<RangeDefinition>
+	{
+		public string Label        { get; set; }
+		public double MaximumValue { get; set; }
+
+		public RangeDefinition( string label, double maxValue )
+		{
+			Label        = label;
+			MaximumValue = maxValue;
+		}
+		
+		public int CompareTo( RangeDefinition other )
+		{
+			return MaximumValue.CompareTo( other.MaximumValue );
+		}
+	}
+	
+	#endregion 
 }
 

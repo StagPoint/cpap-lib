@@ -110,6 +110,8 @@ public partial class SignalChart : UserControl
 	
 	#region Private fields
 
+	private const double MINIMUM_TIME_WINDOW = 30;
+
 	private CustomChartStyle     _chartStyle;
 	private DailyReport?         _day                = null;
 	private bool                 _hasDataAvailable   = false;
@@ -416,6 +418,7 @@ public partial class SignalChart : UserControl
 		}
 
 		(double timeOffset, _) = Chart.GetMouseCoordinates();
+		var time = _day.RecordingStartTime.AddSeconds( timeOffset );
 
 		switch( _interactionMode )
 		{
@@ -469,7 +472,7 @@ public partial class SignalChart : UserControl
 					end   = Math.Min( _day.TotalTimeSpan.TotalSeconds, _pointerDownAxisLimits.XMax + panAmount );
 					start = end - _pointerDownAxisLimits.XSpan;
 				}
-			
+				
 				Chart.Plot.SetAxisLimits( start, end );
 				Chart.RenderRequest( RenderType.LowQualityThenHighQualityDelayed );
 
@@ -479,8 +482,6 @@ public partial class SignalChart : UserControl
 			}
 			case GraphInteractionMode.None:
 			{
-				var time = _day.RecordingStartTime.AddSeconds( timeOffset );
-
 				UpdateTimeMarker( time );
 				RaiseTimeMarkerChanged( time );
 				break;
@@ -527,8 +528,6 @@ public partial class SignalChart : UserControl
 
 	private void EndSelectionMode()
 	{
-		const double MINIMUM_TIME_WINDOW = 30;
-
 		// Sanity check
 		if( _day == null )
 		{
@@ -536,12 +535,19 @@ public partial class SignalChart : UserControl
 		}
 		
 		_interactionMode = GraphInteractionMode.None;
-			
+
 		if( _selectionStartTime > _selectionEndTime )
 		{
 			(_selectionStartTime, _selectionEndTime) = (_selectionEndTime, _selectionStartTime);
 		}
-		
+
+		// Try to differentiate between a click or simple mousedown and the user intending to select a time range
+		var pixelDifference = Chart.Plot.XAxis.Dims.PxPerUnit * ( _selectionEndTime - _selectionStartTime );
+		if( pixelDifference <= 2 )
+		{
+			return;
+		}
+
 		// Enforce maximum zoom
 		if( _selectionEndTime < _selectionStartTime + MINIMUM_TIME_WINDOW )
 		{
@@ -916,7 +922,6 @@ public partial class SignalChart : UserControl
 			graph.MarkerSize  = 0;
 			graph.ScaleY      = signalScale;
 			graph.UseParallel = true;
-			// graph.StepDisplay = true;
 
 			// "Fill Below" is only available on signals that do not cross a zero line and do not have a secondary 
 			// signal. 
@@ -942,7 +947,7 @@ public partial class SignalChart : UserControl
 
 		// If manual vertical axis tick positions were provided, set up the labels for them and force the chart
 		// to show those instead of the automatically-generated tick positions. 
-		if( manualLabels != null && manualLabels.Length > 0 )
+		if( manualLabels is { Length: > 0 } )
 		{
 			var labels = new string[ manualLabels.Length ];
 			for( int i = 0; i < labels.Length; i++ )
@@ -1066,7 +1071,7 @@ public partial class SignalChart : UserControl
 		
 		plot.XAxis.TickLabelFormat( x => $"{TimeSpan.FromSeconds( x ):c}" );
 		plot.XAxis.MinimumTickSpacing( 1f );
-		plot.XAxis.SetZoomInLimit( 60 ); // Make smallest zoom window possible be 1 minute 
+		plot.XAxis.SetZoomInLimit( MINIMUM_TIME_WINDOW ); // Make smallest zoom window possible be 1 minute 
 		plot.XAxis.Layout( padding: 0 );
 		plot.XAxis.MajorGrid( false );
 		plot.XAxis.AxisTicks.MajorTickLength = 15;
@@ -1095,7 +1100,7 @@ public partial class SignalChart : UserControl
 		chart.RenderRequest();
 	}
 	
-	private float MeasureText( string text, string fontFamily, float emSize )
+	private static float MeasureText( string text, string fontFamily, float emSize )
 	{
 		FormattedText formatted = new FormattedText(
 			text,

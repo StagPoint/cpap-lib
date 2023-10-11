@@ -118,10 +118,10 @@ public class ViatomImporterCSV : IOximetryImporter
 
 		while( !reader.EndOfStream )
 		{
-			lastDateTime = currentDateTime;
-			
 			var line = reader.ReadLine();
 
+			lastDateTime = currentDateTime;
+			
 			if( string.IsNullOrEmpty( line ) )
 			{
 				return null;

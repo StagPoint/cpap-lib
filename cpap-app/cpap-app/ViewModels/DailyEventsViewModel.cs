@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -140,7 +139,7 @@ public class EventTypeSummary
 			}
 		}
 
-		PercentTime = TotalCount > 0 ? totalSeconds / (dailyTotalTime * 60) : 0;
+		PercentTime = TotalCount > 0 ? totalSeconds / (dailyTotalTime * 3600) : 0;
 		IndexValue  = TotalCount > 0 ? TotalCount / dailyTotalTime : 0;
 		TotalTime   = TimeSpan.FromSeconds( totalSeconds );
 	}

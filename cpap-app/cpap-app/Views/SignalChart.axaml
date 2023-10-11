@@ -14,8 +14,8 @@
              ChartGridLineColor="{DynamicResource TextFillColorSecondaryBrush}"
              Background="Transparent">
     <Grid Name="ContainerGrid" RowDefinitions="18,*,Auto" ColumnDefinitions="36,*,36">
-        <Line Name="TimeMarkerLine" IsEnabled="False" ZIndex="9999" Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="3" Grid.RowSpan="3" Stroke="{DynamicResource AccentFillColorDefaultBrush}" StrokeThickness="0.5" StartPoint="0,0" EndPoint="0,0"  />
-        <Border Name="EventTooltip" CornerRadius="8" Margin="0 38" IsHitTestVisible="False" Tag="Event Tooltip" VerticalAlignment="Top" IsEnabled="False" ZIndex="10000" Grid.Column="1" Grid.Row="0" Grid.ColumnSpan="2" Grid.RowSpan="3" Background="Black" Width="250">
+        <Line Name="TimeMarkerLine" IsEnabled="False" ZIndex="9990" Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="3" Grid.RowSpan="3" Stroke="{DynamicResource AccentFillColorDefaultBrush}" StrokeThickness="0.5" StartPoint="0,0" EndPoint="0,0"  />
+        <Border Name="EventTooltip" CornerRadius="8" Margin="0 38" IsHitTestVisible="False" Tag="Event Tooltip" VerticalAlignment="Top" IsEnabled="False" ZIndex="9990" Grid.Column="1" Grid.Row="0" Grid.ColumnSpan="2" Grid.RowSpan="3" Background="Black" Width="250">
             <TextBlock Text="{Binding $parent.Tag, Mode=OneWay}" IsVisible="True" IsHitTestVisible="False" TextWrapping="NoWrap" HorizontalAlignment="Center" Theme="{DynamicResource CaptionTextBlockStyle}" Foreground="White" Padding="20 0 20 2" />
         </Border>
         <TextBlock
@@ -39,21 +39,20 @@
                     Margin="0 12 20 0"
                     Spacing="2"
                     HorizontalAlignment="Right"
-                    VerticalAlignment="Top">
+                    VerticalAlignment="Top"
+                    ZIndex="9999">
             <Button
                 Name="btnChartPinUnpin"
                 BorderThickness="0"
                 Background="Transparent"
-                Padding="8 4"
-                ZIndex="9999">
+                Padding="8 4">
                 <controls:SymbolIcon Symbol="UnPin" />
             </Button>
             <Button
                 Name="btnChartSettings"
                 BorderThickness="0"
                 Background="Transparent"
-                Padding="8 4"
-                ZIndex="9999">
+                Padding="8 4">
                 <controls:SymbolIcon Symbol="Settings" />
             </Button>
         </StackPanel>

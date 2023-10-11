@@ -99,7 +99,7 @@ public class ViatomDesktopImporterCSV : IOximetryImporter
 		};
 
 		var baseFilename = filename = Path.GetFileName( filename );
-		int nameEndIndex = baseFilename.IndexOf( '_' );
+		int nameEndIndex = baseFilename.IndexOf( '-' );
 		if( nameEndIndex != -1 )
 		{
 			session.Source = baseFilename[ ..nameEndIndex ];

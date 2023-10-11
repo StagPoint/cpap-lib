@@ -36,7 +36,7 @@ public partial class EventSummaryView : UserControl
 		{
 			var eventArgs = new ReportedEventTypeArgs
 			{
-				Route       = RoutingStrategies.Bubble | RoutingStrategies.Tunnel,
+				Route       = RoutingStrategies.Bubble,
 				RoutedEvent = DailyReportView.ReportedEventTypeSelectedEvent,
 				Source      = this,
 				Type        = eventType

@@ -187,9 +187,6 @@ namespace cpaplib
 					continue;
 				}
 
-				// TODO: Need to keep pulse oximetry data in a separate Session from the rest of CPAP data, even when imported directly from CPAP
-				var isPulseOximetryFile = baseFilename.EndsWith( "_SAD", StringComparison.OrdinalIgnoreCase );
-
 				// The file's date, extracted from the filename, will be used to search for the correct session.
 				// The date/time is incorrect for any other purpose (I think)
 				var fileDate = DateTime
@@ -445,12 +442,12 @@ namespace cpaplib
 				var signal = session.GetSignalByName( SignalNames.LeakRate );
 				if( signal != null )
 				{
-					Annotate( day.Events, EventType.LargeLeak, signal, 2, LeakRedline );
+					Annotate( day.Events, EventType.LargeLeak, signal, 0, LeakRedline, false );
 				}
 			}
 		}
 
-		private void Annotate( List<ReportedEvent> events, EventType eventType, Signal signal, double minDuration, double redLine )
+		private void Annotate( List<ReportedEvent> events, EventType eventType, Signal signal, double minDuration, double redLine, bool interpolateSamples = true )
 		{
 			int    state      = 0;
 			double eventStart = -1;
@@ -467,10 +464,10 @@ namespace cpaplib
 				{
 					case 0:
 					{
-						if( sample >= redLine )
+						if( sample > redLine )
 						{
 							var lastSample = sourceData[ i - 1 ];
-							var t          = MathUtil.InverseLerp( lastSample, sample, redLine );
+							var t          = interpolateSamples ? MathUtil.InverseLerp( lastSample, sample, redLine ) : 1.0;
 
 							eventStart = time - (1.0 - t) * sampleInterval;
 							state      = 1;
@@ -484,11 +481,11 @@ namespace cpaplib
 						// Find the specific time when the sample crossed the threshold, even if it 
 						// doesn't align directly on a sample's interval
 						var lastSample = sourceData[ i - 1 ];
-						var t          = MathUtil.InverseLerp( lastSample, sample, redLine );
+						var t          = interpolateSamples ? MathUtil.InverseLerp( lastSample, sample, redLine ) : 1.0;
 						var eventEnd   = time - (1.0 - t) * sampleInterval;
 						var duration   = eventEnd - eventStart;
 
-						if( sample < redLine )
+						if( sample <= redLine )
 						{
 							if( duration >= minDuration )
 							{

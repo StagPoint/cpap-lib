@@ -74,22 +74,32 @@ public partial class DailySpO2View : UserControl
 					TotalSleepTime     = TimeSpan.FromSeconds( oximetrySessions.Sum( x => x.Duration.TotalSeconds ) ),
 					Sources            = day.Sessions.Where( x => x.SourceType == SourceType.PulseOximetry ).Select( x => x.Source ).Distinct().ToList(),
 				};
-				
+
 				OxygenEvents.DataContext = new DailyEventsViewModel( day, EventTypes.OxygenSaturation );
 				PulseEvents.DataContext  = new DailyEventsViewModel( day, EventTypes.Pulse );
 
 				OxygenSummary.DataContext = DataDistribution.GetDataDistribution(
 					day.Sessions,
-					SignalNames.SpO2, new[] { "> 95 %", "90 - 95 %", "< 90 %" },
-					new[] { 100, 96, 95, 90, 89, 0.0 }
-				);
+					SignalNames.SpO2,
+					new DataDistribution.RangeDefinition[]
+					{
+						new DataDistribution.RangeDefinition( "< 90 %",     89.5 ),
+						new DataDistribution.RangeDefinition( "90-94 %", 94.5 ),
+						new DataDistribution.RangeDefinition( ">= 95 %",   double.MaxValue )
+					} );
 
 				PulseSummary.DataContext = DataDistribution.GetDataDistribution(
-					day.Sessions, SignalNames.Pulse,
-					new[] { "> 120 bpm", "100 - 120", "50 - 99 bpm", "< 50 bpm" },
-					new[] { 255, 121, 120, 101, 99, 50, 49, 0.0 }
+					day.Sessions,
+					SignalNames.Pulse,
+					new DataDistribution.RangeDefinition[]
+					{
+						new DataDistribution.RangeDefinition( "< 50 bpm",   49.5 ),
+						new DataDistribution.RangeDefinition( "50-99 bpm",    99.5 ),
+						new DataDistribution.RangeDefinition( "100-120 bpm",  120.5 ),
+						new DataDistribution.RangeDefinition( ">= 120 bpm", double.MaxValue )
+					}
 				);
-				
+
 				break;
 		}
 	}
