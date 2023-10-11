@@ -13,7 +13,7 @@ namespace cpaplib
 		public double Median            { get; set; }
 		public double Average           { get; set; }
 		public double Percentile95      { get; set; }
-		public double Percentile99      { get; set; }
+		public double Percentile995      { get; set; }
 		public double Maximum           { get; set; }
 
 		public int CompareTo( SignalStatistics other )

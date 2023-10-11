@@ -81,7 +81,7 @@ namespace cpaplib
 		/// </summary>
 		public void UpdateSignalStatistics( string signalName )
 		{
-			var calculator = new StatCalculator();
+			var calculator = new SignalStatCalculator();
 			var stats      = calculator.CalculateStats( signalName, Sessions );
 
 			Statistics.RemoveAll( x => x.SignalName.Equals( signalName ) );

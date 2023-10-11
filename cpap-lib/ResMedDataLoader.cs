@@ -544,7 +544,7 @@ namespace cpaplib
 				// Automatically calculate statistics for all Signals whose value range is zero or above
 				if( signal.MinValue >= 0 && signal.MaxValue > signal.MinValue )
 				{
-					var calculator = new StatCalculator();
+					var calculator = new SignalStatCalculator();
 					day.Statistics.Add( calculator.CalculateStats( signal.Name, day.Sessions ) );
 				}
 			}

@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace cpaplib
 {
-	public class StatCalculator
+	public class SignalStatCalculator
     {
     	private List<Signal> _signals = new List<Signal>();
     
@@ -42,7 +42,7 @@ namespace cpaplib
     			Minimum           = double.MaxValue,
     			Average           = double.MaxValue,
     			Percentile95      = double.MaxValue,
-    			Percentile99      = double.MaxValue,
+    			Percentile995      = double.MaxValue,
     			Maximum           = double.MinValue
     		};
     
@@ -96,7 +96,7 @@ namespace cpaplib
     		{
     			window.Dequeue();
     		}
-    		result.Percentile99 = window.Peek();
+    		result.Percentile995 = window.Peek();
     
     		return result;
     	}
