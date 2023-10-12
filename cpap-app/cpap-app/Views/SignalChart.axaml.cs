@@ -30,6 +30,7 @@ using Brush = Avalonia.Media.Brush;
 using Brushes = Avalonia.Media.Brushes;
 using Color = System.Drawing.Color;
 using Point = Avalonia.Point;
+using Cursor = Avalonia.Input.Cursor;
 
 namespace cpap_app.Views;
 
@@ -72,6 +73,32 @@ public partial class SignalChart : UserControl
 	{
 		add => AddHandler( TimeMarkerChangedEvent, value );
 		remove => RemoveHandler( TimeMarkerChangedEvent, value );
+	}
+	
+	public static readonly RoutedEvent<RoutedEventArgs> PinButtonClickedEvent = RoutedEvent.Register<SignalChart, RoutedEventArgs>( nameof( PinButtonClicked ), RoutingStrategies.Bubble );
+
+	public static void AddPinButtonClickedHandler( IInputElement element, EventHandler<RoutedEventArgs> handler )
+	{
+		element.AddHandler( PinButtonClickedEvent, handler );
+	}
+
+	public event EventHandler<RoutedEventArgs> PinButtonClicked
+	{
+		add => AddHandler( PinButtonClickedEvent, value );
+		remove => RemoveHandler( PinButtonClickedEvent, value );
+	}
+
+	public class ChartDragEventArgs : RoutedEventArgs
+	{
+		public int Direction { get; set; }
+	}
+	
+	public static readonly RoutedEvent<ChartDragEventArgs> ChartDraggedEvent = RoutedEvent.Register<SignalChart, ChartDragEventArgs>( nameof( ChartDragged ), RoutingStrategies.Bubble );
+
+	public event EventHandler<ChartDragEventArgs> ChartDragged
+	{
+		add => AddHandler( ChartDraggedEvent, value );
+		remove => RemoveHandler( ChartDraggedEvent, value );
 	}
 
 	#endregion 
@@ -146,8 +173,45 @@ public partial class SignalChart : UserControl
 		Chart.PointerReleased += OnPointerReleased;
 		Chart.PointerMoved    += OnPointerMoved;
 		Chart.AxesChanged     += OnAxesChanged;
+		
+		ChartLabel.PointerPressed     += ChartLabelOnPointerPressed;
+		ChartLabel.PointerReleased    += ChartLabelOnPointerReleased;
+		ChartLabel.PointerCaptureLost += ChartLabelOnPointerCaptureLost;
+		ChartLabel.PointerMoved += ChartLabelOnPointerMoved;
 
 		Chart.ContextMenu = null;
+		
+		AddHandler( Button.ClickEvent, Button_OnClick);
+	}
+	
+	private void ChartLabelOnPointerMoved( object? sender, PointerEventArgs e )
+	{
+		var position = e.GetPosition( this );
+
+		if( position.Y < 0 || position.Y > this.Bounds.Height )
+		{
+			RaiseEvent( new ChartDragEventArgs
+			{
+				RoutedEvent = ChartDraggedEvent,
+				Source      = this,
+				Direction   = Math.Sign( position.Y ),
+			} );
+		}
+	}
+
+	private void ChartLabelOnPointerCaptureLost( object? sender, PointerCaptureLostEventArgs e )
+	{
+		ChartLabel.Cursor = new Cursor( StandardCursorType.Hand );
+	}
+
+	private void ChartLabelOnPointerReleased( object? sender, PointerReleasedEventArgs e )
+	{
+		ChartLabel.Cursor = new Cursor( StandardCursorType.Hand );
+	}
+
+	private void ChartLabelOnPointerPressed( object? sender, PointerPressedEventArgs e )
+	{
+		ChartLabel.Cursor = new Cursor( StandardCursorType.DragMove );
 	}
 
 	#endregion 
@@ -163,7 +227,7 @@ public partial class SignalChart : UserControl
 			btnChartPinUnpin.GetVisualDescendants().OfType<SymbolIcon>().First().Symbol = Symbol.Pin;
 		}
 	}
-
+	
 	protected override void OnApplyTemplate( TemplateAppliedEventArgs e )
 	{
 		base.OnApplyTemplate( e );
@@ -273,6 +337,18 @@ public partial class SignalChart : UserControl
 	#endregion 
 	
 	#region Event Handlers
+
+	private void Button_OnClick( object? sender, RoutedEventArgs e )
+	{
+		if( object.ReferenceEquals( e.Source, btnChartPinUnpin ) )
+		{
+			RaiseEvent( new RoutedEventArgs()
+			{
+				RoutedEvent = PinButtonClickedEvent,
+				Source = this
+			});
+		}
+	}
 
 	private void OnAxesChanged( object? sender, EventArgs e )
 	{
@@ -493,13 +569,33 @@ public partial class SignalChart : UserControl
 	
 	#region Public functions
 
+	/// <summary>
+	/// Intended to be called when moving the control from one parent to another. 
+	/// SaveState() and RestoreState() are intended to be called as a pair during the procedure.  
+	/// </summary>
+	internal void SaveState()
+	{
+		_pointerDownAxisLimits = Chart.Plot.GetAxisLimits();
+	}
+
+	/// <summary>
+	/// Intended to be called when moving the control from parent to another.
+	/// SaveState() and RestoreState() are intended to be called as a pair during the procedure.  
+	/// </summary>
+	internal void RestoreState()
+	{
+		Chart.Configuration.AxesChangedEventEnabled = false;
+		Chart.Plot.SetAxisLimits( _pointerDownAxisLimits );
+		Chart.RenderRequest();
+		Chart.Configuration.AxesChangedEventEnabled = true;
+	}
+
 	public void SetDisplayedRange( DateTime startTime, DateTime endTime )
 	{
 		if( _day == null )
 		{
 			return;
 		}
-		
 		var offsetStart = (startTime - _day.RecordingStartTime).TotalSeconds;
 		var offsetEnd   = (endTime - _day.RecordingStartTime).TotalSeconds;
 

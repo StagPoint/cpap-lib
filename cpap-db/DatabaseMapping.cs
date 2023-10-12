@@ -1,14 +1,9 @@
-﻿using System.ComponentModel;
-using System.Drawing;
-using System.Globalization;
+﻿using System.Drawing;
 using System.Numerics;
 using System.Reflection;
-using System.Runtime.Intrinsics.X86;
 using System.Text;
 
 using SQLite;
-
-using SQLitePCL;
 
 namespace cpap_db;
 
@@ -109,16 +104,30 @@ public class DatabaseMapping
 		}
 	}
 
+	internal string UpdateQuery
+	{
+		get
+		{
+			if( string.IsNullOrEmpty( _updateQuery ) )
+			{
+				_updateQuery = GenerateUpdateQuery();
+			}
+
+			return _updateQuery;
+		}
+	}
+
 	#endregion
 
 	#region Private fields
 
-	private string _createTableQuery        = String.Empty;
-	private string _insertQuery             = String.Empty;
-	private string _deleteQuery             = String.Empty;
-	private string _selectAllQuery          = String.Empty;
-	private string _selectByPrimaryKeyQuery = String.Empty;
-	private string _selectByForeignKeyQuery = String.Empty;
+	private string _createTableQuery        = string.Empty;
+	private string _insertQuery             = string.Empty;
+	private string _updateQuery             = string.Empty;
+	private string _deleteQuery             = string.Empty;
+	private string _selectAllQuery          = string.Empty;
+	private string _selectByPrimaryKeyQuery = string.Empty;
+	private string _selectByForeignKeyQuery = string.Empty;
 
 	#endregion
 	
@@ -335,6 +344,36 @@ public class DatabaseMapping
 		}
 
 		builder.Append( $" ) VALUES ( {parameters} )" );
+
+		return builder.ToString();
+	}
+
+	private string GenerateUpdateQuery()
+	{
+		if( PrimaryKey == null )
+		{
+			throw new Exception( $"Cannot execute an UPDATE statement without a Primary Key for {ObjectType}" );
+		}
+		
+		var builder    = new StringBuilder();
+
+		builder.Append( $"UPDATE [{TableName}] \nSET\n" );
+
+		for( int i = 0; i < Columns.Count; i++ )
+		{
+			var column = Columns[ i ];
+			
+			builder.Append( $"    [{column.ColumnName}] = ?" );
+
+			if( i < Columns.Count - 1 )
+			{
+				builder.Append( ',' );
+			}
+
+			builder.Append( '\n' );
+		}
+
+		builder.Append( $"WHERE [{PrimaryKey.ColumnName}] = ?\n" );
 
 		return builder.ToString();
 	}
@@ -685,10 +724,30 @@ public class DatabaseMapping<T> : DatabaseMapping
 		return ExecuteQuery( connection, SelectByForeignKeyQuery, foreignKeyValue );
 	}
 
+	internal int Update( SQLiteConnection connection, object data, object primaryKeyValue )
+	{
+		object[] args = new object[ Columns.Count + 1 ];
+
+		int nextColumnIndex = 0;
+		
+		foreach( var column in Columns )
+		{
+			args[ nextColumnIndex++ ] = column.GetValue( data );
+		}
+
+		args[ nextColumnIndex ] = primaryKeyValue;
+
+		string query = UpdateQuery;
+
+		int rowCount = connection.Execute( query, args );
+
+		return rowCount;
+	}
+
 	internal int Insert( SQLiteConnection connection, object data, object primaryKeyValue = null, object foreignKeyValue = null )
 	{
 		int columnCount = Columns.Count;
-		if( PrimaryKey != null && !PrimaryKey.AutoIncrement )
+		if( PrimaryKey is { AutoIncrement: false } )
 		{
 			columnCount += 1;
 		}

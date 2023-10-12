@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 using cpap_app.Configuration;
@@ -11,7 +12,7 @@ using cpaplib;
 
 namespace cpap_app.ViewModels;
 
-public static class SignalConfigurationStore
+public static class SignalChartConfigurationStore
 {
 	public static List<SignalChartConfiguration> GetSignalConfigurations()
 	{
@@ -142,5 +143,83 @@ public static class SignalConfigurationStore
 
 			store.Insert( config );
 		}
+	}
+	
+	public static List<SignalChartConfiguration> Update( SignalChartConfiguration config )
+	{
+		var configurations = GetSignalConfigurations();
+		
+		// Replace the configuration within the list
+		configurations.RemoveAll( x => x.SignalName == config.SignalName );
+		configurations.Add( config );
+		
+		// Re-sort the list so that we can update the DisplayOrder field 
+		configurations.Sort();
+
+		using var store = StorageService.Connect();
+		try
+		{
+			store.Connection.BeginTransaction();
+			
+			int pinnedOrder   = 0;
+			int unpinnedOrder = 0;
+
+			foreach( var loop in configurations )
+			{
+				loop.DisplayOrder = loop.IsVisible ? (loop.IsPinned ? pinnedOrder++ : unpinnedOrder++) : int.MaxValue;
+				
+				store.Update( loop, loop.ID );
+			}
+			
+			store.Connection.Commit();
+		}
+		catch( Exception )
+		{
+			store.Connection.Rollback();
+			throw;
+		}
+
+		return configurations;
+	}
+	
+	public static List<SignalChartConfiguration> SwapDisplayOrder( SignalChartConfiguration a, SignalChartConfiguration b )
+	{
+		// Swap the DisplayOrder values
+		(a.DisplayOrder, b.DisplayOrder) = (b.DisplayOrder, a.DisplayOrder);
+		
+		var configurations = GetSignalConfigurations();
+		
+		// Replace the configurations within the list
+		configurations.RemoveAll( x => x.SignalName == a.SignalName || x.SignalName == b.SignalName );
+		configurations.Add( a );
+		configurations.Add( b );
+		
+		// Re-sort the list so that we can update the DisplayOrder field 
+		configurations.Sort();
+
+		using var store = StorageService.Connect();
+		try
+		{
+			store.Connection.BeginTransaction();
+			
+			int pinnedOrder   = 0;
+			int unpinnedOrder = 0;
+
+			foreach( var loop in configurations )
+			{
+				loop.DisplayOrder = loop.IsVisible ? (loop.IsPinned ? pinnedOrder++ : unpinnedOrder++) : int.MaxValue;
+				
+				store.Update( loop, loop.ID );
+			}
+			
+			store.Connection.Commit();
+		}
+		catch( Exception )
+		{
+			store.Connection.Rollback();
+			throw;
+		}
+
+		return configurations;
 	}
 }

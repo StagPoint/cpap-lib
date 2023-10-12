@@ -1,6 +1,5 @@
-﻿using System.Collections.Generic;
-
-using Avalonia.Media;
+﻿using System;
+using System.Collections.Generic;
 
 using cpaplib;
 
@@ -8,7 +7,7 @@ namespace cpap_app.Configuration;
 
 using Color = System.Drawing.Color;
 
-public class SignalChartConfiguration
+public class SignalChartConfiguration : IComparable<SignalChartConfiguration>
 {
 	public int ID { get; set; }
 
@@ -27,6 +26,16 @@ public class SignalChartConfiguration
 	public bool    ShowStepped         { get; set; }
 
 	public List<EventType> DisplayedEvents { get; set; } = new();
+
+	public int CompareTo( SignalChartConfiguration? other )
+	{
+		if( other == null )
+		{
+			return 0;
+		}
+		
+		return IsPinned == other.IsPinned ? DisplayOrder.CompareTo( other.DisplayOrder ) : (IsPinned ? -1 : 1);
+	}
 	
 	public override string ToString()
 	{

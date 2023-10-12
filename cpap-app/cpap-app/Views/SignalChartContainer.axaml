@@ -9,7 +9,7 @@
              views:SignalChart.TimeMarkerChanged="ChartOnTimeMarkerChanged"
              Background="Transparent">
     <DockPanel LastChildFill="True">
-        <StackPanel Name="PinnedCharts" DockPanel.Dock="Top">
+        <StackPanel Name="PinnedCharts" DockPanel.Dock="Top" Background="{DynamicResource SolidBackgroundFillColorSecondaryBrush}">
             <!-- Pinned charts will be added here by the code-behind -->
         </StackPanel>
         <ScrollViewer

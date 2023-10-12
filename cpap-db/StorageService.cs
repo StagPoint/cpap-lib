@@ -303,7 +303,13 @@ namespace cpap_db
 		
 		#endregion
 		
-		#region General-purpose public functions 
+		#region General-purpose public functions
+
+		public bool Update<T>( T record, object primaryKeyValue ) where T : class, new()
+		{
+			var mapping = GetMapping<T>();
+			return mapping.Update( Connection, record, primaryKeyValue ) == 1;
+		}
 
 		public List<T> SelectAll<T>() where T : class, new()
 		{

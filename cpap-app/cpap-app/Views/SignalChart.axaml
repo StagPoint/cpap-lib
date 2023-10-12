@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:ScottPlot="clr-namespace:ScottPlot.Avalonia;assembly=ScottPlot.Avalonia"
              xmlns:controls="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+             xmlns:views="clr-namespace:cpap_app.Views"
              mc:Ignorable="d"
              d:DesignWidth="800"
              x:Class="cpap_app.Views.SignalChart"
@@ -13,6 +14,15 @@
              ChartBorderColor="{DynamicResource ControlStrokeColorSecondaryBrush}"
              ChartGridLineColor="{DynamicResource TextFillColorSecondaryBrush}"
              Background="Transparent">
+    <UserControl.Styles>
+        <Style Selector="Border.ChartTitle:pointerover">
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="Border.ChartTitle:pressed Label">
+            <Setter Property="Cursor" Value="Cross"/>
+            <Setter Property="Background" Value="Yellow"/>
+        </Style>
+    </UserControl.Styles>
     <Grid Name="ContainerGrid" RowDefinitions="18,*,Auto" ColumnDefinitions="36,*,36">
         <Line Name="TimeMarkerLine" IsEnabled="False" ZIndex="9990" Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="3" Grid.RowSpan="3" Stroke="{DynamicResource AccentFillColorDefaultBrush}" StrokeThickness="0.5" StartPoint="0,0" EndPoint="0,0"  />
         <Border Name="EventTooltip" CornerRadius="8" Margin="0 38" IsHitTestVisible="False" Tag="Event Tooltip" VerticalAlignment="Top" IsEnabled="False" ZIndex="9990" Grid.Column="1" Grid.Row="0" Grid.ColumnSpan="2" Grid.RowSpan="3" Background="Black" Width="250">
@@ -45,39 +55,48 @@
                 Name="btnChartPinUnpin"
                 BorderThickness="0"
                 Background="Transparent"
-                Padding="8 4">
+                Padding="8 4"
+                Tag="{Binding $parent[views:SignalChart]}">
                 <controls:SymbolIcon Symbol="UnPin" />
             </Button>
             <Button
                 Name="btnChartSettings"
                 BorderThickness="0"
                 Background="Transparent"
-                Padding="8 4">
+                Padding="8 4"
+                Tag="{Binding $parent[views:SignalChart]}">
                 <controls:SymbolIcon Symbol="Settings" />
             </Button>
         </StackPanel>
-        <Label
+        <Border
+            Classes="ChartTitle"
             Grid.Row="0"
             Grid.Column="0"
             Grid.RowSpan="2"
-            Width="200"
-            Height="200"
-            HorizontalContentAlignment="Center"
-            VerticalContentAlignment="Center"
-            VerticalAlignment="Center">
-            <TextBlock
-                Name="ChartLabel"
-                Text="Chart Label"
+            Background="Transparent">
+            <Label
+                Width="200"
+                Height="200"
+                HorizontalContentAlignment="Center"
+                VerticalContentAlignment="Center"
                 VerticalAlignment="Center"
-                TextWrapping="NoWrap"
-                Theme="{DynamicResource SubtitleTextBlockStyle}">
-                <TextBlock.RenderTransform>
-                    <TransformGroup>
-                        <RotateTransform Angle="-90" />
-                    </TransformGroup>
-                </TextBlock.RenderTransform>
-            </TextBlock>
-        </Label>
+                Background="Transparent">
+                <TextBlock
+                    Name="ChartLabel"
+                    Text="Chart Label"
+                    VerticalAlignment="Center"
+                    TextWrapping="NoWrap"
+                    Padding="10 0"
+                    Background="Transparent"
+                    Theme="{DynamicResource SubtitleTextBlockStyle}">
+                    <TextBlock.RenderTransform>
+                        <TransformGroup>
+                            <RotateTransform Angle="-90" />
+                        </TransformGroup>
+                    </TextBlock.RenderTransform>
+                </TextBlock>
+            </Label>
+        </Border>
         <ScottPlot:AvaPlot
             Grid.Row="1"
             Grid.Column="1"
