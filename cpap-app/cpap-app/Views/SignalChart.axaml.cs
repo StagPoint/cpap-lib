@@ -375,7 +375,7 @@ public partial class SignalChart : UserControl
 			return;
 		}
 
-		if( _interactionMode == GraphInteractionMode.None )
+		if( _interactionMode == GraphInteractionMode.None && e.Pointer.Captured == null )
 		{
 			var currentPoint = e.GetPosition( Chart );
 			var timeOffset   = Chart.Plot.XAxis.Dims.GetUnit( (float)currentPoint.X );
@@ -488,7 +488,7 @@ public partial class SignalChart : UserControl
 		{
 			return;
 		}
-
+		
 		(double timeOffset, _) = Chart.GetMouseCoordinates();
 		var time = _day.RecordingStartTime.AddSeconds( timeOffset );
 
@@ -554,8 +554,11 @@ public partial class SignalChart : UserControl
 			}
 			case GraphInteractionMode.None:
 			{
-				UpdateTimeMarker( time );
-				RaiseTimeMarkerChanged( time );
+				if( eventArgs.Pointer.Captured == null )
+				{
+					UpdateTimeMarker( time );
+					RaiseTimeMarkerChanged( time );
+				}
 				break;
 			}
 		}

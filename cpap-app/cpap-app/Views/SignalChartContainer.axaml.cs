@@ -19,6 +19,10 @@ public partial class SignalChartContainer : UserControl
 {
 	private List<SignalChart> _charts = new();
 
+	private DispatcherTimer? _dragTimer          = null;
+	private SignalChart?     _dragTarget    = null;
+	private int              _dragDirection = 0;
+
 	#region Constructor 
 	
 	public SignalChartContainer()
@@ -63,7 +67,17 @@ public partial class SignalChartContainer : UserControl
 	}
 	
 	#endregion
-	
+
+	protected override void OnUnloaded( RoutedEventArgs e )
+	{
+		base.OnUnloaded( e );
+
+		if( _dragTimer != null && _dragTimer.IsEnabled )
+		{
+			_dragTimer.Stop();
+		}
+	}
+
 	#region Event handlers
 
 	private void Chart_Dragged( object? sender, SignalChart.ChartDragEventArgs e )
@@ -72,12 +86,29 @@ public partial class SignalChartContainer : UserControl
 		{
 			return;
 		}
+		
+		_dragTimer ??= new DispatcherTimer( TimeSpan.FromSeconds( 0.15 ), DispatcherPriority.Default, ( _, _ ) =>
+		{
+			if( _dragTarget != null )
+			{
+				DragChart( _dragTarget, _dragDirection );
+				_dragTarget = null;
+			}
+		} );
 
+		_dragTarget    = chart;
+		_dragDirection = e.Direction;
+
+		_dragTimer.Start();
+	}
+
+	private void DragChart( SignalChart chart, int direction )
+	{
 		var config       = chart.ChartConfiguration;
-		var container    = config.IsPinned ? PinnedCharts : UnPinnedCharts;
+		var container    = config!.IsPinned ? PinnedCharts : UnPinnedCharts;
 		var controlIndex = container.Children.IndexOf( chart );
 		
-		switch( e.Direction )
+		switch( direction )
 		{
 			case < 0 when controlIndex == 0:
 				return;
@@ -88,7 +119,7 @@ public partial class SignalChartContainer : UserControl
 				var swap = container.Children[ controlIndex - 1 ] as SignalChart;
 				Debug.Assert( swap != null );
 				
-				var updatedConfigs = SignalChartConfigurationStore.SwapDisplayOrder( chart.ChartConfiguration, swap.ChartConfiguration! );
+				var updatedConfigs = SignalChartConfigurationStore.SwapDisplayOrder( chart.ChartConfiguration!, swap.ChartConfiguration! );
 				UpdateConfigurations( updatedConfigs );
 				
 				container.Children.Move( controlIndex, controlIndex - 1 );
@@ -100,7 +131,7 @@ public partial class SignalChartContainer : UserControl
 				var swap = container.Children[ controlIndex + 1 ] as SignalChart;
 				Debug.Assert( swap != null );
 
-				var updatedConfigs = SignalChartConfigurationStore.SwapDisplayOrder( chart.ChartConfiguration, swap.ChartConfiguration! );
+				var updatedConfigs = SignalChartConfigurationStore.SwapDisplayOrder( chart.ChartConfiguration!, swap.ChartConfiguration! );
 				UpdateConfigurations( updatedConfigs );
 				
 				container.Children.Move( controlIndex, controlIndex + 1 );
@@ -109,7 +140,7 @@ public partial class SignalChartContainer : UserControl
 			}
 		}
 
-		Dispatcher.UIThread.Post( chart.BringIntoView, DispatcherPriority.Background );
+		Dispatcher.UIThread.Post( chart.BringIntoView, DispatcherPriority.Default );
 	}
 
 	private void Chart_PinButtonClicked( object? sender, RoutedEventArgs e )

@@ -3,7 +3,6 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
-using Avalonia.Markup.Xaml;
 
 using cpap_app.Events;
 
