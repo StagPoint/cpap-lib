@@ -1,13 +1,10 @@
 ﻿using System;
-using System.Diagnostics;
-using System.Threading.Tasks;
+using System.Linq;
 
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
-using Avalonia.Markup.Xaml;
-using Avalonia.Threading;
 
 using cpap_app.Events;
 
@@ -43,10 +40,21 @@ public partial class DailySessionsList : UserControl
 	}
 	
 	#endregion
-	
-	private void SelectingItemsControl_OnSelectionChanged( object? sender, SelectionChangedEventArgs e )
+
+	protected override void OnPropertyChanged( AvaloniaPropertyChangedEventArgs change )
 	{
-		if( sender is ListBox { SelectedItem: Session session } listBox )
+		base.OnPropertyChanged( change );
+
+		if( change.NewValue is DailyReport day )
+		{
+			// Filter the day's Sessions to only those that were produced by the CPAP machine
+			Repeater.ItemsSource = day.Sessions.Where( x => x.SourceType == SourceType.CPAP );
+		}
+	}
+
+	private void lstSessions_Tapped( object? sender, TappedEventArgs e )
+	{
+		if( sender is Border { Tag: Session session } )
 		{
 			var eventArgs = new DateTimeRangeRoutedEventArgs
 			{
@@ -57,8 +65,6 @@ public partial class DailySessionsList : UserControl
 			};
 			
 			RaiseEvent( eventArgs  );
-			
-			listBox.SelectedItem = null;
 		}
 	}
 }

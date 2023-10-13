@@ -177,7 +177,8 @@ public partial class SignalChart : UserControl
 		ChartLabel.PointerPressed     += ChartLabelOnPointerPressed;
 		ChartLabel.PointerReleased    += ChartLabelOnPointerReleased;
 		ChartLabel.PointerCaptureLost += ChartLabelOnPointerCaptureLost;
-		ChartLabel.PointerMoved += ChartLabelOnPointerMoved;
+		ChartLabel.PointerMoved       += ChartLabelOnPointerMoved;
+		ChartLabel.Cursor             =  new Cursor( StandardCursorType.Hand );
 
 		Chart.ContextMenu = null;
 		
@@ -203,12 +204,12 @@ public partial class SignalChart : UserControl
 	{
 		ChartLabel.Cursor = new Cursor( StandardCursorType.Hand );
 	}
-
+	
 	private void ChartLabelOnPointerReleased( object? sender, PointerReleasedEventArgs e )
 	{
 		ChartLabel.Cursor = new Cursor( StandardCursorType.Hand );
 	}
-
+	
 	private void ChartLabelOnPointerPressed( object? sender, PointerPressedEventArgs e )
 	{
 		ChartLabel.Cursor = new Cursor( StandardCursorType.DragMove );
@@ -231,17 +232,12 @@ public partial class SignalChart : UserControl
 	protected override void OnApplyTemplate( TemplateAppliedEventArgs e )
 	{
 		base.OnApplyTemplate( e );
-
-		if( ChartConfiguration != null )
-		{
-			ChartLabel.Text = ChartConfiguration.Title;
-		}
-
+	
 		EventTooltip.IsVisible   = false;
 		TimeMarkerLine.IsVisible = false;
-
+	
 		InitializeChartProperties( Chart );
-
+	
 		if( _day != null )
 		{
 			LoadData( _day );

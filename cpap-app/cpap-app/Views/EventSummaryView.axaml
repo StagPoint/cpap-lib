@@ -4,15 +4,19 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:cpap_app.ViewModels"
              xmlns:converters="clr-namespace:cpap_app.Converters"
-             xmlns:views="clr-namespace:cpap_app.Views"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="cpap_app.Views.EventSummaryView"
-             x:DataType="viewModels:DailyEventsViewModel">
+             x:DataType="viewModels:DailyEventsViewModel"
+             Name="asDSLSDL">
 
     <UserControl.Resources>
         <converters:NiceNameConverter x:Key="NiceNameConverter" />
         <converters:EventTimespanConverter x:Key="EventTimeConverter" />
     </UserControl.Resources>
+    
+    <UserControl.Styles>
+        <StyleInclude Source="/Styling/GridStyles.axaml" />
+    </UserControl.Styles>
 
     <UserControl.Styles>
         <Style Selector="Border.SelectionRect">
@@ -48,7 +52,7 @@
         </Grid>
 
         <!-- Column headers for event list -->
-        <Grid RowDefinitions="Auto" Classes="Table, ColumnHeader" IsVisible="{Binding Items.Count}">
+        <Grid RowDefinitions="Auto" Classes="ColumnHeader" IsVisible="{Binding Items.Count}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition SharedSizeGroup="C0" />
                 <ColumnDefinition SharedSizeGroup="C1" />

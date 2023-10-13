@@ -1,0 +1,40 @@
+﻿<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Design.PreviewWith>
+        <Border Padding="20">
+            <!-- Add Controls for Previewer Here -->
+        </Border>
+    </Design.PreviewWith>
+
+    <Style Selector="Border.SelectionRect">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Padding" Value="2 0" />
+    </Style>
+    <Style Selector="Border.SelectionRect > Grid > TextBlock">
+        <Setter Property="IsHitTestVisible" Value="False" />
+    </Style>
+    <Style Selector="Border.SelectionRect:pointerover">
+        <Setter Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
+    </Style>
+    <Style Selector="Border.SelectionRect:pressed">
+        <Setter Property="Background" Value="{DynamicResource SubtleFillColorTertiaryBrush}" />
+    </Style>
+    <Style Selector="Grid.ColumnHeader">
+        <Setter Property="Background" Value="{DynamicResource DataGridColumnHeaderBackgroundBrush}" />
+    </Style>
+    <Style Selector="Grid.ColumnHeader > TextBlock">
+        <Setter Property="Theme" Value="{DynamicResource BodyStrongTextBlockStyle}" />
+        <Setter Property="Foreground" Value="{DynamicResource DataGridColumnHeaderForegroundBrush}" />
+        <Setter Property="Padding" Value="4 0 12 1"/>
+    </Style>
+    <Style Selector="Grid.TableData > TextBlock">
+        <Setter Property="Padding" Value="4 0 12 0"/>
+        <Setter Property="IsHitTestVisible" Value="False" />
+    </Style>
+    <Style Selector="Grid.TableData:disabled > TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource TextFillColorDisabledBrush}" />
+    </Style>
+    <Style Selector="TextBlock.ColumnFooter">
+        <Setter Property="Foreground" Value="{DynamicResource SystemControlDisabledBaseMediumLowBrush}" />
+    </Style>
+</Styles>

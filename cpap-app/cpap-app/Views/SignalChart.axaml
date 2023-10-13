@@ -14,15 +14,6 @@
              ChartBorderColor="{DynamicResource ControlStrokeColorSecondaryBrush}"
              ChartGridLineColor="{DynamicResource TextFillColorSecondaryBrush}"
              Background="Transparent">
-    <UserControl.Styles>
-        <Style Selector="Border.ChartTitle:pointerover">
-            <Setter Property="Cursor" Value="Hand"/>
-        </Style>
-        <Style Selector="Border.ChartTitle:pressed Label">
-            <Setter Property="Cursor" Value="Cross"/>
-            <Setter Property="Background" Value="Yellow"/>
-        </Style>
-    </UserControl.Styles>
     <Grid Name="ContainerGrid" RowDefinitions="18,*,Auto" ColumnDefinitions="36,*,36">
         <Line Name="TimeMarkerLine" IsEnabled="False" ZIndex="9990" Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="3" Grid.RowSpan="3" Stroke="{DynamicResource AccentFillColorDefaultBrush}" StrokeThickness="0.5" StartPoint="0,0" EndPoint="0,0"  />
         <Border Name="EventTooltip" CornerRadius="8" Margin="0 38" IsHitTestVisible="False" Tag="Event Tooltip" VerticalAlignment="Top" IsEnabled="False" ZIndex="9990" Grid.Column="1" Grid.Row="0" Grid.ColumnSpan="2" Grid.RowSpan="3" Background="Black" Width="250">

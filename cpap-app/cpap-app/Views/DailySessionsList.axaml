@@ -5,49 +5,51 @@
              xmlns:cpaplib="clr-namespace:cpaplib;assembly=cpap-lib"
              xmlns:converters="clr-namespace:cpap_app.Converters"
              x:Class="cpap_app.Views.DailySessionsList"
-             mc:Ignorable="d" 
-             d:DesignWidth="400" 
+             mc:Ignorable="d"
+             d:DesignWidth="400"
              d:DesignHeight="450"
              x:DataType="cpaplib:DailyReport">
-    <UserControl.Resources>
-        <converters:EnumToBooleanConverter x:Key="EnumToBoolConverter" />
-    </UserControl.Resources>
-    <ListBox Name="lstSessions" Grid.IsSharedSizeScope="True" Margin="0" ItemsSource="{Binding Sessions}" SelectionChanged="SelectingItemsControl_OnSelectionChanged">
-        <ListBox.Styles>
-            <Style Selector="ListBoxItem">
-                <Setter Property="Padding" Value="8,0,8,1"/>
-                <Setter Property="MinHeight" Value="0"/>
-                <Setter Property="MinWidth" Value="0"/>
-                <Setter Property="Margin" Value="-1"/>
-                <Setter Property="CornerRadius" Value="0"/>
-                <Setter Property="Background" Value="Transparent"/>
-            </Style>
-            <Style Selector="ContentPresenter">
-            </Style>
-        </ListBox.Styles>
-        <ListBox.ItemTemplate>
-            <DataTemplate>
-                <Grid IsVisible="{Binding SourceType, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static cpaplib:SourceType.CPAP}}" IsEnabled="{Binding $self.IsVisible, Mode=OneWay}">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" SharedSizeGroup="C0" />
-                        <ColumnDefinition Width="10" />
-                        <ColumnDefinition Width="*" SharedSizeGroup="C1" />
-                        <ColumnDefinition Width="10" />
-                        <ColumnDefinition Width="*" SharedSizeGroup="C2" />
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" Text="{Binding StartTime, Mode=OneWay, StringFormat={}{0:d}}"></TextBlock>
-                    <TextBlock Grid.Column="2">
-                        <TextBox.Text>
-                            <MultiBinding StringFormat="{}{0:T} 🠚 {1:T}">
-                                <Binding Path="StartTime" />
-                                <Binding Path="EndTime" />
-                            </MultiBinding>
-                        </TextBox.Text>
-                    </TextBlock>
-                    <TextBlock Grid.Column="4" Text="{Binding Duration, Mode=OneWay}" />
-                </Grid>
-            </DataTemplate>
-        </ListBox.ItemTemplate>
-    </ListBox>
-
+    <UserControl.Styles>
+        <StyleInclude Source="/Styling/GridStyles.axaml" />
+        <Style Selector="Border.SelectionRect">
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+    </UserControl.Styles>
+    
+    <Grid>
+        <ItemsRepeater Name="Repeater">
+            <ItemsRepeater.ItemTemplate>
+                <DataTemplate DataType="{x:Type cpaplib:Session}">
+                    <Border Classes="SelectionRect" Tapped="lstSessions_Tapped" Tag="{Binding}">
+                        
+                        <!-- 
+                        NOTE: We can't use IsSharedSizeScope="True" here, and are forced to use fixed-width columns, because
+                        Avalonia apparently has an issue with layouts where because this control often starts out outside of the
+                        visible area of a ScrollViewer, the layout engine enters an infinite layout cycle and brings the application
+                        to a screeching halt.
+                        
+                        Similarly, we cannot rely on data binding to set whether a row is visible or not, and must eliminate visible
+                        rows in the data model, which is why this control has a different data model than nearly identical controls
+                        elsewhere in the application.  
+`                       --> 
+                        <Grid RowDefinitions="20" ColumnDefinitions="85,190,85">
+                            <TextBlock Grid.Column="0" Text="{Binding StartTime, Mode=OneWay, StringFormat={}{0:d}}"
+                                       TextWrapping="NoWrap" />
+                            <TextBlock Grid.Column="1" TextWrapping="NoWrap">
+                                <TextBox.Text>
+                                    <MultiBinding StringFormat="{}{0:T} 🠚 {1:T}" Mode="OneWay">
+                                        <Binding Path="StartTime" />
+                                        <Binding Path="EndTime" />
+                                    </MultiBinding>
+                                </TextBox.Text>
+                            </TextBlock>
+                            <TextBlock Grid.Column="2" Text="{Binding Duration, Mode=OneWay}" TextWrapping="NoWrap" />
+                        </Grid>
+                        
+                    </Border>
+                </DataTemplate>
+            </ItemsRepeater.ItemTemplate>
+        </ItemsRepeater>
+    </Grid>
+    
 </UserControl>

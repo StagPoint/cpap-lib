@@ -57,20 +57,12 @@ public partial class SignalChartContainer : UserControl
 				UnPinnedCharts.Children.Add( chart );
 			}
 		}
+		
+		AddHandler( SignalChart.PinButtonClickedEvent, Chart_PinButtonClicked);
+		AddHandler( SignalChart.ChartDraggedEvent,     Chart_Dragged);
 	}
 	
 	#endregion
-	
-	#region Base class overrides
-
-	protected override void OnLoaded( RoutedEventArgs e )
-	{
-		base.OnLoaded( e );
-		
-		AddHandler( SignalChart.PinButtonClickedEvent, Chart_PinButtonClicked);
-		AddHandler( SignalChart.ChartDraggedEvent, Chart_Dragged);
-	}
-	#endregion 
 	
 	#region Event handlers
 

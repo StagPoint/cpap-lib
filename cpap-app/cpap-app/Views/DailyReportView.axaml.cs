@@ -83,21 +83,6 @@ public partial class DailyReportView : UserControl
 		}
 	}
 
-	protected override void OnPropertyChanged( AvaloniaPropertyChangedEventArgs change )
-	{
-		base.OnPropertyChanged( change );
-
-		if( change.NewValue is DailyReport day )
-		{
-			// I don't know why setting DataContext doesn't cascade down in Avalonia like it did in WPF, 
-			// but apparently I need to handle that manually.
-			if( TabFrame.Content is StyledElement childView )
-			{
-				childView.DataContext = day;
-			}
-		}
-	}
-
 	private void OnTimeRangeSelected( object? sender, DateTimeRangeRoutedEventArgs e )
 	{
 		Charts.SelectTimeRange( e.StartTime, e.EndTime );

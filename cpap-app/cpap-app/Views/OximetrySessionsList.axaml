@@ -9,10 +9,7 @@
              d:DesignWidth="400" 
              d:DesignHeight="450"
              x:DataType="cpaplib:DailyReport">
-    <UserControl.Resources>
-        <converters:EnumToBooleanConverter x:Key="EnumToBoolConverter" />
-    </UserControl.Resources>
-    <ListBox Name="lstSessions" Grid.IsSharedSizeScope="True" Margin="0" ItemsSource="{Binding Sessions}" SelectionChanged="SelectingItemsControl_OnSelectionChanged">
+    <ListBox Name="lstSessions" Grid.IsSharedSizeScope="True" Margin="0" SelectionChanged="SelectingItemsControl_OnSelectionChanged">
         <ListBox.Styles>
             <Style Selector="ListBoxItem">
                 <Setter Property="Padding" Value="8,0,8,1"/>
@@ -22,12 +19,10 @@
                 <Setter Property="CornerRadius" Value="0"/>
                 <Setter Property="Background" Value="Transparent"/>
             </Style>
-            <Style Selector="ContentPresenter">
-            </Style>
         </ListBox.Styles>
         <ListBox.ItemTemplate>
-            <DataTemplate>
-                <Grid IsVisible="{Binding SourceType, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static cpaplib:SourceType.PulseOximetry}}" IsEnabled="{Binding $self.IsVisible, Mode=OneWay}">
+            <DataTemplate DataType="{x:Type cpaplib:Session}">
+                <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" SharedSizeGroup="C0" />
                         <ColumnDefinition Width="10" />

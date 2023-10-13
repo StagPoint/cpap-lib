@@ -9,6 +9,8 @@
 
     <ItemGroup>
         <AvaloniaResource Include="Assets\**"/>
+        <AvaloniaXaml Remove="Styling\GridStyles.axaml" />
+        <AvaloniaResource Include="Styling\GridStyles.axaml" />
     </ItemGroup>
 
     <ItemGroup>

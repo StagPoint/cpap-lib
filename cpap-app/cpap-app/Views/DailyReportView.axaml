@@ -12,39 +12,6 @@
              TimeSelected="OnTimeSelected"
              TimeRangeSelected="OnTimeRangeSelected"
              views:DailySessionsList.SessionSelected="OnTimeRangeSelected">
-    <UserControl.Styles>
-        <Style Selector="Border.SelectionRect">
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Padding" Value="2 0" />
-        </Style>
-        <Style Selector="Border.SelectionRect > Grid > TextBlock">
-            <Setter Property="IsHitTestVisible" Value="False" />
-        </Style>
-        <Style Selector="Border.SelectionRect:pointerover">
-            <Setter Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
-        </Style>
-        <Style Selector="Border.SelectionRect:pressed">
-            <Setter Property="Background" Value="{DynamicResource SubtleFillColorTertiaryBrush}" />
-        </Style>
-        <Style Selector="Grid.ColumnHeader">
-            <Setter Property="Background" Value="{DynamicResource DataGridColumnHeaderBackgroundBrush}" />
-        </Style>
-        <Style Selector="Grid.ColumnHeader > TextBlock">
-            <Setter Property="Theme" Value="{DynamicResource BodyStrongTextBlockStyle}" />
-            <Setter Property="Foreground" Value="{DynamicResource DataGridColumnHeaderForegroundBrush}" />
-            <Setter Property="Padding" Value="4 0 12 1"/>
-        </Style>
-        <Style Selector="Grid.TableData > TextBlock">
-            <Setter Property="Padding" Value="4 0 12 0"/>
-            <Setter Property="IsHitTestVisible" Value="False" />
-        </Style>
-        <Style Selector="Grid.TableData:disabled > TextBlock">
-            <Setter Property="Foreground" Value="{DynamicResource TextFillColorDisabledBrush}" />
-        </Style>
-        <Style Selector="TextBlock.ColumnFooter">
-            <Setter Property="Foreground" Value="{DynamicResource SystemControlDisabledBaseMediumLowBrush}" />
-        </Style>
-    </UserControl.Styles>
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition MinWidth="350" Width="375" />
@@ -53,7 +20,7 @@
         </Grid.ColumnDefinitions>
         <GridSplitter Grid.Column="1" Width="4" HorizontalAlignment="Stretch" />
         <DockPanel Grid.Column="0" Background="{DynamicResource SolidBackgroundFillColorSecondaryBrush}" LastChildFill="True">
-            <Grid DockPanel.Dock="Top" Grid.ColumnDefinitions="Auto,*,Auto, Auto">
+            <Grid DockPanel.Dock="Top" ColumnDefinitions="Auto,*,Auto, Auto">
                 <Button Name="btnPrevDay" Grid.Column="0" Padding="5" IsEnabled="False" Click="BtnPrevDay_OnClick"
                         ToolTip.Tip="Go to the previous day with CPAP data">
                     <ui:FontIcon Glyph="&#xE892;" FontSize="18" FontFamily="{DynamicResource SymbolThemeFontFamily}" />
@@ -72,8 +39,8 @@
                 </Button>
             </Grid>
             <StackPanel Name="NoDataNotice" IsVisible="False" DockPanel.Dock="Top" Width="300" Margin="20">
-                <TextBlock Text="No Data Available" Theme="{StaticResource TitleTextBlockStyle}"/>
-                <TextBlock Text="Please select another date which has CPAP data available, or Import CPAP data for this date." Theme="{StaticResource BodyTextBlockStyle}" Margin="0 15" />
+                <TextBlock Text="No Data Available" Theme="{DynamicResource TitleTextBlockStyle}"/>
+                <TextBlock Text="Please select another date which has CPAP data available, or Import CPAP data for this date." Theme="{DynamicResource BodyTextBlockStyle}" Margin="0 15" />
             </StackPanel>
             <TabStrip Name="DetailTypes" HorizontalAlignment="Stretch" WrapSelection="False" DockPanel.Dock="Top"
                       SelectionChanged="DetailTypes_OnSelectionChanged">
@@ -88,7 +55,7 @@
                         <Setter Property="Foreground" Value="{DynamicResource TabItemHeaderForegroundSelected}" />
                     </Style>
                 </TabStrip.Styles>
-                <TabItem Header="General" Name="TabDetails" Tag="{x:Type views:DailyDetailsView}" FontSize="18" Padding="0" />
+                <TabItem Header="Details" Name="TabDetails" Tag="{x:Type views:DailyDetailsView}" FontSize="18" Padding="0" />
                 <TabItem Header="Events" Name="TabEvents" Tag="{x:Type views:DailyEventsListView}" FontSize="18" Padding="0" />
                 <TabItem Header="Oxygen" Name="TabOxygen" Tag="{x:Type views:DailySpO2View}" FontSize="18" Padding="0" />
                 <TabItem Header="Notes" Name="TabNotes" Tag="{x:Type views:DailyNotesView}" FontSize="18" Padding="0" />

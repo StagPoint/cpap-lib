@@ -1,4 +1,6 @@
-﻿using Avalonia;
+﻿using System.Linq;
+
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
@@ -16,6 +18,17 @@ public partial class OximetrySessionsList : UserControl
 		InitializeComponent();
 	}
 	
+	protected override void OnPropertyChanged( AvaloniaPropertyChangedEventArgs change )
+	{
+		base.OnPropertyChanged( change );
+
+		if( change.NewValue is DailyReport day )
+		{
+			// Filter the day's Sessions to only those that were produced by the CPAP machine
+			lstSessions.ItemsSource = day.Sessions.Where( x => x.SourceType == SourceType.CPAP );
+		}
+	}
+
 	private void SelectingItemsControl_OnSelectionChanged( object? sender, SelectionChangedEventArgs e )
 	{
 		if( lstSessions.SelectedItem is Session session )

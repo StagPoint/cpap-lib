@@ -7,12 +7,11 @@
              xmlns:views="clr-namespace:cpap_app.Views"
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="600"
              x:Class="cpap_app.Views.DailyDetailsView"
-             x:DataType="cpaplib:DailyReport"
-             >
+             x:DataType="cpaplib:DailyReport">
     <Design.DataContext>
         <cpaplib:DailyReport />
     </Design.DataContext>
-    <ScrollViewer>
+    <ScrollViewer Name="ScrolLContainer">
         <StackPanel>
             <StackPanel DataContext="{Binding MachineInfo}" Margin="4 8 0 0">
                 <TextBlock Theme="{DynamicResource BodyStrongTextBlockStyle}">
@@ -56,7 +55,7 @@
                         <TextBlock Text="Reported Events" FontSize="16" Theme="{DynamicResource BodyStrongTextBlockStyle}"/>
                     </StackPanel>
                 </Expander.Header>
-                <views:DailyEventSummaryView />
+                <views:DailyEventSummaryView Name="DailyEventSummaryView" />
             </Expander>
 
             <Expander
@@ -71,7 +70,7 @@
                         <TextBlock Text="Statistics" FontSize="16" Theme="{DynamicResource BodyStrongTextBlockStyle}"/>
                     </StackPanel>
                 </Expander.Header>
-                <views:DailyStatisticsSummaryView Name="dailyStatistics" DataContext="{Binding}" />
+                <views:DailyStatisticsSummaryView Name="DailyStatisticsSummaryView" />
             </Expander>
 
             <Expander
@@ -86,7 +85,7 @@
                         <TextBlock Text="Settings" FontSize="16" Theme="{DynamicResource BodyStrongTextBlockStyle}"/>
                     </StackPanel>
                 </Expander.Header>
-                <views:DailySettingsView DataContext="{Binding}" />
+                <views:DailySettingsView Name="DailySettingsView" />
             </Expander>
 
             <Expander
@@ -101,7 +100,7 @@
                         <TextBlock Text="Sessions" FontSize="16" Theme="{DynamicResource BodyStrongTextBlockStyle}"/>
                     </StackPanel>
                 </Expander.Header>
-               <views:DailySessionsList />
+                <views:DailySessionsList Name="DailySessionsList" />
             </Expander>
 
         </StackPanel>

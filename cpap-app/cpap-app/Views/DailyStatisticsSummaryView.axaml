@@ -5,10 +5,16 @@
              xmlns:cpaplib="clr-namespace:cpaplib;assembly=cpap-lib"
              mc:Ignorable="d" d:DesignWidth="350" d:DesignHeight="450"
              x:Class="cpap_app.Views.DailyStatisticsSummaryView"
-             x:DataType="cpaplib:DailyReport">
+             x:DataType="cpaplib:DailyReport"
+             Name="XXXX">
     <Design.DataContext>
         <cpaplib:DailyReport />
     </Design.DataContext>
+ 
+    <UserControl.Styles>
+        <StyleInclude Source="/Styling/GridStyles.axaml" />
+    </UserControl.Styles>
+
     <Grid Grid.IsSharedSizeScope="True" RowDefinitions="Auto,*">
         <Grid.Styles>
             <Style Selector="TextBlock">
@@ -23,7 +29,7 @@
                 <ColumnDefinition Width="Auto" SharedSizeGroup="C2" />
                 <ColumnDefinition Width="Auto" SharedSizeGroup="C3" />
                 <ColumnDefinition Width="Auto" SharedSizeGroup="C4" />
-                <!-- <ColumnDefinition Width="Auto" SharedSizeGroup="C5" /> -->
+                <!-- <ColumnDefinition Width="Auto" SharedSizeGroup="C5}" /> -->
             </Grid.ColumnDefinitions>
             <TextBlock Grid.Column="0" Text="Name" />
             <TextBlock Grid.Column="1" Text="Min" />
