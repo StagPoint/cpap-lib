@@ -1,8 +1,4 @@
-﻿using System.Diagnostics;
-
-using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
+﻿using Avalonia.Controls;
 
 namespace cpap_app.Views;
 

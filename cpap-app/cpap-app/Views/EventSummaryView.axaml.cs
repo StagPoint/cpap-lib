@@ -1,10 +1,7 @@
-﻿using System.Diagnostics;
-
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
-using Avalonia.Markup.Xaml;
 
 using cpap_app.Events;
 using cpap_app.ViewModels;

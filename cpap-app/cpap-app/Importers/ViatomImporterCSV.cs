@@ -15,6 +15,7 @@ public class ViatomImporterCSV : IOximetryImporter
 	// NOTES:
 	// Sample filename: "Oxylink 1250_1692103555000.csv"
 	// Sample filename: "O2Ring 0009_1696377606000.csv"
+	// Sample filename: "WearO2 1545_1697360836000.csv"
 	// Header: "Time,Oxygen Level,Pulse Rate,Motion"
 	
 	#region Public properties 
@@ -29,7 +30,7 @@ public class ViatomImporterCSV : IOximetryImporter
 	{
 		new FilePickerFileType( "Viatom Mobile CSV File" )
 		{
-			Patterns                    = new[] { "OxyLink*.csv", "O2Ring*.csv" },
+			Patterns                    = new[] { "OxyLink*.csv", "O2Ring*.csv", "WearO2*.csv" },
 			AppleUniformTypeIdentifiers = new[] { "public.plain-text" },
 			MimeTypes                   = new[] { "text/plain" }
 		}

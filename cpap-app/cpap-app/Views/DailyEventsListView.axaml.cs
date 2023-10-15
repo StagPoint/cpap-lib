@@ -1,16 +1,9 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Linq;
-using System.Threading.Tasks;
 
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Input;
 using Avalonia.Interactivity;
-using Avalonia.LogicalTree;
-using Avalonia.Markup.Xaml;
-using Avalonia.Threading;
-using Avalonia.VisualTree;
 
 using cpap_app.Events;
 using cpap_app.ViewModels;

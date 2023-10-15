@@ -2,7 +2,6 @@
 
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
 
 using cpap_app.ViewModels;
 
@@ -36,7 +35,7 @@ public partial class DailyEventSummaryView : UserControl
 				var viewModel = new DailyEventsViewModel( day );
 				viewModel.Indexes.Add( new EventGroupSummary( "Apnea/Hypopnea Index (AHI)", EventTypes.Apneas, day.TotalSleepTime, day.Events ) );
 
-				if( day.Events.Any( x => x.Type == EventType.RERA ) )
+				if( day.Events.Any( x => x.Type is EventType.RERA or EventType.FlowLimitation ) )
 				{
 					viewModel.Indexes.Add( new EventGroupSummary( "Respiratory Disturbance (RDI)", EventTypes.RespiratoryDisturbance, day.TotalSleepTime, day.Events ) );
 				}

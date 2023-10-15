@@ -27,13 +27,13 @@ namespace cpaplib
 		};
 
 		private MachineIdentification _machineInfo   = new MachineIdentification();
-		private TimeSpan              _timeAjustment = new TimeSpan( 0, 0, 1, 10 );
+		private TimeSpan              _timeAdjustment = new TimeSpan( 0, 0, 1, 10 );
 
 		public List<DailyReport> LoadFromFolder( string folderPath, DateTime? minDate = null, DateTime? maxDate = null, TimeSpan? timeAdjustment = null )
 		{
 			if( timeAdjustment.HasValue )
 			{
-				_timeAjustment = (TimeSpan)timeAdjustment;
+				_timeAdjustment = (TimeSpan)timeAdjustment;
 			}
 			
 			EnsureCorrectFolderStructure( folderPath );
@@ -274,14 +274,14 @@ namespace cpaplib
 							// because of differences in sampling rate, so we keep track of the start time and end
 							// time of each Signal separately. Note the addition of a time adjustment, which allows
 							// the user to calibrate for "drift" of the ResMed machine's internal clock.  
-							var startTime  = header.StartTime.Value + _timeAjustment;
+							var startTime  = header.StartTime.Value + _timeAdjustment;
 							var endTime    = startTime.AddSeconds( header.NumberOfDataRecords * header.DurationOfDataRecord );
 
 							// We need to see if the session already contains a signal by this name, so we know what to do with it. 
 							if( session.GetSignalByName( signalName ) == null )
 							{
-								// Add the signal to the current session
-								AddSignalToSession( session, startTime, endTime, signal );
+                                // Add the signal to the current session
+                                AddSignalToSession( session, startTime, endTime, signal );
 							}
 							else
 							{
@@ -302,7 +302,7 @@ namespace cpaplib
 								// If there is, add it. 
 								if( splitSession != null )
 								{
-									AddSignalToSession( splitSession, startTime, endTime, signal );
+                                    AddSignalToSession( splitSession, startTime, endTime, signal );
 								}
 								else
 								{
@@ -313,8 +313,8 @@ namespace cpaplib
 										StartTime = session.StartTime,
 										EndTime   = session.EndTime,
 									};
-
-									AddSignalToSession( newSession, startTime, endTime, signal );
+									
+                                    AddSignalToSession( newSession, startTime, endTime, signal );
 									
 									// Add the session to the DailyReport. We'll need to sort sessions afterward because of this. 
 									day.Sessions.Add( newSession );
@@ -412,13 +412,13 @@ namespace cpaplib
 			GenerateEvents( day );
 		}
 
-		private void GenerateEvents( DailyReport day )
+		private static void GenerateEvents( DailyReport day )
 		{
 			GenerateLeakEvents( day );
 			GenerateFlowLimitEvents( day );
 		}
 		
-		private void GenerateFlowLimitEvents( DailyReport day )
+		private static void GenerateFlowLimitEvents( DailyReport day )
 		{
 			// TODO: Flow Limitation Redline needs to be a configurable value 
 			const double FlowLimitRedline = 0.3;
@@ -428,12 +428,12 @@ namespace cpaplib
 				var signal = session.GetSignalByName( SignalNames.FlowLimit );
 				if( signal != null )
 				{
-					Annotate( day.Events, EventType.FlowLimitation, signal, 8, FlowLimitRedline );
+					Annotate( day.Events, EventType.FlowLimitation, signal, 8, FlowLimitRedline, false );
 				}
 			}
 		}
 
-		private void GenerateLeakEvents( DailyReport day )
+		private static void GenerateLeakEvents( DailyReport day )
 		{
 			// TODO: Leak Redline needs to be a configurable value 
 			const double LeakRedline = 24;
@@ -448,7 +448,7 @@ namespace cpaplib
 			}
 		}
 
-		private void Annotate( List<ReportedEvent> events, EventType eventType, Signal signal, double minDuration, double redLine, bool interpolateSamples = true )
+		private static void Annotate( List<ReportedEvent> events, EventType eventType, Signal signal, double minDuration, double redLine, bool interpolateSamples = true )
 		{
 			int    state      = 0;
 			double eventStart = -1;
@@ -557,7 +557,7 @@ namespace cpaplib
 			foreach( var filename in filenames )
 			{
 				var file = EdfFile.Open( filename );
-				day.RecordingStartTime = file.Header.StartTime.Value + _timeAjustment;
+				day.RecordingStartTime = file.Header.StartTime.Value + _timeAdjustment;
 				
 				foreach( var annotationSignal in file.AnnotationSignals )
 				{
@@ -616,7 +616,7 @@ namespace cpaplib
 			foreach( var filename in filenames )
 			{
 				var file = EdfFile.Open( filename );
-				day.RecordingStartTime = file.Header.StartTime.Value + _timeAjustment;
+				day.RecordingStartTime = file.Header.StartTime.Value + _timeAdjustment;
 				
 				foreach( var annotationSignal in file.AnnotationSignals )
 				{
@@ -630,6 +630,8 @@ namespace cpaplib
 
 						// Try to convert the annotation text into an Enum for easier processing. 
 						var eventFlag = ReportedEvent.FromEdfAnnotation( day.RecordingStartTime, annotation );
+						
+						// TODO: The ResMed AirSense 10 reports RERA as "Arousal"? Can RERA be correlated with Flow Limit to differentiate from non-effort-related Arousal? A cursory investigation suggests yes.
 						
 						// We don't need the "Recording Starts" annotations either 
 						if( eventFlag.Type == EventType.RecordingStarts )
@@ -673,7 +675,7 @@ namespace cpaplib
 				// Read in and process the settings for a single day
 				var day = ReadDailyReport( lookup );
 				day.MachineInfo        =  _machineInfo;
-				day.RecordingStartTime += _timeAjustment;
+				day.RecordingStartTime += _timeAdjustment;
 
 				days.Add( day );
 			}
@@ -728,14 +730,14 @@ namespace cpaplib
 					day.Sessions.Add( session );
 				}
 			}
-
-			// Remove all days that are too short to be valid or are otherwise invalid
-			RemoveInvalidDays( days );
-
-			// Remove days that don't match the provided range. It's less efficient to do this after we've already 
-			// gathered the basic day information, but it keeps the code much cleaner and more readable, and this 
-			// isn't exactly a performance-critical section of code ;)
-			FilterDaysByDate( days, minDate, maxDate );
+			
+            // Remove all days that are too short to be valid or are otherwise invalid
+            RemoveInvalidDays( days );
+            
+            // Remove days that don't match the provided range. It's less efficient to do this after we've already 
+            // gathered the basic day information, but it keeps the code much cleaner and more readable, and this 
+            // isn't exactly a performance-critical section of code ;)
+            FilterDaysByDate( days, minDate, maxDate );
 
 			return days;
 		}
@@ -751,23 +753,23 @@ namespace cpaplib
 			// raw data will be kept available for the consumer of this library to make use of if needs be.
 			//RawData = data;
 
-			var day = new DailyReport();
-
-			day.MachineInfo = _machineInfo;
-			day.ReportDate  = new DateTime( 1970, 1, 1 ).AddDays( data[ "Date" ] ).AddHours( 12 );
-
-			day.Settings = ReadMachineSettings( data );
-
-			day.MaskEvents     = (int)(data[ "MaskEvents" ] / 2);
-			day.TotalSleepTime = TimeSpan.FromMinutes( data[ "Duration" ] );
-			//OnDuration = TimeSpan.FromMinutes( data[ "OnDuration" ] );
-
-			day.PatientHours = getValue( "PatientHours" );
-
-			day.Fault.Device     = getValue( "Fault.Device" );
-			day.Fault.Alarm      = getValue( "Fault.Alarm" );
-			day.Fault.Humidifier = getValue( "Fault.Humidifier" );
-			day.Fault.HeatedTube = getValue( "Fault.HeatedTube" );
+			var day = new DailyReport
+			{
+				MachineInfo = _machineInfo,
+				ReportDate  = new DateTime( 1970, 1, 1 ).AddDays( data[ "Date" ] ).AddHours( 12 ),
+				Settings = ResMedDataLoader.ReadMachineSettings( data ),
+				MaskEvents = (int)(data[ "MaskEvents" ] / 2),
+				TotalSleepTime = TimeSpan.FromMinutes( data[ "Duration" ] ),
+				//OnDuration = TimeSpan.FromMinutes( data[ "OnDuration" ] );
+				PatientHours = getValue( "PatientHours" ),
+				Fault =
+				{
+					Device = getValue( "Fault.Device" ),
+					Alarm = getValue( "Fault.Alarm" ),
+					Humidifier = getValue( "Fault.Humidifier" ),
+					HeatedTube = getValue( "Fault.HeatedTube" ),
+				},
+			};
 
 			double getValue( params string[] keys )
 			{
@@ -785,7 +787,7 @@ namespace cpaplib
 			return day;
 		}
 
-		private MachineSettings ReadMachineSettings( Dictionary<string, double> data )
+		private static MachineSettings ReadMachineSettings( Dictionary<string, double> data )
 		{
 			var settings = new MachineSettings();
 			
@@ -910,7 +912,7 @@ namespace cpaplib
 			return settings;
 		}
 
-		private void FilterDaysByDate( List<DailyReport> days, DateTime? minDate, DateTime? maxDate )
+		private static void FilterDaysByDate( List<DailyReport> days, DateTime? minDate, DateTime? maxDate )
 		{
 			int dayIndex = 0;
 			if( minDate.HasValue || maxDate.HasValue )
@@ -936,7 +938,7 @@ namespace cpaplib
 			}
 		}
 
-		private void RemoveInvalidDays( List<DailyReport> days )
+		private static void RemoveInvalidDays( List<DailyReport> days )
 		{
 			int dayIndex = 0;
 			while( dayIndex < days.Count )
@@ -951,7 +953,7 @@ namespace cpaplib
 			}
 		}
 		
-		private void AddSignalToSession( Session session, DateTime startTime, DateTime endTime, EdfStandardSignal fileSignal )
+		private static void AddSignalToSession( Session session, DateTime startTime, DateTime endTime, EdfStandardSignal fileSignal )
 		{
 			// Rename signals to their "standard" names. Among other things, this lets us standardize the 
 			// data even when there might be slight differences in signal names among various machine models.
@@ -979,6 +981,5 @@ namespace cpaplib
 
 			session.Signals.Add( signal );
 		}
-
 	}
 }

@@ -162,14 +162,16 @@ namespace cpaplib
 	{
 		private static Dictionary<string, EventType> _textToEventTypeMap = new Dictionary<string, EventType>()
 		{
+			// NOTE: The order of keys is important for "Type to name" operations when there is more than one 
+			// key that maps to a given EventType, such as RERA and Arousal both mapping to the same value. 
 			{ "Hypopnea", EventType.Hypopnea },
 			{ "Recording starts", EventType.RecordingStarts },
 			{ "Recording ends", EventType.RecordingEnds },
 			{ "Obstructive Apnea", EventType.ObstructiveApnea },
 			{ "Clear Airway", EventType.ClearAirway },
 			{ "Central Apnea", EventType.ClearAirway },
-			{ "Arousal", EventType.RERA },
 			{ "RERA", EventType.RERA },
+			{ "Arousal", EventType.RERA },
 			{ "Unclassified", EventType.Unclassified },
 		};
 
@@ -179,7 +181,12 @@ namespace cpaplib
 			foreach( var value in Enum.GetValues( typeof( EventType ) ) )
 			{
 				var key = NiceNames.Format( value.ToString() );
-				_textToEventTypeMap[ key ] = (EventType)value;
+				
+				// ReSharper disable once CanSimplifyDictionaryLookupWithTryAdd
+				if( !_textToEventTypeMap.ContainsKey( key ) )
+				{
+					_textToEventTypeMap[ key ] = (EventType)value;
+				}
 			}
 		}
 
