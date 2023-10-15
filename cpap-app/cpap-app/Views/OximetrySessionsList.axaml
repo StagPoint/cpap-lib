@@ -24,9 +24,9 @@
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" SharedSizeGroup="C0" />
-                        <ColumnDefinition Width="10" />
+                        <ColumnDefinition Width="12" />
                         <ColumnDefinition Width="*" SharedSizeGroup="C1" />
-                        <ColumnDefinition Width="10" />
+                        <ColumnDefinition Width="20" />
                         <ColumnDefinition Width="*" SharedSizeGroup="C2" />
                     </Grid.ColumnDefinitions>
                     <TextBlock Grid.Column="0" Text="{Binding StartTime, Mode=OneWay, StringFormat={}{0:d}}"></TextBlock>

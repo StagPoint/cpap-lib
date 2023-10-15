@@ -296,7 +296,7 @@ namespace cpap_db
 			day.Events.RemoveAll( x => x.SourceType == SourceType.PulseOximetry );
 			day.Sessions.RemoveAll( x => x.SourceType == SourceType.PulseOximetry );
 			
-			day.UpdateSessionTimes();
+			day.RefreshTimeRange();
 			
 			SaveDailyReport( day );
 		}

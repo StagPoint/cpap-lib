@@ -14,7 +14,6 @@ using Avalonia.Threading;
 using Avalonia.VisualTree;
 
 using cpap_app.Events;
-using cpap_app.Helpers;
 using cpap_app.Importers;
 
 using cpap_db;
@@ -120,8 +119,10 @@ public partial class MainView : UserControl
 			return;
 		}
 
-		var matcher = new Regex( importer.FilenameMatchPattern, RegexOptions.IgnoreCase );
+		var                matcher      = new Regex( importer.FilenameMatchPattern, RegexOptions.IgnoreCase );
+		List<MetaSession>  metaSessions = new List<MetaSession>();
 		List<ImportedData> importedData = new List<ImportedData>();
+		MetaSession?       metaSession  = null;
 
 		var td = new TaskDialog
 		{
@@ -181,23 +182,35 @@ public partial class MainView : UserControl
 						throw;
 					}
 				}
-
-				if( importedData.Count > 0 )
+				
+				// Sort the imported data before grouping into MetaSessions
+				importedData.Sort();
+				
+				// Grouping the imported data into "Meta-sessions" allows us to ensure that sessions that are 
+				// separated by up to an hour (on either side of the main group) still get included.
+				foreach( var data in importedData )
 				{
-					importedData.Sort( ( a, b ) => a.StartTime.CompareTo( b.StartTime ) );
-					var distinctDates = importedData
-					                    .Select( x => x.StartTime.Date )
-					                    .Concat( importedData.Select( x => x.EndTime.Date ) )
-					                    .Distinct()
-					                    .ToList();
-
-					// Extend the range of days by one day in either direction to ensure that all 
-					// applicable days get loaded.
-					distinctDates.Add( distinctDates[ ^1 ].AddDays( 1 ) );
-					distinctDates.Add( distinctDates[ 0 ].AddDays( -1 ) );
-
-					foreach( var date in distinctDates )
+					if( metaSession == null || !metaSession.CanMerge( data ) )
 					{
+						metaSession = new MetaSession();
+						metaSessions.Add( metaSession );
+					}
+							
+					metaSession.Add( data );
+				}
+
+				if( metaSessions.Count > 0 )
+				{
+					metaSessions.Sort();
+
+					var minDate = metaSessions.Min( x => x.StartTime.Date.AddDays( -1 ) );
+					var maxDate = metaSessions.Max( x => x.EndTime.Date.AddDays( 1 ) );
+
+					for( var loop = minDate; loop <= maxDate; loop = loop.AddDays( 1 ) )
+					{
+						// Copy the current date, because otherwise captures might reference the wrong value
+						var date = loop;
+
 						Dispatcher.UIThread.Post( () =>
 						{
 							td.Content = $"Merging sessions and events for \n{date:D}";
@@ -212,38 +225,40 @@ public partial class MainView : UserControl
 						}
 
 						// Obtain a list of import data that could potentially be merged with the current day
-						var overlappingImports = importedData.Where( x => OverlapsDay( day, x ) ).ToList();
+						var overlappingImports = metaSessions.Where( x => x.CanMergeWith( day ) ).ToList();
 
-						bool addedSessionToDay = false;
+						if( overlappingImports.Count == 0 )
+						{
+							continue;
+						}
+
+						bool dayIsModified = false;
 						
 						foreach( var data in overlappingImports )
 						{
-							foreach( var session in data.Sessions )
+							foreach( var item in data.Items )
 							{
-								// If the session either overlaps the current day or is off by an hour or less then
-								// it can be merged. Otherwise skip it. 
-								if( !CanMergeSession( day, session ) )
+								foreach( var session in item.Sessions )
 								{
-									continue;
-								}
-								
-								// If the day doesn't already contain a matching session, add it
-								if( !day.Sessions.Any( x => Session.TimesOverlap( x, session ) && x.SourceType == session.SourceType ) )
-								{
-									// Add the Session to the Day's Session list. 
-									day.AddSession( session );
-									
-									// Add only the events that happened during this Session. Note that In practice this 
-									// should be all of them, since at the time I wrote this all importers only generated
-									// a single Session per file, and that is not expected to change.
-									day.Events.AddRange( data.Events.Where( x => x.StartTime >= session.StartTime && x.StartTime <= session.EndTime ) );
+									// If the day doesn't already contain a matching session, add it
+									if( !day.Sessions.Any( x => Session.TimesOverlap( x, session ) && x.SourceType == session.SourceType ) )
+									{
+										// Add the Session to the Day's Session list. 
+										day.AddSession( session );
 
-									addedSessionToDay = true;
+										// Add only the events that happened during this Session. Note that In practice this 
+										// should be all of them, since at the time I wrote this all importers only generated
+										// a single Session per file, and that is not expected to change, but if it ever does 
+										// this code should be robust in handling that change. 
+										day.Events.AddRange( item.Events.Where( x => x.StartTime >= session.StartTime && x.StartTime <= session.EndTime ) );
+
+										dayIsModified = true;
+									}
 								}
 							}
 						}
 
-						if( addedSessionToDay )
+						if( dayIsModified )
 						{
 							day.UpdateSignalStatistics( SignalNames.SpO2 );
 							day.UpdateSignalStatistics( SignalNames.Pulse );
@@ -266,7 +281,7 @@ public partial class MainView : UserControl
 		td.XamlRoot = (Visual)VisualRoot!;
 		await td.ShowAsync();	
 
-		if( !operationWasCanccelled && importedData.Count == 0 || !dataWasImported )
+		if( !operationWasCanccelled && metaSessions.Count == 0 || !dataWasImported )
 		{
 			var dialog = MessageBoxManager.GetMessageBoxStandard(
 				$"Import from {importer.FriendlyName}",
@@ -285,31 +300,6 @@ public partial class MainView : UserControl
 				dailyReportView.DataContext = db.LoadDailyReport( dailyReport.ReportDate.Date );
 			}
 		}
-	}
-
-	private bool CanMergeSession( DailyReport day, Session session )
-	{
-		if( DateHelper.RangesOverlap( day.RecordingStartTime, day.RecordingEndTime, session.StartTime, session.EndTime ) )
-		{
-			return true;
-		}
-
-		if( day.RecordingEndTime >= session.StartTime.AddHours( -1 ) && day.RecordingEndTime <= session.StartTime )
-		{
-			return true;
-		}
-
-		return day.RecordingEndTime >= session.EndTime && day.RecordingEndTime <= session.EndTime.AddHours( 1 );
-	}
-
-	private bool OverlapsDay( DailyReport day, ImportedData data )
-	{
-		if( day.RecordingStartTime.Date == data.StartTime.Date || day.RecordingEndTime.Date == data.StartTime.Date )
-		{
-			return true;
-		}
-
-		return day.RecordingEndTime.Date == data.StartTime.Date || day.RecordingEndTime.Date == data.EndTime.Date;
 	}
 
 	private async void HandleImportRequestCPAP( object? sender, RoutedEventArgs e )

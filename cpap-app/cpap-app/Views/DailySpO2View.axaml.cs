@@ -89,7 +89,7 @@ public partial class DailySpO2View : UserControl
 			new[]
 			{
 				new DataDistribution.RangeDefinition( "< 90 %",  89.5 ),
-				new DataDistribution.RangeDefinition( "90-94 %", 94.5 ),
+				new DataDistribution.RangeDefinition( "90% - 94%", 94.5 ),
 				new DataDistribution.RangeDefinition( ">= 95 %", double.MaxValue )
 			} );
 

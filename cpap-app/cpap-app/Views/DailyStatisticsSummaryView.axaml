@@ -3,6 +3,8 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:cpaplib="clr-namespace:cpaplib;assembly=cpap-lib"
+             xmlns:viewModels="clr-namespace:cpap_app.ViewModels"
+             xmlns:converters="clr-namespace:cpap_app.Converters"
              mc:Ignorable="d" d:DesignWidth="350" d:DesignHeight="450"
              x:Class="cpap_app.Views.DailyStatisticsSummaryView"
              x:DataType="cpaplib:DailyReport"
@@ -14,31 +16,37 @@
     <UserControl.Styles>
         <StyleInclude Source="/Styling/GridStyles.axaml" />
     </UserControl.Styles>
+    
+    <UserControl.Resources>
+        <converters:BoolToGridLengthConverter x:Key="BooleanToGridLength" />
+    </UserControl.Resources>
 
-    <Grid Grid.IsSharedSizeScope="True" RowDefinitions="Auto,*">
+    <Grid Name="StatsGrid" Grid.IsSharedSizeScope="True" RowDefinitions="Auto,*" x:DataType="viewModels:DailyStatisticsViewModel">
         <Grid.Styles>
             <Style Selector="TextBlock">
                 <!-- <Setter Property="FontSize" Value="14"/> -->
                 <Setter Property="Padding" Value="2 0 8 2" />
             </Style>
         </Grid.Styles>
-        <Grid Grid.Row="0" HorizontalAlignment="Stretch" RowDefinitions="Auto" Classes="Table, ColumnHeader">
+        <Grid Name="HeaderGrid" Grid.Row="0" HorizontalAlignment="Stretch" RowDefinitions="Auto" Classes="ColumnHeader">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" SharedSizeGroup="C0" />
-                <ColumnDefinition Width="Auto" SharedSizeGroup="C1" />
-                <ColumnDefinition Width="Auto" SharedSizeGroup="C2" />
-                <ColumnDefinition Width="Auto" SharedSizeGroup="C3" />
-                <ColumnDefinition Width="Auto" SharedSizeGroup="C4" />
-                <!-- <ColumnDefinition Width="Auto" SharedSizeGroup="C5}" /> -->
+                <ColumnDefinition Width="{Binding VisibleColumns.Minimum, Converter={StaticResource BooleanToGridLength}}" SharedSizeGroup="C1" />
+                <ColumnDefinition Width="{Binding VisibleColumns.Average, Converter={StaticResource BooleanToGridLength}}" SharedSizeGroup="C2" />
+                <ColumnDefinition Width="{Binding VisibleColumns.Median, Converter={StaticResource BooleanToGridLength}}" SharedSizeGroup="C3" />
+                <ColumnDefinition Width="{Binding VisibleColumns.Percentile95, Converter={StaticResource BooleanToGridLength}}" SharedSizeGroup="C4" />
+                <ColumnDefinition Width="{Binding VisibleColumns.Percentile995, Converter={StaticResource BooleanToGridLength}}" SharedSizeGroup="C5" />
+                <ColumnDefinition Width="{Binding VisibleColumns.Maximum, Converter={StaticResource BooleanToGridLength}}" SharedSizeGroup="C6" />
             </Grid.ColumnDefinitions>
             <TextBlock Grid.Column="0" Text="Name" />
             <TextBlock Grid.Column="1" Text="Min" />
             <TextBlock Grid.Column="2" Text="Avg" />
-            <!-- <TextBlock Grid.Column="3" Text="Med" /> -->
-            <TextBlock Grid.Column="3" Text="95%" />
-            <TextBlock Grid.Column="4" Text="99.5%" />
+            <TextBlock Grid.Column="3" Text="Med" />
+            <TextBlock Grid.Column="4" Text="95%" />
+            <TextBlock Grid.Column="5" Text="99.5%" />
+            <TextBlock Grid.Column="6" Text="Max" />
         </Grid>
-        <ItemsControl Grid.Row="1" ItemsSource="{Binding Statistics}">
+        <ItemsControl Name="Repeater" Grid.Row="1" ItemsSource="{Binding Statistics}">
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
                     <Border Classes="SelectionRect">
@@ -50,15 +58,15 @@
                                 <ColumnDefinition Width="Auto" SharedSizeGroup="C3" />
                                 <ColumnDefinition Width="Auto" SharedSizeGroup="C4" />
                                 <ColumnDefinition Width="Auto" SharedSizeGroup="C5" />
+                                <ColumnDefinition Width="Auto" SharedSizeGroup="C6" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Text="{Binding SignalName}" />
                             <TextBlock Grid.Column="1" Text="{Binding Minimum, Mode=OneWay, StringFormat={}{0:f2}}" />
                             <TextBlock Grid.Column="2" Text="{Binding Average, Mode=OneWay, StringFormat={}{0:f2}}" />
-                            <!-- <TextBlock Grid.Column="3" Text="{Binding Median, Mode=OneWay, StringFormat={}{0:f2}}" /> -->
-                            <TextBlock Grid.Column="3"
-                                       Text="{Binding Percentile95, Mode=OneWay, StringFormat={}{0:f2}}" />
-                            <TextBlock Grid.Column="4"
-                                       Text="{Binding Percentile995, Mode=OneWay, StringFormat={}{0:f2}}" />
+                            <TextBlock Grid.Column="3" Text="{Binding Median, Mode=OneWay, StringFormat={}{0:f2}}" />
+                            <TextBlock Grid.Column="4" Text="{Binding Percentile95, Mode=OneWay, StringFormat={}{0:f2}}" />
+                            <TextBlock Grid.Column="5" Text="{Binding Percentile995, Mode=OneWay, StringFormat={}{0:f2}}" />
+                            <TextBlock Grid.Column="6" Text="{Binding Maximum, Mode=OneWay, StringFormat={}{0:f2}}" />
                         </Grid>
                     </Border>
                 </DataTemplate>

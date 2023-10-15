@@ -327,7 +327,7 @@ namespace cpaplib
 				}
 			}
 
-			// Remove all sessions that did not have signal data. This happens when the ResMed machine reports a 
+			// Remove all sessions that did not have signal data. This happens (for instance) when the ResMed machine reports a 
 			// MaskOn/MaskOff session that is too short for any data to be recorded. 
 			day.Sessions.RemoveAll( x => x.Signals.Count == 0 );
 			foreach( var maskSession in day.Sessions )
@@ -337,6 +337,7 @@ namespace cpaplib
 				// be other similar situations I haven't encountered yet (and in any case such signals are not valid). 
 				maskSession.Signals.RemoveAll( x => !x.Samples.Any( value => value >= x.MinValue ) );
 			}
+			day.Sessions.RemoveAll( x => x.Signals.Count == 0 || x.Duration.TotalMinutes < 5 );
 			
 			// If there is SpO2 and Pulse data, split those signals off into separate sessions for more logical grouping
 			int sessionCount = day.Sessions.Count;

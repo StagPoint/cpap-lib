@@ -11,7 +11,7 @@
         <cpaplib:DailyReport/>
     </Design.DataContext>   
     <UserControl.Resources>
-        <converters:BoolToGridRowHeightConverter x:Key="BoolToGridRowHeightConverter" />
+        <converters:BoolToGridLengthConverter x:Key="BoolToGridRowHeightConverter" />
         <converters:PropertyValueToGridRowVisibilityConverter x:Key="PropertyValueToGridRowVisibilityConverter" />
         <converters:NiceNameConverter x:Key="NiceNameConverter" />
     </UserControl.Resources>

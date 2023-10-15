@@ -23,8 +23,8 @@ public partial class OximetrySessionsList : UserControl
 
 		if( change.NewValue is DailyReport day )
 		{
-			// Filter the day's Sessions to only those that were produced by the CPAP machine
-			lstSessions.ItemsSource = day.Sessions.Where( x => x.SourceType == SourceType.CPAP );
+			// Filter the day's Sessions to only those that were produced by a Pulse Oximeter
+			lstSessions.ItemsSource = day.Sessions.Where( x => x.SourceType == SourceType.PulseOximetry );
 		}
 	}
 

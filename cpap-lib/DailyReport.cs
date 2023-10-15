@@ -96,7 +96,7 @@ namespace cpaplib
 		/// Updates the RecordingStartTime, RecordingEndTime, and TotalSleepTime properties to reflect
 		/// any changes to the Sessions collection.
 		/// </summary>
-		public void UpdateSessionTimes()
+		public void RefreshTimeRange()
 		{
 			RecordingStartTime = Sessions.Min( x => x.StartTime );
 			RecordingEndTime   = Sessions.Max( x => x.EndTime );

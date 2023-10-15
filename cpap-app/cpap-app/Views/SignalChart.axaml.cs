@@ -178,43 +178,12 @@ public partial class SignalChart : UserControl
 		ChartLabel.PointerReleased    += ChartLabelOnPointerReleased;
 		ChartLabel.PointerCaptureLost += ChartLabelOnPointerCaptureLost;
 		ChartLabel.PointerMoved       += ChartLabelOnPointerMoved;
-		ChartLabel.Cursor             =  new Cursor( StandardCursorType.Hand );
 
-		Chart.ContextMenu = null;
+		//Chart.ContextMenu = null;
 		
 		AddHandler( Button.ClickEvent, Button_OnClick);
 	}
 	
-	private void ChartLabelOnPointerMoved( object? sender, PointerEventArgs e )
-	{
-		var position = e.GetPosition( this );
-
-		if( position.Y < 0 || position.Y > this.Bounds.Height )
-		{
-			RaiseEvent( new ChartDragEventArgs
-			{
-				RoutedEvent = ChartDraggedEvent,
-				Source      = this,
-				Direction   = Math.Sign( position.Y ),
-			} );
-		}
-	}
-
-	private void ChartLabelOnPointerCaptureLost( object? sender, PointerCaptureLostEventArgs e )
-	{
-		ChartLabel.Cursor = new Cursor( StandardCursorType.Hand );
-	}
-	
-	private void ChartLabelOnPointerReleased( object? sender, PointerReleasedEventArgs e )
-	{
-		ChartLabel.Cursor = new Cursor( StandardCursorType.Hand );
-	}
-	
-	private void ChartLabelOnPointerPressed( object? sender, PointerPressedEventArgs e )
-	{
-		ChartLabel.Cursor = new Cursor( StandardCursorType.DragMove );
-	}
-
 	#endregion 
 	
 	#region Base class overrides 
@@ -333,6 +302,36 @@ public partial class SignalChart : UserControl
 	#endregion 
 	
 	#region Event Handlers
+
+	private void ChartLabelOnPointerMoved( object? sender, PointerEventArgs e )
+	{
+		var position = e.GetPosition( this );
+
+		if( position.Y < 0 || position.Y > this.Bounds.Height )
+		{
+			RaiseEvent( new ChartDragEventArgs
+			{
+				RoutedEvent = ChartDraggedEvent,
+				Source      = this,
+				Direction   = Math.Sign( position.Y ),
+			} );
+		}
+	}
+
+	private void ChartLabelOnPointerCaptureLost( object? sender, PointerCaptureLostEventArgs e )
+	{
+		ChartLabel.Cursor = new Cursor( StandardCursorType.Arrow );
+	}
+	
+	private void ChartLabelOnPointerReleased( object? sender, PointerReleasedEventArgs e )
+	{
+		ChartLabel.Cursor = new Cursor( StandardCursorType.Arrow );
+	}
+	
+	private void ChartLabelOnPointerPressed( object? sender, PointerPressedEventArgs e )
+	{
+		ChartLabel.Cursor = new Cursor( StandardCursorType.SizeNorthSouth );
+	}
 
 	private void Button_OnClick( object? sender, RoutedEventArgs e )
 	{
@@ -915,6 +914,8 @@ public partial class SignalChart : UserControl
 			}
 
 			ChartSignal( Chart, day, ChartConfiguration.SignalName, 1f, ChartConfiguration.AxisMinValue, ChartConfiguration.AxisMaxValue );
+
+			// TODO: This should come *before* ChartSignal(), but relies on the axis limits being finalized first. Fix that.
 			CreateEventMarkers( day );
 
 			_selectionSpan                = Chart.Plot.AddHorizontalSpan( -1, -1, Color.Red.MultiplyAlpha( 0.2f ), null );

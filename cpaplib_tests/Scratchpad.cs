@@ -3,8 +3,6 @@ using System.Numerics;
 using System.Reflection;
 using System.Text;
 
-using cpap_app.Helpers;
-
 using cpaplib;
 
 using StagPoint.EDF.Net;
@@ -17,6 +15,90 @@ public class Scratchpad
 	public static double InverseLerp( double a, double b, double v )
 	{
 		return (v - a) / (b - a);
+	}
+
+	[TestMethod]
+	public void ReadViatomBinaryFile()
+	{
+		const int HEADER_SIZE = 40;
+		const int RECORD_SIZE = 5;
+
+		string path = @"D:\Data Files\Viatom\23072C0009\20231004031747";
+
+		Assert.IsTrue( File.Exists( path ) );
+
+		using var file   = File.OpenRead( path );
+		using var reader = new BinaryReader( file );
+
+		int fileVersion = reader.ReadInt16();
+		Assert.IsTrue( fileVersion == 3 );
+
+		// Read timestamp (NOTE: The filename also appears to be a timestamp. Do they always match?)
+
+		int year = reader.ReadInt16();
+		Assert.AreEqual( 2023, year );
+
+		int month = reader.ReadByte();
+		Assert.IsTrue( month >= 1 && month <= 12 );
+				
+		int day = reader.ReadByte();
+		Assert.IsTrue( day is >= 1 and <= 31 );
+				
+		int hour = reader.ReadByte();
+		Assert.IsTrue( hour is >= 0 and <= 24 );
+				
+		int minute = reader.ReadByte();
+		Assert.IsTrue( minute is >= 0 and <= 60 );
+				
+		int second = reader.ReadByte();
+		Assert.IsTrue( second is >= 0 and <= 60 );
+
+		var expectedDateTime = DateTime.Parse( "2023-10-04 03:17:47.000" );
+		var headerDateTime   = new DateTime( year, month, day, hour, minute, second );
+		Assert.AreEqual( expectedDateTime, headerDateTime );
+				
+		// Read and validate file size 
+		int fileSize = reader.ReadInt32();
+		Assert.AreEqual( file.Length, fileSize );
+				
+		// Read duration of recording 
+		var duration = TimeSpan.FromSeconds( reader.ReadInt32() );
+		Assert.AreEqual( TimeSpan.FromSeconds( 5316 ), duration );
+
+		var oxygenAverage = reader.ReadByte();
+		Assert.AreEqual( 96, oxygenAverage );
+
+		var oxygenMinimum = reader.ReadByte();
+		Assert.AreEqual( 91, oxygenMinimum );
+
+		var countODI3 = reader.ReadByte();
+		Assert.AreEqual( 4, countODI3 );
+				
+		var countODI4 = reader.ReadByte();
+		Assert.AreEqual( 1, countODI4 );
+
+		var timeBelow90 = reader.ReadInt32();
+		Assert.AreEqual( 0, timeBelow90 );
+
+		var o2Score = reader.ReadByte();
+		Assert.AreEqual( 97, o2Score );
+
+		// Skip the rest of the header, as it doesn't provide any useful information for us. 
+		file.Position = HEADER_SIZE;
+
+		int    recordCount = (fileSize - HEADER_SIZE) / RECORD_SIZE;
+		double frequency   = 1.0 / (duration.TotalSeconds / recordCount);
+
+		for( int i = 0; i < recordCount; i++ )
+		{
+			var spO2      = reader.ReadByte();
+			var pulse     = reader.ReadByte();
+			var isInvalid = reader.ReadByte();
+			var motion    = reader.ReadByte();
+			var vibration = reader.ReadByte();
+			
+			Debug.WriteLine( $"OX: {spO2}, PULSE: {pulse}, MOT: {motion}, INVALID: {isInvalid}, VIB: {vibration}" );
+		}
 	}
 
 	[TestMethod]

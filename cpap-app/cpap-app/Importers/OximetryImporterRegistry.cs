@@ -12,5 +12,6 @@ public static class OximetryImporterRegistry
 		RegisteredImporters.Add( new ViatomDesktopImporterCSV() );
 		RegisteredImporters.Add( new EmayImporterCSV() );
 		//RegisteredLoaders.Add( new EdfLoader() );
+		//RegisteredLoaders.Add( new ViatomBinaryImporter() );
 	}
 }

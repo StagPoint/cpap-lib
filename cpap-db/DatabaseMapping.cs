@@ -716,7 +716,7 @@ public class DatabaseMapping<T> : DatabaseMapping
 	internal List<T> SelectByForeignKey<P>( SQLiteConnection connection, object foreignKeyValue, IList<P> primaryKeys = null ) 
 		where P: struct
 	{
-		return ExecuteQuery<P>( connection, SelectByForeignKeyQuery, primaryKeys, foreignKeyValue );
+		return ExecuteQuery( connection, SelectByForeignKeyQuery, primaryKeys, foreignKeyValue );
 	}
 
 	internal List<T> SelectByForeignKey( SQLiteConnection connection, object foreignKeyValue ) 

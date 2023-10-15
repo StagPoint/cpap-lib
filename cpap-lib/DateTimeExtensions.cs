@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 
 namespace cpaplib
 {
-	public static class DateTimeExtensions
+	internal static class DateTimeExtensions
 	{
 		public static DateTime Trim( this DateTime date, long ticks = TimeSpan.TicksPerSecond )
 		{
@@ -11,7 +11,7 @@ namespace cpaplib
 		}
 	}
 
-	public static class DateUtil
+	internal static class DateUtil
 	{
 		[MethodImpl( MethodImplOptions.AggressiveInlining )]
 		public static DateTime Min( DateTime a, DateTime b )
