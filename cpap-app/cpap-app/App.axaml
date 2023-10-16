@@ -13,6 +13,7 @@
     <Application.Styles>
         <FluentTheme />
         <sty:FluentAvaloniaTheme PreferSystemTheme="False" PreferUserAccentColor="True" />
+        <StyleInclude Source="/Styling/CustomStyles.axaml" />
     </Application.Styles>
-    
+
 </Application>

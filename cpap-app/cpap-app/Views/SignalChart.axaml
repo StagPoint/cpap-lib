@@ -10,7 +10,7 @@
              x:Class="cpap_app.Views.SignalChart"
              Height="220"
              ChartForeground="{DynamicResource TextFillColorPrimaryBrush}"
-             ChartBackground="{DynamicResource SolidBackgroundFillColorSecondaryBrush}"
+             ChartBackground="{DynamicResource ControlOnImageFillColorDefaultBrush}"
              ChartBorderColor="{DynamicResource ControlStrokeColorSecondaryBrush}"
              ChartGridLineColor="{DynamicResource TextFillColorSecondaryBrush}"
              Background="Transparent">
@@ -56,11 +56,21 @@
                 Background="Transparent"
                 Padding="8 4"
                 Tag="{Binding $parent[views:SignalChart]}">
+                <Button.Flyout>
+                    <MenuFlyout>
+                        <MenuItem Header="Configure">
+                            <MenuItem Header="Signal Color..." Click="ConfigureSignalColor_OnClick" />
+                        </MenuItem>
+                        <MenuItem Header="Move...">
+                            <MenuItem Header="Up" />
+                            <MenuItem Header="Down" />
+                        </MenuItem>
+                    </MenuFlyout>
+                </Button.Flyout>
                 <controls:SymbolIcon Symbol="Settings" />
             </Button>
         </StackPanel>
         <Border
-            Classes="ChartTitle"
             Grid.Row="0"
             Grid.Column="0"
             Grid.RowSpan="2"
@@ -108,6 +118,6 @@
                    Margin="100 -30 0 0"
                    IsVisible="True">
         </TextBlock>
-        <Separator Name="BottomSeparator" Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="3" IsHitTestVisible="False"/>
+        <Separator Name="BottomSeparator" Background="{DynamicResource FocusStrokeColorOuterBrush}" Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="3" IsHitTestVisible="False"/>
     </Grid>
 </UserControl>

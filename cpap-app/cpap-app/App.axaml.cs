@@ -19,19 +19,20 @@ public partial class App : Application
 
 	public override void OnFrameworkInitializationCompleted()
 	{
-		if( ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop )
+		switch( ApplicationLifetime )
 		{
-			desktop.MainWindow = new MainWindow
-			{
-				DataContext = null
-			};
-		}
-		else if( ApplicationLifetime is ISingleViewApplicationLifetime singleViewPlatform )
-		{
-			singleViewPlatform.MainView = new MainView
-			{
-				DataContext = null
-			};
+			case IClassicDesktopStyleApplicationLifetime desktop:
+				desktop.MainWindow = new MainWindow
+				{
+					DataContext = null
+				};
+				break;
+			case ISingleViewApplicationLifetime singleViewPlatform:
+				singleViewPlatform.MainView = new MainView
+				{
+					DataContext = null
+				};
+				break;
 		}
 
 		base.OnFrameworkInitializationCompleted();

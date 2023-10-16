@@ -32,12 +32,12 @@ public class CustomChartStyle : ScottPlot.Styles.Default
 	
 	#region Constructor 
 	
-	public CustomChartStyle( Brush foreground, Brush background, Brush borderColor, Brush gridLineColor )
+	public CustomChartStyle( IBrush foreground, IBrush background, IBrush borderColor, IBrush gridLineColor )
 	{
-		var foreColor       = ((SolidColorBrush)foreground).Color.ToDrawingColor();
-		var border          = ((SolidColorBrush)borderColor).Color.ToDrawingColor();
-		var midColor        = ((SolidColorBrush)gridLineColor).Color.ToDrawingColor().MultiplyAlpha( 0.5f );
-		var backgroundColor = ((SolidColorBrush)background).Color.ToDrawingColor();
+		var foreColor       = ((ISolidColorBrush)foreground).Color.ToDrawingColor();
+		var border          = ((ISolidColorBrush)borderColor).Color.ToDrawingColor();
+		var midColor        = ((ISolidColorBrush)gridLineColor).Color.ToDrawingColor().MultiplyAlpha( 0.5f );
+		var backgroundColor = ((ISolidColorBrush)background).Color.ToDrawingColor();
 		var fontName        = FontManager.Current.DefaultFontFamily.Name;
 
 		FigureBackgroundColor = Color.Transparent;

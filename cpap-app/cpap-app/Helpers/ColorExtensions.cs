@@ -1,9 +1,21 @@
 ﻿using System.Drawing;
 
+using FluentAvalonia.UI.Media;
+
 namespace cpap_app.Helpers;
 
 public static class ColorExtensions
 {
+	public static Color2 ToColor2( this System.Drawing.Color color )
+	{
+		return new Color2( color.R, color.G, color.B, color.A );
+	}
+
+	public static Color ToDrawingColor( this Color2 color )
+	{
+		return Color.FromArgb( color.A, color.R, color.G, color.B );
+	}
+	
 	public static System.Drawing.Color ToDrawingColor( this Avalonia.Media.Color color )
 	{
 		return System.Drawing.Color.FromArgb( color.A, color.R, color.G, color.B );

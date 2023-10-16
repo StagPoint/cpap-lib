@@ -10,6 +10,7 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.Styling;
 using Avalonia.VisualTree;
 
 using cpap_app.Configuration;
@@ -26,7 +27,6 @@ using ScottPlot;
 using ScottPlot.Avalonia;
 using ScottPlot.Plottable;
 
-using Brush = Avalonia.Media.Brush;
 using Brushes = Avalonia.Media.Brushes;
 using Color = System.Drawing.Color;
 using Point = Avalonia.Point;
@@ -40,10 +40,10 @@ public partial class SignalChart : UserControl
 {
 	#region Dependency Properties
 
-	public static readonly StyledProperty<Brush> ChartBackgroundProperty    = AvaloniaProperty.Register<SignalChart, Brush>( nameof( ChartBackground ) );
-	public static readonly StyledProperty<Brush> ChartGridLineColorProperty = AvaloniaProperty.Register<SignalChart, Brush>( nameof( ChartGridLineColor ) );
-	public static readonly StyledProperty<Brush> ChartForegroundProperty    = AvaloniaProperty.Register<SignalChart, Brush>( nameof( ChartForeground ) );
-	public static readonly StyledProperty<Brush> ChartBorderColorProperty   = AvaloniaProperty.Register<SignalChart, Brush>( nameof( ChartBorderColor ) );
+	public static readonly StyledProperty<IBrush> ChartBackgroundProperty    = AvaloniaProperty.Register<SignalChart, IBrush>( nameof( ChartBackground ) );
+	public static readonly StyledProperty<IBrush> ChartGridLineColorProperty = AvaloniaProperty.Register<SignalChart, IBrush>( nameof( ChartGridLineColor ) );
+	public static readonly StyledProperty<IBrush> ChartForegroundProperty    = AvaloniaProperty.Register<SignalChart, IBrush>( nameof( ChartForeground ) );
+	public static readonly StyledProperty<IBrush> ChartBorderColorProperty   = AvaloniaProperty.Register<SignalChart, IBrush>( nameof( ChartBorderColor ) );
 
 	#endregion
 	
@@ -109,25 +109,25 @@ public partial class SignalChart : UserControl
 	public SignalChartConfiguration?      SecondaryConfiguration { get; set; }
 	public List<EventMarkerConfiguration> MarkerConfiguration    { get; set; }
 
-	public Brush ChartForeground
+	public IBrush ChartForeground
 	{
 		get => GetValue( ChartForegroundProperty );
 		set => SetValue( ChartForegroundProperty, value );
 	}
 
-	public Brush ChartBackground
+	public IBrush ChartBackground
 	{
 		get => GetValue( ChartBackgroundProperty );
 		set => SetValue( ChartBackgroundProperty, value );
 	}
 
-	public Brush ChartGridLineColor
+	public IBrush ChartGridLineColor
 	{
 		get => GetValue( ChartGridLineColorProperty );
 		set => SetValue( ChartGridLineColorProperty, value );
 	}
 
-	public Brush ChartBorderColor
+	public IBrush ChartBorderColor
 	{
 		get => GetValue( ChartBorderColorProperty );
 		set => SetValue( ChartBorderColorProperty, value );
@@ -157,6 +157,8 @@ public partial class SignalChart : UserControl
 	private List<ReportedEvent> _events           = new();
 	private List<Signal>        _signals          = new();
 	private List<Signal>        _secondarySignals = new();
+	
+	private ColorPickerFlyout? _flyout;
 	
 	#endregion 
 	
@@ -303,6 +305,50 @@ public partial class SignalChart : UserControl
 	
 	#region Event Handlers
 
+	private void ConfigureSignalColor_OnClick( object? sender, RoutedEventArgs e )
+	{
+		if( ChartConfiguration == null )
+		{
+			return;
+		}
+
+		if( _flyout == null )
+		{
+			_flyout = new ColorPickerFlyout();
+			
+			_flyout.Confirmed += ( flyout, args ) =>
+			{
+				var color = _flyout.ColorPicker.Color.ToDrawingColor();
+				ChartConfiguration.PlotColor = color;
+				
+				foreach( var plottable in Chart.Plot.GetPlottables() )
+				{
+					if( plottable is SignalPlot plot )
+					{
+						plot.Color = color;
+					}
+				}
+				
+				Chart.RefreshRequest();
+			};
+		}
+		
+		_flyout.ColorPicker.PreviousColor = ChartConfiguration.PlotColor.ToColor2();
+		_flyout.ColorPicker.Color = _flyout.ColorPicker.PreviousColor;
+
+		_flyout.Placement                       = PlacementMode.Pointer;
+		_flyout.ColorPicker.IsMoreButtonVisible = true;
+		_flyout.ColorPicker.IsCompact           = true;
+		_flyout.ColorPicker.IsAlphaEnabled      = true;
+		_flyout.ColorPicker.UseSpectrum         = true;
+		_flyout.ColorPicker.UseColorWheel       = false;
+		_flyout.ColorPicker.UseColorTriangle    = false;
+		_flyout.ColorPicker.UseColorPalette     = true;
+		_flyout.ColorPicker.PaletteColumnCount  = 10;
+		
+		_flyout.ShowAt( this );
+	}
+	
 	private void ChartLabelOnPointerMoved( object? sender, PointerEventArgs e )
 	{
 		var position = e.GetPosition( this );
@@ -898,19 +944,22 @@ public partial class SignalChart : UserControl
 				Chart.IsEnabled        = true;
 				this.IsEnabled         = true;
 			}
+			
+			var isDarkTheme  = Application.Current?.ActualThemeVariant == ThemeVariant.Dark;
+			var redlineAlpha = isDarkTheme ? 0.5f : 0.45f; 
 
 			// If a RedLine position is specified, we want to add it before any signal data, as items are rendered in the 
 			// order in which they are added, and we want the redline rendered behind the signal data.
 			if( ChartConfiguration.BaselineHigh.HasValue )
 			{
-				var redlineColor = Colors.Red.MultiplyAlpha( 0.75f );
-				Chart.Plot.AddHorizontalLine( ChartConfiguration.BaselineHigh.Value, redlineColor.ToDrawingColor(), 1f, LineStyle.Dot );
+				var redlineColor = Colors.Red.MultiplyAlpha( redlineAlpha );
+				Chart.Plot.AddHorizontalLine( ChartConfiguration.BaselineHigh.Value, redlineColor.ToDrawingColor(), 1.0f, LineStyle.Dash );
 			}
 
 			if( ChartConfiguration.BaselineLow.HasValue )
 			{
-				var redlineColor = Colors.Red.MultiplyAlpha( 0.75f );
-				Chart.Plot.AddHorizontalLine( ChartConfiguration.BaselineLow.Value, redlineColor.ToDrawingColor(), 1f, LineStyle.Dot );
+				var redlineColor = Colors.Red.MultiplyAlpha( redlineAlpha );
+				Chart.Plot.AddHorizontalLine( ChartConfiguration.BaselineLow.Value, redlineColor.ToDrawingColor(), 1.0f, LineStyle.Dash );
 			}
 
 			ChartSignal( Chart, day, ChartConfiguration.SignalName, 1f, ChartConfiguration.AxisMinValue, ChartConfiguration.AxisMaxValue );
@@ -1013,17 +1062,21 @@ public partial class SignalChart : UserControl
 					}
 				}
 			}
-			
+
+			graph.LineWidth   = 1.5;
 			graph.OffsetX     = offset;
 			graph.MarkerSize  = 0;
 			graph.ScaleY      = signalScale;
 			graph.UseParallel = true;
-
+			
 			// "Fill Below" is only available on signals that do not cross a zero line and do not have a secondary 
 			// signal. 
 			if( signal is { MinValue: >= 0, MaxValue: > 0 } && SecondaryConfiguration == null && (ChartConfiguration.FillBelow ?? false) )
 			{
-				graph.FillBelow( chartColor, Colors.Transparent.ToDrawingColor(), 0.18 );
+				var    isDarkTheme = Application.Current?.ActualThemeVariant == ThemeVariant.Dark;
+				double alpha       = isDarkTheme ? 0.3 : 0.7;
+				
+				graph.FillBelow( chartColor, Colors.Transparent.ToDrawingColor(), alpha );
 			}
 
 			firstSessionAdded = false;
@@ -1221,6 +1274,6 @@ public partial class SignalChart : UserControl
 		Selecting,
 	}
 	
-	#endregion 
+	#endregion
 }
 
