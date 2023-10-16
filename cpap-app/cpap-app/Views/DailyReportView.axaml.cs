@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 
 using Avalonia;
@@ -9,7 +8,6 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Interactivity;
 
 using cpap_app.Events;
-using cpap_app.ViewModels;
 
 using cpap_db;
 
@@ -19,6 +17,8 @@ namespace cpap_app.Views;
 
 public partial class DailyReportView : UserControl
 {
+	#region Events 
+	
 	public static readonly RoutedEvent<ReportedEventTypeArgs> ReportedEventTypeSelectedEvent =
 		RoutedEvent.Register<DailyReportView, ReportedEventTypeArgs>( nameof( ReportedEventTypeSelected ), RoutingStrategies.Bubble );
 
@@ -46,7 +46,15 @@ public partial class DailyReportView : UserControl
 		remove => RemoveHandler( TimeSelectedEvent, value );
 	}
 	
+	#endregion 
+	
+	#region Private fields 
+	
 	private List<DateTime> _datesWithData = new List<DateTime>();
+	
+	#endregion 
+	
+	#region Constructor 
 	
 	public DailyReportView()
 	{
@@ -54,34 +62,54 @@ public partial class DailyReportView : UserControl
 		
 		TabFrame.Content = new DailyDetailsView();
 	}
+	
+	#endregion 
+	
+	#region Base class overrides
+
+	protected override void OnPropertyChanged( AvaloniaPropertyChangedEventArgs change )
+	{
+		base.OnPropertyChanged( change );
+
+		if( change.Property.Name == nameof( DataContext ) )
+		{
+			if( TabFrame.Content is Control control )
+			{
+				control.DataContext = change.NewValue;
+			}
+		}
+	}
 
 	protected override void OnLoaded( RoutedEventArgs e )
 	{
 		base.OnLoaded( e );
+
+		using var store = StorageService.Connect();
 		
-		using( var store = StorageService.Connect() )
+		_datesWithData = store.GetStoredDates();
+
+		// TODO: Keep DisplayDateStart/DisplayDateEnd up to date (after importing, etc.)
+		if( _datesWithData.Count == 0 )
 		{
-			_datesWithData = store.GetStoredDates();
+			DateSelector.DisplayDateStart = DateTime.Today;
+			DateSelector.DisplayDateEnd   = DateTime.Today;
+			DateSelector.SelectedDate     = DateTime.Today;
 
-			// TODO: Keep DisplayDateStart/DisplayDateEnd up to date (after importing, etc.)
-			if( _datesWithData.Count == 0 )
-			{
-				DateSelector.DisplayDateStart = DateTime.Today;
-				DateSelector.DisplayDateEnd   = DateTime.Today;
-				DateSelector.SelectedDate     = DateTime.Today;
+			DateSelector.IsEnabled = false;
+		}
+		else
+		{
+			DateSelector.DisplayDateStart = _datesWithData.Min();
+			DateSelector.DisplayDateEnd   = _datesWithData.Max();
+			DateSelector.SelectedDate     = _datesWithData.Max();
 
-				DateSelector.IsEnabled = false;
-			}
-			else
-			{
-				DateSelector.DisplayDateStart = _datesWithData.Min();
-				DateSelector.DisplayDateEnd   = _datesWithData.Max();
-				DateSelector.SelectedDate     = _datesWithData.Max();
-
-				DateSelector.IsEnabled = true;
-			}
+			DateSelector.IsEnabled = true;
 		}
 	}
+	
+	#endregion 
+	
+	#region Event handlers 
 
 	private void OnTimeRangeSelected( object? sender, DateTimeRangeRoutedEventArgs e )
 	{
@@ -183,5 +211,7 @@ public partial class DailyReportView : UserControl
 		
 		Charts.ShowEventType( eventArgs.Type );
 	}
+	
+	#endregion 
 }
 

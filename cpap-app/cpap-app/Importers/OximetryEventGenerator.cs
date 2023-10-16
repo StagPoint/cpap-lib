@@ -35,8 +35,9 @@ public static class OximetryEventGenerator
 
 	private static void GeneratePulseChangeEvents( Signal signal, List<ReportedEvent> events )
 	{
-		const int    WINDOW_LENGTH = 30;
-		const double THRESHOLD     = 0.5;
+		const int    START_TIME    = 120;
+		const int    WINDOW_LENGTH = 60;
+		const double THRESHOLD     = 0.25;
 		const double MIN_SIZE      = 10;
 		const double PERSISTENCE   = 0.1;
 
@@ -49,7 +50,8 @@ public static class OximetryEventGenerator
 		// with a minimum difference of 10 beats per minute. 
 		var peakSignals = PeakFinder.GenerateSignals( data, windowSize, THRESHOLD, PERSISTENCE, MIN_SIZE );
 
-		for( int i = 0; i < data.Count; i++ )
+		var startIndex = (int)(START_TIME / timeInterval);
+		for( int i = startIndex; i < data.Count; i++ )
 		{
 			var peakSignal = peakSignals[ i ];
 			if( peakSignal == 0 )
@@ -75,7 +77,7 @@ public static class OximetryEventGenerator
 			// The peak finder (may) generates a signal per sample for the entire duration of the peak. We only 
 			// need to know when the peak started, so skip ahead a bit. 
 			int eventStart = i;
-			while( i < data.Count - 1 && peakSignals[ i + 1 ] == peakSignal && i - eventStart < windowSize )
+			while( i < data.Count - 1 && peakSignals[ i + 1 ] == peakSignal && i - eventStart + 1 < windowSize )
 			{
 				i++;
 			}
@@ -84,6 +86,7 @@ public static class OximetryEventGenerator
 
 	private static void GeneratePulseRateEvents( Signal signal, List<ReportedEvent> events )
 	{
+		const int    START_TIME            = 120;
 		const double TACHYCARDIA_THRESHOLD = 100;
 		const double BRADYCARDIA_THRESHOLD = 50;
 		const double MIN_EVENT_TIME        = 10;
@@ -101,7 +104,8 @@ public static class OximetryEventGenerator
 
 		var sourceData = signal.Samples;
 
-		for( int i = 1; i < sourceData.Count; i++ )
+		var startIndex = (int)(START_TIME / timeInterval);
+		for( int i = startIndex; i < sourceData.Count; i++ )
 		{
 			var sample = sourceData[ i ];
 			var time   = (i * timeInterval);
@@ -212,6 +216,7 @@ public static class OximetryEventGenerator
 	private static void GenerateDesaturationEvents( Signal signal, List<ReportedEvent> events )
 	{
 		// TODO: Make window size configurable 
+		const int    START_TIME             = 120;
 		const int    WINDOW_SIZE            = 300;
 		const double MAX_EVENT_DURATION     = 120;
 		const double MIN_EVENT_DURATION     = 10;
@@ -245,6 +250,11 @@ public static class OximetryEventGenerator
 			var sample    = sourceData[ i ];
 			var time      = (i * timeInterval);
 			var threshold = baseline - DESATURATION_THRESHOLD;
+
+			if( time < START_TIME )
+			{
+				continue;
+			}
 
 			switch( state )
 			{
@@ -327,6 +337,7 @@ public static class OximetryEventGenerator
 
 	private static void GenerateHypoxemiaEvents( Signal signal, List<ReportedEvent> events )
 	{
+		const int    START_TIME          = 120;
 		const double HYPOXEMIA_THRESHOLD = 88;
 		const double MIN_EVENT_DURATION  = 10;
 
@@ -343,7 +354,8 @@ public static class OximetryEventGenerator
 
 		var sourceData = signal.Samples;
 
-		for( int i = 1; i < sourceData.Count; i++ )
+		var startIndex = (int)(START_TIME / timeInterval);
+		for( int i = startIndex; i < sourceData.Count; i++ )
 		{
 			var sample = sourceData[ i ];
 			var time   = (i * timeInterval);

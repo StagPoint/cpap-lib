@@ -25,10 +25,10 @@
     <Style Selector="Grid.ColumnHeader > TextBlock">
         <Setter Property="Theme" Value="{DynamicResource BodyStrongTextBlockStyle}" />
         <Setter Property="Foreground" Value="{DynamicResource DataGridColumnHeaderForegroundBrush}" />
-        <Setter Property="Padding" Value="4 0 12 1"/>
+        <Setter Property="Padding" Value="4 0 16 1"/>
     </Style>
     <Style Selector="Grid.TableData > TextBlock">
-        <Setter Property="Padding" Value="4 0 12 0"/>
+        <Setter Property="Padding" Value="4 0 16 0"/>
         <Setter Property="IsHitTestVisible" Value="False" />
     </Style>
     <Style Selector="Grid.TableData:disabled > TextBlock">

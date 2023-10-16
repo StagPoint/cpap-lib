@@ -428,7 +428,7 @@ namespace cpaplib
 				var signal = session.GetSignalByName( SignalNames.FlowLimit );
 				if( signal != null )
 				{
-					Annotate( day.Events, EventType.FlowLimitation, signal, 8, FlowLimitRedline, false );
+					Annotate( day.Events, EventType.FlowLimitation, signal, 5, FlowLimitRedline, false );
 				}
 			}
 		}
@@ -443,7 +443,7 @@ namespace cpaplib
 				var signal = session.GetSignalByName( SignalNames.LeakRate );
 				if( signal != null )
 				{
-					Annotate( day.Events, EventType.LargeLeak, signal, 0, LeakRedline, false );
+					Annotate( day.Events, EventType.LargeLeak, signal, 5, LeakRedline, false );
 				}
 			}
 		}

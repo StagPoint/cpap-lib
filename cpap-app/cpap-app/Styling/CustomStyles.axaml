@@ -1,32 +1,4 @@
 ﻿<Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:controls="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia">
-    <!--<Style Selector="controls|ColorPickerButton">
-        <Setter Property="Width" Value="20" />
-        <Setter Property="MinWidth" Value="20" />
-        <Setter Property="Height" Value="20" />
-        <Setter Property="MinHeight" Value="20" />
-        <Setter Property="Background" Value="Black" />
-        <Setter Property="Padding" Value="0" />
-    </Style>
-    <Style Selector="controls|ColorPickerButton /template/ Button">
-        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-        <Setter Property="VerticalContentAlignment" Value="Stretch" />
-        <Setter Property="Background" Value="Black" />
-        <Setter Property="Padding" Value="0" />
-    </Style>
-    <Style Selector="controls|ColorPickerButton /template/ Button > Grid > Border">
-        <Setter Property="Margin" Value="50" />
-        <Setter Property="HorizontalAlignment" Value="Stretch" />
-        <Setter Property="VerticalAlignment" Value="Stretch" />
-        <Setter Property="BorderBrush" Value="Transparent" />
-        <Setter Property="BorderThickness" Value="0" />
-        <Setter Property="Grid.Column" Value="0" />
-        <Setter Property="Grid.ColumnSpan" Value="2" />
-        <Setter Property="Background" Value="Red" />
-    </Style>
-    <Style Selector="controls|ColorPickerButton /template/ Button > Grid > controls|SymbolIcon">
-        <Setter Property="Margin" Value="0" />
-        <Setter Property="IsVisible" Value="False" />
-    </Style>-->
 </Styles>

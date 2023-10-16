@@ -10,9 +10,14 @@
              UnitOfMeasure="%">
     <UserControl.Styles>
         <StyleInclude Source="/Styling/GridStyles.axaml" />
+        <Style Selector="Grid.QuickSummary > TextBlock">
+            <Setter Property="Theme" Value="{DynamicResource BodyTextBlockStyle}" />
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="Foreground" Value="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+        </Style>
     </UserControl.Styles>
     <StackPanel Orientation="Vertical">
-        <Grid ColumnDefinitions="Auto,40,*" RowDefinitions="Auto,Auto">
+        <Grid Classes="QuickSummary" ColumnDefinitions="Auto,40,*" RowDefinitions="Auto,Auto">
             <TextBlock Grid.Column="0" Grid.Row="0" Text="Average" />
             <TextBlock Grid.Column="2" Grid.Row="0">
                 <TextBox.Text>
@@ -51,7 +56,7 @@
                 <ItemsRepeater.ItemTemplate>
                     <DataTemplate DataType="{x:Type viewModels:DistributionGrouping}">
                         <Border Classes="SelectionRect">
-                            <Grid RowDefinitions="Auto" IsEnabled="{Binding TotalTime.TotalSeconds}" Classes="TableData">
+                            <Grid RowDefinitions="Auto" IsVisible="{Binding TotalTime.TotalSeconds}" Classes="TableData">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition SharedSizeGroup="C0" />
                                     <ColumnDefinition SharedSizeGroup="C1" />

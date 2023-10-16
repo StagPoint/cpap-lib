@@ -53,10 +53,10 @@ public partial class DailySpO2View : UserControl
 				SetVisibility( pnlNoInfoAvailable, true );
 				SetVisibility( pnlOximetryInfo,    false );
 				SetVisibility( SourcesSummary,     false );
-				return;
+				break;
 			case DailyReport day when day.Sessions.All( x => x.SourceType != SourceType.PulseOximetry ):
 				DataContext = null;
-				return;
+				break;
 			case DailyReport day:
 				SetVisibility( pnlNoInfoAvailable, false );
 				SetVisibility( pnlOximetryInfo,    true );

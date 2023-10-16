@@ -4,36 +4,4 @@
                     xmlns:converters="clr-namespace:Avalonia.Markup.Xaml.Converters;assembly=Avalonia.Markup.Xaml"
                     x:CompileBindings="True">
 
-    <Design.PreviewWith>
-        <Border Padding="50" Background="Black">
-            <ui:ColorPickerButton Theme="{DynamicResource ColorPickerButton_CUSTOM}" />
-        </Border>
-    </Design.PreviewWith>
-
-    <converters:ColorToBrushConverter x:Key="ColorBrushConv" />
-    
-    <ControlTheme x:Key="ColorPickerButton_CUSTOM" TargetType="ui:ColorPickerButton">
-        <Setter Property="Height" Value="20" />
-        <Setter Property="Width" Value="20" />
-        <Setter Property="CornerRadius" Value="{DynamicResource ControlCornerRadius}" />
-        <Setter Property="Template">
-            <ControlTemplate>
-                <Button Name="ShowFlyoutButton"
-                        CornerRadius="{TemplateBinding CornerRadius}"
-                        HorizontalContentAlignment="Stretch"
-                        VerticalContentAlignment="Stretch"
-                        Padding="0">
-                    <Grid ColumnDefinitions="*,Auto">
-                        <Border 
-                                BorderThickness="0"
-                                HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-                                MinWidth="20" MinHeight="20"
-                                Background="{TemplateBinding Color, Converter={StaticResource ColorBrushConv}}"
-                                CornerRadius="{TemplateBinding CornerRadius}" />
-                    </Grid>
-                </Button>
-            </ControlTemplate>
-        </Setter>
-    </ControlTheme>
-
 </ResourceDictionary>

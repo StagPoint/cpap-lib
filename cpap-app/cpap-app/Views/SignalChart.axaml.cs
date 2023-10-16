@@ -326,6 +326,13 @@ public partial class SignalChart : UserControl
 					if( plottable is SignalPlot plot )
 					{
 						plot.Color = color;
+
+#pragma warning disable CS0618 // Type or member is obsolete
+						if( plot.FillType != FillType.NoFill )
+						{
+							SetPlotFill( plot, color );
+						}
+#pragma warning restore CS0618 // Type or member is obsolete
 					}
 				}
 				
@@ -343,7 +350,7 @@ public partial class SignalChart : UserControl
 		_flyout.ColorPicker.UseSpectrum         = true;
 		_flyout.ColorPicker.UseColorWheel       = false;
 		_flyout.ColorPicker.UseColorTriangle    = false;
-		_flyout.ColorPicker.UseColorPalette     = true;
+		_flyout.ColorPicker.UseColorPalette     = false;
 		_flyout.ColorPicker.PaletteColumnCount  = 10;
 		
 		_flyout.ShowAt( this );
@@ -953,16 +960,16 @@ public partial class SignalChart : UserControl
 			if( ChartConfiguration.BaselineHigh.HasValue )
 			{
 				var redlineColor = Colors.Red.MultiplyAlpha( redlineAlpha );
-				Chart.Plot.AddHorizontalLine( ChartConfiguration.BaselineHigh.Value, redlineColor.ToDrawingColor(), 1.0f, LineStyle.Dash );
+				Chart.Plot.AddHorizontalLine( ChartConfiguration.BaselineHigh.Value, redlineColor.ToDrawingColor(), 0.5f, LineStyle.Dot );
 			}
 
 			if( ChartConfiguration.BaselineLow.HasValue )
 			{
 				var redlineColor = Colors.Red.MultiplyAlpha( redlineAlpha );
-				Chart.Plot.AddHorizontalLine( ChartConfiguration.BaselineLow.Value, redlineColor.ToDrawingColor(), 1.0f, LineStyle.Dash );
+				Chart.Plot.AddHorizontalLine( ChartConfiguration.BaselineLow.Value, redlineColor.ToDrawingColor(), 0.5f, LineStyle.Dot );
 			}
 
-			ChartSignal( Chart, day, ChartConfiguration.SignalName, 1f, ChartConfiguration.AxisMinValue, ChartConfiguration.AxisMaxValue );
+			PlotSignal( Chart, day, ChartConfiguration.SignalName, 1f, ChartConfiguration.AxisMinValue, ChartConfiguration.AxisMaxValue );
 
 			// TODO: This should come *before* ChartSignal(), but relies on the axis limits being finalized first. Fix that.
 			CreateEventMarkers( day );
@@ -986,7 +993,7 @@ public partial class SignalChart : UserControl
 		}
 	}
 	
-	private void ChartSignal( AvaPlot chart, DailyReport day, string signalName, float signalScale = 1f, double? axisMinValue = null, double? axisMaxValue = null, double[]? manualLabels = null )
+	private void PlotSignal( AvaPlot chart, DailyReport day, string signalName, float signalScale = 1f, double? axisMinValue = null, double? axisMaxValue = null, double[]? manualLabels = null )
 	{
 		if( ChartConfiguration == null )
 		{
@@ -1063,7 +1070,7 @@ public partial class SignalChart : UserControl
 				}
 			}
 
-			graph.LineWidth   = 1.5;
+			graph.LineWidth   = 1.1;
 			graph.OffsetX     = offset;
 			graph.MarkerSize  = 0;
 			graph.ScaleY      = signalScale;
@@ -1073,10 +1080,7 @@ public partial class SignalChart : UserControl
 			// signal. 
 			if( signal is { MinValue: >= 0, MaxValue: > 0 } && SecondaryConfiguration == null && (ChartConfiguration.FillBelow ?? false) )
 			{
-				var    isDarkTheme = Application.Current?.ActualThemeVariant == ThemeVariant.Dark;
-				double alpha       = isDarkTheme ? 0.3 : 0.7;
-				
-				graph.FillBelow( chartColor, Colors.Transparent.ToDrawingColor(), alpha );
+				SetPlotFill( graph, chartColor );
 			}
 
 			firstSessionAdded = false;
@@ -1108,6 +1112,14 @@ public partial class SignalChart : UserControl
 		}
 	}
 	
+	private static void SetPlotFill( SignalPlot graph, Color chartColor )
+	{
+		var    isDarkTheme = Application.Current?.ActualThemeVariant == ThemeVariant.Dark;
+		double alpha       = isDarkTheme ? 0.3 : 0.7;
+
+		graph.FillBelow( chartColor, Colors.Transparent.ToDrawingColor(), alpha );
+	}
+
 	private void CreateEventMarkers( DailyReport day )
 	{
 		int[] typesSeen = new int[ 256 ];

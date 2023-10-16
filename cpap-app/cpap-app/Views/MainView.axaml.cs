@@ -43,6 +43,8 @@ public partial class MainView : UserControl
 
 	#endregion 
 	
+	#region Constructor 
+	
 	public MainView()
 	{
 		InitializeComponent();
@@ -63,6 +65,10 @@ public partial class MainView : UserControl
 			} );
 		}
 	}
+	
+	#endregion 
+	
+	#region Event handlers 
 
 	private void NavView_OnSelectionChanged( object? sender, NavigationViewSelectionChangedEventArgs e )
 	{
@@ -433,6 +439,38 @@ public partial class MainView : UserControl
 		await td.ShowAsync();	
 	}
 	
+	private async void DailySpO2View_OnDeletionRequested( object? sender, DateTimeRoutedEventArgs e )
+	{
+		var dialog = MessageBoxManager.GetMessageBoxStandard(
+			"Delete Pulse Oximetry Data",
+			$"Are you sure you wish to delete pulse oximetry data for {e.DateTime:D}?",
+			ButtonEnum.YesNo,
+			Icon.Warning
+		);
+		
+		var result = await dialog.ShowWindowDialogAsync( this.FindAncestorOfType<Window>() );
+
+		if( result != ButtonResult.Yes )
+		{
+			return;
+		}
+
+		using var connection = StorageService.Connect();
+		connection.DeletePulseOximetryData( e.DateTime );
+		
+		if( NavView.Content is DailyReportView { DataContext: DailyReport day } dailyReportView )
+		{
+			if( day.ReportDate.Date == e.DateTime.Date )
+			{
+				dailyReportView.DataContext = connection.LoadDailyReport( e.DateTime );
+			}
+		}
+	}
+
+	#endregion 
+	
+	#region Private functions 
+	
 	private DateTime ImportFrom( string folder )
 	{
 		using var storage = StorageService.Connect();
@@ -466,31 +504,5 @@ public partial class MainView : UserControl
 		}
 	}
 	
-	private async void DailySpO2View_OnDeletionRequested( object? sender, DateTimeRoutedEventArgs e )
-	{
-		var dialog = MessageBoxManager.GetMessageBoxStandard(
-			"Delete Pulse Oximetry Data",
-			$"Are you sure you wish to delete pulse oximetry data for {e.DateTime:D}?",
-			ButtonEnum.YesNo,
-			Icon.Warning
-		);
-		
-		var result = await dialog.ShowWindowDialogAsync( this.FindAncestorOfType<Window>() );
-
-		if( result != ButtonResult.Yes )
-		{
-			return;
-		}
-
-		using var connection = StorageService.Connect();
-		connection.DeletePulseOximetryData( e.DateTime );
-		
-		if( NavView.Content is DailyReportView { DataContext: DailyReport day } dailyReportView )
-		{
-			if( day.ReportDate.Date == e.DateTime.Date )
-			{
-				dailyReportView.DataContext = connection.LoadDailyReport( e.DateTime );
-			}
-		}
-	}
+	#endregion 
 }
