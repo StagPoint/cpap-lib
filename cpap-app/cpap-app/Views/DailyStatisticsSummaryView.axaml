@@ -5,6 +5,7 @@
              xmlns:cpaplib="clr-namespace:cpaplib;assembly=cpap-lib"
              xmlns:viewModels="clr-namespace:cpap_app.ViewModels"
              xmlns:converters="clr-namespace:cpap_app.Converters"
+             xmlns:controls="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
              mc:Ignorable="d" d:DesignWidth="350" d:DesignHeight="450"
              x:Class="cpap_app.Views.DailyStatisticsSummaryView"
              x:DataType="cpaplib:DailyReport"
@@ -29,15 +30,25 @@
             </Style>
         </Grid.Styles>
         <Border Classes="ColumnHeader" Grid.Row="0">
-            <Grid Name="HeaderGrid" HorizontalAlignment="Stretch" RowDefinitions="Auto">
+            <Grid Name="HeaderGrid" HorizontalAlignment="Stretch" RowDefinitions="Auto" Background="Transparent" DataContext="{Binding VisibleColumns}">
+                <Grid.ContextFlyout>
+                    <controls:FAMenuFlyout Placement="Bottom">
+                        <controls:ToggleMenuFlyoutItem Text="Minimum" IsChecked="{Binding Minimum}" />
+                        <controls:ToggleMenuFlyoutItem Text="Average" IsChecked="{Binding Average}" />
+                        <controls:ToggleMenuFlyoutItem Text="Median" IsChecked="{Binding Median}" />
+                        <controls:ToggleMenuFlyoutItem Text="95%" IsChecked="{Binding Percentile95}" />
+                        <controls:ToggleMenuFlyoutItem Text="99.5%" IsChecked="{Binding Percentile995}" />
+                        <controls:ToggleMenuFlyoutItem Text="Maximum" IsChecked="{Binding Maximum}" />
+                    </controls:FAMenuFlyout>
+                </Grid.ContextFlyout>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" SharedSizeGroup="C0" />
-                    <ColumnDefinition Width="{Binding VisibleColumns.Minimum, Converter={StaticResource BooleanToGridLength}}" SharedSizeGroup="C1" />
-                    <ColumnDefinition Width="{Binding VisibleColumns.Average, Converter={StaticResource BooleanToGridLength}}" SharedSizeGroup="C2" />
-                    <ColumnDefinition Width="{Binding VisibleColumns.Median, Converter={StaticResource BooleanToGridLength}}" SharedSizeGroup="C3" />
-                    <ColumnDefinition Width="{Binding VisibleColumns.Percentile95, Converter={StaticResource BooleanToGridLength}}" SharedSizeGroup="C4" />
-                    <ColumnDefinition Width="{Binding VisibleColumns.Percentile995, Converter={StaticResource BooleanToGridLength}}" SharedSizeGroup="C5" />
-                    <ColumnDefinition Width="{Binding VisibleColumns.Maximum, Converter={StaticResource BooleanToGridLength}}" SharedSizeGroup="C6" />
+                    <ColumnDefinition Width="{Binding Minimum, Converter={StaticResource BooleanToGridLength}}" SharedSizeGroup="C1" />
+                    <ColumnDefinition Width="{Binding Average, Converter={StaticResource BooleanToGridLength}}" SharedSizeGroup="C2" />
+                    <ColumnDefinition Width="{Binding Median, Converter={StaticResource BooleanToGridLength}}" SharedSizeGroup="C3" />
+                    <ColumnDefinition Width="{Binding Percentile95, Converter={StaticResource BooleanToGridLength}}" SharedSizeGroup="C4" />
+                    <ColumnDefinition Width="{Binding Percentile995, Converter={StaticResource BooleanToGridLength}}" SharedSizeGroup="C5" />
+                    <ColumnDefinition Width="{Binding Maximum, Converter={StaticResource BooleanToGridLength}}" SharedSizeGroup="C6" />
                 </Grid.ColumnDefinitions>
                 <TextBlock Grid.Column="0" Text="Name" />
                 <TextBlock Grid.Column="1" Text="Min" />

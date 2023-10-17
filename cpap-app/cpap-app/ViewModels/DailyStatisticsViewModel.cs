@@ -1,21 +1,64 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 
 using cpap_db;
 
 using cpaplib;
 
+using ReactiveUI;
+
 namespace cpap_app.ViewModels;
 
-public class DailyStatisticsColumnVisibility
+public class DailyStatisticsColumnVisibility : ReactiveObject
 {
-	public bool Minimum       { get; set; } = true;
-	public bool Average       { get; set; } = true;
-	public bool Median        { get; set; } = false;
-	public bool Percentile95  { get; set; } = true;
-	public bool Percentile995 { get; set; } = true;
-	public bool Maximum       { get; set; } = false;
+	#region Private fields
+
+	private bool _minimum       = true;
+	private bool _average       = true;
+	private bool _median        = false;
+	private bool _percentile95  = true;
+	private bool _percentile995 = true;
+	private bool _maximum       = false;
+	
+	#endregion
+
+	public bool Minimum
+	{
+		get => _minimum;
+		set => this.RaiseAndSetIfChanged( ref _minimum, value );
+	}
+	
+	public bool Average
+	{
+		get => _average;
+		set => this.RaiseAndSetIfChanged( ref _average, value );
+	}
+	
+	public bool Median
+	{
+		get => _median;
+		set => this.RaiseAndSetIfChanged( ref _median, value );
+	}
+
+	public bool Percentile95
+	{
+		get => _percentile95;
+		set => this.RaiseAndSetIfChanged( ref _percentile95, value );
+	}
+
+	public bool Percentile995
+	{
+		get => _percentile995;
+		set => this.RaiseAndSetIfChanged( ref _percentile995, value );
+	}
+
+	public bool Maximum
+	{
+		get => _maximum;
+		set => this.RaiseAndSetIfChanged( ref _maximum, value );
+	}
 }
 
 public class DailyStatisticsViewModel
@@ -46,6 +89,7 @@ public class DailyStatisticsViewModel
 		// TODO: Should column order be configurable also?
 		// Retrieve the list of visible columns 
 		VisibleColumns = db.SelectById<DailyStatisticsColumnVisibility>( 0 );
+		VisibleColumns.PropertyChanged += VisibleColumnsOnPropertyChanged;
 
 		// Retrieve the Signal Chart Configurations so that we can re-use the DisplayOrder values the user has configured 
 		var configurations = SignalChartConfigurationStore.GetSignalConfigurations();
@@ -108,5 +152,11 @@ public class DailyStatisticsViewModel
 				stat.SignalName = config.Title;
 			}
 		}
+	}
+	
+	private void VisibleColumnsOnPropertyChanged( object? sender, PropertyChangedEventArgs e )
+	{
+		using var db = StorageService.Connect();
+		db.Update( VisibleColumns, 0 );
 	}
 }
