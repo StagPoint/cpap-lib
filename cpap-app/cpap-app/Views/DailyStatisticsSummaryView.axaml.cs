@@ -1,6 +1,4 @@
-﻿using System.ComponentModel;
-
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls;
 
 using cpap_app.ViewModels;
@@ -16,11 +14,6 @@ public partial class DailyStatisticsSummaryView : UserControl
 		InitializeComponent();
 	}
 	
-	private void VisibleColumnsOnPropertyChanged( object? sender, PropertyChangedEventArgs e )
-	{
-		throw new System.NotImplementedException();
-	}
-
 	protected override void OnPropertyChanged( AvaloniaPropertyChangedEventArgs change )
 	{
 		base.OnPropertyChanged( change );

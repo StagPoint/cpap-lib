@@ -39,6 +39,7 @@
                         <controls:ToggleMenuFlyoutItem Text="95%" IsChecked="{Binding Percentile95}" />
                         <controls:ToggleMenuFlyoutItem Text="99.5%" IsChecked="{Binding Percentile995}" />
                         <controls:ToggleMenuFlyoutItem Text="Maximum" IsChecked="{Binding Maximum}" />
+                        <controls:ToggleMenuFlyoutItem Text="Mean Standard Deviation" IsChecked="{Binding AverageDeviation}" />
                     </controls:FAMenuFlyout>
                 </Grid.ContextFlyout>
                 <Grid.ColumnDefinitions>
@@ -49,6 +50,7 @@
                     <ColumnDefinition Width="{Binding Percentile95, Converter={StaticResource BooleanToGridLength}}" SharedSizeGroup="C4" />
                     <ColumnDefinition Width="{Binding Percentile995, Converter={StaticResource BooleanToGridLength}}" SharedSizeGroup="C5" />
                     <ColumnDefinition Width="{Binding Maximum, Converter={StaticResource BooleanToGridLength}}" SharedSizeGroup="C6" />
+                    <ColumnDefinition Width="{Binding AverageDeviation, Converter={StaticResource BooleanToGridLength}}" SharedSizeGroup="C7" />
                 </Grid.ColumnDefinitions>
                 <TextBlock Grid.Column="0" Text="Name" />
                 <TextBlock Grid.Column="1" Text="Min" />
@@ -57,6 +59,7 @@
                 <TextBlock Grid.Column="4" Text="95%" />
                 <TextBlock Grid.Column="5" Text="99.5%" />
                 <TextBlock Grid.Column="6" Text="Max" />
+                <TextBlock Grid.Column="7" Text="Dev" />
             </Grid>
         </Border>
         <ItemsControl Name="Repeater" Grid.Row="1" ItemsSource="{Binding Statistics}" Margin="0 2 0 0">
@@ -72,6 +75,7 @@
                                 <ColumnDefinition Width="Auto" SharedSizeGroup="C4" />
                                 <ColumnDefinition Width="Auto" SharedSizeGroup="C5" />
                                 <ColumnDefinition Width="Auto" SharedSizeGroup="C6" />
+                                <ColumnDefinition Width="Auto" SharedSizeGroup="C7" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Text="{Binding SignalName}" />
                             <TextBlock Grid.Column="1" Text="{Binding Minimum, Mode=OneWay, StringFormat={}{0:f2}}" />
@@ -80,6 +84,7 @@
                             <TextBlock Grid.Column="4" Text="{Binding Percentile95, Mode=OneWay, StringFormat={}{0:f2}}" />
                             <TextBlock Grid.Column="5" Text="{Binding Percentile995, Mode=OneWay, StringFormat={}{0:f2}}" />
                             <TextBlock Grid.Column="6" Text="{Binding Maximum, Mode=OneWay, StringFormat={}{0:f2}}" />
+                            <TextBlock Grid.Column="7" Text="{Binding MeanDeviation, Mode=OneWay, StringFormat={}{0:f2}}" />
                         </Grid>
                     </Border>
                 </DataTemplate>

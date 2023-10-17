@@ -21,6 +21,7 @@ public class DailyStatisticsColumnVisibility : ReactiveObject
 	private bool _percentile95  = true;
 	private bool _percentile995 = true;
 	private bool _maximum       = false;
+	private bool _avgDeviation  = false;
 	
 	#endregion
 
@@ -58,6 +59,12 @@ public class DailyStatisticsColumnVisibility : ReactiveObject
 	{
 		get => _maximum;
 		set => this.RaiseAndSetIfChanged( ref _maximum, value );
+	}
+
+	public bool AverageDeviation
+	{
+		get => _avgDeviation;
+		set => this.RaiseAndSetIfChanged( ref _avgDeviation, value );
 	}
 }
 

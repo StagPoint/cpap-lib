@@ -34,27 +34,41 @@ namespace cpaplib
     		var totalCount = _signals.Sum( x => x.Samples.Count );
 		    var windowSize = (int)( totalCount * (1.0 - 0.95) );
     		var window     = new BinaryHeap( windowSize );
-    
-    		var result = new SignalStatistics
-    		{
-    			SignalName        = _signals[0].Name,
-    			UnitOfMeasurement = _signals[0].UnitOfMeasurement,
-    			Minimum           = double.MaxValue,
-    			Average           = double.MaxValue,
-    			Percentile95      = double.MaxValue,
-    			Percentile995      = double.MaxValue,
-    			Maximum           = double.MinValue
-    		};
-    
-    		decimal sum          = 0;
-		    bool    foundMinimum = false;
+
+		    var result = new SignalStatistics
+		    {
+			    SignalName        = _signals[ 0 ].Name,
+			    UnitOfMeasurement = _signals[ 0 ].UnitOfMeasurement,
+			    Minimum           = double.MaxValue,
+			    Average           = double.MaxValue,
+			    Percentile95      = double.MaxValue,
+			    Percentile995     = double.MaxValue,
+			    Maximum           = double.MinValue
+		    };
+
+		    int period              = (int)(60 * _signals[ 0 ].FrequencyInHz);
+
+		    decimal deviationSum   = 0;
+		    int     deviationTotal = 0;
+    		decimal sum            = 0;
+		    bool    foundMinimum   = false;
     
     		foreach( var signal in _signals )
     		{
-    			var data = signal.Samples;
+			    // Restart deviation calculations per session 
+			    var deviationCalculator = new MovingAverageCalculator( period );
+
+			    var data = signal.Samples;
     			for( int i = 0; i < data.Count; i++ )
     			{
     				var sample = data[ i ];
+
+				    deviationCalculator.AddObservation( MathUtil.InverseLerp( signal.MinValue, signal.MaxValue, sample ) );
+				    if( deviationCalculator.HasFullPeriod )
+				    {
+					    deviationSum   += (decimal)deviationCalculator.StandardDeviation;
+					    deviationTotal += 1;
+				    }
 
 				    if( sample > 0 )
 				    {
@@ -87,9 +101,10 @@ namespace cpaplib
 			    result.Minimum = 0;
 		    }
     
-    		result.Median       = (result.Minimum + result.Maximum) * 0.5;
-    		result.Average      = (double)(sum / totalCount);
-    		result.Percentile95 = window.Peek();
+    		result.Median        = (result.Minimum + result.Maximum) * 0.5;
+    		result.Average       = (double)(sum / totalCount);
+    		result.Percentile95  = window.Peek();
+		    result.MeanDeviation = (double)(deviationSum / deviationTotal) * 100.0;
 
 		    int nn = (int)( totalCount * (1.0 - 0.995) );
     		while( window.Count > nn && window.Count > 1 )
