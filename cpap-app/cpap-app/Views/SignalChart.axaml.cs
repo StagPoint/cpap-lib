@@ -263,6 +263,7 @@ public partial class SignalChart : UserControl
 				_selectionStartTime      = 0;
 				_selectionEndTime        = 0;
 				_selectionSpan.IsVisible = false;
+				EventTooltip.IsVisible   = false;
 				
 				Chart.RenderRequest();
 			}
@@ -345,13 +346,26 @@ public partial class SignalChart : UserControl
 
 		_flyout.Placement                       = PlacementMode.Pointer;
 		_flyout.ColorPicker.IsMoreButtonVisible = true;
-		_flyout.ColorPicker.IsCompact           = true;
-		_flyout.ColorPicker.IsAlphaEnabled      = true;
+		_flyout.ColorPicker.IsCompact           = false;
+		_flyout.ColorPicker.IsAlphaEnabled      = false;
 		_flyout.ColorPicker.UseSpectrum         = true;
-		_flyout.ColorPicker.UseColorWheel       = false;
+		_flyout.ColorPicker.UseColorWheel       = true;
 		_flyout.ColorPicker.UseColorTriangle    = false;
-		_flyout.ColorPicker.UseColorPalette     = false;
-		_flyout.ColorPicker.PaletteColumnCount  = 10;
+
+		var hexColors = new uint[]
+		{
+			0xffebac23, 0xffb80058, 0xff008cf9, 0xff006e00, 0xff00bbad,
+			0xffd163e6, 0xffb24502, 0xffff9287, 0xff5954d6, 0xff00c6f8,
+			0xff878500, 0xff00a76c,
+			0xfff6da9c, 0xffff5caa, 0xff8accff, 0xff4bff4b, 0xff6efff4,
+			0xffedc1f5, 0xfffeae7c, 0xffffc8c3, 0xffbdbbef, 0xffbdf2ff,
+			0xfffffc43, 0xff65ffc8,
+			0xffaaaaaa,
+		};
+
+		_flyout.ColorPicker.UseColorPalette     = true;
+		_flyout.ColorPicker.PaletteColumnCount  = 16;
+		_flyout.ColorPicker.CustomPaletteColors = hexColors.Select( Avalonia.Media.Color.FromUInt32 );
 		
 		_flyout.ShowAt( this );
 	}

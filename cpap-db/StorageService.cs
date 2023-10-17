@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Reflection;
 using System.Text;
@@ -31,6 +32,7 @@ namespace cpap_db
 		public const string AvapSettings       = "avaps_settings";
 	}
 	
+	[SuppressMessage( "ReSharper", "ConvertToUsingDeclaration" )]
 	public class StorageService : IDisposable
 	{
 		#region Private fields
@@ -65,8 +67,10 @@ namespace cpap_db
 			sessionMapping.PrimaryKey = new PrimaryKeyColumn( "id", typeof( int ), true );
 			sessionMapping.ForeignKey = new ForeignKeyColumn( dayMapping );
 
-			var blobColumnMapping = new ColumnMapping( "samples", "Samples", typeof( Signal ) );
-			blobColumnMapping.Converter = new DoubleListBlobConverter();
+			var blobColumnMapping = new ColumnMapping( "samples", "Samples", typeof( Signal ) )
+			{
+				Converter = new DoubleListBlobConverter(),
+			};
 
 			var signalMapping = CreateMapping<Signal>( TableNames.Signal );
 			signalMapping.ForeignKey = new ForeignKeyColumn( sessionMapping );
@@ -194,7 +198,6 @@ namespace cpap_db
 				day.Sessions[ i ].Signals = SelectByForeignKey<Signal>( sessionKeys[ i ] );
 			}
 			
-			day.Statistics.Sort();
 			day.Events.Sort();
 			day.Sessions.Sort();
 
@@ -257,7 +260,7 @@ namespace cpap_db
 					Connection.Commit();
 				}
 			}
-			catch( Exception e )
+			catch( Exception )
 			{
 				if( !wasInTransaction )
 				{
@@ -337,7 +340,7 @@ namespace cpap_db
 			var mapping = GetMapping<T>();
 
 			var keys    = new List<int>();
-			var records = mapping.SelectByForeignKey<int>( Connection, foreignKeyValue, keys );
+			var records = mapping.SelectByForeignKey( Connection, foreignKeyValue, keys );
 
 			primaryKeyValue = keys.First();
 
@@ -355,7 +358,7 @@ namespace cpap_db
 			where P : struct
 		{
 			var mapping = GetMapping<T>();
-			return mapping.SelectByForeignKey<P>( Connection, foreignKeyValue, primaryKeys );
+			return mapping.SelectByForeignKey( Connection, foreignKeyValue, primaryKeys );
 		}
 		
 		/// <summary>
@@ -582,7 +585,7 @@ namespace cpap_db
 				}
 
 				string str = SQLite3.ColumnString( stmt, index );
-				return Enum.Parse( clrType, str.ToString(), true );
+				return Enum.Parse( clrType, str, true );
 			}
 
 			if( clrType == typeof( long ) )

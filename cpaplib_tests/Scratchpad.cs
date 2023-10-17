@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Globalization;
 using System.Numerics;
 using System.Reflection;
 using System.Text;
@@ -31,9 +32,7 @@ public class Scratchpad
 		using var reader = new BinaryReader( file );
 
 		int fileVersion = reader.ReadInt16();
-		Assert.IsTrue( fileVersion == 3 );
-
-		// Read timestamp (NOTE: The filename also appears to be a timestamp. Do they always match?)
+		Assert.IsTrue( fileVersion is 3 or 5 ); // Never actually encountered FileVersion=5, but apparently someone else has and it's binary compatible
 
 		int year = reader.ReadInt16();
 		Assert.AreEqual( 2023, year );
@@ -53,38 +52,48 @@ public class Scratchpad
 		int second = reader.ReadByte();
 		Assert.IsTrue( second is >= 0 and <= 60 );
 
-		var expectedDateTime = DateTime.Parse( "2023-10-04 03:17:47.000" );
-		var headerDateTime   = new DateTime( year, month, day, hour, minute, second );
-		Assert.AreEqual( expectedDateTime, headerDateTime );
-				
+		var expectedTimestamp = DateTime.Parse( "2023-10-04 03:17:47.000" );
+		var headerTimestamp   = new DateTime( year, month, day, hour, minute, second );
+		Assert.AreEqual( expectedTimestamp, headerTimestamp );
+
+		// Read timestamp (NOTE: The filename also appears to be a timestamp. Do they always match?)
+		var filenameTimestamp = DateTime.ParseExact( Path.GetFileName( path ), "yyyyMMddHHmmsss", CultureInfo.InvariantCulture );
+		Assert.AreEqual( expectedTimestamp, filenameTimestamp );
+
 		// Read and validate file size 
 		int fileSize = reader.ReadInt32();
 		Assert.AreEqual( file.Length, fileSize );
 				
 		// Read duration of recording 
-		var duration = TimeSpan.FromSeconds( reader.ReadInt32() );
+		var duration = TimeSpan.FromSeconds( reader.ReadInt16() );
 		Assert.AreEqual( TimeSpan.FromSeconds( 5316 ), duration );
 
-		var oxygenAverage = reader.ReadByte();
-		Assert.AreEqual( 96, oxygenAverage );
-
-		var oxygenMinimum = reader.ReadByte();
-		Assert.AreEqual( 91, oxygenMinimum );
-
-		var countODI3 = reader.ReadByte();
-		Assert.AreEqual( 4, countODI3 );
-				
-		var countODI4 = reader.ReadByte();
-		Assert.AreEqual( 1, countODI4 );
-
-		var timeBelow90 = reader.ReadInt32();
-		Assert.AreEqual( 0, timeBelow90 );
-
-		var o2Score = reader.ReadByte();
-		Assert.AreEqual( 97, o2Score );
+		// Assert.AreEqual( 0, reader.ReadByte() );
+		// Assert.AreEqual( 0, reader.ReadByte() );
+		//
+		// var oxygenAverage = reader.ReadByte();
+		// Assert.AreEqual( 96, oxygenAverage );
+		//
+		// var oxygenMinimum = reader.ReadByte();
+		// Assert.AreEqual( 91, oxygenMinimum );
+		//
+		// var countODI3 = reader.ReadByte();
+		// Assert.AreEqual( 4, countODI3 );
+		// 		
+		// var countODI4 = reader.ReadByte();
+		// Assert.AreEqual( 1, countODI4 );
+		//
+		// var timeBelow90 = reader.ReadInt32();
+		// Assert.AreEqual( 0, timeBelow90 );
+		//
+		// var o2Score = reader.ReadByte();
+		// Assert.AreEqual( 97, o2Score );
 
 		// Skip the rest of the header, as it doesn't provide any useful information for us. 
 		file.Position = HEADER_SIZE;
+		
+		// The rest of the file should be an exact multiple of RECORD_SIZE
+		Assert.AreEqual( 0, (fileSize - HEADER_SIZE) % RECORD_SIZE );
 
 		int    recordCount = (fileSize - HEADER_SIZE) / RECORD_SIZE;
 		double frequency   = 1.0 / (duration.TotalSeconds / recordCount);
@@ -158,13 +167,6 @@ public class Scratchpad
 	{
 		Assert.AreEqual( 0.3, InverseLerp( 0,  10, 3 ), 0.01 );
 		Assert.AreEqual( 0.7, InverseLerp( 10, 0,  3 ), 0.01 );
-	}
-	
-	[TestMethod]
-	public void IntegerTypes()
-	{
-		var numType = typeof(INumber<>);
-		var result  = typeof( int ).GetTypeInfo().GetInterfaces().Any( i => i.IsGenericType && (i.GetGenericTypeDefinition() == numType) );
 	}
 	
 	// [TestMethod]

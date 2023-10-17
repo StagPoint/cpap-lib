@@ -33,6 +33,11 @@ public class SignalChartConfiguration : IComparable<SignalChartConfiguration>
 		{
 			return 0;
 		}
+
+		if( IsVisible != other.IsVisible )
+		{
+			return IsVisible ? -1 : 1;
+		}
 		
 		return IsPinned == other.IsPinned ? DisplayOrder.CompareTo( other.DisplayOrder ) : (IsPinned ? -1 : 1);
 	}

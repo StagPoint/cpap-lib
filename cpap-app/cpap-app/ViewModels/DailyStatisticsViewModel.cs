@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
 using cpap_db;
 
@@ -41,8 +43,30 @@ public class DailyStatisticsViewModel
 	{
 		using var db = StorageService.Connect();
 
+		// TODO: Should column order be configurable also?
+		// Retrieve the list of visible columns 
 		VisibleColumns = db.SelectById<DailyStatisticsColumnVisibility>( 0 );
+
+		// Retrieve the Signal Chart Configurations so that we can re-use the DisplayOrder values the user has configured 
+		var configurations = SignalChartConfigurationStore.GetSignalConfigurations();
 		
-		Statistics = day.Statistics;
+		Statistics = new List<SignalStatistics>();
+		foreach( var configuration in configurations )
+		{
+			var stat = day.Statistics.FirstOrDefault( x => x.SignalName.Equals( configuration.SignalName, StringComparison.OrdinalIgnoreCase ) );
+			if( stat != null )
+			{
+				Statistics.Add( stat );
+			}
+		}
+		
+		// Add in any statistics that have not (yet?) been configured 
+		foreach( var stat in day.Statistics )
+		{
+			if( !Statistics.Any( x => x.SignalName == stat.SignalName ) )
+			{
+				Statistics.Add( stat );
+			}
+		}
 	}
 }

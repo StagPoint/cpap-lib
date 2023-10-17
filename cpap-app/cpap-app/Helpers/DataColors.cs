@@ -6,14 +6,14 @@ namespace cpap_app.Helpers;
 
 public class DataColors
 {
-	private static uint[] _lightThemeColors = new[]
+	public static readonly uint[] LightThemeColors = new[]
 	{
 		0xff1192e9, 0xff005f5d, 0xff9f1853, 0xfffa4e56, 
 		0xff6929c5, 0xff197f38, 0xff002d9d, 0xffee5398, 0xffb08600, 
 		0xff520609, 0xff009d9a, 0xff01274a, 0xff8c3702, 0xffa66efe
 	};
 
-	private static uint[] _darkThemeColors = new[]
+	public static readonly uint[] DarkThemeColors = new[]
 	{
 		0xff33b1fd, 0xff41bebb, 0xffff7eb5, 0xfffa4e54,
 		0xff893ffc, 0xff6fdc8c, 0xff4689ff, 0xffd02770, 0xffd3a107,
@@ -37,7 +37,7 @@ public class DataColors
 	public static Color GetDataColor( int index )
 	{
 		var isDarkTheme = Application.Current?.ActualThemeVariant == ThemeVariant.Dark;
-		var colors      = isDarkTheme ? _darkThemeColors : _lightThemeColors;
+		var colors      = isDarkTheme ? DarkThemeColors : LightThemeColors;
 		
 		return Color.FromUInt32( colors[ index % colors.Length ] );
 	}

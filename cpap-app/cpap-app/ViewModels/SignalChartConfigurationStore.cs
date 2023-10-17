@@ -21,7 +21,10 @@ public static class SignalChartConfigurationStore
 		// TODO: Move SignalChartConfiguration initialization to application startup
 		Initialize( store );
 
-		return store.SelectAll<SignalChartConfiguration>().OrderBy( x => x.DisplayOrder ).ToList();
+		var configurations = store.SelectAll<SignalChartConfiguration>().ToList();
+		configurations.Sort();
+
+		return configurations;
 	}
 
 	private static void Initialize( StorageService store )
