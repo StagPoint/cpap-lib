@@ -352,7 +352,7 @@ public partial class SignalChart : UserControl
 		_flyout.ColorPicker.UseColorWheel       = true;
 		_flyout.ColorPicker.UseColorTriangle    = false;
 
-		var hexColors = new uint[]
+		var hexColors = new[]
 		{
 			0xffebac23, 0xffb80058, 0xff008cf9, 0xff006e00, 0xff00bbad,
 			0xffd163e6, 0xffb24502, 0xffff9287, 0xff5954d6, 0xff00c6f8,

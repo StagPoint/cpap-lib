@@ -52,21 +52,23 @@
         </Grid>
 
         <!-- Column headers for event list -->
-        <Grid RowDefinitions="Auto" Classes="ColumnHeader" IsVisible="{Binding Items.Count}">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition SharedSizeGroup="C0" />
-                <ColumnDefinition SharedSizeGroup="C1" />
-                <ColumnDefinition SharedSizeGroup="C2" />
-                <ColumnDefinition SharedSizeGroup="C3" />
-            </Grid.ColumnDefinitions>
-            <TextBlock Grid.Column="0" Grid.Row="0" Text="Event" />
-            <TextBlock Grid.Column="1" Grid.Row="0" Text="#/Hour" HorizontalAlignment="Center" />
-            <TextBlock Grid.Column="2" Grid.Row="0" Text="Total" HorizontalAlignment="Center" />
-            <TextBlock Grid.Column="3" Grid.Row="0" Text="Time" />
-        </Grid>
+        <Border Classes="ColumnHeader" IsVisible="{Binding Items.Count}">
+            <Grid RowDefinitions="Auto">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition SharedSizeGroup="C0" />
+                    <ColumnDefinition SharedSizeGroup="C1" />
+                    <ColumnDefinition SharedSizeGroup="C2" />
+                    <ColumnDefinition SharedSizeGroup="C3" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Grid.Row="0" Text="Event" />
+                <TextBlock Grid.Column="1" Grid.Row="0" Text="#/Hour" HorizontalAlignment="Center" />
+                <TextBlock Grid.Column="2" Grid.Row="0" Text="Total" HorizontalAlignment="Center" />
+                <TextBlock Grid.Column="3" Grid.Row="0" Text="Time" />
+            </Grid>
+        </Border>
 
         <!-- Events -->
-        <ItemsRepeater ItemsSource="{Binding Items}">
+        <ItemsRepeater ItemsSource="{Binding Items}" Margin="0 2 0 0">
             <ItemsRepeater.Styles>
                 <Style Selector="TextBlock">
                     <Setter Property="IsHitTestVisible" Value="False" />

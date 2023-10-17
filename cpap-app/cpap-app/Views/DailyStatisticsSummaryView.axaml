@@ -28,25 +28,27 @@
                 <Setter Property="Padding" Value="2 0 8 2" />
             </Style>
         </Grid.Styles>
-        <Grid Name="HeaderGrid" Grid.Row="0" HorizontalAlignment="Stretch" RowDefinitions="Auto" Classes="ColumnHeader">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" SharedSizeGroup="C0" />
-                <ColumnDefinition Width="{Binding VisibleColumns.Minimum, Converter={StaticResource BooleanToGridLength}}" SharedSizeGroup="C1" />
-                <ColumnDefinition Width="{Binding VisibleColumns.Average, Converter={StaticResource BooleanToGridLength}}" SharedSizeGroup="C2" />
-                <ColumnDefinition Width="{Binding VisibleColumns.Median, Converter={StaticResource BooleanToGridLength}}" SharedSizeGroup="C3" />
-                <ColumnDefinition Width="{Binding VisibleColumns.Percentile95, Converter={StaticResource BooleanToGridLength}}" SharedSizeGroup="C4" />
-                <ColumnDefinition Width="{Binding VisibleColumns.Percentile995, Converter={StaticResource BooleanToGridLength}}" SharedSizeGroup="C5" />
-                <ColumnDefinition Width="{Binding VisibleColumns.Maximum, Converter={StaticResource BooleanToGridLength}}" SharedSizeGroup="C6" />
-            </Grid.ColumnDefinitions>
-            <TextBlock Grid.Column="0" Text="Name" />
-            <TextBlock Grid.Column="1" Text="Min" />
-            <TextBlock Grid.Column="2" Text="Avg" />
-            <TextBlock Grid.Column="3" Text="Med" />
-            <TextBlock Grid.Column="4" Text="95%" />
-            <TextBlock Grid.Column="5" Text="99.5%" />
-            <TextBlock Grid.Column="6" Text="Max" />
-        </Grid>
-        <ItemsControl Name="Repeater" Grid.Row="1" ItemsSource="{Binding Statistics}">
+        <Border Classes="ColumnHeader" Grid.Row="0">
+            <Grid Name="HeaderGrid" HorizontalAlignment="Stretch" RowDefinitions="Auto">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" SharedSizeGroup="C0" />
+                    <ColumnDefinition Width="{Binding VisibleColumns.Minimum, Converter={StaticResource BooleanToGridLength}}" SharedSizeGroup="C1" />
+                    <ColumnDefinition Width="{Binding VisibleColumns.Average, Converter={StaticResource BooleanToGridLength}}" SharedSizeGroup="C2" />
+                    <ColumnDefinition Width="{Binding VisibleColumns.Median, Converter={StaticResource BooleanToGridLength}}" SharedSizeGroup="C3" />
+                    <ColumnDefinition Width="{Binding VisibleColumns.Percentile95, Converter={StaticResource BooleanToGridLength}}" SharedSizeGroup="C4" />
+                    <ColumnDefinition Width="{Binding VisibleColumns.Percentile995, Converter={StaticResource BooleanToGridLength}}" SharedSizeGroup="C5" />
+                    <ColumnDefinition Width="{Binding VisibleColumns.Maximum, Converter={StaticResource BooleanToGridLength}}" SharedSizeGroup="C6" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="Name" />
+                <TextBlock Grid.Column="1" Text="Min" />
+                <TextBlock Grid.Column="2" Text="Avg" />
+                <TextBlock Grid.Column="3" Text="Med" />
+                <TextBlock Grid.Column="4" Text="95%" />
+                <TextBlock Grid.Column="5" Text="99.5%" />
+                <TextBlock Grid.Column="6" Text="Max" />
+            </Grid>
+        </Border>
+        <ItemsControl Name="Repeater" Grid.Row="1" ItemsSource="{Binding Statistics}" Margin="0 2 0 0">
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
                     <Border Classes="SelectionRect">
