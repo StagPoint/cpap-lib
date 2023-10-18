@@ -47,7 +47,9 @@
                         <ColumnDefinition SharedSizeGroup="C2" />
                     </Grid.ColumnDefinitions>
                     <TextBlock Grid.Column="0" Grid.Row="0" Text="Range" />
+                    <Rectangle Grid.Column="1" Grid.Row="0" Classes="HeaderSeparator" />
                     <TextBlock Grid.Column="1" Grid.Row="0" Text="Duration" />
+                    <Rectangle Grid.Column="2" Grid.Row="0" Classes="HeaderSeparator" />
                     <TextBlock Grid.Column="2" Grid.Row="0" Text="Total" />
                 </Grid>
             </Border>

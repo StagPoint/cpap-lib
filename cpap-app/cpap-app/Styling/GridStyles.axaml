@@ -30,6 +30,14 @@
         <Setter Property="Foreground" Value="{DynamicResource DataGridColumnHeaderForegroundBrush}" />
         <Setter Property="Padding" Value="4 0 16 2"/>
     </Style>
+    <Style Selector="Rectangle.HeaderSeparator">
+        <Setter Property="Fill" Value="{DynamicResource DataGridGridLinesBrush}" />
+        <Setter Property="HorizontalAlignment" Value="Left" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Width" Value="1" />
+        <Setter Property="Height" Value="18" />
+        <Setter Property="Margin" Value="-4 0 0 0" />
+    </Style>
     
     <Style Selector="Grid.TableData > TextBlock">
         <Setter Property="Padding" Value="4 0 16 0"/>

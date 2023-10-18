@@ -26,7 +26,7 @@
             Grid.RowSpan="2"
             Padding="45 16"
             Margin="0 0 0 0"
-            Width="400"
+            Width="500"
             HorizontalAlignment="Left"
             Theme="{DynamicResource CaptionTextBlockStyle}"
             Text="Current value information goes here"
@@ -57,15 +57,15 @@
                 Padding="8 4"
                 Tag="{Binding $parent[views:SignalChart]}">
                 <Button.Flyout>
-                    <MenuFlyout>
-                        <MenuItem Header="Configure">
-                            <MenuItem Header="Signal Color..." Click="ConfigureSignalColor_OnClick" />
-                        </MenuItem>
-                        <MenuItem Header="Move...">
-                            <MenuItem Header="Up" />
-                            <MenuItem Header="Down" />
-                        </MenuItem>
-                    </MenuFlyout>
+                    <controls:FAMenuFlyout>
+                        <controls:MenuFlyoutSubItem Text="Configure">
+                            <controls:MenuFlyoutItem Text="Signal Color..." Click="ConfigureSignalColor_OnClick" />
+                        </controls:MenuFlyoutSubItem>
+                        <controls:MenuFlyoutSubItem Text="Move...">
+                            <controls:MenuFlyoutItem Text="Up" IconSource="ChevronUp" />
+                            <controls:MenuFlyoutItem Text="Down" IconSource="ChevronDown" />
+                        </controls:MenuFlyoutSubItem>
+                    </controls:FAMenuFlyout>
                 </Button.Flyout>
                 <controls:SymbolIcon Symbol="Settings" />
             </Button>

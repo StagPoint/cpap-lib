@@ -53,12 +53,19 @@
                     <ColumnDefinition Width="{Binding AverageDeviation, Converter={StaticResource BooleanToGridLength}}" SharedSizeGroup="C7" />
                 </Grid.ColumnDefinitions>
                 <TextBlock Grid.Column="0" Text="Name" />
+                <Rectangle Classes="HeaderSeparator" Grid.Column="1" IsVisible="{Binding Minimum}" />
                 <TextBlock Grid.Column="1" Text="Min" />
+                <Rectangle Classes="HeaderSeparator" Grid.Column="2" IsVisible="{Binding Average}" />
                 <TextBlock Grid.Column="2" Text="Avg" />
+                <Rectangle Classes="HeaderSeparator" Grid.Column="3" IsVisible="{Binding Median}" />
                 <TextBlock Grid.Column="3" Text="Med" />
+                <Rectangle Classes="HeaderSeparator" Grid.Column="4" IsVisible="{Binding Percentile95}" />
                 <TextBlock Grid.Column="4" Text="95%" />
+                <Rectangle Classes="HeaderSeparator" Grid.Column="5" IsVisible="{Binding Percentile995}" />
                 <TextBlock Grid.Column="5" Text="99.5%" />
+                <Rectangle Classes="HeaderSeparator" Grid.Column="6" IsVisible="{Binding Maximum}" />
                 <TextBlock Grid.Column="6" Text="Max" />
+                <Rectangle Classes="HeaderSeparator" Grid.Column="7" IsVisible="{Binding AverageDeviation}" />
                 <TextBlock Grid.Column="7" Text="Dev" />
             </Grid>
         </Border>
