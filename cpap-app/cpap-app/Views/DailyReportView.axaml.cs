@@ -5,13 +5,21 @@ using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
+using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Threading;
+using Avalonia.VisualTree;
 
 using cpap_app.Events;
 
 using cpap_db;
 
 using cpaplib;
+
+using FluentAvalonia.UI.Controls;
+
+using MsBox.Avalonia;
+using MsBox.Avalonia.Enums;
 
 namespace cpap_app.Views;
 
@@ -61,11 +69,27 @@ public partial class DailyReportView : UserControl
 		InitializeComponent();
 		
 		TabFrame.Content = new DailyDetailsView();
+		
+		AddHandler( DailySpO2View.DeletionRequestedEvent, DailySpO2View_OnDeletionRequested );
 	}
 	
 	#endregion 
 	
 	#region Base class overrides
+
+	protected override void OnKeyDown( KeyEventArgs e )
+	{
+		if( e.Handled )
+		{
+			return;
+		}
+		
+		if( e.Key == Key.G && (e.KeyModifiers & KeyModifiers.Control) != 0 )
+		{
+			e.Handled = true;
+			ShowGotoTimeDialog();
+		}
+	}
 
 	protected override void OnPropertyChanged( AvaloniaPropertyChangedEventArgs change )
 	{
@@ -212,6 +236,115 @@ public partial class DailyReportView : UserControl
 		Charts.ShowEventType( eventArgs.Type );
 	}
 	
+	private async void DailySpO2View_OnDeletionRequested( object? sender, DateTimeRoutedEventArgs e )
+	{
+		var dialog = MessageBoxManager.GetMessageBoxStandard(
+			"Delete Pulse Oximetry Data",
+			$"Are you sure you wish to delete pulse oximetry data for {e.DateTime:D}?",
+			ButtonEnum.YesNo,
+			Icon.Warning
+		);
+		
+		var result = await dialog.ShowWindowDialogAsync( this.FindAncestorOfType<Window>() );
+
+		if( result != ButtonResult.Yes )
+		{
+			return;
+		}
+
+		using var connection = StorageService.Connect();
+		connection.DeletePulseOximetryData( e.DateTime );
+		
+		DataContext = connection.LoadDailyReport( e.DateTime );
+	}
+
+	#endregion 
+	
+	#region Private functions 
+	
+	private async void ShowGotoTimeDialog()
+	{
+		if( DataContext is not DailyReport day )
+		{
+			return;
+		}
+		
+		var dialog = new ContentDialog()
+		{
+			Title             = "Go to a specific time",
+			PrimaryButtonText = "Ok",
+			CloseButtonText   = "Cancel",
+			DefaultButton     = ContentDialogButton.Primary,
+		};
+
+		var input = new TextBox()
+		{
+			Watermark = "hh:mm:ss (24-hour time)",
+		};
+
+		dialog.Content = input;
+
+		var task = dialog.ShowAsync();
+		Dispatcher.UIThread.Post( () =>
+		{
+			input.Focus();
+		}, DispatcherPriority.Loaded );
+
+		var result = await task;
+
+		if( string.IsNullOrEmpty( input.Text ) )
+		{
+			return;
+		}
+
+		if( result != ContentDialogResult.Primary )
+		{
+			return;
+		}
+		
+		if( !TimeSpan.TryParse( input.Text, out TimeSpan time ) )
+		{
+			var msgBox = MessageBoxManager.GetMessageBoxStandard(
+				"Go to a specific time",
+				$"The value '{input.Text}' is not a valid time code",
+				ButtonEnum.Ok,
+				Icon.Error );
+
+			await msgBox.ShowWindowDialogAsync( this.FindAncestorOfType<Window>() );
+		}
+
+		var dateTime = day.RecordingStartTime;
+
+		if( time <= day.RecordingEndTime.TimeOfDay )
+		{
+			dateTime = day.RecordingEndTime.Date + time;
+		}
+		else if( time >= day.RecordingStartTime.TimeOfDay )
+		{
+			dateTime = day.RecordingStartTime.Date + time;
+		}
+		else if( time.Add( TimeSpan.FromHours( 12 ) ) >= day.RecordingStartTime.TimeOfDay )
+		{
+			// Even though we told the user to use 24-hour time, see if it's possible to fix it for them anyways. 
+			// Worse case scenario should be that they go to the wrong time, and have to learn to use 24-hour time as directed ;)
+			dateTime = day.RecordingStartTime.Date + time + TimeSpan.FromHours( 12 );
+		}
+		else
+		{
+			var msgBox = MessageBoxManager.GetMessageBoxStandard(
+				"Go to a specific time",
+				$"The value '{input.Text}' is is out of range",
+				ButtonEnum.Ok,
+				Icon.Error );
+
+			await msgBox.ShowWindowDialogAsync( this.FindAncestorOfType<Window>() );
+
+			return;
+		}
+			
+		Charts.SelectTimeRange( dateTime - TimeSpan.FromMinutes( 3 ), dateTime + TimeSpan.FromMinutes( 3 ) );
+	}
+
 	#endregion 
 }
 

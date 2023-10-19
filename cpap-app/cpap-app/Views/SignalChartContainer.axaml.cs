@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 
@@ -72,7 +73,7 @@ public partial class SignalChartContainer : UserControl
 	{
 		base.OnUnloaded( e );
 
-		if( _dragTimer != null && _dragTimer.IsEnabled )
+		if( _dragTimer is { IsEnabled: true } )
 		{
 			_dragTimer.Stop();
 		}

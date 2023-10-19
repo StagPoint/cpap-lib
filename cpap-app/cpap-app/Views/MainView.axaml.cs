@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
@@ -51,8 +52,7 @@ public partial class MainView : UserControl
 		
 		NavView.Content = new HomeView();
 
-		AddHandler( ImportRequestEvent,                   HandleImportRequestCPAP );
-		AddHandler( DailySpO2View.DeletionRequestedEvent, DailySpO2View_OnDeletionRequested );
+		AddHandler( ImportRequestEvent, HandleImportRequestCPAP );
 
 		btnImportCPAP.Tapped += HandleImportRequestCPAP;
 		
@@ -68,7 +68,7 @@ public partial class MainView : UserControl
 	
 	#endregion 
 	
-	#region Event handlers 
+	#region Event handlers
 
 	private void NavView_OnSelectionChanged( object? sender, NavigationViewSelectionChangedEventArgs e )
 	{
@@ -93,7 +93,13 @@ public partial class MainView : UserControl
 				var page = Activator.CreateInstance( pageType );
 				navView.Content         = page;
 				navView.PaneDisplayMode = NavigationViewPaneDisplayMode.LeftCompact;
-				
+
+				if( page is InputElement control )
+				{
+					control.Focusable = true;
+					Dispatcher.UIThread.Post( () => control.Focus(), DispatcherPriority.Loaded );
+				}
+
 				return;
 			}
 
@@ -439,34 +445,6 @@ public partial class MainView : UserControl
 		await td.ShowAsync();	
 	}
 	
-	private async void DailySpO2View_OnDeletionRequested( object? sender, DateTimeRoutedEventArgs e )
-	{
-		var dialog = MessageBoxManager.GetMessageBoxStandard(
-			"Delete Pulse Oximetry Data",
-			$"Are you sure you wish to delete pulse oximetry data for {e.DateTime:D}?",
-			ButtonEnum.YesNo,
-			Icon.Warning
-		);
-		
-		var result = await dialog.ShowWindowDialogAsync( this.FindAncestorOfType<Window>() );
-
-		if( result != ButtonResult.Yes )
-		{
-			return;
-		}
-
-		using var connection = StorageService.Connect();
-		connection.DeletePulseOximetryData( e.DateTime );
-		
-		if( NavView.Content is DailyReportView { DataContext: DailyReport day } dailyReportView )
-		{
-			if( day.ReportDate.Date == e.DateTime.Date )
-			{
-				dailyReportView.DataContext = connection.LoadDailyReport( e.DateTime );
-			}
-		}
-	}
-
 	#endregion 
 	
 	#region Private functions 
