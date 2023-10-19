@@ -168,12 +168,13 @@ public partial class SignalChart : UserControl
 	{
 		InitializeComponent();
 
-		PointerWheelChanged   += OnPointerWheelChanged;
-		PointerEntered        += OnPointerEntered;
-		PointerExited         += OnPointerExited;
-		Chart.PointerPressed  += OnPointerPressed;
-		Chart.PointerReleased += OnPointerReleased;
-		Chart.PointerMoved    += OnPointerMoved;
+		PointerWheelChanged += OnPointerWheelChanged;
+		PointerEntered      += OnPointerEntered;
+		PointerExited       += OnPointerExited;
+		PointerPressed      += OnPointerPressed;
+		PointerReleased     += OnPointerReleased;
+		PointerMoved        += OnPointerMoved;
+		
 		Chart.AxesChanged     += OnAxesChanged;
 		
 		ChartLabel.PointerPressed     += ChartLabelOnPointerPressed;
@@ -383,6 +384,8 @@ public partial class SignalChart : UserControl
 				Direction   = Math.Sign( position.Y ),
 			} );
 		}
+
+		e.Handled = true;
 	}
 
 	private void ChartLabelOnPointerCaptureLost( object? sender, PointerCaptureLostEventArgs e )
@@ -398,6 +401,8 @@ public partial class SignalChart : UserControl
 	private void ChartLabelOnPointerPressed( object? sender, PointerPressedEventArgs e )
 	{
 		ChartLabel.Cursor = new Cursor( StandardCursorType.SizeNorthSouth );
+
+		e.Handled = true;
 	}
 
 	private void Button_OnClick( object? sender, RoutedEventArgs e )
@@ -554,8 +559,10 @@ public partial class SignalChart : UserControl
 		{
 			return;
 		}
-		
-		(double timeOffset, _) = Chart.GetMouseCoordinates();
+
+		var mouseRelativePosition = eventArgs.GetCurrentPoint( Chart ).Position;
+
+		(double timeOffset, _) = Chart.Plot.GetCoordinate( (float)mouseRelativePosition.X, (float)mouseRelativePosition.Y );
 		var time = _day.RecordingStartTime.AddSeconds( timeOffset );
 
 		switch( _interactionMode )
@@ -1245,7 +1252,7 @@ public partial class SignalChart : UserControl
 		Chart.Configuration.Quality              = ScottPlot.Control.QualityMode.LowWhileDragging;
 
 		plot.Style( _chartStyle );
-		plot.Layout( 0, 0, 0, 20 );
+		plot.Layout( 0, 0, 0, 8 );
 		//plot.Margins( 0.0, 0.1 );
 		
 		plot.XAxis.TickLabelFormat( TickFormatter );
@@ -1259,6 +1266,7 @@ public partial class SignalChart : UserControl
 		plot.XAxis2.Layout( 8, 1, 1 );
 
 		plot.YAxis.TickDensity( 1f );
+		plot.YAxis.TickLabelFormat( x => $"{x:0.##}" );
 		plot.YAxis.Layout( 0, maximumLabelWidth, maximumLabelWidth );
 		plot.YAxis2.Layout( 0, 5, 5 );
 
