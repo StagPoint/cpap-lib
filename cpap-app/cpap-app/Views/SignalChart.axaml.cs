@@ -983,7 +983,7 @@ public partial class SignalChart : UserControl
 				Chart.Plot.AddHorizontalLine( ChartConfiguration.BaselineLow.Value, redlineColor.ToDrawingColor(), 0.5f, LineStyle.Dot );
 			}
 
-			PlotSignal( Chart, day, ChartConfiguration.SignalName, 1f, ChartConfiguration.AxisMinValue, ChartConfiguration.AxisMaxValue );
+			PlotSignal( Chart, day, ChartConfiguration.SignalName, ChartConfiguration.AxisMinValue, ChartConfiguration.AxisMaxValue );
 
 			// TODO: This should come *before* ChartSignal(), but relies on the axis limits being finalized first. Fix that.
 			CreateEventMarkers( day );
@@ -1007,15 +1007,19 @@ public partial class SignalChart : UserControl
 		}
 	}
 	
-	private void PlotSignal( AvaPlot chart, DailyReport day, string signalName, float signalScale = 1f, double? axisMinValue = null, double? axisMaxValue = null, double[]? manualLabels = null )
+	private void PlotSignal( AvaPlot chart, DailyReport day, string signalName, double? axisMinValue = null, double? axisMaxValue = null )
 	{
+		Debug.Assert( _day != null, nameof( _day ) + " != null" );
+		
 		if( ChartConfiguration == null )
 		{
 			throw new Exception( $"The {nameof( ChartConfiguration )} property has not been assigned" );
 		}
 		
-		var minValue = axisMinValue ?? double.MaxValue;
-		var maxValue = axisMaxValue ?? double.MinValue;
+		var dataMinValue = double.MaxValue;
+		var signalMinValue = double.MaxValue;
+		var dataMaxValue = double.MinValue;
+		var signalMaxValue = double.MinValue;
 
 		// Need to keep track of the first session added to the chart so that we can set that 
 		// section's Label (for the chart legend). Otherwise, it will be duplicated for each 
@@ -1034,12 +1038,15 @@ public partial class SignalChart : UserControl
 				continue;
 			}
 			
+			// Keep track of min and max values 
+			dataMinValue   = Math.Min( dataMinValue,   signal.Samples.Min() );
+			signalMinValue = Math.Min( signalMinValue, signal.MinValue );
+			dataMaxValue   = Math.Max( dataMaxValue,   signal.Samples.Max() );
+			signalMaxValue = Math.Max( signalMaxValue, signal.MaxValue );
+			
 			// Keep track of all of the signals that this graph displays. This is done partially so that we don't 
 			// have to search for the signals during time-sensitive operations such as mouse movement, etc. 
 			_signals.Add( signal );
-
-			minValue = Math.Min( minValue, signal.MinValue * signalScale );
-			maxValue = Math.Max( maxValue, signal.MaxValue * signalScale );
 
 			var offset = (signal.StartTime - day.RecordingStartTime).TotalSeconds;
 
@@ -1063,6 +1070,10 @@ public partial class SignalChart : UserControl
 				var secondarySignal = session.GetSignalByName( SecondaryConfiguration.SignalName );
 				if( secondarySignal != null )
 				{
+					// Keep track of min and max values 
+					dataMinValue = Math.Min( dataMinValue, secondarySignal.Samples.Min() );
+					dataMaxValue = Math.Max( dataMaxValue, secondarySignal.Samples.Max() );
+
 					_secondarySignals.Add( secondarySignal );
 					
 					var secondaryGraph = chart.Plot.AddSignal( 
@@ -1087,7 +1098,6 @@ public partial class SignalChart : UserControl
 			graph.LineWidth   = 1.1;
 			graph.OffsetX     = offset;
 			graph.MarkerSize  = 0;
-			graph.ScaleY      = signalScale;
 			graph.UseParallel = true;
 			
 			// "Fill Below" is only available on signals that do not cross a zero line and do not have a secondary 
@@ -1101,28 +1111,19 @@ public partial class SignalChart : UserControl
 		}
 
 		// Set zoom and boundary limits
-		maxValue = axisMaxValue ?? maxValue;
-		minValue = axisMinValue ?? minValue;
-		var extents = maxValue - minValue;
-		chart.Plot.YAxis.SetBoundary( minValue, maxValue + extents * 0.1 );
-		chart.Plot.XAxis.SetBoundary( -1, day.TotalTimeSpan.TotalSeconds + 1 );
-		
-		Debug.Assert( _day != null, nameof( _day ) + " != null" );
-		chart.Plot.XAxis.TickLabelFormat( x => $"{_day.RecordingStartTime.AddSeconds( x ):hh:mm:ss tt}" );
-
-		chart.Plot.SetAxisLimits( -1, day.TotalTimeSpan.TotalSeconds + 1, minValue, maxValue + extents * 0.1 );
-
-		// If manual vertical axis tick positions were provided, set up the labels for them and force the chart
-		// to show those instead of the automatically-generated tick positions. 
-		if( manualLabels is { Length: > 0 } )
 		{
-			var labels = new string[ manualLabels.Length ];
-			for( int i = 0; i < labels.Length; i++ )
-			{
-				labels[ i ] = manualLabels[ i ].ToString( "F0" );
-			}
-			
-			chart.Plot.YAxis.ManualTickPositions( manualLabels, labels );
+			var minValue = axisMinValue ?? (ChartConfiguration.AutoScaleY ? dataMinValue : signalMinValue);
+			var maxValue = axisMaxValue ?? (ChartConfiguration.AutoScaleY ? dataMaxValue : signalMaxValue);
+
+			var extents = Math.Max( 1.0, maxValue - minValue );
+			var padding = ChartConfiguration.AutoScaleY ? extents * 0.1 : 0;
+
+			chart.Plot.YAxis.SetBoundary( minValue, maxValue + padding );
+			chart.Plot.XAxis.SetBoundary( -1, day.TotalTimeSpan.TotalSeconds + 1 );
+			chart.Plot.SetAxisLimits( -1, day.TotalTimeSpan.TotalSeconds + 1, minValue, maxValue + padding );
+
+			double tickSpacing = extents / 4;
+			chart.Plot.YAxis.ManualTickSpacing( tickSpacing );
 		}
 	}
 	
@@ -1217,6 +1218,9 @@ public partial class SignalChart : UserControl
 		Chart.IsEnabled        = false;
 		this.IsEnabled         = false;
 
+		Chart.Plot.XAxis.ManualTickSpacing( 3600 );
+		Chart.Plot.YAxis.ManualTickSpacing( 5 );
+
 		Chart.RenderRequest();
 	}
 
@@ -1241,10 +1245,11 @@ public partial class SignalChart : UserControl
 		Chart.Configuration.Quality              = ScottPlot.Control.QualityMode.LowWhileDragging;
 
 		plot.Style( _chartStyle );
-		plot.Layout( 0, 0, 0, 0 );
-		plot.Margins( 0.0, 0.1 );
+		plot.Layout( 0, 0, 0, 20 );
+		//plot.Margins( 0.0, 0.1 );
 		
-		plot.XAxis.TickLabelFormat( x => $"{TimeSpan.FromSeconds( x ):c}" );
+		plot.XAxis.TickLabelFormat( TickFormatter );
+		//plot.XAxis.TickLabelFormat( x => $"{TimeSpan.FromSeconds( x ):c}" );
 		plot.XAxis.MinimumTickSpacing( 1f );
 		plot.XAxis.SetZoomInLimit( MINIMUM_TIME_WINDOW ); // Make smallest zoom window possible be 1 minute 
 		plot.XAxis.Layout( padding: 0 );
@@ -1275,6 +1280,11 @@ public partial class SignalChart : UserControl
 		chart.RenderRequest();
 	}
 	
+	private string TickFormatter( double time )
+	{
+		return _day == null ? $"00:00:00" : $"{_day.RecordingStartTime.AddSeconds( time ):hh:mm:ss tt}";
+	}
+
 	private static float MeasureText( string text, string fontFamily, float emSize )
 	{
 		FormattedText formatted = new FormattedText(

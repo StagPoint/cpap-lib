@@ -36,8 +36,8 @@ public static class OximetryEventGenerator
 	private static void GeneratePulseChangeEvents( Signal signal, List<ReportedEvent> events )
 	{
 		const int    START_TIME    = 120;
-		const int    WINDOW_LENGTH = 60;
-		const double THRESHOLD     = 0.25;
+		const int    WINDOW_LENGTH = 120;
+		const double THRESHOLD     = 0.1;
 		const double MIN_SIZE      = 10;
 		const double PERSISTENCE   = 0.1;
 
