@@ -26,8 +26,8 @@ namespace cpaplib
 			"DATALOG",
 		};
 
-		private MachineIdentification _machineInfo   = new MachineIdentification();
-		private TimeSpan              _timeAdjustment = new TimeSpan( 0, 0, 1, 10 );
+		private MachineIdentification _machineInfo    = new MachineIdentification();
+		private TimeSpan              _timeAdjustment = TimeSpan.Zero;
 
 		public List<DailyReport> LoadFromFolder( string folderPath, DateTime? minDate = null, DateTime? maxDate = null, TimeSpan? timeAdjustment = null )
 		{
@@ -337,6 +337,9 @@ namespace cpaplib
 				// be other similar situations I haven't encountered yet (and in any case such signals are not valid). 
 				maskSession.Signals.RemoveAll( x => !x.Samples.Any( value => value >= x.MinValue ) );
 			}
+
+			// TODO: This is the wrong place to be removing sessions, as it can throw off the times of successive sessions 
+			// Remove all sessions that are shorter than five minutes
 			day.Sessions.RemoveAll( x => x.Signals.Count == 0 || x.Duration.TotalMinutes < 5 );
 			
 			// If there is SpO2 and Pulse data, split those signals off into separate sessions for more logical grouping

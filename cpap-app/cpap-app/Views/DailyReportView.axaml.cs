@@ -173,32 +173,31 @@ public partial class DailyReportView : UserControl
 	
 	private void DateSelector_OnSelectedDateChanged( object? sender, SelectionChangedEventArgs e )
 	{
-		using( var store = StorageService.Connect() )
+		using var store = StorageService.Connect();
+		
+		// Keep this up-to-date. Probably unnecessary and overkill, but it's quick and not terribly wasteful.
+		_datesWithData = store.GetStoredDates();
+
+		// TODO: Implement visual indication of "no data available" to match previous viewer codebase
+		var day = store.LoadDailyReport( DateSelector.SelectedDate ?? store.GetMostRecentStoredDate() );
+
+		DataContext = day;
+
+		btnPrevDay.IsEnabled   = day != null && _datesWithData.Any( x => x < day.ReportDate.Date );
+		btnNextDay.IsEnabled   = day != null && _datesWithData.Any( x => x > day.ReportDate );
+		btnLastDay.IsEnabled   = _datesWithData.Count > 0;
+		NoDataNotice.IsVisible = day == null;
+
+		TabFrame.IsVisible    = (day != null);
+		DetailTypes.IsVisible = (day != null);
+
+		// DataContext won't cascade down to Frame.Content, so we need to pass it along manually
+		if( TabFrame.Content is Control childView )
 		{
-			// Keep this up-to-date. Probably unnecessary and overkill, but it's quick and not terribly wasteful.
-			_datesWithData = store.GetStoredDates();
-
-			// TODO: Implement visual indication of "no data available" to match previous viewer codebase
-			var day = store.LoadDailyReport( DateSelector.SelectedDate ?? store.GetMostRecentStoredDate() );
-
-			DataContext = day;
-
-			btnPrevDay.IsEnabled   = day != null && _datesWithData.Any( x => x < day.ReportDate.Date );
-			btnNextDay.IsEnabled   = day != null && _datesWithData.Any( x => x > day.ReportDate );
-			btnLastDay.IsEnabled   = _datesWithData.Count > 0;
-			NoDataNotice.IsVisible = day == null;
-
-			TabFrame.IsVisible    = (day != null);
-			DetailTypes.IsVisible = (day != null);
-
-			// I don't know why setting DataContext doesn't cascade down in Avalonia like it did in WPF, 
-			// but apparently I need to handle that manually.
-			if( TabFrame.Content is StyledElement childView )
-			{
-				childView.DataContext = day;
-			}
+			childView.DataContext = day;
 		}
 	}
+	
 	private void BtnLastDay_OnClick( object? sender, RoutedEventArgs e )
 	{
 		DateSelector.SelectedDate = _datesWithData[ ^1 ];
@@ -269,20 +268,19 @@ public partial class DailyReportView : UserControl
 			return;
 		}
 		
-		var dialog = new ContentDialog()
-		{
-			Title             = "Go to a specific time",
-			PrimaryButtonText = "Ok",
-			CloseButtonText   = "Cancel",
-			DefaultButton     = ContentDialogButton.Primary,
-		};
-
 		var input = new TextBox()
 		{
 			Watermark = "hh:mm:ss (24-hour time)",
 		};
 
-		dialog.Content = input;
+		var dialog = new ContentDialog()
+		{
+			Title             = "Go to a specific time",
+			PrimaryButtonText = "Go",
+			CloseButtonText   = "Cancel",
+			DefaultButton     = ContentDialogButton.Primary,
+			Content           = input,
+		};
 
 		var task = dialog.ShowAsync();
 		Dispatcher.UIThread.Post( () =>
@@ -342,7 +340,7 @@ public partial class DailyReportView : UserControl
 			return;
 		}
 			
-		Charts.SelectTimeRange( dateTime - TimeSpan.FromMinutes( 3 ), dateTime + TimeSpan.FromMinutes( 3 ) );
+		Charts.SelectTimeRange( dateTime - TimeSpan.FromMinutes( 2 ), dateTime + TimeSpan.FromMinutes( 2 ) );
 	}
 
 	#endregion 

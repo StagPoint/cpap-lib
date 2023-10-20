@@ -31,9 +31,9 @@ namespace cpaplib
     
     	public SignalStatistics CalculateStats()
     	{
-    		var totalCount = _signals.Sum( x => x.Samples.Count );
-		    var windowSize = (int)( totalCount * (1.0 - 0.95) );
-    		var window     = new BinaryHeap( windowSize );
+    		var totalCount           = _signals.Sum( x => x.Samples.Count );
+		    var percentileWindowSize = (int)( totalCount * (1.0 - 0.95) );
+		    var percentileWindow     = new BinaryHeap( percentileWindowSize );
 
 		    var result = new SignalStatistics
 		    {
@@ -46,8 +46,7 @@ namespace cpaplib
 			    Maximum           = double.MinValue
 		    };
 
-		    int period              = (int)(60 * _signals[ 0 ].FrequencyInHz);
-
+		    int     period         = (int)(60 * _signals[ 0 ].FrequencyInHz);
 		    decimal deviationSum   = 0;
 		    int     deviationTotal = 0;
     		decimal sum            = 0;
@@ -80,38 +79,38 @@ namespace cpaplib
 
 				    sum += (decimal)sample;
     				
-    				if( window.Count < window.Capacity )
+    				if( percentileWindow.Count < percentileWindow.Capacity )
     				{
-    					window.Enqueue( sample );
-    					continue;
+    					percentileWindow.Enqueue( sample );
     				}
-    
-    				if( sample > window.Peek() )
+    				else if( sample > percentileWindow.Peek() )
     				{
-    					window.Dequeue();
-    					window.Enqueue( sample );
+    					percentileWindow.Dequeue();
+    					percentileWindow.Enqueue( sample );
     				}
     			}
     		}
 
-		    // Because minimum is defined as "Minimum value above zero", it's possible that we've never 
+		    // Because minimum is defined in this library as "Minimum value above zero", it's possible that we've never 
 		    // found a minimum value. If that's the case, assign zero explicitly (default value is double.MaxValue).
 		    if( !foundMinimum )
 		    {
 			    result.Minimum = 0;
 		    }
+		    
+		    // TODO: The Percentile95 and Percentile995 values should probably use interpolation to get the precise value 
     
     		result.Median        = (result.Minimum + result.Maximum) * 0.5;
     		result.Average       = (double)(sum / totalCount);
-    		result.Percentile95  = window.Peek();
 		    result.MeanDeviation = (double)(deviationSum / deviationTotal) * 100.0;
+		    result.Percentile95  = percentileWindow.Peek();
 
 		    int nn = (int)( totalCount * (1.0 - 0.995) );
-    		while( window.Count > nn && window.Count > 1 )
+    		while( percentileWindow.Count > nn && percentileWindow.Count > 1 )
     		{
-    			window.Dequeue();
+    			percentileWindow.Dequeue();
     		}
-    		result.Percentile995 = window.Peek();
+    		result.Percentile995 = percentileWindow.Peek();
     
     		return result;
     	}

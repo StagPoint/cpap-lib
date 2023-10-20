@@ -215,11 +215,14 @@ public static class OximetryEventGenerator
 
 	private static void GenerateDesaturationEvents( Signal signal, List<ReportedEvent> events )
 	{
-		// TODO: Make window size configurable 
+		// As defined here, a Desaturation is a drop of 3% or more below the baseline (calculated as a moving average
+		// over the previous five minutes), lasting for at least four seconds and no more than 120 seconds.
+		
+		// TODO: Make these options configurable 
 		const int    START_TIME             = 120;
 		const int    WINDOW_SIZE            = 300;
 		const double MAX_EVENT_DURATION     = 120;
-		const double MIN_EVENT_DURATION     = 10;
+		const double MIN_EVENT_DURATION     = 4;
 		const double DESATURATION_THRESHOLD = 3;
 
 		int    state        = 0;
@@ -301,13 +304,6 @@ public static class OximetryEventGenerator
 
 						state = 0;
 					}
-					else
-					{
-						// We don't want a desaturation to move the baseline average as quickly as a normal sample,
-						// since it's presumably a short term aberration. One way to accomplish that is to reduce
-						// the influence of new samples to the baseline while we're currently tracking a desaturation.
-						sample = MathUtil.Lerp( baseline, sample, 0.75 );
-					}
 					break;
 			}
 			
@@ -319,20 +315,20 @@ public static class OximetryEventGenerator
 			}
 		}
 
-		if( state == 1 && eventDuration >= MIN_EVENT_DURATION && eventDuration <= MAX_EVENT_DURATION )
-		{
-			var annotation = new ReportedEvent
-			{
-				Type      = EventType.Desaturation,
-				StartTime = signal.StartTime.AddSeconds( eventStart ),
-				Duration  = TimeSpan.FromSeconds( eventDuration )
-			};
-
-			if( !events.Any( x => ReportedEvent.TimesOverlap( x, annotation ) ) )
-			{
-				events.Add( annotation );
-			}
-		}
+		// if( state == 1 && eventDuration >= MIN_EVENT_DURATION && eventDuration <= MAX_EVENT_DURATION )
+		// {
+		// 	var annotation = new ReportedEvent
+		// 	{
+		// 		Type      = EventType.Desaturation,
+		// 		StartTime = signal.StartTime.AddSeconds( eventStart ),
+		// 		Duration  = TimeSpan.FromSeconds( eventDuration )
+		// 	};
+		//
+		// 	if( !events.Any( x => ReportedEvent.TimesOverlap( x, annotation ) ) )
+		// 	{
+		// 		events.Add( annotation );
+		// 	}
+		// }
 	}
 
 	private static void GenerateHypoxemiaEvents( Signal signal, List<ReportedEvent> events )
