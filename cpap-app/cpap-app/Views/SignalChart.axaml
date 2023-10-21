@@ -42,14 +42,15 @@
                     HorizontalAlignment="Right"
                     VerticalAlignment="Top"
                     ZIndex="9999">
-            <Button
+            <!--<Button
                 Name="btnChartPinUnpin"
                 BorderThickness="0"
                 Background="Transparent"
                 Padding="8 4"
+                Click="OnPinClick"
                 Tag="{Binding $parent[views:SignalChart]}">
-                <controls:SymbolIcon Symbol="UnPin" />
-            </Button>
+                <controls:SymbolIcon Symbol="Pin" />
+            </Button>-->
             <Button
                 Name="btnChartSettings"
                 BorderThickness="0"
@@ -57,15 +58,54 @@
                 Padding="8 4"
                 Tag="{Binding $parent[views:SignalChart]}">
                 <Button.Flyout>
-                    <controls:FAMenuFlyout>
-                        <controls:MenuFlyoutSubItem Text="Configure">
-                            <controls:MenuFlyoutItem Text="Signal Color..." Click="ConfigureSignalColor_OnClick" />
-                        </controls:MenuFlyoutSubItem>
-                        <controls:MenuFlyoutSubItem Text="Move...">
-                            <controls:MenuFlyoutItem Text="Up" IconSource="ChevronUp" />
-                            <controls:MenuFlyoutItem Text="Down" IconSource="ChevronDown" />
-                        </controls:MenuFlyoutSubItem>
-                    </controls:FAMenuFlyout>
+                    <MenuFlyout>
+                        <MenuItem Click="OnPinClick">
+                            <MenuItem.Icon>
+                                <controls:SymbolIcon Name="mnuPin" Symbol="Pin" Margin="0 0 8 0"/>
+                            </MenuItem.Icon>
+                            <MenuItem.Header>
+                                <TextBlock Name="txtPin" Text="Pin" />
+                            </MenuItem.Header>
+                        </MenuItem>
+                        <Separator />
+                        <MenuItem Header="Signal Color..." Click="ConfigureSignalColor_OnClick">
+                            <MenuItem.Icon>
+                                <controls:SymbolIcon Symbol="ColorLine"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Header="Fill Below">
+                            <MenuItem.Icon>
+                                <controls:SymbolIcon Symbol="Checkmark"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <Separator />
+                        <MenuItem Header="Configure Y-Axis...">
+                            <Grid ColumnDefinitions="Auto,12,Auto,12,Auto" RowDefinitions="Auto,Auto">
+                                <!-- Column headers -->
+                                <TextBlock Grid.Column="0" Grid.Row="0" Text="Scale Mode" />
+                                <TextBlock Grid.Column="2" Grid.Row="0" Text="Min" />
+                                <TextBlock Grid.Column="4" Grid.Row="0" Text="Max" />
+                                <!-- Controls -->
+                                <ComboBox Grid.Column="0" Grid.Row="1" SelectedIndex="0" Width="130">
+                                    <ComboBoxItem>Defaults</ComboBoxItem>
+                                    <ComboBoxItem>Auto-Scale</ComboBoxItem>
+                                    <ComboBoxItem>Override</ComboBoxItem>
+                                </ComboBox>
+                                <controls:NumberBox Grid.Column="2" Grid.Row="1" IsEnabled="True" Width="100" SmallChange="5" LargeChange="10" Minimum="0" Maximum="100" Value="0" />
+                                <controls:NumberBox Grid.Column="4" Grid.Row="1" IsEnabled="False" Width="100" SmallChange="5" LargeChange="10" Minimum="0" Maximum="100" Value="100" />
+                            </Grid>
+                        </MenuItem>
+                        <MenuItem Header="Event Overlays...">
+                            <controls:FAMenuFlyout>
+                                <controls:ToggleMenuFlyoutItem Text="Obstructive Apnea" />
+                            </controls:FAMenuFlyout>
+                        </MenuItem>
+                        <MenuItem Header="_Open...">
+                            <MenuItem.Icon>
+                                <CheckBox BorderThickness="1" IsHitTestVisible="False" IsChecked="True" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                    </MenuFlyout>
                 </Button.Flyout>
                 <controls:SymbolIcon Symbol="Settings" />
             </Button>

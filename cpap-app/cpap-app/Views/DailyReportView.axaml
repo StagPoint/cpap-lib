@@ -27,7 +27,6 @@
                 </Button>
                 <CalendarDatePicker Grid.Column="1" Name="DateSelector" HorizontalAlignment="Stretch"
                                     SelectedDateFormat="Long"
-                                    CalendarOpened="DateSelector_OnCalendarOpened"
                                     SelectedDateChanged="DateSelector_OnSelectedDateChanged" />
                 <Button Name="btnNextDay" Grid.Column="2" Padding="5" IsEnabled="False" Click="BtnNextDay_OnClick" 
                         ToolTip.Tip="Go to the next day with CPAP data">

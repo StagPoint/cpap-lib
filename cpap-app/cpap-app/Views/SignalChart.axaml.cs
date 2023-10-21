@@ -11,7 +11,6 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Styling;
-using Avalonia.VisualTree;
 
 using cpap_app.Configuration;
 using cpap_app.Converters;
@@ -90,7 +89,7 @@ public partial class SignalChart : UserControl
 
 	public class ChartDragEventArgs : RoutedEventArgs
 	{
-		public int Direction { get; set; }
+		public int Direction { get; init; }
 	}
 	
 	public static readonly RoutedEvent<ChartDragEventArgs> ChartDraggedEvent = RoutedEvent.Register<SignalChart, ChartDragEventArgs>( nameof( ChartDragged ), RoutingStrategies.Bubble );
@@ -183,8 +182,6 @@ public partial class SignalChart : UserControl
 		ChartLabel.PointerMoved       += ChartLabelOnPointerMoved;
 
 		//Chart.ContextMenu = null;
-		
-		AddHandler( Button.ClickEvent, Button_OnClick);
 	}
 	
 	#endregion 
@@ -197,7 +194,13 @@ public partial class SignalChart : UserControl
 
 		if( ChartConfiguration is { IsPinned: true } )
 		{
-			btnChartPinUnpin.GetVisualDescendants().OfType<SymbolIcon>().First().Symbol = Symbol.Pin;
+			mnuPin.Symbol = Symbol.UnPin;
+			txtPin.Text   = "Unpin";
+		}
+		else
+		{
+			mnuPin.Symbol = Symbol.Pin;
+			txtPin.Text   = "Pin";
 		}
 	}
 	
@@ -405,16 +408,13 @@ public partial class SignalChart : UserControl
 		e.Handled = true;
 	}
 
-	private void Button_OnClick( object? sender, RoutedEventArgs e )
+	private void OnPinClick( object? sender, RoutedEventArgs e )
 	{
-		if( object.ReferenceEquals( e.Source, btnChartPinUnpin ) )
+		RaiseEvent( new RoutedEventArgs
 		{
-			RaiseEvent( new RoutedEventArgs()
-			{
-				RoutedEvent = PinButtonClickedEvent,
-				Source = this
-			});
-		}
+			RoutedEvent = PinButtonClickedEvent,
+			Source = this
+		});
 	}
 
 	private void OnAxesChanged( object? sender, EventArgs e )
@@ -1119,11 +1119,29 @@ public partial class SignalChart : UserControl
 
 		// Set zoom and boundary limits
 		{
-			var minValue = axisMinValue ?? (ChartConfiguration.AutoScaleY ? dataMinValue : signalMinValue);
-			var maxValue = axisMaxValue ?? (ChartConfiguration.AutoScaleY ? dataMaxValue : signalMaxValue);
+			var minValue = signalMinValue;
+			var maxValue = signalMaxValue;
 
+			switch( ChartConfiguration.ScalingMode )
+			{
+				case AxisScalingMode.Defaults:
+					minValue = signalMinValue;
+					maxValue = signalMaxValue;
+					break;
+				case AxisScalingMode.AutoFit:
+					minValue = dataMinValue;
+					maxValue = dataMaxValue;
+					break;
+				case AxisScalingMode.Override:
+					minValue = axisMinValue ?? signalMinValue;
+					maxValue = axisMaxValue ?? signalMaxValue;
+					break;
+				default:
+					throw new ArgumentOutOfRangeException( $"Value {ChartConfiguration.ScalingMode} is not handled" );
+			}
+			
 			var extents = Math.Max( 1.0, maxValue - minValue );
-			var padding = ChartConfiguration.AutoScaleY ? extents * 0.1 : 0;
+			var padding = ChartConfiguration.ScalingMode == AxisScalingMode.AutoFit ? extents * 0.1 : 0;
 
 			chart.Plot.YAxis.SetBoundary( minValue, maxValue + padding );
 			chart.Plot.XAxis.SetBoundary( -1, day.TotalTimeSpan.TotalSeconds + 1 );

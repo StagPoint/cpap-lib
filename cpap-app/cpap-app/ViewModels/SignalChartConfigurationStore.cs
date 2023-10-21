@@ -32,8 +32,10 @@ public static class SignalChartConfigurationStore
 		var mapping = StorageService.CreateMapping<SignalChartConfiguration>( "chart_config" );
 
 		// Have to add the DisplayedEvents column manually, as CreateMapping only handles value types and strings. 
-		var eventsColumn = new ColumnMapping( nameof( SignalChartConfiguration.DisplayedEvents ), nameof( SignalChartConfiguration.DisplayedEvents ), typeof( SignalChartConfiguration ) );
-		eventsColumn.Converter = new EnumListBlobConverter<EventType>();
+		var eventsColumn = new ColumnMapping( nameof( SignalChartConfiguration.DisplayedEvents ), nameof( SignalChartConfiguration.DisplayedEvents ), typeof( SignalChartConfiguration ) )
+		{
+			Converter = new EnumListBlobConverter<EventType>(),
+		};
 		mapping.Columns.Add( eventsColumn );
 
 		store.CreateTable<SignalChartConfiguration>();
@@ -83,10 +85,12 @@ public static class SignalChartConfigurationStore
 				case SignalNames.Pressure:
 					config.SecondarySignalName = SignalNames.EPAP;
 					config.AxisMaxValue        = 20;
+					config.ScalingMode         = AxisScalingMode.Override;
 					break;
 				
 				case SignalNames.MaskPressure:
 					config.AxisMaxValue = 20;
+					config.ScalingMode  = AxisScalingMode.Override;
 					break;
 				
 				case SignalNames.LeakRate:
@@ -94,6 +98,7 @@ public static class SignalChartConfigurationStore
 					config.BaselineHigh = 24;
 					config.AxisMinValue = 0;
 					config.AxisMaxValue = 40;
+					config.ScalingMode  = AxisScalingMode.Override;
 					config.DisplayedEvents = new List<EventType>()
 					{
 						EventType.LargeLeak
@@ -113,6 +118,7 @@ public static class SignalChartConfigurationStore
 					config.BaselineHigh = 500;
 					config.AxisMinValue = 0;
 					config.AxisMaxValue = 2000;
+					config.ScalingMode  = AxisScalingMode.Override;
 					break;
 				
 				case SignalNames.MinuteVent:
@@ -125,23 +131,30 @@ public static class SignalChartConfigurationStore
 					config.BaselineLow  = 10;
 					config.AxisMinValue = 0;
 					config.AxisMaxValue = 40;
+					config.ScalingMode  = AxisScalingMode.Override;
 					break;
 				
 				case SignalNames.SpO2:
-					config.BaselineLow     = 88;
 					config.DisplayedEvents = EventTypes.OxygenSaturation.ToList();
+					config.BaselineLow     = 88;
+					config.AxisMinValue    = 80;
+					config.AxisMaxValue    = 100;
+					config.ScalingMode     = AxisScalingMode.Override;
 					break;
 				
 				case SignalNames.Pulse:
+					config.DisplayedEvents = EventTypes.Pulse.ToList();
 					config.BaselineHigh    = 100;
 					config.BaselineLow     = 50;
 					config.AxisMinValue    = 40;
-					config.AxisMaxValue    = 130;
-					config.DisplayedEvents = EventTypes.Pulse.ToList();
+					config.AxisMaxValue    = 120;
+					config.ScalingMode     = AxisScalingMode.Override;
 					break;
 				
+				case SignalNames.Snore:
 				case SignalNames.Movement:
-					config.ShowStepped     = true;
+					config.ShowStepped = true;
+					config.ScalingMode = AxisScalingMode.AutoFit;
 					break;
 			}
 

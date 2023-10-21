@@ -7,6 +7,22 @@ namespace cpap_app.Configuration;
 
 using Color = System.Drawing.Color;
 
+public enum AxisScalingMode
+{
+	/// <summary>
+	/// The scaling mode is controlled by the Signal's defined <see cref="Signal.MinValue"/> and <see cref="Signal.MaxValue"/> values 
+	/// </summary>
+	Defaults,
+	/// <summary>
+	/// The Y axis will be scaled to show only the range of the available data
+	/// </summary>
+	AutoFit,
+	/// <summary>
+	/// The Y axis will be scaled according to user-defined values <see cref="SignalChartConfiguration.AxisMinValue"/> and <see cref="SignalChartConfiguration.AxisMaxValue"/> 
+	/// </summary>
+	Override
+}
+
 public class SignalChartConfiguration : IComparable<SignalChartConfiguration>
 {
 	#region Public properties
@@ -54,10 +70,9 @@ public class SignalChartConfiguration : IComparable<SignalChartConfiguration>
 	public double? BaselineLow { get; set; }
 
 	/// <summary>
-	/// If set to TRUE, the chart's Y axis will be automatically scaled to fit the data, rather than
-	/// having a pre-set scale.
+	/// Controls how the Signal's Y axis will be scaled
 	/// </summary>
-	public bool AutoScaleY { get; set; } = false;
+	public AxisScalingMode ScalingMode { get; set; } = AxisScalingMode.Defaults;
 
 	/// <summary>
 	/// If set, controls the minimum value that will be displayed on the Y axis in a Signal's chart

@@ -174,7 +174,7 @@ public partial class DailyReportView : UserControl
 	private void DateSelector_OnSelectedDateChanged( object? sender, SelectionChangedEventArgs e )
 	{
 		using var store = StorageService.Connect();
-		
+
 		// Keep this up-to-date. Probably unnecessary and overkill, but it's quick and not terribly wasteful.
 		_datesWithData = store.GetStoredDates();
 
@@ -201,10 +201,6 @@ public partial class DailyReportView : UserControl
 	private void BtnLastDay_OnClick( object? sender, RoutedEventArgs e )
 	{
 		DateSelector.SelectedDate = _datesWithData[ ^1 ];
-	}
-	
-	private void DateSelector_OnCalendarOpened( object? sender, EventArgs e )
-	{
 	}
 	
 	private void BtnPrevDay_OnClick( object? sender, RoutedEventArgs e )
@@ -309,6 +305,8 @@ public partial class DailyReportView : UserControl
 				Icon.Error );
 
 			await msgBox.ShowWindowDialogAsync( this.FindAncestorOfType<Window>() );
+			
+			return;
 		}
 
 		var dateTime = day.RecordingStartTime;
@@ -331,7 +329,7 @@ public partial class DailyReportView : UserControl
 		{
 			var msgBox = MessageBoxManager.GetMessageBoxStandard(
 				"Go to a specific time",
-				$"The value '{input.Text}' is is out of range",
+				$"The value '{input.Text}' is out of range",
 				ButtonEnum.Ok,
 				Icon.Error );
 

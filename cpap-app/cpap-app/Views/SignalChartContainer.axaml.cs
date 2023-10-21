@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.Linq;
 
 using Avalonia.Controls;
-using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 
@@ -161,10 +160,10 @@ public partial class SignalChartContainer : UserControl
 
 		if( config.IsPinned )
 		{
-			config.DisplayOrder = 255;
+			config.DisplayOrder = -1;
 			
 			PinnedCharts.Children.Remove( chart );
-			UnPinnedCharts.Children.Add( chart );
+			UnPinnedCharts.Children.Insert( 0, chart );
 		}
 		else
 		{

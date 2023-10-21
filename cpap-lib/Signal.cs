@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 // ReSharper disable UseIndexFromEndExpression
@@ -110,6 +109,7 @@ namespace cpaplib
 		/// <summary>
 		/// Returns the value of the signal at the given time
 		/// </summary>
+		/// <param name="time">The time for which the value should be returned</param>
 		/// <param name="interpolate">If TRUE, will interpolate between the two surrounding signal values to return
 		/// the exact value at the given time. Will otherwise return the value that is closest to the given time.</param>
 		public double GetValueAtTime( DateTime time, bool interpolate = true )
