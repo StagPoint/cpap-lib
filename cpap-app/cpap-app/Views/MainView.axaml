@@ -18,6 +18,7 @@
                            AlwaysShowHeader="False"
                            PaneTitle="Navigation"
                            IsSettingsVisible="True"
+                           IsPaneOpen="False"
                            SelectionChanged="NavView_OnSelectionChanged">
             <ui:NavigationView.Styles>
                 <Style Selector="ui|NavigationView /template/ TextBlock#PaneTitleTextBlock">
@@ -38,7 +39,7 @@
                 </ui:NavigationViewItem>
                 <ui:NavigationViewItem Content="Import">
                     <ui:NavigationViewItem.IconSource>
-                        <ui:FontIconSource Glyph="&#xE8E5;" FontFamily="Segoe MDL2 Assets" />
+                        <ui:SymbolIconSource Symbol="Upload" />
                     </ui:NavigationViewItem.IconSource>
                     <ui:NavigationViewItem.MenuItems>
                         <ui:NavigationViewItem Name="btnImportCPAP" Content="CPAP Data">
@@ -76,6 +77,10 @@
                 <ui:NavigationViewItem Name="navBackup" Content="Backup" IconSource="SaveAs" IsEnabled="False" />
             </ui:NavigationView.FooterMenuItems>
 
+            <ui:Frame Name="NavFrame"
+                Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}"
+                Foreground="{DynamicResource TextFillColorPrimaryBrush}">
+            </ui:Frame>
         </ui:NavigationView>
     </Grid>
 </UserControl>

@@ -1,14 +1,10 @@
-using System;
-using System.Threading.Tasks;
-
 using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Controls.Notifications;
-using Avalonia.Threading;
+using Avalonia.Styling;
+
+using cpap_app.Configuration;
+using cpap_app.ViewModels;
 
 using FluentAvalonia.UI.Windowing;
-
-using ReactiveUI;
 
 namespace cpap_app.Views;
 
@@ -18,8 +14,27 @@ public partial class MainWindow : AppWindow
 	{
 		InitializeComponent();
 
+		var appSettings = ApplicationSettingsStore.GetSettings();
+
+		var requestedTheme = GetThemeVariant( appSettings.Theme );
+		if( requestedTheme != null )
+		{
+			Application.Current!.RequestedThemeVariant = requestedTheme;
+		}
+
 		#if DEBUG
 		this.AttachDevTools();
 		#endif
+	}
+	
+	private static ThemeVariant? GetThemeVariant( ApplicationThemeType value )
+	{
+		return value switch
+		{
+			ApplicationThemeType.Light  => ThemeVariant.Light,
+			ApplicationThemeType.Dark   => ThemeVariant.Dark,
+			ApplicationThemeType.System => ThemeVariant.Default,
+			_                           => null
+		};
 	}
 }

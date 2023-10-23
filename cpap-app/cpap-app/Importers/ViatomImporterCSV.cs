@@ -48,7 +48,7 @@ public class ViatomImporterCSV : IOximetryImporter
 	
 	#region Public functions 
 
-	public ImportedData? Load( string filename, Stream stream )
+	public ImportedData? Load( string filename, Stream stream, PulseOximetryImportOptions options, OximetryEventGeneratorConfig? eventConfig = null )
 	{
 		using var reader = new StreamReader( stream, Encoding.Default, leaveOpen: true );
 
@@ -114,9 +114,6 @@ public class ViatomImporterCSV : IOximetryImporter
 		DateTime currentDateTime = DateTime.MinValue;
 		DateTime lastDateTime    = DateTime.MinValue;
 
-		// TODO: Figure out how to add configuration options to importers 
-		double timeAjustSeconds = 0;
-
 		while( !reader.EndOfStream )
 		{
 			var line = reader.ReadLine();
@@ -135,7 +132,7 @@ public class ViatomImporterCSV : IOximetryImporter
 				return null;
 			}
 
-			currentDateTime = currentDateTime.AddSeconds( timeAjustSeconds );
+			currentDateTime = currentDateTime.AddSeconds( options.TimeAdjust );
 			
 			if( isStartRecord )
 			{
@@ -147,7 +144,7 @@ public class ViatomImporterCSV : IOximetryImporter
 
 			if( int.TryParse( lineData[ 1 ], out var oxy ) && oxy <= 100 )
 			{
-				oxygen.Samples.Add( oxy );
+				oxygen.Samples.Add( oxy + options.CalibrationAdjust );
 				lastGoodOxy = oxy;
 			}
 			else
@@ -190,13 +187,19 @@ public class ViatomImporterCSV : IOximetryImporter
 		oxygen.StartTime = pulse.StartTime = movement.StartTime = session.StartTime;
 		oxygen.EndTime   = pulse.EndTime   = movement.EndTime   = session.EndTime;
 
-		return new ImportedData
+		var result = new ImportedData
 		{
 			StartTime = session.StartTime,
 			EndTime   = session.EndTime,
 			Sessions  = new List<Session>() { session },
-			Events    = OximetryEventGenerator.GenerateEvents( oxygen, pulse )
 		};
+
+		if( options.GenerateEvents )
+		{
+			result.Events = OximetryEventGenerator.GenerateEvents( eventConfig ?? new OximetryEventGeneratorConfig(), oxygen, pulse );
+		}
+
+		return result;
 	}
 	
 	#endregion 

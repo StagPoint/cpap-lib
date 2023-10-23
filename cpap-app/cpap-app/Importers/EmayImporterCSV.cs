@@ -46,112 +46,119 @@ public class EmayImporterCSV : IOximetryImporter
 	
 	#region Public functions 
 
-	public ImportedData? Load( string filename, Stream stream )
+	public ImportedData? Load( string filename, Stream stream, PulseOximetryImportOptions options, OximetryEventGeneratorConfig? eventConfig = null )
 	{
-		using( var reader = new StreamReader( stream, Encoding.Default, leaveOpen: true ) )
+		using var reader    = new StreamReader( stream, Encoding.Default, leaveOpen: true );
+
+		var firstLine = reader.ReadLine();
+		if( string.IsNullOrEmpty( firstLine ) )
 		{
-			var firstLine = reader.ReadLine();
-			if( string.IsNullOrEmpty( firstLine ) )
-			{
-				return null;
-			}
+			return null;
+		}
 
-			var headers = firstLine.Split( ',' );
-			if( !_expectedHeaders.SequenceEqual( headers ) )
-			{
-				return null;
-			}
+		var headers = firstLine.Split( ',' );
+		if( !_expectedHeaders.SequenceEqual( headers ) )
+		{
+			return null;
+		}
 
-			Signal oxygen = new Signal
-			{
-				Name              = SignalNames.SpO2,
-				FrequencyInHz     = 1,
-				MinValue          = 80,
-				MaxValue          = 100,
-				UnitOfMeasurement = "%",
-			};
+		Signal oxygen = new Signal
+		{
+			Name              = SignalNames.SpO2,
+			FrequencyInHz     = 1,
+			MinValue          = 80,
+			MaxValue          = 100,
+			UnitOfMeasurement = "%",
+		};
 		
-			Signal pulse = new Signal
+		Signal pulse = new Signal
+		{
+			Name              = SignalNames.Pulse,
+			FrequencyInHz     = 1,
+			MinValue          = 60,
+			MaxValue          = 120,
+			UnitOfMeasurement = "bpm",
+		};
+
+		Session session = new()
+		{
+			Source     = this.Source,
+			Signals    = { oxygen, pulse },
+			SourceType = SourceType.PulseOximetry
+		};
+
+		bool isStartRecord = true;
+		byte lastGoodOxy   = 0;
+		byte lastGoodHR    = 0;
+
+		while( !reader.EndOfStream )
+		{
+			var line = reader.ReadLine();
+
+			if( string.IsNullOrEmpty( line ) )
 			{
-				Name              = SignalNames.Pulse,
-				FrequencyInHz     = 1,
-				MinValue          = 60,
-				MaxValue          = 120,
-				UnitOfMeasurement = "bpm",
-			};
+				return null;
+			}
 
-			Session session = new()
-			{
-				Source  = this.Source,
-				Signals = { oxygen, pulse },
-				SourceType    = SourceType.PulseOximetry
-			};
-
-			bool isStartRecord = true;
-			byte lastGoodOxy   = 0;
-			byte lastGoodHR = 0;
-
-			while( !reader.EndOfStream )
-			{
-				var line = reader.ReadLine();
-
-				if( string.IsNullOrEmpty( line ) )
-				{
-					return null;
-				}
-
-				var lineData = line.Split( ',' );
+			var lineData = line.Split( ',' );
 				
-				var dateTimeText = $"{lineData[ 0 ]} {lineData[ 1 ]}";
-				if( !DateTime.TryParse( dateTimeText, out DateTime dateTimeValue ) )
-				{
-					return null;
-				}
-				
-				if( isStartRecord )
-				{
-					session.StartTime = dateTimeValue;
-					isStartRecord    = false;
-				}
-
-				session.EndTime = dateTimeValue;
-
-				if( byte.TryParse( lineData[ 2 ], out var oxy ) )
-				{
-					oxygen.Samples.Add( oxy );
-					lastGoodOxy = oxy;
-				}
-				else
-				{
-					// EMAY pulse oximeters may leave the SpO2 and PR fields blank to indicate an invalid reading
-					// TODO: How to handle invalid records in imported files. Split the file, duplicate last good reading, etc?
-					oxygen.Samples.Add( lastGoodOxy );
-				}
-
-				if( byte.TryParse( lineData[ 3 ], out var hr ) )
-				{
-					pulse.Samples.Add( hr );
-					lastGoodHR = hr;
-				}
-				else
-				{
-					// EMAY pulse oximeters may leave the SpO2 and PR fields blank to indicate an invalid reading
-					// TODO: How to handle invalid records in imported files. Split the file, duplicate last good reading, etc?
-					pulse.Samples.Add( lastGoodHR );
-				}
+			var dateTimeText = $"{lineData[ 0 ]} {lineData[ 1 ]}";
+			if( !DateTime.TryParse( dateTimeText, out DateTime dateTimeValue ) )
+			{
+				return null;
 			}
 			
-			oxygen.StartTime = pulse.StartTime = session.StartTime;
-			oxygen.EndTime   = pulse.EndTime   = session.EndTime;
-
-			return new ImportedData
+			dateTimeValue = dateTimeValue.AddSeconds( options.TimeAdjust );
+				
+			if( isStartRecord )
 			{
-				StartTime = session.StartTime,
-				EndTime = session.EndTime,
-				Sessions = new List<Session>() { session },
-				Events   = OximetryEventGenerator.GenerateEvents( oxygen, pulse ),
-			};
+				session.StartTime = dateTimeValue;
+				isStartRecord     = false;
+			}
+
+			session.EndTime = dateTimeValue;
+
+			if( byte.TryParse( lineData[ 2 ], out var oxy ) )
+			{
+				oxygen.Samples.Add( oxy + options.CalibrationAdjust );
+				lastGoodOxy = oxy;
+			}
+			else
+			{
+				// EMAY pulse oximeters may leave the SpO2 and PR fields blank to indicate an invalid reading
+				// TODO: How to handle invalid records in imported files. Split the file, duplicate last good reading, etc?
+				oxygen.Samples.Add( lastGoodOxy );
+			}
+
+			if( byte.TryParse( lineData[ 3 ], out var hr ) )
+			{
+				pulse.Samples.Add( hr );
+				lastGoodHR = hr;
+			}
+			else
+			{
+				// EMAY pulse oximeters may leave the SpO2 and PR fields blank to indicate an invalid reading
+				// TODO: How to handle invalid records in imported files. Split the file, duplicate last good reading, etc?
+				pulse.Samples.Add( lastGoodHR );
+			}
 		}
+			
+		oxygen.StartTime = pulse.StartTime = session.StartTime;
+		oxygen.EndTime   = pulse.EndTime   = session.EndTime;
+
+		var result = new ImportedData
+		{
+			StartTime = session.StartTime,
+			EndTime   = session.EndTime,
+			Sessions  = new List<Session>() { session },
+		};
+
+		if( options.GenerateEvents )
+		{
+			result.Events = OximetryEventGenerator.GenerateEvents( eventConfig ?? new OximetryEventGeneratorConfig(), oxygen, pulse );
+		}
+
+		return result;
 	}
 	
 	#endregion 

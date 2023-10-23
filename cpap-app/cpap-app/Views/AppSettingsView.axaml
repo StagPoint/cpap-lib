@@ -2,6 +2,116 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="cpap_app.Views.AppSettingsView">
+             xmlns:controls="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+             xmlns:viewModels1="clr-namespace:cpap_app.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="900"
+             x:Class="cpap_app.Views.AppSettingsView"
+             x:DataType="viewModels1:AppSettingsViewModel">
+    <Design.DataContext>
+        <viewModels1:AppSettingsViewModel />
+    </Design.DataContext>
+    <StackPanel Spacing="8">
+        <Grid Margin="10 0 0 10"
+              ColumnDefinitions="*,Auto" RowDefinitions="*,Auto">
+
+            <DockPanel>
+                <Image Source="/Assets/stagpoint-large.ico"
+                       DockPanel.Dock="Left"
+                       Height="78"
+                       RenderOptions.BitmapInterpolationMode="HighQuality"/>
+
+                <StackPanel Spacing="0" Margin="12 0">
+                    <TextBlock Text="CPAP Data Viewer"
+                               Theme="{DynamicResource TitleTextBlockStyle}" />
+
+                    <TextBlock Text="v0,0,1-alpha"
+                               Theme="{DynamicResource BodyTextBlockStyle}" />
+
+                    <TextBlock Text="MIT License"
+                               Theme="{DynamicResource CaptionTextBlockStyle}" />
+
+                    <TextBlock Theme="{DynamicResource CaptionTextBlockStyle}"
+                               Text="https://github.com/StagPoint/cpap-lib"
+                               Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+                </StackPanel>
+            </DockPanel>
+        </Grid>
+        <controls:SettingsExpander Header="App Theme"
+                                   IconSource="DarkTheme"
+                                   Description="Change the current app theme">
+            <controls:SettingsExpander.Footer>
+                <ComboBox SelectedItem="{Binding CurrentAppTheme}"
+                          ItemsSource="{Binding AppThemes}"
+                          MinWidth="150" />
+            </controls:SettingsExpander.Footer>
+
+        </controls:SettingsExpander>
+        <controls:SettingsExpander Header="Import"
+                                   Description="Set import options for CPAP and Pulse Oximetry devices"
+                                   IsClickEnabled="True"
+                                   IconSource="Upload"
+                                   ActionIconSource="ChevronRight"/>
+        <controls:SettingsExpander Header="Events"
+                                   Description="Set display options for reported events"
+                                   IsClickEnabled="True"
+                                   IconSource="Flag"
+                                   ActionIconSource="ChevronRight"/>
+        <controls:SettingsExpander Header="Signals"
+                                   Description="Set display options for signal data"
+                                   IsClickEnabled="True"
+                                   ActionIconSource="ChevronRight">
+            <controls:SettingsExpander.IconSource>
+                <controls:FontIconSource Glyph="&#xE9D9;" FontFamily="Segoe MDL2 Assets" />
+            </controls:SettingsExpander.IconSource>
+        </controls:SettingsExpander>
+        <controls:SettingsExpander Header="Profiles"
+                                   Description="Add, remove, and edit user profiles"
+                                   IsClickEnabled="True"
+                                   IconSource="AddFriend"
+                                   ActionIconSource="ChevronRight"/>
+        <controls:SettingsExpander Header="About"
+                                   IsExpanded="False"
+                                   IconSource="M2 14C2 20.6274 7.37258 26 14 26C20.6274 26 26 20.6274 26 14C26 7.37258 20.6274 2 14 2C7.37258 2 2 7.37258 2 14ZM15.25 8C15.25 8.69036 14.6904 9.25 14 9.25C13.3096 9.25 12.75 8.69036 12.75 8C12.75 7.30964 13.3096 6.75 14 6.75C14.6904 6.75 15.25 7.30964 15.25 8ZM14 11C14.5523 11 15 11.4477 15 12L15 20C15 20.5523 14.5523 21 14 21C13.4477 21 13 20.5523 13 20L13 12C13 11.4477 13.4477 11 14 11Z">
+            <controls:SettingsExpanderItem Content="Found a bug? Want a new feature?"
+                                           ActionIconSource="Open"
+                                           IsClickEnabled="True"
+                                           Name="LaunchRepoLinkItem"/>
+            <controls:SettingsExpanderItem Content="Clone the repository">
+                <controls:SettingsExpanderItem.Footer>
+                    <SelectableTextBlock Text="git clone https://github.com/StagPoint/cpap-lib" />
+                </controls:SettingsExpanderItem.Footer>
+            </controls:SettingsExpanderItem>
+            <controls:SettingsExpanderItem>
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Dependencies" FontWeight="Bold"/>
+                    <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorPrimaryBrush}">
+                        <Run>
+                            This application uses several third-party libraries which are licensed under the MIT license, including: 
+                        </Run>
+                        <LineBreak />
+                        <Run>Avalonia (https://avaloniaui.net)</Run>
+                        <LineBreak />
+                        <Run>FluentAvalonia (https://github.com/amwx/FluentAvalonia)</Run>
+                        <LineBreak />
+                        <Run>ScottPlot (https://github.com/ScottPlot/ScottPlot)</Run>
+                        <LineBreak />
+                        <Run>StagPoint.EuropeanDataFormat.Net (https://github.com/StagPoint/StagPoint.EuropeanDataFormat.Net)</Run>
+                        <LineBreak />
+                        <Run>sqlite-net (https://github.com/praeclarum/sqlite-net)</Run>
+                        <LineBreak />
+                        <LineBreak />
+                        <Run>
+                            This application is licensed under the MIT license
+                        </Run>
+                        <LineBreak />
+                        <LineBreak />
+                        <Run>
+                            Both StagPoint and this application are not affiliated with and not endorsed by any CPAP equipment manufacturer or seller.
+                        </Run>
+                        <LineBreak />
+                    </TextBlock>
+                </StackPanel>
+            </controls:SettingsExpanderItem>
+        </controls:SettingsExpander>
+    </StackPanel>
 </UserControl>

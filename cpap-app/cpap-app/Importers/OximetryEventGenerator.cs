@@ -10,16 +10,36 @@ using MathUtil = cpap_app.Helpers.MathUtil;
 
 namespace cpap_app.Importers;
 
+public class OximetryEventGeneratorConfig
+{
+	public double EventScanDelay { get; set; } = 300;
+
+	public double HypoxemiaThreshold       { get; set; } = 88;
+	public double HypoxemiaMinimumDuration { get; set; } = 10;
+
+	public double DesaturationThreshold       { get; set; } = 3;
+	public double DesaturationWindowLength    { get; set; } = 300;
+	public double DesaturationMinimumDuration { get; set; } = 5;
+	public double DesaturationMaximumDuration { get; set; } = 120;
+
+	public double TachycardiaThreshold     { get; set; } = 100;
+	public double BradycardiaThreshold     { get; set; } = 50;
+	public double PulseRateMinimumDuration { get; set; } = 10;
+
+	public double PulseChangeThreshold    { get; set; } = 10;
+	public double PulseChangeWindowLength { get; set; } = 120;
+}
+
 public static class OximetryEventGenerator
 {
-	public static List<ReportedEvent> GenerateEvents( Signal oxygen, Signal pulse )
+	public static List<ReportedEvent> GenerateEvents( OximetryEventGeneratorConfig config, Signal oxygen, Signal pulse )
 	{
 		var events = new List<ReportedEvent>();
 
-		GenerateHypoxemiaEvents( oxygen, events );
-		GenerateDesaturationEvents( oxygen, events );
-		GeneratePulseRateEvents( pulse, events );
-		GeneratePulseChangeEvents( pulse, events );
+		GenerateHypoxemiaEvents( config, oxygen, events );
+		GenerateDesaturationEvents( config, oxygen, events );
+		GeneratePulseRateEvents( config, pulse, events );
+		GeneratePulseChangeEvents( config, pulse, events );
 		AssignEventSourceType( events );
 
 		return events;
@@ -33,24 +53,21 @@ public static class OximetryEventGenerator
 		}
 	}
 
-	private static void GeneratePulseChangeEvents( Signal signal, List<ReportedEvent> events )
+	private static void GeneratePulseChangeEvents( OximetryEventGeneratorConfig config, Signal signal, List<ReportedEvent> events )
 	{
-		const int    START_TIME    = 120;
-		const int    WINDOW_LENGTH = 120;
 		const double THRESHOLD     = 0.1;
-		const double MIN_SIZE      = 10;
 		const double PERSISTENCE   = 0.1;
 
-		int    windowSize   = (int)Math.Ceiling( WINDOW_LENGTH * signal.FrequencyInHz );
+		int    windowSize   = (int)Math.Ceiling( config.EventScanDelay * signal.FrequencyInHz );
 		double timeInterval = 1.0 / signal.FrequencyInHz;
 
 		var data   = signal.Samples;
 		
 		// Looks for variations greater than one standard deviation from the running 30 second average,
 		// with a minimum difference of 10 beats per minute. 
-		var peakSignals = PeakFinder.GenerateSignals( data, windowSize, THRESHOLD, PERSISTENCE, MIN_SIZE );
+		var peakSignals = PeakFinder.GenerateSignals( data, windowSize, THRESHOLD, PERSISTENCE, config.PulseChangeThreshold );
 
-		var startIndex = (int)(START_TIME / timeInterval);
+		var startIndex = (int)(config.EventScanDelay / timeInterval);
 		for( int i = startIndex; i < data.Count; i++ )
 		{
 			var peakSignal = peakSignals[ i ];
@@ -84,13 +101,8 @@ public static class OximetryEventGenerator
 		}
 	}
 
-	private static void GeneratePulseRateEvents( Signal signal, List<ReportedEvent> events )
+	private static void GeneratePulseRateEvents( OximetryEventGeneratorConfig config, Signal signal, List<ReportedEvent> events )
 	{
-		const int    START_TIME            = 120;
-		const double TACHYCARDIA_THRESHOLD = 100;
-		const double BRADYCARDIA_THRESHOLD = 50;
-		const double MIN_EVENT_TIME        = 10;
-
 		if( signal.Samples.Count == 0 )
 		{
 			return;
@@ -104,7 +116,7 @@ public static class OximetryEventGenerator
 
 		var sourceData = signal.Samples;
 
-		var startIndex = (int)(START_TIME / timeInterval);
+		var startIndex = (int)(config.EventScanDelay / timeInterval);
 		for( int i = startIndex; i < sourceData.Count; i++ )
 		{
 			var sample = sourceData[ i ];
@@ -113,48 +125,43 @@ public static class OximetryEventGenerator
 			switch( state )
 			{
 				case 0:
-					switch( sample )
+					if( sample <= config.BradycardiaThreshold )
 					{
-						case <= BRADYCARDIA_THRESHOLD:
-						{
-							// Find the specific time when the sample crossed the threshold, even if it 
-							// doesn't align directly on a sample's interval
-							var lastSample = sourceData[ i - 1 ];
-							var t          = MathUtil.InverseLerp( lastSample, sample, BRADYCARDIA_THRESHOLD );
-							eventStart = time - (1.0 - t) * timeInterval;
+						// Find the specific time when the sample crossed the threshold, even if it 
+						// doesn't align directly on a sample's interval
+						var lastSample = sourceData[ i - 1 ];
+						var t          = MathUtil.InverseLerp( lastSample, sample, config.BradycardiaThreshold );
+						eventStart = time - (1.0 - t) * timeInterval;
 
-							state         = 1;
-							eventDuration = 0;
-							break;
-						}
-						case >= TACHYCARDIA_THRESHOLD:
-						{
-							// Find the specific time when the sample crossed the threshold, even if it 
-							// doesn't align directly on a sample's interval
-							var lastSample = sourceData[ i - 1 ];
-							var t          = MathUtil.InverseLerp( lastSample, sample, TACHYCARDIA_THRESHOLD );
+						state         = 1;
+						eventDuration = 0;
+					}
+					else if( sample >= config.TachycardiaThreshold )
+					{
+						// Find the specific time when the sample crossed the threshold, even if it 
+						// doesn't align directly on a sample's interval
+						var lastSample = sourceData[ i - 1 ];
+						var t          = MathUtil.InverseLerp( lastSample, sample, config.TachycardiaThreshold );
 
-							eventStart    = time - (1.0 - t) * timeInterval;
-							state         = 2;
-							eventDuration = 0;
-							break;
-						}
+						eventStart    = time - (1.0 - t) * timeInterval;
+						state         = 2;
+						eventDuration = 0;
 					}
 					break;
 
 				case 1:
 					eventDuration = (time - eventStart);
-					if( sample > BRADYCARDIA_THRESHOLD )
+					if( sample > config.BradycardiaThreshold )
 					{
 						// Find the specific time when the sample crossed the threshold, even if it 
 						// doesn't align directly on a sample's interval
 						var lastSample = sourceData[ i - 1 ];
-						var t          = MathUtil.InverseLerp( lastSample, sample, BRADYCARDIA_THRESHOLD );
+						var t          = MathUtil.InverseLerp( lastSample, sample, config.BradycardiaThreshold );
 						var eventEnd   = time - (1.0 - t) * timeInterval;
 
 						eventDuration = eventEnd - eventStart;
 
-						if( eventDuration >= MIN_EVENT_TIME )
+						if( eventDuration >= config.PulseRateMinimumDuration )
 						{
 							var annotation = new ReportedEvent
 							{
@@ -172,17 +179,17 @@ public static class OximetryEventGenerator
 
 				case 2:
 					eventDuration = (time - eventStart);
-					if( sample < TACHYCARDIA_THRESHOLD )
+					if( sample < config.TachycardiaThreshold )
 					{
 						// Find the specific time when the sample crossed the threshold, even if it 
 						// doesn't align directly on a sample's interval
 						var lastSample = sourceData[ i - 1 ];
-						var t          = MathUtil.InverseLerp( lastSample, sample, TACHYCARDIA_THRESHOLD );
+						var t          = MathUtil.InverseLerp( lastSample, sample, config.TachycardiaThreshold );
 						var eventEnd   = time - (1.0 - t) * timeInterval;
 
 						eventDuration = eventEnd - eventStart;
 
-						if( eventDuration >= MIN_EVENT_TIME )
+						if( eventDuration >= config.PulseRateMinimumDuration )
 						{
 							var annotation = new ReportedEvent
 							{
@@ -200,7 +207,7 @@ public static class OximetryEventGenerator
 			}
 		}
 
-		if( state != 0 && eventDuration >= MIN_EVENT_TIME )
+		if( state != 0 && eventDuration >= config.PulseRateMinimumDuration )
 		{
 			var annotation = new ReportedEvent
 			{
@@ -213,20 +220,10 @@ public static class OximetryEventGenerator
 		}
 	}
 
-	private static void GenerateDesaturationEvents( Signal signal, List<ReportedEvent> events )
+	private static void GenerateDesaturationEvents( OximetryEventGeneratorConfig config, Signal signal, List<ReportedEvent> events )
 	{
-		// As defined here, a Desaturation is a drop of 3% or more below the baseline (calculated as a moving average
-		// over the previous five minutes), lasting for at least four seconds and no more than 120 seconds.
-		
-		// TODO: Make these options configurable 
-		const int    START_TIME             = 120;
-		const int    WINDOW_SIZE            = 300;
-		const double MAX_EVENT_DURATION     = 120;
-		const double MIN_EVENT_DURATION     = 4;
-		const double DESATURATION_THRESHOLD = 3;
-
 		int    state        = 0;
-		int    windowSize   = (int)Math.Ceiling( WINDOW_SIZE * signal.FrequencyInHz );
+		int    windowSize   = (int)Math.Ceiling( config.DesaturationWindowLength * signal.FrequencyInHz );
 		double timeInterval = 1.0 / signal.FrequencyInHz;
 
 		if( signal.Samples.Count <= windowSize )
@@ -252,9 +249,9 @@ public static class OximetryEventGenerator
 		{
 			var sample    = sourceData[ i ];
 			var time      = (i * timeInterval);
-			var threshold = baseline - DESATURATION_THRESHOLD;
+			var threshold = baseline - config.DesaturationThreshold;
 
-			if( time < START_TIME )
+			if( time < config.EventScanDelay )
 			{
 				continue;
 			}
@@ -277,7 +274,7 @@ public static class OximetryEventGenerator
 
 				case 1:
 					eventDuration = (time - eventStart);
-					if( eventDuration >= MAX_EVENT_DURATION || sample > threshold )
+					if( eventDuration >= config.DesaturationMaximumDuration || sample > threshold )
 					{
 						// Find the specific time when the sample crossed the threshold, even if it 
 						// doesn't align directly on a sample's interval
@@ -287,7 +284,7 @@ public static class OximetryEventGenerator
 
 						eventDuration = eventEnd - eventStart;
 
-						if( eventDuration >= MIN_EVENT_DURATION )
+						if( eventDuration >= config.DesaturationMinimumDuration )
 						{
 							var annotation = new ReportedEvent
 							{
@@ -314,29 +311,10 @@ public static class OximetryEventGenerator
 				baseline    =  baselineSum / windowSize;
 			}
 		}
-
-		// if( state == 1 && eventDuration >= MIN_EVENT_DURATION && eventDuration <= MAX_EVENT_DURATION )
-		// {
-		// 	var annotation = new ReportedEvent
-		// 	{
-		// 		Type      = EventType.Desaturation,
-		// 		StartTime = signal.StartTime.AddSeconds( eventStart ),
-		// 		Duration  = TimeSpan.FromSeconds( eventDuration )
-		// 	};
-		//
-		// 	if( !events.Any( x => ReportedEvent.TimesOverlap( x, annotation ) ) )
-		// 	{
-		// 		events.Add( annotation );
-		// 	}
-		// }
 	}
 
-	private static void GenerateHypoxemiaEvents( Signal signal, List<ReportedEvent> events )
+	private static void GenerateHypoxemiaEvents( OximetryEventGeneratorConfig config, Signal signal, List<ReportedEvent> events )
 	{
-		const int    START_TIME          = 120;
-		const double HYPOXEMIA_THRESHOLD = 88;
-		const double MIN_EVENT_DURATION  = 10;
-
 		if( signal.Samples.Count == 0 )
 		{
 			return;
@@ -350,7 +328,7 @@ public static class OximetryEventGenerator
 
 		var sourceData = signal.Samples;
 
-		var startIndex = (int)(START_TIME / timeInterval);
+		var startIndex = (int)(config.EventScanDelay / timeInterval);
 		for( int i = startIndex; i < sourceData.Count; i++ )
 		{
 			var sample = sourceData[ i ];
@@ -359,12 +337,12 @@ public static class OximetryEventGenerator
 			switch( state )
 			{
 				case 0:
-					if( sample <= HYPOXEMIA_THRESHOLD )
+					if( sample <= config.HypoxemiaThreshold )
 					{
 						// Find the specific time when the sample crossed the threshold, even if it 
 						// doesn't align directly on a sample's interval
 						var lastSample = sourceData[ i - 1 ];
-						var t          = MathUtil.InverseLerp( lastSample, sample, HYPOXEMIA_THRESHOLD );
+						var t          = MathUtil.InverseLerp( lastSample, sample, config.HypoxemiaThreshold );
 						eventStart = time - (1.0 - t) * timeInterval;
 
 						state         = 1;
@@ -374,17 +352,17 @@ public static class OximetryEventGenerator
 
 				case 1:
 					eventDuration = (time - eventStart);
-					if( sample > HYPOXEMIA_THRESHOLD )
+					if( sample > config.HypoxemiaThreshold )
 					{
 						// Find the specific time when the sample crossed the threshold, even if it 
 						// doesn't align directly on a sample's interval
 						var lastSample = sourceData[ i - 1 ];
-						var t          = MathUtil.InverseLerp( lastSample, sample, HYPOXEMIA_THRESHOLD );
+						var t          = MathUtil.InverseLerp( lastSample, sample, config.HypoxemiaThreshold );
 						var eventEnd   = time - (1.0 - t) * timeInterval;
 
 						eventDuration = eventEnd - eventStart;
 
-						if( eventDuration >= MIN_EVENT_DURATION )
+						if( eventDuration >= config.HypoxemiaMinimumDuration )
 						{
 							var annotation = new ReportedEvent
 							{
@@ -402,7 +380,7 @@ public static class OximetryEventGenerator
 			}
 		}
 
-		if( state == 1 && eventDuration >= MIN_EVENT_DURATION )
+		if( state == 1 && eventDuration >= config.HypoxemiaMinimumDuration )
 		{
 			var annotation = new ReportedEvent
 			{

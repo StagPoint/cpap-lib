@@ -14,5 +14,5 @@ public interface IOximetryImporter
 	public List<FilePickerFileType> FileTypeFilters      { get; }
 	public string                   FilenameMatchPattern { get; }
 
-	public ImportedData? Load( string filename, Stream stream );
+	public ImportedData? Load( string filename, Stream stream, PulseOximetryImportOptions options, OximetryEventGeneratorConfig? eventConfig = null );
 }

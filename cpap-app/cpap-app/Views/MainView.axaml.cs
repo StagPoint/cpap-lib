@@ -14,7 +14,6 @@ using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 
-using cpap_app.Events;
 using cpap_app.Importers;
 
 using cpap_db;
@@ -22,6 +21,7 @@ using cpap_db;
 using cpaplib;
 
 using FluentAvalonia.UI.Controls;
+using FluentAvalonia.UI.Media.Animation;
 using FluentAvalonia.UI.Windowing;
 
 using MsBox.Avalonia;
@@ -50,7 +50,10 @@ public partial class MainView : UserControl
 	{
 		InitializeComponent();
 		
-		NavView.Content = new HomeView();
+		NavFrame.IsNavigationStackEnabled = false;
+		NavFrame.CacheSize                = 0;
+
+		NavView.SelectedItem = navHome;
 
 		AddHandler( ImportRequestEvent, HandleImportRequestCPAP );
 
@@ -79,9 +82,12 @@ public partial class MainView : UserControl
 
 		if( e.IsSettingsSelected )
 		{
-			navView.Content = new AppSettingsView();
+			NavFrame.Navigate( typeof( AppSettingsView ), null, new SlideNavigationTransitionInfo() { Effect = SlideNavigationTransitionEffect.FromBottom } );
+
+			return;
 		}
-		else if( e.SelectedItem is NavigationViewItem navViewItem )
+
+		if( e.SelectedItem is NavigationViewItem navViewItem )
 		{
 			if( navViewItem.Tag == null )
 			{
@@ -90,14 +96,25 @@ public partial class MainView : UserControl
 			
 			if( navViewItem.Tag is System.Type pageType )
 			{
-				var page = Activator.CreateInstance( pageType );
-				navView.Content         = page;
-				navView.PaneDisplayMode = NavigationViewPaneDisplayMode.LeftCompact;
-
-				if( page is InputElement control )
+				NavFrame.Navigate( pageType, null, new SlideNavigationTransitionInfo() { Effect = SlideNavigationTransitionEffect.FromBottom } );
+				
+				Dispatcher.UIThread.Post( () =>
 				{
-					control.Focusable = true;
-					Dispatcher.UIThread.Post( () => control.Focus(), DispatcherPriority.Loaded );
+					if( NavFrame.Content is InputElement control )
+					{
+						control.Focusable = true;
+						control.Focus();
+					}
+				}, DispatcherPriority.Loaded );
+
+				if( object.ReferenceEquals( NavView.SelectedItem, navDailyReport ) )
+				{
+					navView.PaneDisplayMode = NavigationViewPaneDisplayMode.LeftCompact;
+				}
+				else if( object.ReferenceEquals( NavView.SelectedItem, navHome ) )
+				{
+					navView.PaneDisplayMode = NavigationViewPaneDisplayMode.LeftCompact;
+					SetNavViewDisplayMode( NavigationViewPaneDisplayMode.Left );
 				}
 
 				return;
@@ -108,6 +125,14 @@ public partial class MainView : UserControl
 				HandleImportRequestOximetry( importer );
 			}
 		}
+	}
+	
+	private void SetNavViewDisplayMode( NavigationViewPaneDisplayMode mode )
+	{
+		Dispatcher.UIThread.Post( () =>
+		{
+			NavView.PaneDisplayMode = mode;
+		}, DispatcherPriority.Background );
 	}
 
 	private async void HandleImportRequestOximetry( IOximetryImporter importer )
@@ -181,7 +206,10 @@ public partial class MainView : UserControl
 					{
 						await using var file = File.OpenRead( fileItem.Path.LocalPath );
 
-						var data = importer.Load( fileItem.Name, file );
+						var importOptions        = new PulseOximetryImportOptions() { CalibrationAdjust = -1, TimeAdjust = 0 };
+						var eventGeneratorConfig = new OximetryEventGeneratorConfig();
+
+						var data = importer.Load( fileItem.Name, file, importOptions, eventGeneratorConfig );
 						if( data is { Sessions.Count: > 0 } )
 						{
 							importedData.Add( data );
@@ -297,7 +325,7 @@ public partial class MainView : UserControl
 		{
 			var dialog = MessageBoxManager.GetMessageBoxStandard(
 				$"Import from {importer.FriendlyName}",
-				$"There was no data imported. \nThe files you selected were not the correct format or could not be matched to any existing sessions.",
+				$"There was no data imported. \nThe files you selected could not be matched to any existing CPAP sessions.",
 				ButtonEnum.Ok,
 				Icon.Warning );
 
@@ -305,7 +333,7 @@ public partial class MainView : UserControl
 		}
 		else
 		{
-			if( NavView.Content is DailyReportView { DataContext: DailyReport dailyReport } dailyReportView )
+			if( NavFrame.Content is DailyReportView { DataContext: DailyReport dailyReport } dailyReportView )
 			{
 				using var db = StorageService.Connect();
 					
@@ -423,21 +451,31 @@ public partial class MainView : UserControl
 				// to notice, and they're left with the feeling that "it didn't work" because
 				// they didn't see any visual feedback. 
 				await Task.Delay( Math.Max( 0, 1000 - (Environment.TickCount - startTime) ) );
-		
-				Dispatcher.UIThread.Post( () =>
+
+				Dispatcher.UIThread.Post( onImportComplete );
+				
+				return;
+
+				async void onImportComplete()
 				{
-					// TODO: How to navigate to the Daily Report view after import happens?
-					
 					td.Hide( TaskDialogStandardResult.OK );
 
-					using( var store = StorageService.Connect() )
+					if( mostRecentDay != null )
 					{
+						using var store = StorageService.Connect();
+
 						NavView.SelectedItem = navDailyReport;
-						DataContext          = store.LoadDailyReport( mostRecentDay );
+						DataContext          = store.LoadDailyReport( mostRecentDay.Value );
+					}
+					else
+					{
+						var dialog = MessageBoxManager.GetMessageBoxStandard( $"Import from folder", $"All CPAP data was already up to date.", ButtonEnum.Ok, Icon.Database );
+
+						await dialog.ShowWindowDialogAsync( this.FindAncestorOfType<Window>() );
 					}
 
 					appWindow?.PlatformFeatures.SetTaskBarProgressBarState( TaskBarProgressBarState.None );
-				} );
+				}
 			} );
 		};
 
@@ -449,7 +487,7 @@ public partial class MainView : UserControl
 	
 	#region Private functions 
 	
-	private DateTime ImportFrom( string folder )
+	private DateTime? ImportFrom( string folder )
 	{
 		using var storage = StorageService.Connect();
 		storage.Connection.BeginTransaction();
@@ -462,6 +500,12 @@ public partial class MainView : UserControl
 
 			var loader = new ResMedDataLoader();
 			var days   = loader.LoadFromFolder( folder, mostRecentDay );
+
+			if( days == null || days.Count == 0 )
+			{
+				storage.Connection.Commit();
+				return null;
+			}
 
 			foreach( var day in days )
 			{

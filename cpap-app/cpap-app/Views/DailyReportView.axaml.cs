@@ -7,6 +7,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Layout;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 
@@ -17,6 +18,7 @@ using cpap_db;
 using cpaplib;
 
 using FluentAvalonia.UI.Controls;
+using FluentAvalonia.UI.Media.Animation;
 
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
@@ -68,9 +70,12 @@ public partial class DailyReportView : UserControl
 	{
 		InitializeComponent();
 		
-		TabFrame.Content = new DailyDetailsView();
-		
 		AddHandler( DailySpO2View.DeletionRequestedEvent, DailySpO2View_OnDeletionRequested );
+
+		TabFrame.IsNavigationStackEnabled = false;
+		TabFrame.CacheSize                = 0;
+		
+		TabFrame.Navigate( typeof( DailyDetailsView ), DataContext, new SuppressNavigationTransitionInfo() );
 	}
 	
 	#endregion 
@@ -147,27 +152,28 @@ public partial class DailyReportView : UserControl
 
 	private void DetailTypes_OnSelectionChanged( object? sender, SelectionChangedEventArgs e )
 	{
-		if( sender is not TabStrip tabs )
+		if( sender is not TabStrip tabStrip )
 		{ 
 			return;
 		}
 
-		if( tabs.SelectedItem is not TabItem selectedItem )
+		if( tabStrip.SelectedItem is not TabItem selectedItem )
 		{
 			return;
 		}
 
-		if( selectedItem.Tag is not System.Type pageType )
+		if( selectedItem.Tag is System.Type pageType )
+		{
+			TabFrame.Navigate( pageType, DataContext, new SlideNavigationTransitionInfo() { Effect = SlideNavigationTransitionEffect.FromBottom } );
+			selectedItem.Tag = TabFrame.Content;
+		}
+		else if( selectedItem.Tag is Control control )
+		{
+			TabFrame.Content = control;
+		}
+		else
 		{
 			throw new Exception( $"Unhandled page type: {selectedItem.Tag}" );
-		}
-	
-		var page = Activator.CreateInstance( pageType );
-		TabFrame.Content = page;
-
-		if( page is StyledElement view )
-		{
-			view.DataContext = DataContext;
 		}
 	}
 	
@@ -264,9 +270,9 @@ public partial class DailyReportView : UserControl
 			return;
 		}
 		
-		var input = new TextBox()
+		var input = new MaskedTextBox()
 		{
-			Watermark = "hh:mm:ss (24-hour time)",
+			Mask = "00:00:00"
 		};
 
 		var dialog = new ContentDialog()
@@ -275,7 +281,15 @@ public partial class DailyReportView : UserControl
 			PrimaryButtonText = "Go",
 			CloseButtonText   = "Cancel",
 			DefaultButton     = ContentDialogButton.Primary,
-			Content           = input,
+			Content           = new StackPanel()
+			{
+				Orientation = Orientation.Vertical,
+				Children =
+				{
+					new TextBlock() { Text = "Enter the time (in 24-hour time format)" },
+					input
+				}
+			},
 		};
 
 		var task = dialog.ShowAsync();

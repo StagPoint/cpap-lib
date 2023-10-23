@@ -974,7 +974,7 @@ public partial class SignalChart : UserControl
 			}
 			
 			var isDarkTheme  = Application.Current?.ActualThemeVariant == ThemeVariant.Dark;
-			var redlineAlpha = isDarkTheme ? 0.5f : 0.45f; 
+			var redlineAlpha = isDarkTheme ? 0.5f : 0.75f; 
 
 			// If a RedLine position is specified, we want to add it before any signal data, as items are rendered in the 
 			// order in which they are added, and we want the redline rendered behind the signal data.
@@ -1155,7 +1155,9 @@ public partial class SignalChart : UserControl
 	private static void SetPlotFill( SignalPlot graph, Color chartColor )
 	{
 		var    isDarkTheme = Application.Current?.ActualThemeVariant == ThemeVariant.Dark;
-		double alpha       = isDarkTheme ? 0.3 : 0.7;
+		
+		// TODO: Which alpha values actually work best for each theme?
+		double alpha = isDarkTheme ? 0.35 : 0.25;
 
 		graph.FillBelow( chartColor, Colors.Transparent.ToDrawingColor(), alpha );
 	}
