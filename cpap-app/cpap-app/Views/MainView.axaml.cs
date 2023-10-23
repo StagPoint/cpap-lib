@@ -14,6 +14,7 @@ using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 
+using cpap_app.Animation;
 using cpap_app.Importers;
 
 using cpap_db;
@@ -21,7 +22,6 @@ using cpap_db;
 using cpaplib;
 
 using FluentAvalonia.UI.Controls;
-using FluentAvalonia.UI.Media.Animation;
 using FluentAvalonia.UI.Windowing;
 
 using MsBox.Avalonia;
@@ -82,7 +82,7 @@ public partial class MainView : UserControl
 
 		if( e.IsSettingsSelected )
 		{
-			NavFrame.Navigate( typeof( AppSettingsView ), null, new SlideNavigationTransitionInfo() { Effect = SlideNavigationTransitionEffect.FromBottom } );
+			NavFrame.Navigate( typeof( AppSettingsView ), null, new FadeNavigationTransitionInfo() );
 
 			return;
 		}
@@ -96,7 +96,7 @@ public partial class MainView : UserControl
 			
 			if( navViewItem.Tag is System.Type pageType )
 			{
-				NavFrame.Navigate( pageType, null, new SlideNavigationTransitionInfo() { Effect = SlideNavigationTransitionEffect.FromBottom } );
+				NavFrame.Navigate( pageType, null, new FadeNavigationTransitionInfo() );
 				
 				Dispatcher.UIThread.Post( () =>
 				{

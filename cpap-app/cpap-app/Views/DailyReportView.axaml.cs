@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 
 using Avalonia;
 using Avalonia.Controls;
@@ -11,6 +12,7 @@ using Avalonia.Layout;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 
+using cpap_app.Animation;
 using cpap_app.Events;
 
 using cpap_db;
@@ -164,12 +166,24 @@ public partial class DailyReportView : UserControl
 
 		if( selectedItem.Tag is System.Type pageType )
 		{
-			TabFrame.Navigate( pageType, DataContext, new SlideNavigationTransitionInfo() { Effect = SlideNavigationTransitionEffect.FromBottom } );
+			TabFrame.Navigate( pageType, DataContext, new FadeNavigationTransitionInfo() );
+			
+			// Changing the item's Tag from the view type to the view instance allows us to cache the loaded view
+			// so that next time the user clicks on the tab the view will have retained its state. This is preferable
+			// to using the caching built into Frame.Navigate(), as we don't need a Forward/Back navigation stack.  
 			selectedItem.Tag = TabFrame.Content;
 		}
 		else if( selectedItem.Tag is Control control )
 		{
+			// Load the cached view into the frame 
 			TabFrame.Content = control;
+
+			// Post the animation otherwise pages that take slightly longer to load won't
+			// have an animation since it will run before layout is complete
+			Dispatcher.UIThread.Post( () =>
+			{
+				new FadeNavigationTransitionInfo().RunAnimation( control, CancellationToken.None );
+			}, DispatcherPriority.Render );
 		}
 		else
 		{

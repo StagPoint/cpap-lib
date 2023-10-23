@@ -34,7 +34,7 @@
                 <ui:NavigationViewItem Name="navHome" Content="Home" Tag="{x:Type views:HomeView}" IconSource="Home" />
                 <ui:NavigationViewItem Name="navDailyReport" Content="Daily View" Tag="{x:Type views:DailyReportView}">
                     <ui:NavigationViewItem.IconSource>
-                        <ui:FontIconSource Glyph="&#xE9D2;" FontFamily="Segoe MDL2 Assets" />
+                        <ui:FontIconSource Glyph="&#xE9D9;" FontFamily="Segoe MDL2 Assets" />
                     </ui:NavigationViewItem.IconSource>
                 </ui:NavigationViewItem>
                 <ui:NavigationViewItem Content="Import">
