@@ -24,6 +24,7 @@ using cpap_db;
 using cpaplib;
 
 using FluentAvalonia.UI.Controls;
+using FluentAvalonia.UI.Media.Animation;
 using FluentAvalonia.UI.Windowing;
 
 using MsBox.Avalonia;
@@ -47,10 +48,23 @@ public partial class MainView : UserControl
 	#endregion 
 	
 	#region Public properties
-	
-	public UserProfile ActiveUserProfile { get; set; }
+
+	public static readonly DirectProperty<MainView, UserProfile> ActiveUserProfileProperty =
+		AvaloniaProperty.RegisterDirect<MainView, UserProfile>( nameof( ActiveUserProfile ), o => o.ActiveUserProfile );
+
+	public UserProfile ActiveUserProfile
+	{
+		get => _activeUserProfile;
+		set => SetAndRaise( ActiveUserProfileProperty, ref _activeUserProfile, value );
+	}
 	
 	#endregion
+	
+	#region Private fields
+
+	private UserProfile _activeUserProfile;
+	
+	#endregion 
 	
 	#region Constructor 
 	
@@ -77,11 +91,41 @@ public partial class MainView : UserControl
 		}
 		
 		ActiveUserProfile = UserProfileStore.GetLastUserProfile();
+
+		navProfile.MenuItemsSource = UserProfileStore.SelectAll();
 	}
 	
 	#endregion 
 	
+	#region Base class overrides
+
+	protected override void OnPropertyChanged( AvaloniaPropertyChangedEventArgs change )
+	{
+		base.OnPropertyChanged( change );
+
+		if( change.Property.Name == nameof( ActiveUserProfile ) )
+		{
+			if( change.NewValue is UserProfile profile )
+			{
+				profile.LastLogin = DateTime.Now;
+				UserProfileStore.Update( profile );
+			}
+			
+			LoadTabPage( new HomeView() );
+		}
+	}
+
+	#endregion 
+	
 	#region Event handlers
+
+	private void UserProfileMenuItemTapped( object? sender, TappedEventArgs e )
+	{
+		if( sender is Control { Tag: UserProfile profile } )
+		{
+			ActiveUserProfile = profile;
+		}
+	}
 
 	private void NavView_OnSelectionChanged( object? sender, NavigationViewSelectionChangedEventArgs e )
 	{
@@ -92,7 +136,7 @@ public partial class MainView : UserControl
 
 		if( e.IsSettingsSelected )
 		{
-			NavFrame.Navigate( typeof( AppSettingsView ), null, new FadeNavigationTransitionInfo() );
+			NavFrame.Navigate( typeof( AppSettingsView ), null, e.RecommendedNavigationTransitionInfo );
 
 			return;
 		}
@@ -107,12 +151,17 @@ public partial class MainView : UserControl
 				{
 					var page = Activator.CreateInstance( pageType ) as Control;
 
+					var transition = e.RecommendedNavigationTransitionInfo;
+					
 					if( page is DailyReportView dailyReportView )
 					{
 						dailyReportView.ActiveUserProfile = ActiveUserProfile;
+						
+						// DailyReportView is way to heavy to deal with complex animations 
+						transition = new SuppressNavigationTransitionInfo();
 					}
 					
-					LoadTabPage( page );
+					LoadTabPage( page, transition );
 
 					if( object.ReferenceEquals( NavView.SelectedItem, navDailyReport ) )
 					{
@@ -133,35 +182,6 @@ public partial class MainView : UserControl
 		}
 	}
 	
-	private void LoadTabPage( Control page )
-	{
-		NavFrame.Content = page;
-		
-		Dispatcher.UIThread.Post( () =>
-		{
-			if( NavFrame.Content is InputElement control )
-			{
-				control.Focusable = true;
-				control.Focus();
-			}
-		}, DispatcherPriority.Loaded );
-
-		// Post the animation otherwise pages that take slightly longer to load won't
-		// have an animation since it will run before layout is complete
-		Dispatcher.UIThread.Post( () =>
-		{
-			new FadeNavigationTransitionInfo().RunAnimation( page, CancellationToken.None );
-		}, DispatcherPriority.Render );
-	}
-
-	private void SetNavViewDisplayMode( NavigationViewPaneDisplayMode mode )
-	{
-		Dispatcher.UIThread.Post( () =>
-		{
-			NavView.PaneDisplayMode = mode;
-		}, DispatcherPriority.Background );
-	}
-
 	private async void HandleImportRequestOximetry( IOximetryImporter importer )
 	{
 		var sp = TopLevel.GetTopLevel( this )?.StorageProvider;
@@ -517,8 +537,39 @@ public partial class MainView : UserControl
 	
 	#endregion 
 	
-	#region Private functions 
-	
+	#region Private functions
+
+	private void LoadTabPage( Control page, NavigationTransitionInfo? transition = null )
+	{
+		transition ??= new FadeNavigationTransitionInfo();
+		
+		NavFrame.Content = page;
+		
+		Dispatcher.UIThread.Post( () =>
+		{
+			if( NavFrame.Content is InputElement control )
+			{
+				control.Focusable = true;
+				control.Focus();
+			}
+		}, DispatcherPriority.Loaded );
+
+		// Post the animation otherwise pages that take slightly longer to load won't
+		// have an animation since it will run before layout is complete
+		Dispatcher.UIThread.Post( () =>
+		{
+			transition.RunAnimation( page, CancellationToken.None );
+		}, DispatcherPriority.Render );
+	}
+
+	private void SetNavViewDisplayMode( NavigationViewPaneDisplayMode mode )
+	{
+		Dispatcher.UIThread.Post( () =>
+		{
+			NavView.PaneDisplayMode = mode;
+		}, DispatcherPriority.Background );
+	}
+
 	private DateTime? ImportFrom( string folder )
 	{
 		using var storage = StorageService.Connect();
@@ -560,5 +611,5 @@ public partial class MainView : UserControl
 		}
 	}
 	
-	#endregion 
+	#endregion
 }

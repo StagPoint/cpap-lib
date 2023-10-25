@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
              xmlns:views="clr-namespace:cpap_app.Views"
+             xmlns:cpaplib="clr-namespace:cpaplib;assembly=cpap-lib"
              mc:Ignorable="d"
              d:DesignWidth="800"
              d:DesignHeight="700"
@@ -69,11 +70,16 @@
                         <ui:FontIconSource Glyph="&#xE9F9;" FontFamily="Segoe MDL2 Assets" />
                     </ui:NavigationViewItem.IconSource>
                 </ui:NavigationViewItem>
+                <ui:NavigationViewItem Name="navProfile" Content="Profile" IconSource="Contact">
+                    <ui:NavigationViewItem.DataTemplates>
+                        <DataTemplate DataType="{x:Type cpaplib:UserProfile}">
+                            <ui:NavigationViewItem IconSource="Contact2" Tag="{Binding}" Content="{Binding UserName}" Tapped="UserProfileMenuItemTapped" />
+                        </DataTemplate>
+                    </ui:NavigationViewItem.DataTemplates>
+                </ui:NavigationViewItem>
             </ui:NavigationView.MenuItems>
 
             <ui:NavigationView.FooterMenuItems>
-                <ui:NavigationViewItem Name="navProfile" Content="Profile" Tag="{x:Type views:ProfileView}"
-                                       IconSource="Contact" IsEnabled="False" />
                 <ui:NavigationViewItem Name="navBackup" Content="Backup" IconSource="SaveAs" IsEnabled="False" />
             </ui:NavigationView.FooterMenuItems>
 

@@ -63,6 +63,9 @@ namespace cpaplib
 				LoadSessionsForDay( folderPath, day );
 			}
 #endif
+			
+			// Remove all days that do not have any sessions 
+			days.RemoveAll( x => x.Sessions.Count == 0 );
 
 			// Make sure that each Session has its Source set (sessions may be created by other processes, such as
 			// pulse oximeter import, etc.)
@@ -169,7 +172,8 @@ namespace cpaplib
 			var logFolder = Path.Combine( rootFolder, $@"DATALOG\{day.ReportDate:yyyyMMdd}" );
 			if( !Directory.Exists( logFolder ) )
 			{
-				throw new DirectoryNotFoundException( $"Could not find the session directory for {logFolder}" );
+				Debug.WriteLine( $"Could not find the session directory for {logFolder}" );
+				return;
 			}
 
 			LoadEventsAndAnnotations( logFolder, day );
@@ -349,6 +353,12 @@ namespace cpaplib
 			// TODO: This is the wrong place to be removing sessions, as it can throw off the times of successive sessions 
 			// Remove all sessions that are shorter than five minutes
 			day.Sessions.RemoveAll( x => x.Signals.Count == 0 || x.Duration.TotalMinutes < 5 );
+			
+			// If the day no longer has any sessions, stop processing it
+			if( day.Sessions.Count == 0 )
+			{
+				return;
+			}
 			
 			// If there is SpO2 and Pulse data, split those signals off into separate sessions for more logical grouping
 			int sessionCount = day.Sessions.Count;

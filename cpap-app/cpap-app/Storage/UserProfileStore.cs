@@ -19,7 +19,10 @@ public class UserProfileStore
 	{
 		using var store = StorageService.Connect();
 
-		return store.SelectAll<UserProfile>();
+		var list = store.SelectAll<UserProfile>();
+		list.Sort();
+
+		return list;
 	}
 
 	public static bool Insert( UserProfile profile )

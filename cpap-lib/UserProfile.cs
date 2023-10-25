@@ -2,7 +2,7 @@
 
 namespace cpaplib
 {
-	public class UserProfile
+	public class UserProfile : IComparable<UserProfile>
 	{
 		public int      UserProfileID { get; set; }
 		public DateTime LastLogin     { get; set; } = DateTime.Now;
@@ -20,6 +20,24 @@ namespace cpaplib
 		public double        UntreatedAHI            { get; set; } = 12;
 		public double        PrescriptionPressureMin { get; set; } = 8;
 		public double        PrescriptionPressureMax { get; set; } = 20;
+		
+		#region IComparable<UserProfile> interface implementation
+
+		public int CompareTo( UserProfile other )
+		{
+			return other == null ? 0 : string.Compare( UserName, other.UserName, StringComparison.Ordinal );
+		}
+		
+		#endregion
+		
+		#region Base class overrides
+
+		public override string ToString()
+		{
+			return $"{UserName}, ID: {UserProfileID}";
+		}
+
+		#endregion 
 	}
 
 
