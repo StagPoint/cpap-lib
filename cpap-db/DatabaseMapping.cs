@@ -567,12 +567,13 @@ public class DatabaseMapping<T> : DatabaseMapping
 					if( fitsPrimaryKeyColumnNamingPattern )
 					{
 						var isIntegerProperty = property.PropertyType.GetTypeInfo().GetInterfaces().Any( i => i.IsGenericType && (i.GetGenericTypeDefinition() == typeof( INumber<> )) );
-						PrimaryKey          = new PrimaryKeyColumn( property.Name, property.PropertyType, isIntegerProperty );
+
+						PrimaryKey                  = new PrimaryKeyColumn( property.Name, property.PropertyType, isIntegerProperty );
 						PrimaryKey.PropertyAccessor = property;
 					}
 					else
 					{
-						// TODO: This doesn't seem to handle nullable strings? Noticed at one point, don't have a repro unfortunately.
+						// TODO: This doesn't seem to handle nullable strings properly? Noticed at one point, don't have a repro unfortunately.
 						
 						var newColumn = new ColumnMapping( property.Name, property );
 						newColumn.IsNullable = Nullable.GetUnderlyingType( property.PropertyType ) != null;
@@ -711,6 +712,11 @@ public class DatabaseMapping<T> : DatabaseMapping
 		}
 
 		return rows[ 0 ];
+	}
+
+	internal List<T> SelectAllByPrimaryKey( SQLiteConnection connection, object primaryKeyValue )
+	{
+		return ExecuteQuery( connection, SelectByPrimaryKeyQuery, primaryKeyValue );
 	}
 
 	internal List<T> SelectByForeignKey<P>( SQLiteConnection connection, object foreignKeyValue, IList<P> primaryKeys = null ) 

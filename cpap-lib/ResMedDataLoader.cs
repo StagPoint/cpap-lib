@@ -73,6 +73,14 @@ namespace cpaplib
 					session.Source = _machineInfo.ProductName;
 				}
 			}
+			
+			// Fix up the ReportDate field to eliminate the stupid 12 hour time offset added by the ResMed machine. 
+			// It was important to retain it during some phases of the import process, but now import is done
+			// and we don't need that offset anymore.
+			foreach( var day in days )
+			{
+				day.ReportDate = day.ReportDate.Date;
+			}
 
 			return days;
 		}
@@ -425,13 +433,25 @@ namespace cpaplib
 		{
 			// TODO: Flow Limitation Redline needs to be a configurable value 
 			const double FlowLimitRedline = 0.3;
+
+			List<ReportedEvent> flowLimitEvents = new List<ReportedEvent>();
 			
 			foreach( var session in day.Sessions )
 			{
 				var signal = session.GetSignalByName( SignalNames.FlowLimit );
 				if( signal != null )
 				{
-					Annotate( day.Events, EventType.FlowLimitation, signal, 5, FlowLimitRedline, false );
+					flowLimitEvents.AddRange( Annotate( EventType.FlowLimitation, signal, 5, FlowLimitRedline, false ) );
+				}
+			}
+			
+			// HACK: Don't add any flow limitation events that coincide with a RERA event, since the two are related
+			// and we don't want to double-count the events when calculating the RDI
+			foreach( var flowLimit in flowLimitEvents )
+			{
+				if( !day.Events.Any( x => x.Type == EventType.RERA && ReportedEvent.TimesOverlap( x, flowLimit ) ) )
+				{
+					day.Events.Add( flowLimit );
 				}
 			}
 		}
@@ -446,13 +466,15 @@ namespace cpaplib
 				var signal = session.GetSignalByName( SignalNames.LeakRate );
 				if( signal != null )
 				{
-					Annotate( day.Events, EventType.LargeLeak, signal, 5, LeakRedline, false );
+					day.Events.AddRange( Annotate( EventType.LargeLeak, signal, 5, LeakRedline, false ) );
 				}
 			}
 		}
 
-		private static void Annotate( List<ReportedEvent> events, EventType eventType, Signal signal, double minDuration, double redLine, bool interpolateSamples = true )
+		private static List<ReportedEvent> Annotate( EventType eventType, Signal signal, double minDuration, double redLine, bool interpolateSamples = true )
 		{
+			List<ReportedEvent> events = new List<ReportedEvent>();
+			
 			int    state      = 0;
 			double eventStart = -1;
 
@@ -522,6 +544,8 @@ namespace cpaplib
 
 				events.Add( annotation );
 			}
+
+			return events;
 		}
 
 		private void CalculateSignalStatistics( DailyReport day )

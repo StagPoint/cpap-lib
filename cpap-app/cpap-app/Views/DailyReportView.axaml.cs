@@ -14,6 +14,7 @@ using Avalonia.VisualTree;
 
 using cpap_app.Animation;
 using cpap_app.Events;
+using cpap_app.ViewModels;
 
 using cpap_db;
 
@@ -117,7 +118,7 @@ public partial class DailyReportView : UserControl
 
 		using var store = StorageService.Connect();
 		
-		_datesWithData = store.GetStoredDates();
+		_datesWithData = store.GetStoredDates( UserProfileStore.GetLastUserProfile().UserProfileID );
 
 		// TODO: Keep DisplayDateStart/DisplayDateEnd up to date (after importing, etc.)
 		if( _datesWithData.Count == 0 )
@@ -164,30 +165,45 @@ public partial class DailyReportView : UserControl
 			return;
 		}
 
-		if( selectedItem.Tag is System.Type pageType )
+		switch( selectedItem.Tag )
 		{
-			TabFrame.Navigate( pageType, DataContext, new FadeNavigationTransitionInfo() );
-			
-			// Changing the item's Tag from the view type to the view instance allows us to cache the loaded view
-			// so that next time the user clicks on the tab the view will have retained its state. This is preferable
-			// to using the caching built into Frame.Navigate(), as we don't need a Forward/Back navigation stack.  
-			selectedItem.Tag = TabFrame.Content;
-		}
-		else if( selectedItem.Tag is Control control )
-		{
-			// Load the cached view into the frame 
-			TabFrame.Content = control;
-
-			// Post the animation otherwise pages that take slightly longer to load won't
-			// have an animation since it will run before layout is complete
-			Dispatcher.UIThread.Post( () =>
+			case System.Type pageType:
 			{
-				new FadeNavigationTransitionInfo().RunAnimation( control, CancellationToken.None );
-			}, DispatcherPriority.Render );
-		}
-		else
-		{
-			throw new Exception( $"Unhandled page type: {selectedItem.Tag}" );
+				if( Activator.CreateInstance( pageType ) is not Control page )
+				{
+					throw new Exception( $"{pageType} is an invalid view type" );
+				}
+
+				// Set the frame's content to the new view instance
+				TabFrame.Content = page;
+				page.DataContext = DataContext;
+			
+				// Changing the item's Tag from the view type to the view instance allows us to cache the loaded view
+				// so that next time the user clicks on the tab the view will have retained its state. This is preferable
+				// to using the caching built into Frame.Navigate(), as we don't need a Forward/Back navigation stack.  
+				selectedItem.Tag = page;
+			
+				// Post the animation otherwise pages that take slightly longer to load won't
+				// have an animation since it will run before layout is complete
+				Dispatcher.UIThread.Post( () =>
+				{
+					new FadeNavigationTransitionInfo().RunAnimation( page, CancellationToken.None );
+				}, DispatcherPriority.Render );
+				break;
+			}
+			case Control page:
+				// Load the cached view into the frame 
+				TabFrame.Content = page;
+
+				// Post the animation otherwise pages that take slightly longer to load won't
+				// have an animation since it will run before layout is complete
+				Dispatcher.UIThread.Post( () =>
+				{
+					new FadeNavigationTransitionInfo().RunAnimation( page, CancellationToken.None );
+				}, DispatcherPriority.Render );
+				break;
+			default:
+				throw new Exception( $"Unhandled page type: {selectedItem.Tag}" );
 		}
 	}
 	
@@ -195,11 +211,13 @@ public partial class DailyReportView : UserControl
 	{
 		using var store = StorageService.Connect();
 
+		var profileID = UserProfileStore.GetLastUserProfile().UserProfileID;
+
 		// Keep this up-to-date. Probably unnecessary and overkill, but it's quick and not terribly wasteful.
-		_datesWithData = store.GetStoredDates();
+		_datesWithData = store.GetStoredDates( profileID );
 
 		// TODO: Implement visual indication of "no data available" to match previous viewer codebase
-		var day = store.LoadDailyReport( DateSelector.SelectedDate ?? store.GetMostRecentStoredDate() );
+		var day = store.LoadDailyReport( profileID, DateSelector.SelectedDate ?? _datesWithData[ ^1 ] );
 
 		DataContext = day;
 
@@ -267,10 +285,12 @@ public partial class DailyReportView : UserControl
 			return;
 		}
 
+		var profileID = UserProfileStore.GetLastUserProfile().UserProfileID;
+
 		using var connection = StorageService.Connect();
-		connection.DeletePulseOximetryData( e.DateTime );
+		connection.DeletePulseOximetryData( profileID, e.DateTime );
 		
-		DataContext = connection.LoadDailyReport( e.DateTime );
+		DataContext = connection.LoadDailyReport( profileID, e.DateTime );
 	}
 
 	#endregion 

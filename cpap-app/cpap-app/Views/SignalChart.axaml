@@ -5,6 +5,7 @@
              xmlns:ScottPlot="clr-namespace:ScottPlot.Avalonia;assembly=ScottPlot.Avalonia"
              xmlns:controls="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
              xmlns:views="clr-namespace:cpap_app.Views"
+             xmlns:viewModels="clr-namespace:cpap_app.ViewModels"
              mc:Ignorable="d"
              d:DesignWidth="800"
              x:Class="cpap_app.Views.SignalChart"
@@ -15,7 +16,7 @@
              ChartGridLineColor="{DynamicResource TextFillColorSecondaryBrush}"
              Background="Transparent">
     <Grid Name="ContainerGrid" RowDefinitions="18,*,Auto" ColumnDefinitions="36,*,36" Background="Transparent">
-        <Line Name="TimeMarkerLine" IsEnabled="False" ZIndex="9990" Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="3" Grid.RowSpan="3" Stroke="{DynamicResource AccentFillColorDefaultBrush}" StrokeThickness="0.5" StartPoint="0,0" EndPoint="0,0"  />
+        <Line Name="TimeMarkerLine" IsEnabled="False" ZIndex="5000" Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="3" Grid.RowSpan="3" Stroke="{DynamicResource AccentFillColorSelectedTextBackgroundBrush}" StrokeThickness="1" StartPoint="0,0" EndPoint="0,0"  />
         <Border Name="EventTooltip" CornerRadius="8" Margin="0 38" IsHitTestVisible="False" Tag="Event Tooltip" VerticalAlignment="Top" IsEnabled="False" ZIndex="9990" Grid.Column="1" Grid.Row="0" Grid.ColumnSpan="2" Grid.RowSpan="3" Background="Black" Width="250">
             <TextBlock Text="{Binding $parent.Tag, Mode=OneWay}" IsVisible="True" IsHitTestVisible="False" TextWrapping="NoWrap" HorizontalAlignment="Center" Theme="{DynamicResource CaptionTextBlockStyle}" Foreground="White" Padding="20 0 20 2" />
         </Border>
@@ -28,6 +29,7 @@
             Margin="0 0 0 0"
             Width="500"
             HorizontalAlignment="Left"
+            ZIndex="6000"
             Theme="{DynamicResource CaptionTextBlockStyle}"
             Text="Current value information goes here"
             IsHitTestVisible="False">
@@ -112,23 +114,17 @@
                                     <Setter Property="Margin" Value="8 0 16 0" />
                                 </Style>
                             </MenuItem.Styles>
-                            <StackPanel Orientation="Horizontal" Classes="CheckMenuItem">
-                                <controls:SymbolIcon Symbol="Checkmark" IsVisible="True"/>
-                                <TextBlock Text="Obstructive Apnea"/>                                
-                            </StackPanel>
-                            <StackPanel Orientation="Horizontal" Classes="CheckMenuItem">
-                                <controls:SymbolIcon Symbol="Checkmark" IsVisible="True"/>
-                                <TextBlock Text="Obstructive Apnea"/>                                
-                            </StackPanel>
-                            <StackPanel Orientation="Horizontal" Classes="CheckMenuItem">
-                                <controls:SymbolIcon Symbol="Checkmark" IsVisible="False"/>
-                                <Border Background="Transparent" Width="16" Height="16" IsVisible="True" />
-                                <TextBlock Text="Obstructive Apnea"/>                                
-                            </StackPanel>
-                            <StackPanel Orientation="Horizontal" Classes="CheckMenuItem">
-                                <controls:SymbolIcon Symbol="Checkmark" IsVisible="True"/>
-                                <TextBlock Text="Obstructive Apnea"/>                                
-                            </StackPanel>
+                            <ItemsRepeater Name="EventTypesList">
+                                <ItemsRepeater.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type viewModels:EventTypeIncludedItem}">
+                                        <StackPanel Orientation="Horizontal" Classes="CheckMenuItem">
+                                            <controls:SymbolIcon Symbol="Checkmark" IsVisible="{Binding IsIncluded}"/>
+                                            <Border Background="Transparent" Width="16" Height="16" IsVisible="{Binding !IsIncluded}" />
+                                            <TextBlock Text="{Binding Label}"/>                                
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsRepeater.ItemTemplate>
+                            </ItemsRepeater>
                         </MenuItem>
                     </MenuFlyout>
                 </Button.Flyout>

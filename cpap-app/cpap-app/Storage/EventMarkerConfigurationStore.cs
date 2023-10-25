@@ -10,8 +10,6 @@ using cpap_db;
 
 using cpaplib;
 
-using ScottPlot;
-
 namespace cpap_app.ViewModels;
 
 public class EventMarkerConfigurationStore
@@ -79,12 +77,12 @@ public class EventMarkerConfigurationStore
 					break;
 				case EventType.Desaturation:
 					eventMarkerType     = EventMarkerType.ArrowBottom;
-					eventColor          = Color.Orange;
+					eventColor          = Color.OrangeRed;
 					eventMarkerPosition = EventMarkerPosition.InCenter;
 					break;
 				case EventType.PulseRateChange:
 					eventMarkerType     = EventMarkerType.TickBottom;
-					eventColor          = Color.Yellow;
+					eventColor          = Color.Red;
 					eventMarkerPosition = EventMarkerPosition.AtBeginning;
 					break;
 				case EventType.Hypoxemia:

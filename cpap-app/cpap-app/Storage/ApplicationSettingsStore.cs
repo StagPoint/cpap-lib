@@ -6,13 +6,18 @@ namespace cpap_app.ViewModels;
 
 public class ApplicationSettingsStore
 {
-	public static ApplicationSettings GetSettings()
+	static ApplicationSettingsStore()
 	{
 		using var store = StorageService.Connect();
 		
 		// TODO: Move initialization to application startup
 		Initialize( store );
-
+	}
+	
+	public static ApplicationSettings GetSettings()
+	{
+		using var store = StorageService.Connect();
+		
 		return store.SelectById<ApplicationSettings>( 0 );
 	}
 

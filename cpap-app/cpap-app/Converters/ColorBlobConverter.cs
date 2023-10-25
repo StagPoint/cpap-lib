@@ -2,7 +2,7 @@
 
 using Avalonia.Media;
 
-using cpap_db;
+using cpap_db.Converters;
 
 namespace cpap_app.Converters;
 
@@ -15,7 +15,7 @@ public class ColorBlobConverter : IBlobTypeConverter
 			throw new InvalidCastException( $"{value} is not a {nameof( Color )} type" );
 		}
 
-		return new byte[ 4 ] { color.A, color.R, color.G, color.B };
+		return new byte[] { color.A, color.R, color.G, color.B };
 	}
 
 	public object ConvertFromBlob( byte[] value )

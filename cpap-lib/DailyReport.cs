@@ -6,10 +6,15 @@ namespace cpaplib
 {
 	public class DailyReport
 	{
-		#region Public properties 
+		#region Public properties
+
+		/// <summary>
+		/// The unique identifier for this report
+		/// </summary>
+		public int ID { get; set; } = -1;
 		
 		/// <summary>
-		/// The date on which this report was generated.
+		/// The date for which this report was generated (ie, "Report for the night of Dec 12, 2023")
 		/// </summary>
 		public DateTime ReportDate { get; set; }
 		

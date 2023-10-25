@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace cpap_app.Helpers;
 
@@ -9,6 +8,11 @@ public static class PeakFinder
 	public static int[] GenerateSignals( List<double> input, int windowSize, double threshold, double peakInfluence, double minDelta )
 	{
 		var signals = new int[ input.Count ];
+
+		if( input.Count <= windowSize )
+		{
+			return signals;
+		}
 
 		// Prime the moving average/stdev window first
 		var calculator = new MovingAverageCalculator( windowSize );

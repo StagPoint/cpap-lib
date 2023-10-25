@@ -403,6 +403,11 @@ public partial class SignalChart : UserControl
 	
 	private void ChartLabelOnPointerPressed( object? sender, PointerPressedEventArgs e )
 	{
+		if( e.Handled || !e.GetCurrentPoint( this ).Properties.IsLeftButtonPressed )
+		{
+			return;
+		}
+		
 		ChartLabel.Cursor = new Cursor( StandardCursorType.SizeNorthSouth );
 
 		e.Handled = true;
@@ -713,6 +718,9 @@ public partial class SignalChart : UserControl
 		var pixelDifference = Chart.Plot.XAxis.Dims.PxPerUnit * ( _selectionEndTime - _selectionStartTime );
 		if( pixelDifference <= 2 )
 		{
+			_selectionSpan.IsVisible = false;
+			Chart.RenderRequest();
+
 			return;
 		}
 
@@ -874,7 +882,7 @@ public partial class SignalChart : UserControl
 		}
 
 		TimeMarkerLine.StartPoint = new Point( mousePosition, dataRect.Top );
-		TimeMarkerLine.EndPoint   = new Point( mousePosition, dataRect.Bottom );
+		TimeMarkerLine.EndPoint   = new Point( mousePosition, dataRect.Bottom + Chart.Plot.XAxis.AxisTicks.MajorTickLength );
 		TimeMarkerLine.IsVisible  = true;
 
 		foreach( var signal in _signals )
@@ -1154,11 +1162,11 @@ public partial class SignalChart : UserControl
 	
 	private static void SetPlotFill( SignalPlot graph, Color chartColor )
 	{
-		var    isDarkTheme = Application.Current?.ActualThemeVariant == ThemeVariant.Dark;
+		var isDarkTheme = Application.Current?.ActualThemeVariant == ThemeVariant.Dark;
 		
 		// TODO: Which alpha values actually work best for each theme?
-		double alpha = isDarkTheme ? 0.35 : 0.25;
-
+		double alpha = isDarkTheme ? 0.35 : 0.45;
+		
 		graph.FillBelow( chartColor, Colors.Transparent.ToDrawingColor(), alpha );
 	}
 

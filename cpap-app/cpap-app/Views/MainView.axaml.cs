@@ -16,6 +16,7 @@ using Avalonia.VisualTree;
 
 using cpap_app.Animation;
 using cpap_app.Importers;
+using cpap_app.ViewModels;
 
 using cpap_db;
 
@@ -44,6 +45,12 @@ public partial class MainView : UserControl
 
 	#endregion 
 	
+	#region Public properties
+	
+	public UserProfile ActiveUserProfile { get; set; }
+	
+	#endregion
+	
 	#region Constructor 
 	
 	public MainView()
@@ -67,6 +74,8 @@ public partial class MainView : UserControl
 				Tag = importer, 
 			} );
 		}
+		
+		ActiveUserProfile = UserProfileStore.GetLastUserProfile();
 	}
 	
 	#endregion 
@@ -257,8 +266,8 @@ public partial class MainView : UserControl
 						} );
 
 						using var db  = StorageService.Connect();
-
-						var day = db.LoadDailyReport( date );
+						
+						var day = db.LoadDailyReport( ActiveUserProfile.UserProfileID, date );
 						if( day == null )
 						{
 							continue;
@@ -303,7 +312,7 @@ public partial class MainView : UserControl
 							day.UpdateSignalStatistics( SignalNames.SpO2 );
 							day.UpdateSignalStatistics( SignalNames.Pulse );
 
-							db.SaveDailyReport( day );
+							db.SaveDailyReport( ActiveUserProfile.UserProfileID, day );
 
 							dataWasImported = true;
 						}
@@ -337,7 +346,9 @@ public partial class MainView : UserControl
 			{
 				using var db = StorageService.Connect();
 					
-				dailyReportView.DataContext = db.LoadDailyReport( dailyReport.ReportDate.Date );
+				var profileID = ActiveUserProfile.UserProfileID;
+
+				dailyReportView.DataContext = db.LoadDailyReport( profileID, dailyReport.ReportDate.Date );
 			}
 		}
 	}
@@ -464,8 +475,10 @@ public partial class MainView : UserControl
 					{
 						using var store = StorageService.Connect();
 
+						var profileID = ActiveUserProfile.UserProfileID;
+
 						NavView.SelectedItem = navDailyReport;
-						DataContext          = store.LoadDailyReport( mostRecentDay.Value );
+						DataContext          = store.LoadDailyReport( profileID, mostRecentDay.Value );
 					}
 					else
 					{
@@ -496,7 +509,9 @@ public partial class MainView : UserControl
 		{
 			int startTime = Environment.TickCount;
 
-			var mostRecentDay = storage.GetMostRecentStoredDate().AddHours( 12 );
+			var profileID = ActiveUserProfile.UserProfileID;
+
+			var mostRecentDay = storage.GetMostRecentStoredDate( profileID ).AddHours( 12 );
 
 			var loader = new ResMedDataLoader();
 			var days   = loader.LoadFromFolder( folder, mostRecentDay );
@@ -509,7 +524,7 @@ public partial class MainView : UserControl
 
 			foreach( var day in days )
 			{
-				storage.SaveDailyReport( day );
+				storage.SaveDailyReport( profileID, day );
 			}
 
 			storage.Connection.Commit();
@@ -517,7 +532,7 @@ public partial class MainView : UserControl
 			var elapsed = Environment.TickCount - startTime;
 			Debug.WriteLine( $"Time to load CPAP data ({days.Count} days): {elapsed / 1000.0f:F3} seconds" );
 			
-			return storage.GetMostRecentStoredDate();
+			return storage.GetMostRecentStoredDate( profileID );
 		}
 		catch
 		{

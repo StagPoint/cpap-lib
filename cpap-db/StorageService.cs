@@ -4,6 +4,8 @@ using System.Drawing;
 using System.Reflection;
 using System.Text;
 
+using cpap_db.Converters;
+
 using cpaplib;
 
 using SQLite;
@@ -14,22 +16,23 @@ namespace cpap_db
 {
 	public static class TableNames
 	{
-		public const string DailyReport         = "day";
-		public const string Session             = "session";
-		public const string Signal              = "signal";
-		public const string FaultMapping        = "fault";
-		public const string ReportedEvent       = "event";
-		public const string SignalStatistics    = "signal_stats";
+		public const string DailyReport      = "day";
+		public const string Session          = "session";
+		public const string Signal           = "signal";
+		public const string FaultMapping     = "fault";
+		public const string ReportedEvent    = "event";
+		public const string SignalStatistics = "signal_stats";
 		
 		public const string MachineSettings = "machine_settings";
 		public const string MachineInfo     = "machine_info";
+		public const string UserProfiles    = "user_profile";
 		
 		// All of the following classes will likely be eliminated at some point, but for now...
-		public const string EprSettings         = "epr_settings";
-		public const string CpapSettings        = "cpap_settings";
-		public const string AutoSetSettings     = "auto_settings";
-		public const string AsvSettings         = "asv_settings";
-		public const string AvapSettings       = "avaps_settings";
+		public const string EprSettings     = "epr_settings";
+		public const string CpapSettings    = "cpap_settings";
+		public const string AutoSetSettings = "auto_settings";
+		public const string AsvSettings     = "asv_settings";
+		public const string AvapSettings    = "avaps_settings";
 	}
 	
 	[SuppressMessage( "ReSharper", "ConvertToUsingDeclaration" )]
@@ -49,9 +52,11 @@ namespace cpap_db
 		{
 			#region Create mappings for cpap-lib types
 
+			var profileMapping = CreateMapping<UserProfile>( TableNames.UserProfiles );
+
 			var dayMapping = CreateMapping<DailyReport>( TableNames.DailyReport );
-			dayMapping.PrimaryKey = new PrimaryKeyColumn( "id", typeof( DateTime ) );
-			dayMapping.ForeignKey = new ForeignKeyColumn( "profileID", typeof( int ), "profile", "profileID", false );
+			dayMapping.PrimaryKey = dayMapping.PrimaryKey;
+			dayMapping.ForeignKey = new ForeignKeyColumn( profileMapping.PrimaryKey.ColumnName, typeof( int ), TableNames.UserProfiles, profileMapping.PrimaryKey.ColumnName, true );
 
 			var machineInfoMapping = CreateMapping<MachineIdentification>( TableNames.MachineInfo );
 			machineInfoMapping.ForeignKey = new ForeignKeyColumn( dayMapping );
@@ -140,6 +145,13 @@ namespace cpap_db
 					Debug.WriteLine( $"Checking database table {mapping.Key.Name}" );
 					mapping.Value.CreateTable( store.Connection );
 				}
+
+				var profileRecords = store.SelectAll<UserProfile>();
+				if( profileRecords.Count == 0 )
+				{
+					var defaultProfile = new UserProfile();
+					store.Insert( defaultProfile, primaryKeyValue: 0 );
+				}
 			}
 		}
 
@@ -170,19 +182,21 @@ namespace cpap_db
 		
 		#region Public functions (cpap-lib specific)
 		
-		public DailyReport LoadDailyReport( DateTime date )
+		public DailyReport LoadDailyReport( int profileID, DateTime date )
 		{
-			var day = SelectById<DailyReport>( date );
+			var day = SelectByForeignKey<DailyReport>( profileID ).FirstOrDefault( x => x.ReportDate.Date == date );
 			if( day == null )
 			{
 				return null;
 			}
+
+			var dayID = day.ID;
 			
-			day.MachineInfo      = SelectByForeignKey<MachineIdentification>( date ).First();
-			day.Fault            = SelectByForeignKey<FaultInfo>( date ).First();
-			day.Statistics       = SelectByForeignKey<SignalStatistics>( date );
-			day.Events           = SelectByForeignKey<ReportedEvent>( date );
-			day.Settings         = SelectByForeignKey<MachineSettings>( date, out int settingsID );
+			day.MachineInfo      = SelectByForeignKey<MachineIdentification>( dayID ).First();
+			day.Fault            = SelectByForeignKey<FaultInfo>( dayID ).First();
+			day.Statistics       = SelectByForeignKey<SignalStatistics>( dayID );
+			day.Events           = SelectByForeignKey<ReportedEvent>( dayID );
+			day.Settings         = SelectByForeignKey<MachineSettings>( dayID, out int settingsID );
 			day.Settings.AutoSet = SelectByForeignKey<AutoSetSettings>( settingsID ).First();
 			day.Settings.CPAP    = SelectByForeignKey<CpapSettings>( settingsID ).First();
 			day.Settings.Avap    = SelectByForeignKey<AvapSettings>( settingsID ).First();
@@ -190,7 +204,7 @@ namespace cpap_db
 			day.Settings.EPR     = SelectByForeignKey<EprSettings>( settingsID ).First();
 
 			var sessionKeys = new List<int>();
-			day.Sessions = SelectByForeignKey<Session, int>( date, sessionKeys );
+			day.Sessions = SelectByForeignKey<Session, int>( dayID, sessionKeys );
 
 			Debug.Assert( sessionKeys.Count == day.Sessions.Count );
 			for( int i = 0; i < sessionKeys.Count; i++ )
@@ -204,10 +218,8 @@ namespace cpap_db
 			return day;
 		}
 
-		public void SaveDailyReport( DailyReport day )
+		public void SaveDailyReport( int profileID, DailyReport day )
 		{
-			var dayID = day.ReportDate.Date;
-
 			var wasInTransaction = Connection.IsInTransaction;
 
 			if( !wasInTransaction )
@@ -221,9 +233,11 @@ namespace cpap_db
 				// not already exist, and there's no convenient way to update existing records with this 
 				// many nested dependencies, so just get rid of it if it already exists. 
 				var mapping = GetMapping<DailyReport>();
-				mapping.Delete( Connection, dayID );
+				mapping.Delete( Connection, day.ID );
 
-				Insert( day, dayID, -1 );
+				Insert( day, foreignKeyValue: profileID );
+
+				int dayID = day.ID;
 
 				Insert( day.MachineInfo, foreignKeyValue: dayID );
 				Insert( day.Fault,       foreignKeyValue: dayID );
@@ -270,47 +284,80 @@ namespace cpap_db
 			}
 		}
 		
-		public DateTime GetMostRecentStoredDate()
+		public DateTime GetMostRecentStoredDate( int profileID )
 		{
-			var mapping = GetMapping<DailyReport>();
-			var query   = $"SELECT IFNULL( [{mapping.PrimaryKey.ColumnName}], datetime('now','-180 day','localtime') ) FROM [{mapping.TableName}] ORDER BY ReportDate DESC LIMIT 1";
+			var reportMapping  = GetMapping<DailyReport>();
 			
-			return Connection.ExecuteScalar<DateTime>( query );
+			var query   = $"SELECT IFNULL( [{nameof(DailyReport.ReportDate)}], datetime('now','-180 day','localtime') ) FROM [{reportMapping.TableName}] WHERE [{reportMapping.ForeignKey.ColumnName}] = ? ORDER BY ReportDate DESC LIMIT 1";
+			
+			return Connection.ExecuteScalar<DateTime>( query, profileID );
 		}
 
-		public List<DateTime> GetStoredDates()
+		public List<DateTime> GetStoredDates( int profileID )
 		{
-			var mapping = GetMapping<DailyReport>();
-			var days    = mapping.SelectAll( Connection );
+			var reportMapping = GetMapping<DailyReport>();
+		
+			var query = $"SELECT [{nameof(DailyReport.ReportDate)}] FROM [{reportMapping.TableName}] WHERE [{reportMapping.ForeignKey.ColumnName}] = ? ORDER BY [{reportMapping.PrimaryKey.ColumnName}]";
+			var list  = Connection.QueryScalars<DateTime>( query, profileID );
 
-			return days.OrderBy( x => x.ReportDate ).Select( x => x.ReportDate.Date ).ToList();
+			return list;
 		}
 
-		public bool DeleteDay( DateTime day )
+		public void DeletePulseOximetryData( int profileID, DateTime date )
 		{
-			var mapping = GetMapping<DailyReport>();
-			return mapping.Delete( Connection, day );
-		}
-
-		public void DeletePulseOximetryData( DateTime date )
-		{
-			var day = LoadDailyReport( date );
+			var day = LoadDailyReport( profileID, date );
 
 			day.Events.RemoveAll( x => x.SourceType == SourceType.PulseOximetry );
 			day.Sessions.RemoveAll( x => x.SourceType == SourceType.PulseOximetry );
 			
 			day.RefreshTimeRange();
 			
-			SaveDailyReport( day );
+			SaveDailyReport( profileID, day );
 		}
 		
 		#endregion
 		
 		#region General-purpose public functions
 
+		public bool Delete<T>( T record, object primaryKeyValue = null ) where T : class, new()
+		{
+			var mapping = GetMapping<T>();
+			if( mapping == null )
+			{
+				throw new Exception( $"There is no database mapping for type {nameof( T )}" );
+			}
+
+			if( primaryKeyValue == null )
+			{
+				if( mapping.PrimaryKey != null && mapping.PrimaryKey.PropertyAccessor != null )
+				{
+					primaryKeyValue = mapping.PrimaryKey.PropertyAccessor.GetValue( record );
+				}
+				else
+				{
+					throw new ArgumentNullException( $"You must provide a primary key value for type {nameof( T )}" );
+				}
+			}
+
+			return mapping.Delete( Connection, primaryKeyValue );
+		}
+
 		public bool Update<T>( T record, object primaryKeyValue ) where T : class, new()
 		{
 			var mapping = GetMapping<T>();
+			
+			if( primaryKeyValue == null )
+			{
+				if( mapping.PrimaryKey != null && mapping.PrimaryKey.PropertyAccessor != null )
+				{
+					primaryKeyValue = mapping.PrimaryKey.PropertyAccessor.GetValue( record );
+				}
+				else
+				{
+					throw new ArgumentNullException( $"You must provide a primary key value for type {nameof( T )}" );
+				}
+			}
+
 			return mapping.Update( Connection, record, primaryKeyValue ) == 1;
 		}
 
@@ -327,6 +374,12 @@ namespace cpap_db
 			var mapping = GetMapping<T>();
 			
 			return mapping.ExecuteQuery( Connection, mapping.SelectAllQuery, primaryKeys );
+		}
+
+		public List<T> SelectAllById<T>( object primaryKeyValue ) where T : class, new()
+		{
+			var mapping = GetMapping<T>();
+			return mapping.SelectAllByPrimaryKey( Connection, primaryKeyValue );
 		}
 
 		public T SelectById<T>( object primaryKeyValue ) where T : class, new()

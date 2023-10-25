@@ -6,7 +6,12 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="cpap_app.Views.HomeView">
     <StackPanel Width="800" Orientation="Vertical" VerticalAlignment="Top">
-        <TextBlock Text="Welcome to the CPAP Data Viewer" Margin="0 30 0 0" HorizontalAlignment="Center" Theme="{StaticResource TitleLargeTextBlockStyle}" />
+        <Image Source="/Assets/cpap-sd-card-128.png"
+               DockPanel.Dock="Left"
+               Height="128"
+               Margin="30"
+               RenderOptions.BitmapInterpolationMode="HighQuality"/>
+        <TextBlock Text="Welcome to the CPAP Data Viewer" HorizontalAlignment="Center" Theme="{StaticResource TitleLargeTextBlockStyle}" />
         <TextBlock TextWrapping="Wrap" Width="600" HorizontalAlignment="Center" FontSize="16" Margin="20">
             To begin, please import your CPAP data (typically found on the SD Card in your CPAP machine) by clicking the 
             "Import" button below and selecting the CPAP data folder which contains the STR.edf file, or select a destination 
