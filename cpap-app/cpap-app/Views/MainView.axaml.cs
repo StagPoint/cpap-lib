@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Avalonia;
@@ -98,44 +99,61 @@ public partial class MainView : UserControl
 
 		if( e.SelectedItem is NavigationViewItem navViewItem )
 		{
-			if( navViewItem.Tag == null )
+			switch( navViewItem.Tag )
 			{
-				return;
-			}
-			
-			if( navViewItem.Tag is System.Type pageType )
-			{
-				NavFrame.Navigate( pageType, null, new FadeNavigationTransitionInfo() );
-				
-				Dispatcher.UIThread.Post( () =>
+				case null:
+					return;
+				case System.Type pageType:
 				{
-					if( NavFrame.Content is InputElement control )
+					var page = Activator.CreateInstance( pageType ) as Control;
+
+					if( page is DailyReportView dailyReportView )
 					{
-						control.Focusable = true;
-						control.Focus();
+						dailyReportView.ActiveUserProfile = ActiveUserProfile;
 					}
-				}, DispatcherPriority.Loaded );
+					
+					LoadTabPage( page );
 
-				if( object.ReferenceEquals( NavView.SelectedItem, navDailyReport ) )
-				{
-					navView.PaneDisplayMode = NavigationViewPaneDisplayMode.LeftCompact;
+					if( object.ReferenceEquals( NavView.SelectedItem, navDailyReport ) )
+					{
+						navView.PaneDisplayMode = NavigationViewPaneDisplayMode.LeftCompact;
+					}
+					else if( object.ReferenceEquals( NavView.SelectedItem, navHome ) )
+					{
+						navView.PaneDisplayMode = NavigationViewPaneDisplayMode.LeftCompact;
+						SetNavViewDisplayMode( NavigationViewPaneDisplayMode.Left );
+					}
+
+					return;
 				}
-				else if( object.ReferenceEquals( NavView.SelectedItem, navHome ) )
-				{
-					navView.PaneDisplayMode = NavigationViewPaneDisplayMode.LeftCompact;
-					SetNavViewDisplayMode( NavigationViewPaneDisplayMode.Left );
-				}
-
-				return;
-			}
-
-			if( navViewItem.Tag is IOximetryImporter importer )
-			{
-				HandleImportRequestOximetry( importer );
+				case IOximetryImporter importer:
+					HandleImportRequestOximetry( importer );
+					break;
 			}
 		}
 	}
 	
+	private void LoadTabPage( Control page )
+	{
+		NavFrame.Content = page;
+		
+		Dispatcher.UIThread.Post( () =>
+		{
+			if( NavFrame.Content is InputElement control )
+			{
+				control.Focusable = true;
+				control.Focus();
+			}
+		}, DispatcherPriority.Loaded );
+
+		// Post the animation otherwise pages that take slightly longer to load won't
+		// have an animation since it will run before layout is complete
+		Dispatcher.UIThread.Post( () =>
+		{
+			new FadeNavigationTransitionInfo().RunAnimation( page, CancellationToken.None );
+		}, DispatcherPriority.Render );
+	}
+
 	private void SetNavViewDisplayMode( NavigationViewPaneDisplayMode mode )
 	{
 		Dispatcher.UIThread.Post( () =>
@@ -348,7 +366,8 @@ public partial class MainView : UserControl
 					
 				var profileID = ActiveUserProfile.UserProfileID;
 
-				dailyReportView.DataContext = db.LoadDailyReport( profileID, dailyReport.ReportDate.Date );
+				dailyReportView.ActiveUserProfile = ActiveUserProfile;
+				dailyReportView.DataContext       = db.LoadDailyReport( profileID, dailyReport.ReportDate.Date );
 			}
 		}
 	}

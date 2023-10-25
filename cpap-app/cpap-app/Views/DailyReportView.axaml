@@ -41,7 +41,7 @@
                 <TextBlock Text="No Data Available" Theme="{DynamicResource TitleTextBlockStyle}"/>
                 <TextBlock Text="Please select another date which has CPAP data available, or Import CPAP data for this date." Theme="{DynamicResource BodyTextBlockStyle}" Margin="0 15" />
             </StackPanel>
-            <TabStrip Name="DetailTypes" HorizontalAlignment="Stretch" WrapSelection="False" DockPanel.Dock="Top"
+            <TabStrip Name="DetailTypes" HorizontalAlignment="Stretch" WrapSelection="False" DockPanel.Dock="Top" SelectedIndex="-1"
                       SelectionChanged="DetailTypes_OnSelectionChanged">
                 <TabStrip.Styles>
                     <Style Selector="TabStripItem">

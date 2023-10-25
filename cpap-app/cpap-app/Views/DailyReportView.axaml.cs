@@ -21,7 +21,6 @@ using cpap_db;
 using cpaplib;
 
 using FluentAvalonia.UI.Controls;
-using FluentAvalonia.UI.Media.Animation;
 
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
@@ -61,6 +60,12 @@ public partial class DailyReportView : UserControl
 	
 	#endregion 
 	
+	#region Public properties
+	
+	public UserProfile ActiveUserProfile { get; set; }
+	
+	#endregion 
+	
 	#region Private fields 
 	
 	private List<DateTime> _datesWithData = new List<DateTime>();
@@ -77,14 +82,12 @@ public partial class DailyReportView : UserControl
 
 		TabFrame.IsNavigationStackEnabled = false;
 		TabFrame.CacheSize                = 0;
-		
-		TabFrame.Navigate( typeof( DailyDetailsView ), DataContext, new SuppressNavigationTransitionInfo() );
 	}
 	
 	#endregion 
 	
 	#region Base class overrides
-
+	
 	protected override void OnKeyDown( KeyEventArgs e )
 	{
 		if( e.Handled )
@@ -116,9 +119,11 @@ public partial class DailyReportView : UserControl
 	{
 		base.OnLoaded( e );
 
+		LoadTabPage( new DailyDetailsView() { DataContext = DataContext } );
+
 		using var store = StorageService.Connect();
 		
-		_datesWithData = store.GetStoredDates( UserProfileStore.GetLastUserProfile().UserProfileID );
+		_datesWithData = store.GetStoredDates( ActiveUserProfile.UserProfileID );
 
 		// TODO: Keep DisplayDateStart/DisplayDateEnd up to date (after importing, etc.)
 		if( _datesWithData.Count == 0 )
@@ -155,6 +160,12 @@ public partial class DailyReportView : UserControl
 
 	private void DetailTypes_OnSelectionChanged( object? sender, SelectionChangedEventArgs e )
 	{
+		if( TabFrame == null || DataContext == null )
+		{
+			// Ignore events that happen before the page is loaded. Not sure why this happens yet. 
+			return;
+		}
+		
 		if( sender is not TabStrip tabStrip )
 		{ 
 			return;
@@ -174,44 +185,42 @@ public partial class DailyReportView : UserControl
 					throw new Exception( $"{pageType} is an invalid view type" );
 				}
 
-				// Set the frame's content to the new view instance
-				TabFrame.Content = page;
 				page.DataContext = DataContext;
 			
 				// Changing the item's Tag from the view type to the view instance allows us to cache the loaded view
 				// so that next time the user clicks on the tab the view will have retained its state. This is preferable
 				// to using the caching built into Frame.Navigate(), as we don't need a Forward/Back navigation stack.  
 				selectedItem.Tag = page;
-			
-				// Post the animation otherwise pages that take slightly longer to load won't
-				// have an animation since it will run before layout is complete
-				Dispatcher.UIThread.Post( () =>
-				{
-					new FadeNavigationTransitionInfo().RunAnimation( page, CancellationToken.None );
-				}, DispatcherPriority.Render );
+
+				LoadTabPage( page );
 				break;
 			}
 			case Control page:
-				// Load the cached view into the frame 
-				TabFrame.Content = page;
-
-				// Post the animation otherwise pages that take slightly longer to load won't
-				// have an animation since it will run before layout is complete
-				Dispatcher.UIThread.Post( () =>
-				{
-					new FadeNavigationTransitionInfo().RunAnimation( page, CancellationToken.None );
-				}, DispatcherPriority.Render );
+				LoadTabPage( page );
 				break;
 			default:
 				throw new Exception( $"Unhandled page type: {selectedItem.Tag}" );
 		}
 	}
 	
+	private void LoadTabPage( Control page )
+	{
+		// Load the cached view into the frame 
+		TabFrame.Content = page;
+
+		// Post the animation otherwise pages that take slightly longer to load won't
+		// have an animation since it will run before layout is complete
+		Dispatcher.UIThread.Post( () =>
+		{
+			new FadeNavigationTransitionInfo().RunAnimation( page, CancellationToken.None );
+		}, DispatcherPriority.Render );
+	}
+
 	private void DateSelector_OnSelectedDateChanged( object? sender, SelectionChangedEventArgs e )
 	{
 		using var store = StorageService.Connect();
 
-		var profileID = UserProfileStore.GetLastUserProfile().UserProfileID;
+		var profileID = ActiveUserProfile.UserProfileID;
 
 		// Keep this up-to-date. Probably unnecessary and overkill, but it's quick and not terribly wasteful.
 		_datesWithData = store.GetStoredDates( profileID );
@@ -285,7 +294,7 @@ public partial class DailyReportView : UserControl
 			return;
 		}
 
-		var profileID = UserProfileStore.GetLastUserProfile().UserProfileID;
+		var profileID = ActiveUserProfile.UserProfileID;
 
 		using var connection = StorageService.Connect();
 		connection.DeletePulseOximetryData( profileID, e.DateTime );
