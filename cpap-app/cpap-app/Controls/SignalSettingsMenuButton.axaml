@@ -1,0 +1,79 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:fui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+             xmlns:controls="clr-namespace:cpap_app.Controls"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="400"
+             x:Class="cpap_app.Controls.SignalSettingsMenuButton">
+    <StackPanel Orientation="Horizontal">
+        <Button
+            Name="btnChartPinUnpin"
+            BorderThickness="0"
+            Background="Transparent"
+            Padding="8 4"
+            Click="OnPinClick">
+            <fui:SymbolIcon Name="btnPinUnpin" Symbol="Pin" />
+        </Button>
+        <Button
+            Name="btnChartSettings"
+            BorderThickness="0"
+            Background="Transparent"
+            Padding="8 4">
+            <Button.Flyout>
+                <MenuFlyout>
+                    <MenuItem Click="OnPinClick">
+                        <MenuItem.Icon>
+                            <fui:SymbolIcon Name="mnuPin" Symbol="Pin"/>
+                        </MenuItem.Icon>
+                        <MenuItem.Header>
+                            <TextBlock Name="txtPin" Text="Pin" />
+                        </MenuItem.Header>
+                    </MenuItem>
+                    <Separator />
+                    <MenuItem Header="Signal Color..." Click="ConfigureSignalColor_OnClick">
+                        <MenuItem.Icon>
+                            <fui:SymbolIcon Symbol="ColorLine" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Header="Fill Below" Click="FillBelow_OnClick">
+                        <MenuItem.Icon>
+                            <fui:SymbolIcon Name="mnuFillBelow" Symbol="Checkmark" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <Separator />
+                    <MenuItem Header="Configure Y-Axis...">
+                        <Grid ColumnDefinitions="Auto,12,Auto,12,Auto" RowDefinitions="Auto,Auto">
+                            <!-- Column headers -->
+                            <TextBlock Grid.Column="0" Grid.Row="0" Text="Scale Mode" />
+                            <TextBlock Grid.Column="2" Grid.Row="0" Text="Min" />
+                            <TextBlock Grid.Column="4" Grid.Row="0" Text="Max" />
+                            <!-- Controls -->
+                            <ComboBox Grid.Column="0" Grid.Row="1" SelectedIndex="0" Width="130">
+                                <ComboBoxItem>Defaults</ComboBoxItem>
+                                <ComboBoxItem>Auto-Scale</ComboBoxItem>
+                                <ComboBoxItem>Override</ComboBoxItem>
+                            </ComboBox>
+                            <fui:NumberBox Grid.Column="2" Grid.Row="1" IsEnabled="False" Width="100" SmallChange="5"
+                                           LargeChange="10" Minimum="0" Maximum="100" Value="0" />
+                            <fui:NumberBox Grid.Column="4" Grid.Row="1" IsEnabled="False" Width="100" SmallChange="5"
+                                           LargeChange="10" Minimum="0" Maximum="100" Value="100" />
+                        </Grid>
+                    </MenuItem>
+                    <MenuItem Name="EventOverlays" Header="Event Overlays..." IsSelected="True"
+                              Grid.IsSharedSizeScope="True">
+                        <MenuItem.Styles>
+                            <Style Selector="controls|CheckMarkMenuItem">
+                                <!-- NOTE: Without the negative margins, the menu items have too much space between them and
+                                     clicking the empty space dismisses the menu -->
+                                <Setter Property="Margin" Value="-4 -10 -24 -10" />
+                            </Style>
+                        </MenuItem.Styles>
+                        <!-- Child menu items will be inserted here by the code-behind -->
+                    </MenuItem>
+                </MenuFlyout>
+            </Button.Flyout>
+            <fui:SymbolIcon Symbol="Settings" />
+        </Button>
+    </StackPanel>
+</UserControl>

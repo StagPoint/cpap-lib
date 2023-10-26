@@ -62,8 +62,8 @@ public partial class SignalChartContainer : UserControl
 			}
 		}
 		
-		AddHandler( SignalChart.PinButtonClickedEvent, Chart_PinButtonClicked);
-		AddHandler( SignalChart.ChartDraggedEvent,     Chart_Dragged);
+		AddHandler( SignalChart.ChartConfigurationChangedEvent, OnChartConfigurationChanged );
+		AddHandler( SignalChart.ChartDraggedEvent,              Chart_Dragged );
 	}
 	
 	#endregion
@@ -143,14 +143,20 @@ public partial class SignalChartContainer : UserControl
 		Dispatcher.UIThread.Post( chart.BringIntoView, DispatcherPriority.Default );
 	}
 
-	private void Chart_PinButtonClicked( object? sender, RoutedEventArgs e )
+	private void OnChartConfigurationChanged( object? sender, ChartConfigurationChangedEventArgs e )
 	{
-		if( e.Source is not SignalChart chart )
+		if( e is { Source: SignalChart chart, PropertyName: nameof( SignalChartConfiguration.IsPinned ) } )
 		{
-			return;
+			Chart_IsPinnedChanged( chart, e.ChartConfiguration );
 		}
+		
+		var configurations = SignalChartConfigurationStore.Update( e.ChartConfiguration );
+		
+		UpdateConfigurations( configurations );
+	}
 
-		var config = chart.ChartConfiguration;
+	private void Chart_IsPinnedChanged( SignalChart chart, SignalChartConfiguration config )
+	{
 		if( config == null )
 		{
 			throw new Exception( $"Unexpected null value on property {nameof( SignalChartConfiguration )}" );
@@ -160,25 +166,20 @@ public partial class SignalChartContainer : UserControl
 
 		if( config.IsPinned )
 		{
-			config.DisplayOrder = -1;
-			
-			PinnedCharts.Children.Remove( chart );
-			UnPinnedCharts.Children.Insert( 0, chart );
-		}
-		else
-		{
 			config.DisplayOrder = 255;
 			
 			UnPinnedCharts.Children.Remove( chart );
 			PinnedCharts.Children.Add( chart );
 		}
+		else
+		{
+			config.DisplayOrder = -1;
+			
+			PinnedCharts.Children.Remove( chart );
+			UnPinnedCharts.Children.Insert( 0, chart );
+		}
 		
 		chart.RestoreState();
-		
-		config.IsPinned = !config.IsPinned;
-
-		var configurations = SignalChartConfigurationStore.Update( config );
-		UpdateConfigurations( configurations );
 	}
 
 	private void ChartDisplayedRangeChanged( object? sender, DateTimeRangeRoutedEventArgs e )

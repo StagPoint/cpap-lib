@@ -150,6 +150,10 @@ public partial class MainView : UserControl
 				case System.Type pageType:
 				{
 					var page = Activator.CreateInstance( pageType ) as Control;
+					if( page == null )
+					{
+						throw new InvalidCastException( $"The type {pageType} could not be cast to an appropriate view type" );
+					}
 
 					var transition = e.RecommendedNavigationTransitionInfo;
 					
@@ -157,7 +161,7 @@ public partial class MainView : UserControl
 					{
 						dailyReportView.ActiveUserProfile = ActiveUserProfile;
 						
-						// DailyReportView is way to heavy to deal with complex animations 
+						// DailyReportView is way too heavy to deal with complex animations 
 						transition = new SuppressNavigationTransitionInfo();
 					}
 					

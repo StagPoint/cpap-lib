@@ -37,7 +37,7 @@ namespace cpap_app.Views;
 
 public partial class SignalChart : UserControl
 {
-	#region Dependency Properties
+	#region Styled Properties
 
 	public static readonly StyledProperty<IBrush> ChartBackgroundProperty    = AvaloniaProperty.Register<SignalChart, IBrush>( nameof( ChartBackground ) );
 	public static readonly StyledProperty<IBrush> ChartGridLineColorProperty = AvaloniaProperty.Register<SignalChart, IBrush>( nameof( ChartGridLineColor ) );
@@ -74,17 +74,17 @@ public partial class SignalChart : UserControl
 		remove => RemoveHandler( TimeMarkerChangedEvent, value );
 	}
 	
-	public static readonly RoutedEvent<RoutedEventArgs> PinButtonClickedEvent = RoutedEvent.Register<SignalChart, RoutedEventArgs>( nameof( PinButtonClicked ), RoutingStrategies.Bubble );
+	public static readonly RoutedEvent<ChartConfigurationChangedEventArgs> ChartConfigurationChangedEvent = RoutedEvent.Register<SignalChart, ChartConfigurationChangedEventArgs>( nameof( ChartConfigurationChanged ), RoutingStrategies.Bubble );
 
-	public static void AddPinButtonClickedHandler( IInputElement element, EventHandler<RoutedEventArgs> handler )
+	public static void AddChartConfigurationChangedHandler( IInputElement element, EventHandler<ChartConfigurationChangedEventArgs> handler )
 	{
-		element.AddHandler( PinButtonClickedEvent, handler );
+		element.AddHandler( ChartConfigurationChangedEvent, handler );
 	}
 
-	public event EventHandler<RoutedEventArgs> PinButtonClicked
+	public event EventHandler<ChartConfigurationChangedEventArgs> ChartConfigurationChanged
 	{
-		add => AddHandler( PinButtonClickedEvent, value );
-		remove => RemoveHandler( PinButtonClickedEvent, value );
+		add => AddHandler( ChartConfigurationChangedEvent, value );
+		remove => RemoveHandler( ChartConfigurationChangedEvent, value );
 	}
 
 	public class ChartDragEventArgs : RoutedEventArgs
@@ -104,7 +104,14 @@ public partial class SignalChart : UserControl
 	
 	#region Public properties
 
-	public SignalChartConfiguration?      ChartConfiguration     { get; set; }
+	public static readonly DirectProperty<SignalChart, SignalChartConfiguration?> ChartConfigurationProperty =
+		AvaloniaProperty.RegisterDirect<SignalChart, SignalChartConfiguration?>( nameof( ChartConfiguration ), o => o.ChartConfiguration );
+
+	public SignalChartConfiguration? ChartConfiguration
+	{
+		get => _chartConfiguration;
+		set => SetAndRaise( ChartConfigurationProperty, ref _chartConfiguration, value );
+	}
 	public SignalChartConfiguration?      SecondaryConfiguration { get; set; }
 	public List<EventMarkerConfiguration> MarkerConfiguration    { get; set; }
 
@@ -138,26 +145,27 @@ public partial class SignalChart : UserControl
 
 	private const double MINIMUM_TIME_WINDOW = 30;
 
-	private CustomChartStyle     _chartStyle;
-	private DailyReport?         _day                = null;
-	private bool                 _hasDataAvailable   = false;
-	private bool                 _chartInitialized   = false;
-	private double               _selectionStartTime = 0;
-	private double               _selectionEndTime   = 0;
-	private GraphInteractionMode _interactionMode    = GraphInteractionMode.None;
-	private AxisLimits           _pointerDownAxisLimits;
-	private Point                _pointerDownPosition;
+	private SignalChartConfiguration? _chartConfiguration;
+	private CustomChartStyle          _chartStyle;
+	private DailyReport?              _day                = null;
+	private bool                      _hasDataAvailable   = false;
+	private bool                      _chartInitialized   = false;
+	private double                    _selectionStartTime = 0;
+	private double                    _selectionEndTime   = 0;
+	private GraphInteractionMode      _interactionMode    = GraphInteractionMode.None;
+	private AxisLimits                _pointerDownAxisLimits;
+	private Point                     _pointerDownPosition;
 
 	private HSpan          _selectionSpan;
 	private VLine          _hoverMarkerLine;
 	private HSpan          _hoverMarkerSpan;
 	private ReportedEvent? _hoverEvent = null;
+
+	private List<IPlottable>    _eventMarkers = new();
+	private List<ReportedEvent> _events       = new();
 	
-	private List<ReportedEvent> _events           = new();
-	private List<Signal>        _signals          = new();
-	private List<Signal>        _secondarySignals = new();
-	
-	private ColorPickerFlyout? _flyout;
+	private List<Signal> _signals          = new();
+	private List<Signal> _secondarySignals = new();
 	
 	#endregion 
 	
@@ -187,22 +195,6 @@ public partial class SignalChart : UserControl
 	#endregion 
 	
 	#region Base class overrides 
-	
-	protected override void OnLoaded( RoutedEventArgs e )
-	{
-		base.OnLoaded( e );
-
-		if( ChartConfiguration is { IsPinned: true } )
-		{
-			mnuPin.Symbol = Symbol.UnPin;
-			txtPin.Text   = "Unpin";
-		}
-		else
-		{
-			mnuPin.Symbol = Symbol.Pin;
-			txtPin.Text   = "Pin";
-		}
-	}
 	
 	protected override void OnApplyTemplate( TemplateAppliedEventArgs e )
 	{
@@ -304,74 +296,38 @@ public partial class SignalChart : UserControl
 				IndicateNoDataAvailable();
 			}
 		}
+		else if( change.Property.Name == nameof( ChartConfiguration ) )
+		{
+			btnSettings.ChartConfiguration = change.NewValue as SignalChartConfiguration;
+		}
 	}
 
 	#endregion 
 	
 	#region Event Handlers
 
-	private void ConfigureSignalColor_OnClick( object? sender, RoutedEventArgs e )
+	private void BtnSettings_OnChartConfigurationChanged( object? sender, ChartConfigurationChangedEventArgs e )
 	{
-		if( ChartConfiguration == null )
+		switch( e.PropertyName )
 		{
-			return;
+			case nameof( SignalChartConfiguration.PlotColor ):
+				RefreshPlotColor();
+				break;
+			case nameof( SignalChartConfiguration.DisplayedEvents ):
+				RefreshEventMarkers();
+				break;
+			case nameof( SignalChartConfiguration.FillBelow ):
+				RefreshPlotFill();
+				break;
 		}
 
-		if( _flyout == null )
+		RaiseEvent( new ChartConfigurationChangedEventArgs
 		{
-			_flyout = new ColorPickerFlyout();
-			
-			_flyout.Confirmed += ( flyout, args ) =>
-			{
-				var color = _flyout.ColorPicker.Color.ToDrawingColor();
-				ChartConfiguration.PlotColor = color;
-				
-				foreach( var plottable in Chart.Plot.GetPlottables() )
-				{
-					if( plottable is SignalPlot plot )
-					{
-						plot.Color = color;
-
-#pragma warning disable CS0618 // Type or member is obsolete
-						if( plot.FillType != FillType.NoFill )
-						{
-							SetPlotFill( plot, color );
-						}
-#pragma warning restore CS0618 // Type or member is obsolete
-					}
-				}
-				
-				Chart.RefreshRequest();
-			};
-		}
-		
-		_flyout.ColorPicker.PreviousColor = ChartConfiguration.PlotColor.ToColor2();
-		_flyout.ColorPicker.Color = _flyout.ColorPicker.PreviousColor;
-
-		_flyout.Placement                       = PlacementMode.Pointer;
-		_flyout.ColorPicker.IsMoreButtonVisible = true;
-		_flyout.ColorPicker.IsCompact           = false;
-		_flyout.ColorPicker.IsAlphaEnabled      = false;
-		_flyout.ColorPicker.UseSpectrum         = true;
-		_flyout.ColorPicker.UseColorWheel       = true;
-		_flyout.ColorPicker.UseColorTriangle    = false;
-
-		var hexColors = new[]
-		{
-			0xffebac23, 0xffb80058, 0xff008cf9, 0xff006e00, 0xff00bbad,
-			0xffd163e6, 0xffb24502, 0xffff9287, 0xff5954d6, 0xff00c6f8,
-			0xff878500, 0xff00a76c,
-			0xfff6da9c, 0xffff5caa, 0xff8accff, 0xff4bff4b, 0xff6efff4,
-			0xffedc1f5, 0xfffeae7c, 0xffffc8c3, 0xffbdbbef, 0xffbdf2ff,
-			0xfffffc43, 0xff65ffc8,
-			0xffaaaaaa,
-		};
-
-		_flyout.ColorPicker.UseColorPalette     = true;
-		_flyout.ColorPicker.PaletteColumnCount  = 16;
-		_flyout.ColorPicker.CustomPaletteColors = hexColors.Select( Avalonia.Media.Color.FromUInt32 );
-		
-		_flyout.ShowAt( this );
+			RoutedEvent        = ChartConfigurationChangedEvent,
+			Source             = this,
+			PropertyName       = e.PropertyName,
+			ChartConfiguration = e.ChartConfiguration,
+		} );
 	}
 	
 	private void ChartLabelOnPointerMoved( object? sender, PointerEventArgs e )
@@ -411,15 +367,6 @@ public partial class SignalChart : UserControl
 		ChartLabel.Cursor = new Cursor( StandardCursorType.SizeNorthSouth );
 
 		e.Handled = true;
-	}
-
-	private void OnPinClick( object? sender, RoutedEventArgs e )
-	{
-		RaiseEvent( new RoutedEventArgs
-		{
-			RoutedEvent = PinButtonClickedEvent,
-			Source = this
-		});
 	}
 
 	private void OnAxesChanged( object? sender, EventArgs e )
@@ -698,6 +645,65 @@ public partial class SignalChart : UserControl
 	#endregion 
 	
 	#region Private functions
+
+	private void RefreshPlotFill()
+	{
+		Debug.Assert( ChartConfiguration != null, nameof( ChartConfiguration ) + " != null" );
+		var fill = ChartConfiguration.FillBelow ?? false;
+
+		var list = Chart.Plot.GetPlottables();
+		foreach( var item in list )
+		{
+			if( item is SignalPlot plot )
+			{
+				if( !fill )
+				{
+					plot.FillDisable();
+				}
+				else
+				{
+					SetPlotFill( plot, plot.Color );
+				}
+			}
+		}
+	
+		Chart.RenderRequest();
+	}
+	
+	private void RefreshPlotColor()
+	{
+		Debug.Assert( ChartConfiguration != null, nameof( ChartConfiguration ) + " != null" );
+
+		var plottables = Chart.Plot.GetPlottables();
+		foreach( var plottable in plottables )
+		{
+			if( plottable is SignalPlot plot )
+			{
+				plot.Color = ChartConfiguration.PlotColor;
+			}
+		}
+
+		RefreshPlotFill();
+
+		Chart.RenderRequest();
+	}
+
+	private void RefreshEventMarkers()
+	{
+		foreach( var marker in _eventMarkers )
+		{
+			Chart.Plot.Remove( marker );
+		}
+		
+		_eventMarkers.Clear();
+		_events.Clear();
+
+		if( _day != null )
+		{
+			CreateEventMarkers( _day );
+			Chart.RenderRequest();
+		}
+	}
 
 	private void EndSelectionMode()
 	{
@@ -1172,8 +1178,6 @@ public partial class SignalChart : UserControl
 
 	private void CreateEventMarkers( DailyReport day )
 	{
-		int[] typesSeen = new int[ 256 ];
-
 		var flagTypes = ChartConfiguration!.DisplayedEvents;
 		if( flagTypes.Count == 0 )
 		{
@@ -1206,27 +1210,31 @@ public partial class SignalChart : UserControl
 					_                               => throw new ArgumentOutOfRangeException( $"Unhandled {nameof( EventMarkerPosition )} value {markerConfig.MarkerPosition}" )
 				};
 
+				IPlottable? marker = null;
+
 				switch( markerConfig.EventMarkerType )
 				{
 					case EventMarkerType.Flag:
-						Chart.Plot.AddVerticalLine( markerOffset, color, 1.5f, LineStyle.Solid, null );
+						marker = Chart.Plot.AddVerticalLine( markerOffset, color, 1.5f, LineStyle.Solid, null );
 						break;
 					case EventMarkerType.TickTop:
 						var topLine = Chart.Plot.AddMarker( markerOffset, limits.YMax, MarkerShape.verticalBar, 32, markerConfig.Color, null );
 						topLine.MarkerLineWidth = 1.5f;
+						marker = topLine;
 						break;
 					case EventMarkerType.TickBottom:
 						var bottomLine = Chart.Plot.AddMarker( markerOffset, limits.YMin, MarkerShape.verticalBar, 32, markerConfig.Color, null );
 						bottomLine.MarkerLineWidth = 1.5f;
+						marker = bottomLine;
 						break;
 					case EventMarkerType.ArrowTop:
-						Chart.Plot.AddMarker( markerOffset, limits.YMax, MarkerShape.filledTriangleDown, 16, markerConfig.Color, null );
+						marker = Chart.Plot.AddMarker( markerOffset, limits.YMax, MarkerShape.filledTriangleDown, 16, markerConfig.Color, null );
 						break;
 					case EventMarkerType.ArrowBottom:
-						Chart.Plot.AddMarker( markerOffset, limits.YMin, MarkerShape.filledTriangleUp, 16, markerConfig.Color, null );
+						marker = Chart.Plot.AddMarker( markerOffset, limits.YMin, MarkerShape.filledTriangleUp, 16, markerConfig.Color, null );
 						break;
 					case EventMarkerType.Span:
-						Chart.Plot.AddHorizontalSpan( startOffset, endOffset, color.MultiplyAlpha( 0.35f ) );
+						marker = Chart.Plot.AddHorizontalSpan( startOffset, endOffset, color.MultiplyAlpha( 0.35f ) );
 						break;
 					case EventMarkerType.None:
 						continue;
@@ -1234,9 +1242,11 @@ public partial class SignalChart : UserControl
 						throw new ArgumentOutOfRangeException( $"Unhandled {nameof( EventMarkerType )} value {markerConfig.EventMarkerType}" );
 				}
 
-				_events.Add( eventFlag );
-
-				typesSeen[ (int)eventFlag.Type ] = 1;
+				if( marker != null )
+				{
+					_eventMarkers.Add( marker );
+					_events.Add( eventFlag );
+				}
 			}
 		}
 	}

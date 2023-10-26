@@ -3,9 +3,9 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:ScottPlot="clr-namespace:ScottPlot.Avalonia;assembly=ScottPlot.Avalonia"
-             xmlns:controls="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+             xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
              xmlns:views="clr-namespace:cpap_app.Views"
-             xmlns:viewModels="clr-namespace:cpap_app.ViewModels"
+             xmlns:controls="clr-namespace:cpap_app.Controls"
              mc:Ignorable="d"
              d:DesignWidth="800"
              x:Class="cpap_app.Views.SignalChart"
@@ -44,92 +44,7 @@
                     HorizontalAlignment="Right"
                     VerticalAlignment="Top"
                     ZIndex="9999">
-            <!--<Button
-                Name="btnChartPinUnpin"
-                BorderThickness="0"
-                Background="Transparent"
-                Padding="8 4"
-                Click="OnPinClick"
-                Tag="{Binding $parent[views:SignalChart]}">
-                <controls:SymbolIcon Symbol="Pin" />
-            </Button>-->
-            <Button
-                Name="btnChartSettings"
-                BorderThickness="0"
-                Background="Transparent"
-                Padding="8 4"
-                Tag="{Binding $parent[views:SignalChart]}">
-                <Button.Flyout>
-                    <MenuFlyout>
-                        <MenuItem Click="OnPinClick">
-                            <MenuItem.Icon>
-                                <controls:SymbolIcon Name="mnuPin" Symbol="Pin" Margin="0 0 8 0"/>
-                            </MenuItem.Icon>
-                            <MenuItem.Header>
-                                <TextBlock Name="txtPin" Text="Pin" />
-                            </MenuItem.Header>
-                        </MenuItem>
-                        <Separator />
-                        <MenuItem Header="Signal Color..." Click="ConfigureSignalColor_OnClick">
-                            <MenuItem.Icon>
-                                <controls:SymbolIcon Symbol="ColorLine"/>
-                            </MenuItem.Icon>
-                        </MenuItem>
-                        <MenuItem Header="Fill Below">
-                            <MenuItem.Icon>
-                                <controls:SymbolIcon Symbol="Checkmark"/>
-                            </MenuItem.Icon>
-                        </MenuItem>
-                        <Separator />
-                        <MenuItem Header="Configure Y-Axis...">
-                            <Grid ColumnDefinitions="Auto,12,Auto,12,Auto" RowDefinitions="Auto,Auto">
-                                <!-- Column headers -->
-                                <TextBlock Grid.Column="0" Grid.Row="0" Text="Scale Mode" />
-                                <TextBlock Grid.Column="2" Grid.Row="0" Text="Min" />
-                                <TextBlock Grid.Column="4" Grid.Row="0" Text="Max" />
-                                <!-- Controls -->
-                                <ComboBox Grid.Column="0" Grid.Row="1" SelectedIndex="0" Width="130">
-                                    <ComboBoxItem>Defaults</ComboBoxItem>
-                                    <ComboBoxItem>Auto-Scale</ComboBoxItem>
-                                    <ComboBoxItem>Override</ComboBoxItem>
-                                </ComboBox>
-                                <controls:NumberBox Grid.Column="2" Grid.Row="1" IsEnabled="False" Width="100" SmallChange="5" LargeChange="10" Minimum="0" Maximum="100" Value="0" />
-                                <controls:NumberBox Grid.Column="4" Grid.Row="1" IsEnabled="False" Width="100" SmallChange="5" LargeChange="10" Minimum="0" Maximum="100" Value="100" />
-                            </Grid>
-                        </MenuItem>
-                        <MenuItem Header="Event Overlays..." IsSelected="True" Grid.IsSharedSizeScope="True">
-                            <MenuItem.Styles>
-                                <Style Selector="StackPanel.CheckMenuItem">
-                                    <Setter Property="Margin" Value="-4 -8 -24 -8" />
-                                    <Setter Property="Background" Value="Transparent" />
-                                    <Setter Property="IsHitTestVisible" Value="True" />
-                                </Style>
-                                <Style Selector="StackPanel > TextBlock">
-                                    <Setter Property="Padding" Value="4 8 24 8" />
-                                </Style>
-                                <Style Selector="controls|SymbolIcon">
-                                    <Setter Property="Margin" Value="8 0 16 0" />
-                                </Style>
-                                <Style Selector="Border">
-                                    <Setter Property="Margin" Value="8 0 16 0" />
-                                </Style>
-                            </MenuItem.Styles>
-                            <ItemsRepeater Name="EventTypesList">
-                                <ItemsRepeater.ItemTemplate>
-                                    <DataTemplate DataType="{x:Type viewModels:EventTypeIncludedItem}">
-                                        <StackPanel Orientation="Horizontal" Classes="CheckMenuItem">
-                                            <controls:SymbolIcon Symbol="Checkmark" IsVisible="{Binding IsIncluded}"/>
-                                            <Border Background="Transparent" Width="16" Height="16" IsVisible="{Binding !IsIncluded}" />
-                                            <TextBlock Text="{Binding Label}"/>                                
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </ItemsRepeater.ItemTemplate>
-                            </ItemsRepeater>
-                        </MenuItem>
-                    </MenuFlyout>
-                </Button.Flyout>
-                <controls:SymbolIcon Symbol="Settings" />
-            </Button>
+            <controls:SignalSettingsMenuButton Name="btnSettings" ChartConfigurationChanged="BtnSettings_OnChartConfigurationChanged" />
         </StackPanel>
         <Border
             Grid.Row="0"
