@@ -4,8 +4,10 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:fui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
              xmlns:controls="clr-namespace:cpap_app.Controls"
+             xmlns:configuration="clr-namespace:cpap_app.Configuration"
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="400"
-             x:Class="cpap_app.Controls.SignalSettingsMenuButton">
+             x:Class="cpap_app.Controls.SignalSettingsMenuButton"
+             x:DataType="configuration:SignalChartConfiguration">
     <StackPanel Orientation="Horizontal">
         <Button
             Name="btnChartPinUnpin"
@@ -49,15 +51,16 @@
                             <TextBlock Grid.Column="2" Grid.Row="0" Text="Min" />
                             <TextBlock Grid.Column="4" Grid.Row="0" Text="Max" />
                             <!-- Controls -->
-                            <ComboBox Grid.Column="0" Grid.Row="1" SelectedIndex="0" Width="130">
+                            <ComboBox Grid.Column="0" Grid.Row="1" Name="ComboScalingMode" SelectedIndex="{Binding ScalingMode, Mode=OneWay}" SelectionChanged="ComboScalingMode_OnSelectionChanged" Width="130">
+                                <!-- NOTE: DO NOT USE TWO-WAY DATA BINDING ON THIS COMBOBOX! Apparently a ComboBox sets its SelectedIndex to -1 when unloaded. -->
                                 <ComboBoxItem>Defaults</ComboBoxItem>
-                                <ComboBoxItem>Auto-Scale</ComboBoxItem>
+                                <ComboBoxItem>Auto-Fit</ComboBoxItem>
                                 <ComboBoxItem>Override</ComboBoxItem>
                             </ComboBox>
-                            <fui:NumberBox Grid.Column="2" Grid.Row="1" IsEnabled="False" Width="100" SmallChange="5"
-                                           LargeChange="10" Minimum="0" Maximum="100" Value="0" />
-                            <fui:NumberBox Grid.Column="4" Grid.Row="1" IsEnabled="False" Width="100" SmallChange="5"
-                                           LargeChange="10" Minimum="0" Maximum="100" Value="100" />
+                            <fui:NumberBox Grid.Column="2" Grid.Row="1" Name="NumberAxisMinValue" Width="100" SmallChange="5"
+                                           LargeChange="10" Minimum="0" Maximum="100" Value="{Binding AxisMinValue}" ValueChanged="AxisScalingValue_OnValueChanged"/>
+                            <fui:NumberBox Grid.Column="4" Grid.Row="1" Name="NumberAxisMaxValue" Width="100" SmallChange="5"
+                                           LargeChange="10" Minimum="0" Maximum="100" Value="{Binding AxisMaxValue}" ValueChanged="AxisScalingValue_OnValueChanged"/>
                         </Grid>
                     </MenuItem>
                     <MenuItem Name="EventOverlays" Header="Event Overlays..." IsSelected="True"

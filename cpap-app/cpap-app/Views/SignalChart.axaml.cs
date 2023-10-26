@@ -269,36 +269,31 @@ public partial class SignalChart : UserControl
 	protected override void OnPropertyChanged( AvaloniaPropertyChangedEventArgs change )
 	{
 		base.OnPropertyChanged( change );
-	
-		if( change.Property.Name == nameof( DataContext ) )
-		{
-			_signals.Clear();
-			_secondarySignals.Clear();
-			
-			if( change.NewValue is DailyReport day )
-			{
-				if( ChartConfiguration == null || string.IsNullOrEmpty( ChartConfiguration.SignalName ) )
-				{
-					throw new NullReferenceException( "No Signal name was provided" );
-				}
 
-				if( !_chartInitialized )
-				{
-					_day = day;
-				}
-				else
-				{
-					LoadData( day );
-				}
-			}
-			else if( change.NewValue == null )
-			{
-				IndicateNoDataAvailable();
-			}
-		}
-		else if( change.Property.Name == nameof( ChartConfiguration ) )
+		switch( change.Property.Name )
 		{
-			btnSettings.ChartConfiguration = change.NewValue as SignalChartConfiguration;
+			case nameof( DataContext ):
+				_signals.Clear();
+				_secondarySignals.Clear();
+			
+				switch( change.NewValue )
+				{
+					case DailyReport _ when ChartConfiguration == null || string.IsNullOrEmpty( ChartConfiguration.SignalName ):
+						throw new NullReferenceException( "No Signal name was provided" );
+					case DailyReport day when !_chartInitialized:
+						_day = day;
+						break;
+					case DailyReport day:
+						LoadData( day );
+						break;
+					case null:
+						IndicateNoDataAvailable();
+						break;
+				}
+				break;
+			case nameof( ChartConfiguration ):
+				btnSettings.ChartConfiguration = change.NewValue as SignalChartConfiguration;
+				break;
 		}
 	}
 
@@ -306,7 +301,7 @@ public partial class SignalChart : UserControl
 	
 	#region Event Handlers
 
-	private void BtnSettings_OnChartConfigurationChanged( object? sender, ChartConfigurationChangedEventArgs e )
+	private void OnChartConfigurationChanged( object? sender, ChartConfigurationChangedEventArgs e )
 	{
 		switch( e.PropertyName )
 		{
@@ -318,6 +313,9 @@ public partial class SignalChart : UserControl
 				break;
 			case nameof( SignalChartConfiguration.FillBelow ):
 				RefreshPlotFill();
+				break;
+			case nameof( SignalChartConfiguration.ScalingMode ):
+				// TODO: Refresh the chart's scaling mode
 				break;
 		}
 
@@ -1154,6 +1152,9 @@ public partial class SignalChart : UserControl
 					throw new ArgumentOutOfRangeException( $"Value {ChartConfiguration.ScalingMode} is not handled" );
 			}
 			
+			ChartConfiguration.AxisMinValue ??= signalMinValue;
+			ChartConfiguration.AxisMaxValue ??= signalMaxValue;
+
 			var extents = Math.Max( 1.0, maxValue - minValue );
 			var padding = ChartConfiguration.ScalingMode == AxisScalingMode.AutoFit ? extents * 0.1 : 0;
 

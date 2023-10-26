@@ -87,7 +87,7 @@ public class SignalChartConfiguration : IComparable<SignalChartConfiguration>
 	/// <summary>
 	/// If set to TRUE, the chart will paint the area under the Signal's waveform with a gradient 
 	/// </summary>
-	public bool? FillBelow { get; set; }
+	public bool? FillBelow { get; set; } = false;
 
 	/// <summary>
 	/// The color to use when drawing the Signal's waveform 

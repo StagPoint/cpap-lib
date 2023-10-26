@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 
 using Avalonia;
@@ -61,18 +62,36 @@ public partial class SignalSettingsMenuButton : UserControl
 		InitializeComponent();
 	}
 
+	private void RaiseChangedEvent( string propertyName )
+	{
+		Debug.Assert( ChartConfiguration != null, nameof( ChartConfiguration ) + " != null" );
+		
+		RaiseEvent( new ChartConfigurationChangedEventArgs
+		{
+			RoutedEvent        = ChartConfigurationChangedEvent,
+			PropertyName       = propertyName,
+			ChartConfiguration = ChartConfiguration
+		} );
+	}
+
 	protected override void OnPropertyChanged( AvaloniaPropertyChangedEventArgs change )
 	{
 		base.OnPropertyChanged( change );
 
 		if( change.Property.Name == nameof( ChartConfiguration ) && change.NewValue is SignalChartConfiguration config )
 		{
+			DataContext = config;
+			
+			NumberAxisMinValue.IsEnabled = config.ScalingMode == AxisScalingMode.Override;
+			NumberAxisMaxValue.IsEnabled = config.ScalingMode == AxisScalingMode.Override;
+			
 			UpdatePinMenu( config );
 			UpdatePinButton( config );
 			UpdateFillMenu( config );
 			UpdateEventMenu( config );
 		}
 	}
+	
 	private void UpdateEventMenu( SignalChartConfiguration config )
 	{
 		EventOverlays.Items.Clear();
@@ -96,12 +115,7 @@ public partial class SignalSettingsMenuButton : UserControl
 				else
 					config.DisplayedEvents.Add( eventType );
 
-				RaiseEvent( new ChartConfigurationChangedEventArgs()
-				{
-					RoutedEvent        = ChartConfigurationChangedEvent,
-					PropertyName       = nameof( SignalChartConfiguration.DisplayedEvents ),
-					ChartConfiguration = config,
-				} );
+				RaiseChangedEvent( nameof( SignalChartConfiguration.DisplayedEvents ) );
 			};
 
 			EventOverlays.Items.Add( new CheckMarkMenuItem() { DataContext = item } );
@@ -124,12 +138,7 @@ public partial class SignalSettingsMenuButton : UserControl
 				var color = _flyout.ColorPicker.Color.ToDrawingColor();
 				ChartConfiguration.PlotColor = color;
 				
-				RaiseEvent( new ChartConfigurationChangedEventArgs()
-				{
-					RoutedEvent        = ChartConfigurationChangedEvent,
-					PropertyName       = nameof( ChartConfiguration.PlotColor ),
-					ChartConfiguration = ChartConfiguration
-				});
+				RaiseChangedEvent( nameof( SignalChartConfiguration.PlotColor ) );
 			};
 		}
 		
@@ -197,41 +206,61 @@ public partial class SignalSettingsMenuButton : UserControl
 	
 	private void OnPinClick( object? sender, RoutedEventArgs e )
 	{
-		if( ChartConfiguration == null )
-		{
-			return;
-		}
+		Debug.Assert( ChartConfiguration != null, nameof( ChartConfiguration ) + " != null" );
 
 		ChartConfiguration.IsPinned = !ChartConfiguration.IsPinned;
 
 		UpdatePinMenu( ChartConfiguration );
 		UpdatePinButton( ChartConfiguration );
 
-		RaiseEvent( new ChartConfigurationChangedEventArgs()
-		{
-			RoutedEvent        = ChartConfigurationChangedEvent,
-			PropertyName       = nameof( ChartConfiguration.IsPinned ),
-			ChartConfiguration = ChartConfiguration
-		} );
+		RaiseChangedEvent( nameof( SignalChartConfiguration.IsPinned ) );
 	}
 	
 	private void FillBelow_OnClick( object? sender, RoutedEventArgs e )
 	{
-		if( ChartConfiguration == null )
-		{
-			return;
-		}
-
+		Debug.Assert( ChartConfiguration != null, nameof( ChartConfiguration ) + " != null" );
+		
 		ChartConfiguration.FillBelow = !(ChartConfiguration.FillBelow ?? false);
 		
 		UpdateFillMenu( ChartConfiguration );
 
-		RaiseEvent( new ChartConfigurationChangedEventArgs()
+		RaiseChangedEvent( nameof( SignalChartConfiguration.FillBelow ) );
+	}
+	
+	private void ComboScalingMode_OnSelectionChanged( object? sender, SelectionChangedEventArgs e )
+	{
+		Debug.Assert( ChartConfiguration != null, nameof( ChartConfiguration ) + " != null" );
+
+		// Stupidly, the SelectedIndex value gets set to -1 when the control unloads. Who thought *that* was a good idea for a bindable control?
+		if( ComboScalingMode.SelectedIndex < 0 )
 		{
-			RoutedEvent        = ChartConfigurationChangedEvent,
-			PropertyName       = nameof( ChartConfiguration.FillBelow ),
-			ChartConfiguration = ChartConfiguration
-		} );
+			return;
+		}
+		
+		var value = (AxisScalingMode)ComboScalingMode.SelectedIndex;
+
+		if( value == ChartConfiguration.ScalingMode )
+		{
+			return;
+		}
+
+		ChartConfiguration.ScalingMode = value;
+
+		NumberAxisMinValue.IsEnabled = value == AxisScalingMode.Override;
+		NumberAxisMaxValue.IsEnabled = value == AxisScalingMode.Override;
+		
+		RaiseChangedEvent( nameof( SignalChartConfiguration.ScalingMode ) );
+	}
+	
+	private void AxisScalingValue_OnValueChanged( NumberBox sender, NumberBoxValueChangedEventArgs args )
+	{
+		Debug.Assert( ChartConfiguration != null, nameof( ChartConfiguration ) + " != null" );
+
+		var propertyName = sender == NumberAxisMinValue 
+			? nameof( ChartConfiguration.AxisMinValue ) 
+			: nameof( ChartConfiguration.AxisMaxValue );
+		
+		RaiseChangedEvent( propertyName );
 	}
 }
 

@@ -44,7 +44,7 @@
                     HorizontalAlignment="Right"
                     VerticalAlignment="Top"
                     ZIndex="9999">
-            <controls:SignalSettingsMenuButton Name="btnSettings" ChartConfigurationChanged="BtnSettings_OnChartConfigurationChanged" />
+            <controls:SignalSettingsMenuButton Name="btnSettings" ChartConfigurationChanged="OnChartConfigurationChanged" />
         </StackPanel>
         <Border
             Grid.Row="0"
