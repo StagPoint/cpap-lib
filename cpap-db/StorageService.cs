@@ -142,7 +142,7 @@ namespace cpap_db
 			{
 				foreach( var mapping in _mappings )
 				{
-					Debug.WriteLine( $"Checking database table {mapping.Key.Name}" );
+					//Debug.WriteLine( $"Checking database table {mapping.Key.Name}" );
 					mapping.Value.CreateTable( store.Connection );
 				}
 

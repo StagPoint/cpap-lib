@@ -81,6 +81,12 @@
                         <!-- Child menu items will be inserted here by the code-behind -->
                     </MenuItem>
                     
+                    <Separator />
+                    
+                    <MenuItem Name="mnuVisualizations" Header="Visualizations" IsEnabled="{Binding $self.ItemCount}">
+                        <!-- Child menu items will be inserted here by the code-behind -->
+                    </MenuItem>
+                    
                 </MenuFlyout>
             </Button.Flyout>
             <fui:SymbolIcon Symbol="Settings" />

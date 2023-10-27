@@ -160,11 +160,13 @@ public partial class SignalChart : UserControl
 	private HSpan          _hoverMarkerSpan;
 	private ReportedEvent? _hoverEvent = null;
 
-	private List<IPlottable>    _eventMarkers = new();
-	private List<ReportedEvent> _events       = new();
+	private List<IPlottable>    _visualizations = new();
+	private List<IPlottable>    _eventMarkers   = new();
+	private List<ReportedEvent> _events         = new();
 	
-	private List<Signal> _signals          = new();
-	private List<Signal> _secondarySignals = new();
+	private List<Signal>     _signals          = new();
+	private List<SignalPlot> _signalPlots      = new();
+	private List<Signal>     _secondarySignals = new();
 	
 	#endregion 
 	
@@ -190,17 +192,29 @@ public partial class SignalChart : UserControl
 
 		//Chart.ContextMenu = null;
 
-		btnSettings.AdditionalMenuItems.Add( new SignalMenuItem
+		btnSettings.Visualizations.Add( new SignalMenuItem
 		{
-			Header  = "Visualize Sliding Average",
+			Header  = "Sliding Average (60sec)",
 			Command = VisualizeSlidingAverage
 		} );
 		
-		btnSettings.AdditionalMenuItems.Add( new SignalMenuItem
+		btnSettings.Visualizations.Add( new SignalMenuItem
 		{
-			Header  = "Visualize Standard Deviation",
+			Header  = "Standard Deviation (60sec)",
 			Command = VisualizeStandardDeviation
 		} );
+		
+		btnSettings.Visualizations.Add( new SignalMenuItem
+		{
+			Header = "Average (Entire series)",
+			Command = VisualizeAverage
+		});
+		
+		btnSettings.Visualizations.Add( new SignalMenuItem
+		{
+			Header = "95th Percentile",
+			Command = VisualizePercentile95
+		});
 	}
 
 	#endregion 
@@ -281,6 +295,8 @@ public partial class SignalChart : UserControl
 			case nameof( DataContext ):
 				_signals.Clear();
 				_secondarySignals.Clear();
+				_signalPlots.Clear();
+				_visualizations.Clear();
 			
 				switch( change.NewValue )
 				{
@@ -544,11 +560,6 @@ public partial class SignalChart : UserControl
 
 				var timeRangeSelected = TimeSpan.FromSeconds( _selectionSpan.X2 - _selectionSpan.X1 );
 
-				if( timeRangeSelected.Minutes > 10 )
-				{
-					Debug.WriteLine( "wtf"  );
-				}
-			
 				EventTooltip.Tag       = FormattedTimespanConverter.FormatTimeSpan( timeRangeSelected, TimespanFormatType.Long, true );
 				EventTooltip.IsVisible = timeRangeSelected.TotalSeconds > double.Epsilon;
 				
@@ -653,8 +664,41 @@ public partial class SignalChart : UserControl
 	
 	#region Private functions
 
+	private void VisualizePercentile95()
+	{
+		Debug.Assert( _day != null,               nameof( _day ) + " != null" );
+		Debug.Assert( ChartConfiguration != null, nameof( ChartConfiguration ) + " != null" );
+		
+		var stats = _day.Statistics.FirstOrDefault( x => x.SignalName == ChartConfiguration.SignalName );
+		if( stats != null )
+		{
+			var color = DataColors.GetDataColor( _visualizations.Count + 8 ).ToDrawingColor();
+
+			_visualizations.Add( Chart.Plot.AddHorizontalLine( stats.Percentile95, color, 1f, LineStyle.Dash, "95%" ) );
+			Chart.RenderRequest();
+		}
+	}
+
+	private void VisualizeAverage()
+	{
+		Debug.Assert( _day != null,               nameof( _day ) + " != null" );
+		Debug.Assert( ChartConfiguration != null, nameof( ChartConfiguration ) + " != null" );
+		
+		var stats = _day.Statistics.FirstOrDefault( x => x.SignalName == ChartConfiguration.SignalName );
+		if( stats != null )
+		{
+			var color = DataColors.GetDataColor( _visualizations.Count + 8 ).ToDrawingColor();
+
+			_visualizations.Add( Chart.Plot.AddHorizontalLine( stats.Average, color, 1f, LineStyle.Dash, "Avg" ) );
+			Chart.RenderRequest();
+		}
+	}
+
 	private void VisualizeSlidingAverage()
 	{
+		Debug.Assert( _day != null, nameof( _day ) + " != null" );
+		var  color = DataColors.GetDataColor( _visualizations.Count + 8 ).ToDrawingColor();
+		
 		bool first = true;
 		foreach( var signal in _signals )
 		{
@@ -671,9 +715,12 @@ public partial class SignalChart : UserControl
 				samples[ i ] = calc.Average;
 			}
 
-			var graph = Chart.Plot.AddSignal( samples, signal.FrequencyInHz, Color.Red, first ? "Avg" : null );
+			var graph = Chart.Plot.AddSignal( samples, signal.FrequencyInHz, color, first ? "Avg" : null );
 			graph.OffsetX    = (signal.StartTime - _day.RecordingStartTime).TotalSeconds;
+			graph.LineStyle  = LineStyle.Dash;
 			graph.MarkerSize = 0;
+
+			_visualizations.Add( graph );
 			
 			first = false;
 		}
@@ -683,6 +730,9 @@ public partial class SignalChart : UserControl
 	
 	private void VisualizeStandardDeviation()
 	{
+		Debug.Assert( _day != null, nameof( _day ) + " != null" );
+		var color = DataColors.GetDataColor( _visualizations.Count + 8 ).ToDrawingColor();
+		
 		bool first = true;
 		foreach( var signal in _signals )
 		{
@@ -699,9 +749,12 @@ public partial class SignalChart : UserControl
 				samples[ i ] = calc.Average + calc.StandardDeviation;
 			}
 
-			var graph = Chart.Plot.AddSignal( samples, signal.FrequencyInHz, Color.Red, first ? "StdDev" : null );
+			var graph = Chart.Plot.AddSignal( samples, signal.FrequencyInHz, color, first ? "StdDev" : null );
+			graph.LineStyle  = LineStyle.Dash;
 			graph.OffsetX    = (signal.StartTime - _day.RecordingStartTime).TotalSeconds;
 			graph.MarkerSize = 0;
+
+			_visualizations.Add( graph );
 
 			if( signal.MinValue < 0 )
 			{
@@ -711,7 +764,8 @@ public partial class SignalChart : UserControl
 					mirror[ i ] = -samples[ i ];
 				}
 				
-				graph            = Chart.Plot.AddSignal( mirror, signal.FrequencyInHz, Color.Red, first ? "StdDev" : null );
+				graph            = Chart.Plot.AddSignal( mirror, signal.FrequencyInHz, color, null );
+				graph.LineStyle  = LineStyle.Dash;
 				graph.OffsetX    = (signal.StartTime - _day.RecordingStartTime).TotalSeconds;
 				graph.MarkerSize = 0;
 			}
@@ -732,19 +786,15 @@ public partial class SignalChart : UserControl
 		// TODO: Which alpha values actually work best for each theme?
 		double alpha = isDarkTheme ? 0.35 : 0.45;
 
-		var list = Chart.Plot.GetPlottables();
-		foreach( var item in list )
+		foreach( var plot in _signalPlots )
 		{
-			if( item is SignalPlot plot )
+			if( !fill )
 			{
-				if( !fill )
-				{
-					plot.FillDisable();
-				}
-				else
-				{
-					plot.FillBelow( plot.Color, Colors.Transparent.ToDrawingColor(), alpha );
-				}
+				plot.FillDisable();
+			}
+			else
+			{
+				plot.FillBelow( plot.Color, Colors.Transparent.ToDrawingColor(), alpha );
 			}
 		}
 
@@ -758,13 +808,9 @@ public partial class SignalChart : UserControl
 	{
 		Debug.Assert( ChartConfiguration != null, nameof( ChartConfiguration ) + " != null" );
 
-		var plottables = Chart.Plot.GetPlottables();
-		foreach( var plottable in plottables )
+		foreach( var plot in _signalPlots )
 		{
-			if( plottable is SignalPlot plot )
-			{
-				plot.Color = ChartConfiguration.PlotColor;
-			}
+			plot.Color = ChartConfiguration.PlotColor;
 		}
 
 		RefreshPlotFill( false );
@@ -1047,6 +1093,7 @@ public partial class SignalChart : UserControl
 	private void LoadData( DailyReport day )
 	{
 		_day = day;
+		
 		_events.Clear();
 
 		CurrentValue.Text = "";
@@ -1174,6 +1221,8 @@ public partial class SignalChart : UserControl
 				firstSessionAdded ? ChartConfiguration.Title : null
 			);
 
+			_signalPlots.Add( graph );
+
 			if( ChartConfiguration.ShowStepped )
 			{
 				graph.StepDisplay      = true;
@@ -1196,6 +1245,8 @@ public partial class SignalChart : UserControl
 						secondarySignal.FrequencyInHz, 
 						SecondaryConfiguration.PlotColor, 
 						firstSessionAdded ? SecondaryConfiguration.Title : null );
+
+					_signalPlots.Add( secondaryGraph );
 					
 					var secondaryOffset = (secondarySignal.StartTime - day.RecordingStartTime).TotalSeconds;
 					

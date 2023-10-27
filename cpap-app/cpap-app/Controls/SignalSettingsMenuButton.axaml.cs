@@ -50,7 +50,7 @@ public partial class SignalSettingsMenuButton : UserControl
 		set => SetAndRaise( ChartConfigurationProperty, ref _chartConfiguration, value );
 	}
 
-	public List<SignalMenuItem> AdditionalMenuItems = new();
+	public List<SignalMenuItem> Visualizations = new();
 	
 	#endregion 
 	
@@ -78,11 +78,9 @@ public partial class SignalSettingsMenuButton : UserControl
 	{
 		base.OnApplyTemplate( e );
 		
-		if( btnChartSettings.Flyout is MenuFlyout flyout && AdditionalMenuItems.Count > 0 )
+		if( Visualizations.Count > 0 )
 		{
-			flyout.Items.Add( new Separator() );
-
-			foreach( var item in AdditionalMenuItems )
+			foreach( var item in Visualizations )
 			{
 				var menuItem = new MenuItem()
 				{
@@ -92,7 +90,7 @@ public partial class SignalSettingsMenuButton : UserControl
 				
 				menuItem.AddHandler( MenuItem.ClickEvent, MenuItemClickHandler );
 
-				flyout.Items.Add( menuItem );
+				mnuVisualizations.Items.Add( menuItem );
 			}
 		}
 	}

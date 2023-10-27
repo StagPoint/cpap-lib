@@ -9,6 +9,5 @@ public class DailyReportViewModel : ViewModelBase
 {
 	public DailyReportViewModel( DateTime date )
 	{
-		Debug.WriteLine( $"Load date: {date}" );
 	}
 }
