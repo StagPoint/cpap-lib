@@ -24,6 +24,7 @@
             Padding="8 4">
             <Button.Flyout>
                 <MenuFlyout>
+                    
                     <MenuItem Click="OnPinClick">
                         <MenuItem.Icon>
                             <fui:SymbolIcon Name="mnuPin" Symbol="Pin"/>
@@ -32,19 +33,24 @@
                             <TextBlock Name="txtPin" Text="Pin" />
                         </MenuItem.Header>
                     </MenuItem>
+                    
                     <Separator />
+                    
                     <MenuItem Header="Signal Color..." Click="ConfigureSignalColor_OnClick">
                         <MenuItem.Icon>
                             <fui:SymbolIcon Symbol="ColorLine" />
                         </MenuItem.Icon>
                     </MenuItem>
+                    
                     <MenuItem Header="Fill Below" Click="FillBelow_OnClick">
                         <MenuItem.Icon>
                             <fui:SymbolIcon Name="mnuFillBelow" Symbol="Checkmark" />
                         </MenuItem.Icon>
                     </MenuItem>
+                    
                     <Separator />
-                    <MenuItem Name="Configure" Header="Configure Y-Axis...">
+                    
+                    <MenuItem Name="Configure" Header="Configure Y-Axis..." StaysOpenOnClick="True">
                         <Grid ColumnDefinitions="Auto,12,Auto,12,Auto" RowDefinitions="Auto,Auto">
                             <!-- Column headers -->
                             <TextBlock Grid.Column="0" Grid.Row="0" Text="Scale Mode" />
@@ -63,8 +69,8 @@
                                            LargeChange="10" Minimum="0" Value="{Binding AxisMaxValue}" ValueChanged="AxisScalingValue_OnValueChanged"/>
                         </Grid>
                     </MenuItem>
-                    <MenuItem Name="EventOverlays" Header="Event Overlays..." IsSelected="True"
-                              Grid.IsSharedSizeScope="True">
+                    
+                    <MenuItem Name="EventOverlays" Header="Event Overlays..." IsSelected="True" Grid.IsSharedSizeScope="True" StaysOpenOnClick="True">
                         <MenuItem.Styles>
                             <Style Selector="controls|CheckMarkMenuItem">
                                 <!-- NOTE: Without the negative margins, the menu items have too much space between them and
@@ -74,6 +80,7 @@
                         </MenuItem.Styles>
                         <!-- Child menu items will be inserted here by the code-behind -->
                     </MenuItem>
+                    
                 </MenuFlyout>
             </Button.Flyout>
             <fui:SymbolIcon Symbol="Settings" />

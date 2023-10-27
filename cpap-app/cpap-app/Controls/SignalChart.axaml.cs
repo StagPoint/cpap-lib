@@ -13,6 +13,7 @@ using Avalonia.Media;
 using Avalonia.Styling;
 
 using cpap_app.Configuration;
+using cpap_app.Controls;
 using cpap_app.Converters;
 using cpap_app.Events;
 using cpap_app.Styling;
@@ -188,8 +189,20 @@ public partial class SignalChart : UserControl
 		ChartLabel.PointerMoved       += ChartLabelOnPointerMoved;
 
 		//Chart.ContextMenu = null;
+
+		btnSettings.AdditionalMenuItems.Add( new SignalMenuItem
+		{
+			Header  = "Visualize Sliding Average",
+			Command = VisualizeSlidingAverage
+		} );
+		
+		btnSettings.AdditionalMenuItems.Add( new SignalMenuItem
+		{
+			Header  = "Visualize Standard Deviation",
+			Command = VisualizeStandardDeviation
+		} );
 	}
-	
+
 	#endregion 
 	
 	#region Base class overrides 
@@ -639,6 +652,75 @@ public partial class SignalChart : UserControl
 	#endregion 
 	
 	#region Private functions
+
+	private void VisualizeSlidingAverage()
+	{
+		bool first = true;
+		foreach( var signal in _signals )
+		{
+			var windowSize = (int)(60 * signal.FrequencyInHz);
+			var calc       = new MovingAverageCalculator( windowSize );
+
+			var samples = new double[ signal.Samples.Count ];
+
+			for( int i = 0; i < signal.Samples.Count; i++ )
+			{
+				var sample = signal.Samples[ i ];
+				calc.AddObservation( sample );
+
+				samples[ i ] = calc.Average;
+			}
+
+			var graph = Chart.Plot.AddSignal( samples, signal.FrequencyInHz, Color.Red, first ? "Avg" : null );
+			graph.OffsetX    = (signal.StartTime - _day.RecordingStartTime).TotalSeconds;
+			graph.MarkerSize = 0;
+			
+			first = false;
+		}
+		
+		Chart.RenderRequest();
+	}
+	
+	private void VisualizeStandardDeviation()
+	{
+		bool first = true;
+		foreach( var signal in _signals )
+		{
+			var windowSize = (int)(60 * signal.FrequencyInHz);
+			var calc       = new MovingAverageCalculator( windowSize );
+
+			var samples = new double[ signal.Samples.Count ];
+
+			for( int i = 0; i < signal.Samples.Count; i++ )
+			{
+				var sample = signal.Samples[ i ];
+				calc.AddObservation( Math.Abs( sample ) );
+
+				samples[ i ] = calc.Average + calc.StandardDeviation;
+			}
+
+			var graph = Chart.Plot.AddSignal( samples, signal.FrequencyInHz, Color.Red, first ? "StdDev" : null );
+			graph.OffsetX    = (signal.StartTime - _day.RecordingStartTime).TotalSeconds;
+			graph.MarkerSize = 0;
+
+			if( signal.MinValue < 0 )
+			{
+				var mirror = new double[ samples.Length ];
+				for( int i = 0; i < samples.Length; i++ )
+				{
+					mirror[ i ] = -samples[ i ];
+				}
+				
+				graph            = Chart.Plot.AddSignal( mirror, signal.FrequencyInHz, Color.Red, first ? "StdDev" : null );
+				graph.OffsetX    = (signal.StartTime - _day.RecordingStartTime).TotalSeconds;
+				graph.MarkerSize = 0;
+			}
+			
+			first = false;
+		}
+		
+		Chart.RenderRequest();
+	}
 
 	private void RefreshPlotFill( bool renderImmediately = false)
 	{
@@ -1164,6 +1246,7 @@ public partial class SignalChart : UserControl
 			}
 
 			// TODO: This is probably not the best place (or way) to be doing this, but the data is conveniently available...
+			// Ensure that the configuration's min and max values are not NULL, which causes issues with data-bound controls. 
 			ChartConfiguration.AxisMinValue ??= signalMinValue;
 			ChartConfiguration.AxisMaxValue ??= signalMaxValue;
 

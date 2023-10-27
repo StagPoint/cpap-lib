@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 // ReSharper disable UseIndexFromEndExpression
@@ -130,11 +131,18 @@ namespace cpaplib
 				return Samples[ Samples.Count - 1 ];
 			}
 			
+			// If the time is exactly divisible by the sample frequency, there is no need for interpolation
+			if( leftIndex == rightIndex || !interpolate )
+			{
+				return Samples[ leftIndex ];
+			}
+
 			// Grab the samples on either side of the given time
 			double a = Samples[ leftIndex ];
 			double b = Samples[ rightIndex ];
 
 			// If not interpolating, then just return the sample that is closest to the given time
+			// ReSharper disable once ConditionIsAlwaysTrueOrFalse (ReSharper is straight up wrong about this)
 			if( !interpolate )
 			{
 				return a;
@@ -148,7 +156,10 @@ namespace cpaplib
 			double t = (offset - timeA) / (timeB - timeA);
 
 			// Return a standard linear interpolation between the samples 
-			return (1.0 - t) * a + b * t;
+			var result = (1.0 - t) * a + b * t;
+			//Debug.Assert( !double.IsNaN( result ), $"{nameof( GetValueAtTime )} returned a NaN value for Signal {Name} at time {time}" );
+
+			return result;
 		}
 		
 		#endregion 

@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 
@@ -48,6 +50,8 @@ public partial class SignalSettingsMenuButton : UserControl
 		set => SetAndRaise( ChartConfigurationProperty, ref _chartConfiguration, value );
 	}
 
+	public List<SignalMenuItem> AdditionalMenuItems = new();
+	
 	#endregion 
 	
 	#region Private fields
@@ -60,6 +64,37 @@ public partial class SignalSettingsMenuButton : UserControl
 	public SignalSettingsMenuButton()
 	{
 		InitializeComponent();
+	}
+	
+	private void MenuItemClickHandler( object? sender, RoutedEventArgs e )
+	{
+		if( sender is MenuItem { Tag: Action action } )
+		{
+			action();
+		}
+	}
+
+	protected override void OnApplyTemplate( TemplateAppliedEventArgs e )
+	{
+		base.OnApplyTemplate( e );
+		
+		if( btnChartSettings.Flyout is MenuFlyout flyout && AdditionalMenuItems.Count > 0 )
+		{
+			flyout.Items.Add( new Separator() );
+
+			foreach( var item in AdditionalMenuItems )
+			{
+				var menuItem = new MenuItem()
+				{
+					Header = item.Header,
+					Tag    = item.Command,
+				};
+				
+				menuItem.AddHandler( MenuItem.ClickEvent, MenuItemClickHandler );
+
+				flyout.Items.Add( menuItem );
+			}
+		}
 	}
 
 	private void RaiseChangedEvent( string propertyName )
@@ -259,12 +294,6 @@ public partial class SignalSettingsMenuButton : UserControl
 	{
 		Debug.Assert( ChartConfiguration != null, nameof( ChartConfiguration ) + " != null" );
 
-		// Databinding when the submenu isn't open causes issues with the bound data (I think databinding when not visible is an issue in Avalonia/FluentAvalonia)
-		// if( !sender.IsKeyboardFocusWithin )
-		// {
-		// 	return;
-		// }
-
 		var propertyName = sender == NumberAxisMinValue 
 			? nameof( ChartConfiguration.AxisMinValue ) 
 			: nameof( ChartConfiguration.AxisMaxValue );
@@ -273,3 +302,8 @@ public partial class SignalSettingsMenuButton : UserControl
 	}
 }
 
+public class SignalMenuItem
+{
+	public string Header  { get; set; }
+	public Action Command { get; set; }
+}
