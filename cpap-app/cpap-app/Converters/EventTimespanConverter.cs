@@ -31,6 +31,6 @@ public class EventTimespanConverter : IValueConverter
 
 	public object? ConvertBack( object? value, Type targetType, object? parameter, CultureInfo culture )
 	{
-		throw new NotImplementedException( $"Two-way binding is not supported for {nameof( EventTimespanConverter )}" );
+		throw new NotSupportedException( $"Two-way binding is not supported for {nameof( EventTimespanConverter )}" );
 	}
 }

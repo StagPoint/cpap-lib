@@ -156,6 +156,12 @@ public static class SignalChartConfigurationStore
 					config.ShowStepped = true;
 					config.ScalingMode = AxisScalingMode.AutoFit;
 					break;
+				
+				case SignalNames.AHI:
+					config.ShowStepped = true;
+					config.ScalingMode = AxisScalingMode.AutoFit;
+					config.DisplayedEvents.AddRange( EventTypes.Apneas );
+					break;
 			}
 
 			store.Insert( config );

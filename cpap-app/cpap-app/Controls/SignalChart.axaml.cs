@@ -20,8 +20,6 @@ using cpap_app.Helpers;
 
 using cpaplib;
 
-using FluentAvalonia.UI.Controls;
-
 using ScottPlot;
 using ScottPlot.Avalonia;
 using ScottPlot.Plottable;
@@ -204,11 +202,6 @@ public partial class SignalChart : UserControl
 		TimeMarkerLine.IsVisible = false;
 	
 		InitializeChartProperties( Chart );
-	
-		if( _day != null )
-		{
-			LoadData( _day );
-		}
 	}
 
 	protected override void OnKeyDown( KeyEventArgs args )
@@ -307,12 +300,15 @@ public partial class SignalChart : UserControl
 		{
 			case nameof( SignalChartConfiguration.PlotColor ):
 				RefreshPlotColor();
+				Chart.RenderRequest();
 				break;
 			case nameof( SignalChartConfiguration.DisplayedEvents ):
 				RefreshEventMarkers();
+				Chart.RenderRequest();
 				break;
 			case nameof( SignalChartConfiguration.FillBelow ):
 				RefreshPlotFill();
+				Chart.RenderRequest();
 				break;
 			case nameof( SignalChartConfiguration.ScalingMode ):
 				// TODO: Refresh the chart's scaling mode
@@ -644,10 +640,15 @@ public partial class SignalChart : UserControl
 	
 	#region Private functions
 
-	private void RefreshPlotFill()
+	private void RefreshPlotFill( bool renderImmediately = false)
 	{
 		Debug.Assert( ChartConfiguration != null, nameof( ChartConfiguration ) + " != null" );
 		var fill = ChartConfiguration.FillBelow ?? false;
+
+		var isDarkTheme = Application.Current?.ActualThemeVariant == ThemeVariant.Dark;
+		
+		// TODO: Which alpha values actually work best for each theme?
+		double alpha = isDarkTheme ? 0.35 : 0.45;
 
 		var list = Chart.Plot.GetPlottables();
 		foreach( var item in list )
@@ -660,15 +661,18 @@ public partial class SignalChart : UserControl
 				}
 				else
 				{
-					SetPlotFill( plot, plot.Color );
+					plot.FillBelow( plot.Color, Colors.Transparent.ToDrawingColor(), alpha );
 				}
 			}
 		}
-	
-		Chart.RenderRequest();
+
+		if( renderImmediately )
+		{
+			Chart.RenderRequest();
+		}
 	}
 	
-	private void RefreshPlotColor()
+	private void RefreshPlotColor( bool renderImmediately = false )
 	{
 		Debug.Assert( ChartConfiguration != null, nameof( ChartConfiguration ) + " != null" );
 
@@ -681,12 +685,15 @@ public partial class SignalChart : UserControl
 			}
 		}
 
-		RefreshPlotFill();
+		RefreshPlotFill( false );
 
-		Chart.RenderRequest();
+		if( renderImmediately )
+		{
+			Chart.RenderRequest();
+		}
 	}
 
-	private void RefreshEventMarkers()
+	private void RefreshEventMarkers( bool renderImmediately = false)
 	{
 		foreach( var marker in _eventMarkers )
 		{
@@ -699,7 +706,11 @@ public partial class SignalChart : UserControl
 		if( _day != null )
 		{
 			CreateEventMarkers( _day );
-			Chart.RenderRequest();
+
+			if( renderImmediately )
+			{
+				Chart.RenderRequest();
+			}
 		}
 	}
 
@@ -968,6 +979,9 @@ public partial class SignalChart : UserControl
 			Chart.Configuration.AxesChangedEventEnabled = false;
 			Chart.Plot.Clear();
 
+			// Always display the name of the Signal, even when there is no data available
+			ChartLabel.Text = ChartConfiguration.SignalName;
+
 			// Check to see if there are any sessions with the named Signal. If not, display the "No Data Available" message and eject.
 			_hasDataAvailable = day.Sessions.FirstOrDefault( x => x.GetSignalByName( ChartConfiguration.SignalName ) != null ) != null;
 			if( !_hasDataAvailable )
@@ -978,7 +992,6 @@ public partial class SignalChart : UserControl
 			}
 			else
 			{
-				ChartLabel.Text        = ChartConfiguration.SignalName;
 				NoDataLabel.IsVisible  = false;
 				CurrentValue.IsVisible = true;
 				Chart.IsEnabled        = true;
@@ -1003,6 +1016,7 @@ public partial class SignalChart : UserControl
 			}
 
 			PlotSignal( Chart, day, ChartConfiguration.SignalName, ChartConfiguration.AxisMinValue, ChartConfiguration.AxisMaxValue );
+			RefreshPlotFill( false );
 
 			// TODO: This should come *before* ChartSignal(), but relies on the axis limits being finalized first. Fix that.
 			CreateEventMarkers( day );
@@ -1119,13 +1133,6 @@ public partial class SignalChart : UserControl
 			graph.MarkerSize  = 0;
 			graph.UseParallel = true;
 			
-			// "Fill Below" is only available on signals that do not cross a zero line and do not have a secondary 
-			// signal. 
-			if( signal is { MinValue: >= 0, MaxValue: > 0 } && SecondaryConfiguration == null && (ChartConfiguration.FillBelow ?? false) )
-			{
-				SetPlotFill( graph, chartColor );
-			}
-
 			firstSessionAdded = false;
 		}
 
@@ -1141,6 +1148,10 @@ public partial class SignalChart : UserControl
 					maxValue = signalMaxValue;
 					break;
 				case AxisScalingMode.AutoFit:
+					if( Math.Abs( dataMaxValue - dataMinValue ) < float.Epsilon )
+					{
+						dataMaxValue += 1;
+					}
 					minValue = dataMinValue;
 					maxValue = dataMaxValue;
 					break;
@@ -1151,7 +1162,8 @@ public partial class SignalChart : UserControl
 				default:
 					throw new ArgumentOutOfRangeException( $"Value {ChartConfiguration.ScalingMode} is not handled" );
 			}
-			
+
+			// TODO: This is probably not the best place (or way) to be doing this, but the data is conveniently available...
 			ChartConfiguration.AxisMinValue ??= signalMinValue;
 			ChartConfiguration.AxisMaxValue ??= signalMaxValue;
 
@@ -1167,16 +1179,6 @@ public partial class SignalChart : UserControl
 		}
 	}
 	
-	private static void SetPlotFill( SignalPlot graph, Color chartColor )
-	{
-		var isDarkTheme = Application.Current?.ActualThemeVariant == ThemeVariant.Dark;
-		
-		// TODO: Which alpha values actually work best for each theme?
-		double alpha = isDarkTheme ? 0.35 : 0.45;
-		
-		graph.FillBelow( chartColor, Colors.Transparent.ToDrawingColor(), alpha );
-	}
-
 	private void CreateEventMarkers( DailyReport day )
 	{
 		var flagTypes = ChartConfiguration!.DisplayedEvents;

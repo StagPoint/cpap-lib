@@ -162,7 +162,7 @@ public partial class MainView : UserControl
 						dailyReportView.ActiveUserProfile = ActiveUserProfile;
 						
 						// DailyReportView is way too heavy to deal with complex animations 
-						transition = new SuppressNavigationTransitionInfo();
+						//transition = new SuppressNavigationTransitionInfo();
 					}
 					
 					LoadTabPage( page, transition );

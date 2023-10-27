@@ -81,8 +81,11 @@ public partial class SignalSettingsMenuButton : UserControl
 		if( change.Property.Name == nameof( ChartConfiguration ) && change.NewValue is SignalChartConfiguration config )
 		{
 			DataContext = config;
-			
+
+			NumberAxisMinValue.Value     = config.AxisMinValue ?? 0;
 			NumberAxisMinValue.IsEnabled = config.ScalingMode == AxisScalingMode.Override;
+
+			NumberAxisMaxValue.Value     = config.AxisMaxValue ?? 4000;
 			NumberAxisMaxValue.IsEnabled = config.ScalingMode == AxisScalingMode.Override;
 			
 			UpdatePinMenu( config );
@@ -255,6 +258,12 @@ public partial class SignalSettingsMenuButton : UserControl
 	private void AxisScalingValue_OnValueChanged( NumberBox sender, NumberBoxValueChangedEventArgs args )
 	{
 		Debug.Assert( ChartConfiguration != null, nameof( ChartConfiguration ) + " != null" );
+
+		// Databinding when the submenu isn't open causes issues with the bound data (I think databinding when not visible is an issue in Avalonia/FluentAvalonia)
+		// if( !sender.IsKeyboardFocusWithin )
+		// {
+		// 	return;
+		// }
 
 		var propertyName = sender == NumberAxisMinValue 
 			? nameof( ChartConfiguration.AxisMinValue ) 

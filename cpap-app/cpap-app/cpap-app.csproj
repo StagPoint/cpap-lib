@@ -32,4 +32,11 @@
       <ProjectReference Include="..\..\cpap-db\cpap-db.csproj" />
       <ProjectReference Include="..\..\cpap-lib\cpap-lib.csproj" />
     </ItemGroup>
+
+    <ItemGroup>
+      <Compile Update="Controls\SignalChart.axaml.cs">
+        <DependentUpon>SignalChart.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+    </ItemGroup>
 </Project>

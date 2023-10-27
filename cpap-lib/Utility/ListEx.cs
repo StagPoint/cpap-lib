@@ -687,7 +687,7 @@ namespace cpaplib
 
 			public void Reset()
 			{
-				throw new NotImplementedException();
+				// Does nothing. Function is needed for satisfying interface implementation. 
 			}
 
 			#endregion

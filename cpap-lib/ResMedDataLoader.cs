@@ -350,7 +350,6 @@ namespace cpaplib
 				maskSession.Signals.RemoveAll( x => !x.Samples.Any( value => value >= x.MinValue ) );
 			}
 
-			// TODO: This is the wrong place to be removing sessions, as it can throw off the times of successive sessions 
 			// Remove all sessions that are shorter than five minutes
 			day.Sessions.RemoveAll( x => x.Signals.Count == 0 || x.Duration.TotalMinutes < 5 );
 			
@@ -414,6 +413,9 @@ namespace cpaplib
 					session.StartTime = DateUtil.Min( session.StartTime, signal.StartTime );
 					session.EndTime   = DateUtil.Max( session.EndTime, signal.EndTime );
 				}
+
+                // Generate any additional signals that we need
+                GenerateCalculatedSignals( day, session );
 				
 				lastRecordedTime  = DateUtil.Max( lastRecordedTime, session.EndTime );
 				firstRecordedTime = DateUtil.Min( firstRecordedTime, session.StartTime );
@@ -432,6 +434,71 @@ namespace cpaplib
 			// Generate events that are of interest which are not reported by the ResMed machine
 			GenerateEvents( day );
 		}
+		
+		private static void GenerateCalculatedSignals( DailyReport day, Session session )
+		{
+			// TODO: Generate the "Inspiration Time" and "Expiration Time" signals? Are those important enough to do so?
+			GenerateSignalAHI( day, session );
+		}
+		
+		private static void GenerateSignalAHI( DailyReport day, Session session )
+		{
+			const double SAMPLE_INTERVAL = 2;
+
+			var signalDuration = Math.Floor( session.Duration.TotalSeconds / SAMPLE_INTERVAL ) * SAMPLE_INTERVAL;
+			Debug.Assert( signalDuration <= session.Duration.TotalSeconds, "Incorrect Signal length calculation" );
+
+			// Compile a list of AHI-relevant events that happened during the Session
+			var events = day.Events.Where( x => x.StartTime >= session.StartTime && x.StartTime + x.Duration <= session.EndTime ).ToList();
+			events.RemoveAll( x => !EventTypes.Apneas.Contains( x.Type ) );
+			
+			// Events aren't stored in chronological order, but we want chronological order here
+			events.Sort( ( a, b ) => a.StartTime.CompareTo( b.StartTime ) );
+
+			// The stack will hold all events that have *started* within the one hour sliding window 
+			var stack = new List<ReportedEvent>( events.Count );
+			
+			var samples = new List<double>( (int)Math.Ceiling( signalDuration / SAMPLE_INTERVAL ) );
+			var signal = new Signal
+			{
+				Name              = SignalNames.AHI,
+				FrequencyInHz     = 1.0 / SAMPLE_INTERVAL,
+				MinValue          = 0,
+				MaxValue          = 100,
+				UnitOfMeasurement = "",
+				Samples           = samples,
+				StartTime         = session.StartTime,
+				EndTime           = session.EndTime
+			};
+
+			session.Signals.Add( signal );
+
+			// There are much more efficient ways of calculating this Signal, but this is straightforward and efficient enough for the purpose.
+			
+			var endTime = session.StartTime.AddSeconds( signalDuration  - SAMPLE_INTERVAL );
+			for( DateTime time = session.StartTime; time < endTime; time = time.AddSeconds( SAMPLE_INTERVAL ) )
+			{
+				while( events.Count > 0 && events[ 0 ].StartTime <= time )
+				{
+					stack.Add( events[ 0 ] );
+					events.RemoveAt( 0 );
+				}
+
+				while( stack.Count > 0 && stack[ 0 ].StartTime <= time.AddHours( -1 ) )
+				{
+					stack.RemoveAt( 0 );
+				}
+
+				samples.Add( stack.Count );
+			}
+			
+			// Ensure that the Signal always drops to zero at the end. This is mostly cosmetic, tbh. 
+			samples.Add( 0 );
+
+			// It's not really a problem if the Signal length exceeds the Session length, except that this isn't a recorded Signal
+			// so there's no good reason to have it extend the Session length to accomodate it. 
+			Debug.Assert( Math.Abs( samples.Count * SAMPLE_INTERVAL - signalDuration ) <= 0.01, "Signal length exceeds Session length" );
+		}
 
 		private static void GenerateEvents( DailyReport day )
 		{
@@ -441,8 +508,9 @@ namespace cpaplib
 		
 		private static void GenerateFlowLimitEvents( DailyReport day )
 		{
-			// TODO: Flow Limitation Redline needs to be a configurable value 
+			// TODO: Flow Limitation event parameters need to be a configurable value 
 			const double FlowLimitRedline = 0.3;
+			const int    MinEventDuration = 3;
 
 			List<ReportedEvent> flowLimitEvents = new List<ReportedEvent>();
 			
@@ -451,7 +519,7 @@ namespace cpaplib
 				var signal = session.GetSignalByName( SignalNames.FlowLimit );
 				if( signal != null )
 				{
-					flowLimitEvents.AddRange( Annotate( EventType.FlowLimitation, signal, 5, FlowLimitRedline, false ) );
+					flowLimitEvents.AddRange( Annotate( EventType.FlowLimitation, signal, MinEventDuration, FlowLimitRedline, false ) );
 				}
 			}
 			
