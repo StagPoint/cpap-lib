@@ -20,8 +20,10 @@
                     Text="Please use the Import button on the Navigation menu to import pulse oximetry data."
                     Margin="10" TextWrapping="Wrap" />
             </StackPanel>
+            
             <StackPanel Name="SourcesSummary" x:DataType="viewModels:DailySummaryViewModel"
                         Margin="4 8 0 0">
+                
                 <ItemsRepeater ItemsSource="{Binding Sources}">
                     <ItemsRepeater.ItemTemplate>
                         <DataTemplate>
@@ -32,6 +34,7 @@
                         </DataTemplate>
                     </ItemsRepeater.ItemTemplate>
                 </ItemsRepeater>
+                
                 <Grid Margin="0 10" ColumnDefinitions="Auto,20,Auto,*" RowDefinitions="Auto,Auto,Auto,Auto">
                     <TextBlock Grid.Column="0" Grid.Row="0" Text="Date:"
                                Theme="{DynamicResource BodyStrongTextBlockStyle}" />
@@ -51,6 +54,7 @@
                                Text="{Binding TotalSleepTime, StringFormat={}{0:T}}" />
                 </Grid>
             </StackPanel>
+            
             <StackPanel Name="pnlOximetryInfo" Orientation="Vertical">
                 <Expander
                     ExpandDirection="Down"
@@ -72,6 +76,7 @@
                         <views:EventSummaryView Name="OxygenEvents" Margin="0 10 0 0" />
                     </StackPanel>
                 </Expander>
+                
                 <Expander
                     ExpandDirection="Down"
                     IsExpanded="True"
@@ -92,6 +97,7 @@
                         <views:EventSummaryView Name="PulseEvents" Margin="0 10 0 0" />
                     </StackPanel>
                 </Expander>
+                
                 <Expander
                     ExpandDirection="Down"
                     IsExpanded="True"
@@ -109,9 +115,10 @@
                     </Expander.Header>
                     <views:OximetrySessionsList />
                 </Expander>
+                
                 <Button HorizontalAlignment="Stretch" Margin="1 12" Click="DeleteOximetryData_OnClick">
-                    <StackPanel Orientation="Horizontal" Spacing="12">
-                        <controls:SymbolIcon Symbol="Delete" />
+                    <StackPanel Orientation="Horizontal" Spacing="12" Margin="-16 0 0 0">
+                        <controls:SymbolIcon Symbol="Delete"/>
                         <TextBlock Text="Delete Pulse Oximetry Data" />
                     </StackPanel>
                 </Button>

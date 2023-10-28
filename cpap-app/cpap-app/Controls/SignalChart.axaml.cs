@@ -191,7 +191,13 @@ public partial class SignalChart : UserControl
 		ChartLabel.PointerMoved       += ChartLabelOnPointerMoved;
 
 		//Chart.ContextMenu = null;
-
+		
+		btnSettings.Visualizations.Add( new SignalMenuItem
+		{
+			Header  = "Mark Respirations",
+			Command = VisualizeRespirations
+		} );
+		
 		btnSettings.Visualizations.Add( new SignalMenuItem
 		{
 			Header  = "Sliding Average (60sec)",
@@ -664,6 +670,49 @@ public partial class SignalChart : UserControl
 	
 	#region Private functions
 
+	private void VisualizeRespirations()
+	{
+		Debug.Assert( _day != null, nameof( _day ) + " != null" );
+
+		var timeRange = Chart.Plot.GetAxisLimits();
+		var startTime = _day.RecordingStartTime.AddSeconds( timeRange.XMin );
+		var endTime   = _day.RecordingStartTime.AddSeconds( timeRange.XMax );
+
+		foreach( var signal in _signals )
+		{
+			if( !DateHelper.RangesOverlap( signal.StartTime, signal.EndTime, startTime, endTime ) )
+			{
+				continue;
+			}
+
+			double signalOffset = (signal.StartTime - _day.RecordingStartTime).TotalSeconds;
+			double interval     = 1.0 / signal.FrequencyInHz;
+
+			double startOffset = (startTime - signal.StartTime).TotalSeconds;
+			int    startIndex  = Math.Max( (int)Math.Floor( startOffset * signal.FrequencyInHz ), 0 );
+			
+			double endOffset = (endTime - signal.StartTime).TotalSeconds;
+			int    endIndex  = Math.Min( (int)Math.Floor( endOffset * signal.FrequencyInHz ), signal.Samples.Count - 1 );
+
+			var lastSign = signal.Samples[ startIndex ] >= 0 ? 1 : -1;
+			for( int i = startIndex; i < endIndex; i++ )
+			{
+				var sign = signal.Samples[ i ] >= 0 ? 1 : -1;
+				if( sign != lastSign )
+				{
+					var lineOffset = signalOffset + i * interval; 
+					Chart.Plot.AddVerticalLine( lineOffset, Color.Red, 1f, LineStyle.Solid );
+
+					lastSign = sign;
+
+					i += Math.Max( (int)signal.FrequencyInHz, 1 );
+				}
+			}
+		}
+		
+		Chart.RenderRequest();
+	}
+
 	private void VisualizePercentile95()
 	{
 		Debug.Assert( _day != null,               nameof( _day ) + " != null" );
@@ -744,7 +793,7 @@ public partial class SignalChart : UserControl
 			for( int i = 0; i < signal.Samples.Count; i++ )
 			{
 				var sample = signal.Samples[ i ];
-				calc.AddObservation( Math.Abs( sample ) );
+				calc.AddObservation( sample );
 
 				samples[ i ] = calc.Average + calc.StandardDeviation;
 			}

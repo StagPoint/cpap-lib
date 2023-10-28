@@ -103,6 +103,12 @@
                 <views:DailySessionsList Name="DailySessionsList" />
             </Expander>
 
+            <Button HorizontalAlignment="Stretch" Margin="1 12" Click="ReimportCurrentDate">
+                <StackPanel Orientation="Horizontal" Spacing="12" Margin="-16 0 0 0">
+                    <controls:SymbolIcon Symbol="Refresh" />
+                    <TextBlock Text="{Binding ReportDate, Mode=OneWay, StringFormat={}Re-Import {0:D}}" />
+                </StackPanel>
+            </Button>
         </StackPanel>
     </ScrollViewer>
 </UserControl>

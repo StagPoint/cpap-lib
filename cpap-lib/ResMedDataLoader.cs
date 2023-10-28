@@ -41,7 +41,7 @@ namespace cpaplib
 			_machineInfo = LoadMachineIdentificationInfo( folderPath );
 
 			var indexFilename = Path.Combine( folderPath, "STR.edf" );
-			var days = LoadIndexAndSettings( indexFilename, minDate, maxDate );
+			var days          = LoadIndexAndSettings( indexFilename, minDate ?? DateTime.MinValue, maxDate ?? DateTime.MaxValue );
 			
 #if ALLOW_ASYNC
 			var tasks = new Task[ days.Count ];
@@ -753,7 +753,7 @@ namespace cpaplib
 			day.Events.Sort();
 		}
 
-		private List<DailyReport> LoadIndexAndSettings( string filename, DateTime? minDate, DateTime? maxDate )
+		private List<DailyReport> LoadIndexAndSettings( string filename, DateTime minDate, DateTime maxDate )
 		{
 			var days = new List<DailyReport>();
 			
@@ -1017,29 +1017,26 @@ namespace cpaplib
 			return settings;
 		}
 
-		private static void FilterDaysByDate( List<DailyReport> days, DateTime? minDate, DateTime? maxDate )
+		private static void FilterDaysByDate( List<DailyReport> days, DateTime minDate, DateTime maxDate )
 		{
 			int dayIndex = 0;
-			if( minDate.HasValue || maxDate.HasValue )
+			while( dayIndex < days.Count )
 			{
-				while( dayIndex < days.Count )
+				var date = days[ dayIndex ].ReportDate.Date;
+
+				if( date < minDate )
 				{
-					var date = days[ dayIndex ].ReportDate.Date;
-
-					if( minDate.HasValue && date < minDate )
-					{
-						days.RemoveAt( dayIndex );
-						continue;
-					}
-
-					if( maxDate.HasValue && date > maxDate )
-					{
-						days.RemoveAt( dayIndex );
-						continue;
-					}
-
-					dayIndex += 1;
+					days.RemoveAt( dayIndex );
+					continue;
 				}
+
+				if( date > maxDate )
+				{
+					days.RemoveAt( dayIndex );
+					continue;
+				}
+
+				dayIndex += 1;
 			}
 		}
 
