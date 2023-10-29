@@ -9,7 +9,7 @@
              mc:Ignorable="d"
              d:DesignWidth="800"
              x:Class="cpap_app.Views.SignalChart"
-             Height="220"
+             Height="200"
              ChartForeground="{DynamicResource TextFillColorPrimaryBrush}"
              ChartBackground="{DynamicResource ControlOnImageFillColorDefaultBrush}"
              ChartBorderColor="{DynamicResource ControlStrokeColorSecondaryBrush}"

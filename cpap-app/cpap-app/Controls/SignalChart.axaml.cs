@@ -706,23 +706,6 @@ public partial class SignalChart : UserControl
 		Chart.RenderRequest();
 	}
 
-	private class BreathRecord
-	{
-		public DateTime StartInspiration { get; set; }
-		public DateTime StartExpiration  { get; set; }
-		public DateTime EndTime          { get; set; }
-		
-		public DateTime TimeOfPeakInspiration { get; set; }
-		public DateTime TimeOfPeakExpiration  { get; set; }
-		
-		public double MinValue { get; set; }
-		public double MaxValue { get; set; }
-
-		public double InspirationLength => (StartExpiration - StartInspiration).TotalSeconds;
-		public double ExpirationLength  => (EndTime - StartExpiration).TotalSeconds;
-		public double TotalLength       => (EndTime - StartInspiration).TotalSeconds;
-	}
-
 	private void VisualizeRespirations()
 	{
 		Debug.Assert( _day != null, nameof( _day ) + " != null" );
@@ -738,7 +721,7 @@ public partial class SignalChart : UserControl
 				continue;
 			}
 
-			var breaths = DetectBreaths( signal );
+			var breaths = BreathDetection.DetectBreaths( signal );
 
 			double signalOffset = (signal.StartTime - _day.RecordingStartTime).TotalSeconds;
 
@@ -753,100 +736,12 @@ public partial class SignalChart : UserControl
 		Chart.RenderRequest();
 	}
 
-	private static List<BreathRecord> DetectBreaths( Signal signal )
-	{
-		const double MIN_BREATH_LENGTH = 1.0;
-
-		var results = new List<BreathRecord>();
-		
-		var filtered = ButterworthFilter.Filter( signal.Samples.ToArray(), signal.FrequencyInHz, 0.75 );
-
-		var lastSign          = filtered[ 0 ] >= 0 ? 1 : -1;
-		var lastStartIndex    = 0;
-		var lastSignFlipIndex = 0;
-		
-		var minValue            = 0.0;
-		var peakExpirationIndex = 0;
-		
-		var maxValue             = 0.0;
-		var peakInspirationIndex = 0;
-
-		for( int i = 0; i < filtered.Length; i++ )
-		{
-			var sample = signal.Samples[ i ];
-
-			if( sample <= minValue )
-			{
-				minValue            = sample;
-				peakExpirationIndex = i;
-			}
-
-			if( sample >= maxValue )
-			{
-				maxValue             = sample;
-				peakInspirationIndex = i;
-			}
-			
-			var sign = filtered[ i ] >= 0 ? 1 : -1;
-			if( sign == lastSign )
-			{
-				continue;
-			}
-			
-			if( sign == 1 )
-			{
-				var breath = new BreathRecord
-				{
-					StartInspiration      = signal.StartTime.AddSeconds( lastStartIndex / signal.FrequencyInHz ),
-					StartExpiration       = signal.StartTime.AddSeconds( lastSignFlipIndex / signal.FrequencyInHz ),
-					EndTime               = signal.StartTime.AddSeconds( i / signal.FrequencyInHz ),
-					TimeOfPeakInspiration = signal.StartTime.AddSeconds( peakInspirationIndex / signal.FrequencyInHz ),
-					TimeOfPeakExpiration  = signal.StartTime.AddSeconds( peakExpirationIndex / signal.FrequencyInHz ),
-					MinValue              = minValue,
-					MaxValue              = maxValue,
-				};
-
-				// If the breath is longer than a reasonable amount of time for a very short breath, add it to the list
-				if( breath.TotalLength > MIN_BREATH_LENGTH )
-				{
-					results.Add( breath );
-				}
-				// otherwise, extend the time of the last breath to merge with this "breath"
-				else if( results.Count > 0 )
-				{
-					// Note that this "merge" process effectively extends the length of the expiratory phase, which seems
-					// perfectly reasonable given the description of ResMed's "fuzzy logic" for phase determination given
-					// in https://doi.org/10.2147/MDER.S70062 (although obviously this code is not an implementation of
-					// that logic per se). 
-					// TODO: Implement "fuzzy logic" breath detection? Could use topographical persistence peak finding? Would handle baseline wandering better, I think.
-					
-					var lastIndex = results.Count - 1;
-					results[ lastIndex ].EndTime  = breath.EndTime;
-					results[ lastIndex ].MinValue = Math.Min( results[ lastIndex ].MinValue, minValue );
-					results[ lastIndex ].MaxValue = Math.Max( results[ lastIndex ].MaxValue, maxValue );
-				}
-
-				lastStartIndex       = i;
-				peakInspirationIndex = i;
-				peakExpirationIndex  = i;
-				
-				minValue             = 0;
-				maxValue             = 0;
-			}
-
-			lastSign          = sign;
-			lastSignFlipIndex = i;
-		}
-
-		return results;
-	}
-
 	private void VisualizePercentile95()
 	{
 		Debug.Assert( _day != null,               nameof( _day ) + " != null" );
 		Debug.Assert( ChartConfiguration != null, nameof( ChartConfiguration ) + " != null" );
 		
-		var stats = _day.Statistics.FirstOrDefault( x => x.SignalName == ChartConfiguration.SignalName );
+		var stats = _day.Statistics.FirstOrDefault( x => x.SignalName == ChartConfiguration.Title );
 		if( stats != null )
 		{
 			var color = DataColors.GetDataColor( _visualizations.Count + 8 ).ToDrawingColor();
@@ -861,7 +756,7 @@ public partial class SignalChart : UserControl
 		Debug.Assert( _day != null,               nameof( _day ) + " != null" );
 		Debug.Assert( ChartConfiguration != null, nameof( ChartConfiguration ) + " != null" );
 		
-		var stats = _day.Statistics.FirstOrDefault( x => x.SignalName == ChartConfiguration.SignalName );
+		var stats = _day.Statistics.FirstOrDefault( x => x.SignalName == ChartConfiguration.Title );
 		if( stats != null )
 		{
 			var color = DataColors.GetDataColor( _visualizations.Count + 8 ).ToDrawingColor();

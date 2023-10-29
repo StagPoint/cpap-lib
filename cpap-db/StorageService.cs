@@ -55,7 +55,6 @@ namespace cpap_db
 			var profileMapping = CreateMapping<UserProfile>( TableNames.UserProfiles );
 
 			var dayMapping = CreateMapping<DailyReport>( TableNames.DailyReport );
-			dayMapping.PrimaryKey = dayMapping.PrimaryKey;
 			dayMapping.ForeignKey = new ForeignKeyColumn( profileMapping.PrimaryKey.ColumnName, typeof( int ), TableNames.UserProfiles, profileMapping.PrimaryKey.ColumnName, true );
 
 			var machineInfoMapping = CreateMapping<MachineIdentification>( TableNames.MachineInfo );

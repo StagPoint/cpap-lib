@@ -7,8 +7,8 @@ namespace cpaplib
 	{
 		#region Private fields
 
-		private double[] _Y = new double[ 3 ];
-		private double[] _X = new double[ 2 ];
+		private double[] _Y = new double[ 2 ];
+		private double[] _Z = new double[ 3 ];
 
 		private int    _order;
 		private double _beta;
@@ -75,9 +75,9 @@ namespace cpaplib
 		{
 			double filtered =
 				beta * sample +
-				(1 - beta) * _Y[ 0 ];
+				(1 - beta) * _Z[ 0 ];
 
-			_Y[ 0 ] = filtered;
+			_Z[ 0 ] = filtered;
 
 			return filtered;
 		}
@@ -86,13 +86,13 @@ namespace cpaplib
 		{
 			var filtered =
 				beta * sample +
-				beta * (1 - beta) * _X[ 0 ] +
-				(1 - beta) * (1 - beta) * _Y[ 1 ];
+				beta * (1 - beta) * _Y[ 0 ] +
+				(1 - beta) * (1 - beta) * _Z[ 1 ];
 
-			_X[ 0 ] = sample;
+			_Y[ 0 ] = sample;
 
-			_Y[ 1 ] = _Y[ 0 ];
-			_Y[ 0 ] = filtered;
+			_Z[ 1 ] = _Z[ 0 ];
+			_Z[ 0 ] = filtered;
 
 			return filtered;
 		}
@@ -101,16 +101,16 @@ namespace cpaplib
 		{
 			double filtered =
 				beta * sample +
-				beta * (1 - beta) * _X[ 0 ] +
-				beta * (1 - beta) * (1 - beta) * _X[ 0 ] +
-				(1 - beta) * (1 - beta) * (1 - beta) * _Y[ 2 ];
+				beta * (1 - beta) * _Y[ 0 ] +
+				beta * (1 - beta) * (1 - beta) * _Y[ 0 ] +
+				(1 - beta) * (1 - beta) * (1 - beta) * _Z[ 2 ];
 
-			_X[ 1 ] = _X[ 0 ];
-			_X[ 0 ] = sample;
-
-			_Y[ 2 ] = _Y[ 1 ];
 			_Y[ 1 ] = _Y[ 0 ];
-			_Y[ 0 ] = filtered;
+			_Y[ 0 ] = sample;
+
+			_Z[ 2 ] = _Z[ 1 ];
+			_Z[ 1 ] = _Z[ 0 ];
+			_Z[ 0 ] = filtered;
 
 			return filtered;
 		}

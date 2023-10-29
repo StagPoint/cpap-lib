@@ -10,10 +10,10 @@ namespace cpaplib
 		public const string Pressure        = "Pressure";
 		public const string EPAP            = "EPAP";
 		public const string LeakRate        = "Leak Rate";
-		public const string RespirationRate = "Respiration Rate";
 		public const string TidalVolume     = "Tidal Volume";
 		public const string MinuteVent      = "Minute Vent";
 		public const string FlowLimit       = "Flow Limit";
+		public const string RespirationRate = "Respiration Rate";
 		public const string InspirationTime = "Inspiration Time";
 		public const string ExpirationTime  = "Expiration Time";
 		public const string AHI             = "AHI";

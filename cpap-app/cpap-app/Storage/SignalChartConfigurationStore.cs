@@ -177,16 +177,16 @@ public static class SignalChartConfigurationStore
 				
 				case SignalNames.InspirationTime:
 					config.Title        = "Insp. Time";
-					config.ScalingMode  = AxisScalingMode.Defaults;
+					config.ScalingMode  = AxisScalingMode.Override;
 					config.AxisMinValue = 0;
-					config.AxisMaxValue = 8;
+					config.AxisMaxValue = 12;
 					break;
 				
 				case SignalNames.ExpirationTime:
 					config.Title        = "Exp. Time";
-					config.ScalingMode  = AxisScalingMode.Defaults;
+					config.ScalingMode  = AxisScalingMode.Override;
 					config.AxisMinValue = 0;
-					config.AxisMaxValue = 8;
+					config.AxisMaxValue = 10;
 					break;
 			}
 

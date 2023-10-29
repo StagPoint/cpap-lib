@@ -59,7 +59,7 @@ namespace cpaplib
 
 			Task.WaitAll( tasks );
 #else
-			foreach( var day in Days )
+			foreach( var day in days )
 			{
 				// Loads all event and session data for the given day
 				LoadSessionsForDay( folderPath, day );
@@ -433,8 +433,8 @@ namespace cpaplib
 					session.EndTime   = DateUtil.Max( session.EndTime, signal.EndTime );
 				}
 
-                // Generate any additional signals that we need
-                GenerateCalculatedSignals( day, session );
+				// Generate any additional signals that we need
+				GenerateCalculatedSignals( day, session );
 				
 				lastRecordedTime  = DateUtil.Max( lastRecordedTime, session.EndTime );
 				firstRecordedTime = DateUtil.Min( firstRecordedTime, session.StartTime );
@@ -456,152 +456,10 @@ namespace cpaplib
 		
 		private static void GenerateCalculatedSignals( DailyReport day, Session session )
 		{
-			// TODO: Generate the "Inspiration Time" and "Expiration Time" signals? Are those important enough to do so?
-			GenerateSignalAHI( day, session );
-			GenerateBreathTimingSignals( day, session );
+			DerivedSignals.GenerateSignalAHI( day, session );
+			DerivedSignals.GenerateRespirationSignals( day, session );
 		}
 		
-		private static void GenerateBreathTimingSignals( DailyReport day, Session session )
-		{
-			// We need the Flow Rate signal's data to calculate inspiration and expiration times
-			var flowRate = session.GetSignalByName( SignalNames.FlowRate );
-			if( flowRate == null )
-			{
-				return;
-			}
-
-			var respirationRate = session.GetSignalByName( SignalNames.RespirationRate );
-			if( respirationRate == null )
-			{
-				return;
-			}
-
-			var signalDuration = Math.Floor( flowRate.Duration.TotalSeconds );
-			
-			var inspirationSamples = new List<double>( (int)Math.Ceiling( signalDuration ) );
-			var inspirationSignal = new Signal
-			{
-				Name              = SignalNames.InspirationTime,
-				FrequencyInHz     = 1.0,
-				MinValue          = 0,
-				MaxValue          = 30,
-				UnitOfMeasurement = "sec",
-				Samples           = inspirationSamples,
-				StartTime         = session.StartTime.AddSeconds( 1 ),
-				EndTime           = session.EndTime
-			};
-
-			var expirationSamples = new List<double>( (int)Math.Ceiling( signalDuration ) );
-			var expirationSignal = new Signal
-			{
-				Name              = SignalNames.ExpirationTime,
-				FrequencyInHz     = 1.0,
-				MinValue          = 0,
-				MaxValue          = 30,
-				UnitOfMeasurement = "sec",
-				Samples           = expirationSamples,
-				StartTime         = session.StartTime.AddSeconds( 1 ),
-				EndTime           = session.EndTime
-			};
-
-			// Apply a bit of filtering to the signal data to remove high frequency oscillations near the zero line
-			// It's probably not actually necessary to do this since we're not tracking individual breaths, but it
-			// does seem to produce more plausible results. 
-			var filtered = ButterworthFilter.Filter( flowRate.Samples.ToArray(), flowRate.FrequencyInHz, 0.5 );
-
-			var inspirationSum = 0.0;
-			var expirationSum  = 0.0;
-			var sampleInterval = 1.0 / flowRate.FrequencyInHz;
-			var outputInterval = (int)flowRate.FrequencyInHz;
-
-			for( int i = 0; i < filtered.Length; i++ )
-			{
-				// Subtract the sample interval before adding new samples 
-				if( i > outputInterval * 60 )
-				{
-					inspirationSum -= sampleInterval;
-					expirationSum  -= sampleInterval;
-				}
-
-				// Add sampleInterval to the appropriate rolling sum 
-				if( filtered[ i ] > 0 )
-					inspirationSum += sampleInterval;
-				else
-					expirationSum += sampleInterval;
-
-				// Output the sum of time spent in either inspiration or expiration during the last period  
-				if( i > 0 && i % outputInterval == 0 )
-				{
-					inspirationSamples.Add( inspirationSum );
-					expirationSamples.Add( expirationSum );
-				}
-			}
-			
-			Debug.Assert( inspirationSamples.Count == (int)(inspirationSignal.EndTime - inspirationSignal.StartTime).TotalSeconds );
-			
-			session.Signals.Add( inspirationSignal );
-			session.Signals.Add( expirationSignal );
-		}
-
-		private static void GenerateSignalAHI( DailyReport day, Session session )
-		{
-			const double SAMPLE_INTERVAL = 2;
-
-			var signalDuration = Math.Floor( session.Duration.TotalSeconds / SAMPLE_INTERVAL ) * SAMPLE_INTERVAL;
-			Debug.Assert( signalDuration <= session.Duration.TotalSeconds, "Incorrect Signal length calculation" );
-
-			// Compile a list of AHI-relevant events that happened during the Session
-			var events = day.Events.Where( x => x.StartTime >= session.StartTime && x.StartTime + x.Duration <= session.EndTime ).ToList();
-			events.RemoveAll( x => !EventTypes.Apneas.Contains( x.Type ) );
-			
-			// Events aren't stored in chronological order, but we want chronological order here
-			events.Sort( ( a, b ) => a.StartTime.CompareTo( b.StartTime ) );
-
-			// The stack will hold all events that have *started* within the one hour sliding window 
-			var stack = new List<ReportedEvent>( events.Count );
-			
-			var samples = new List<double>( (int)Math.Ceiling( signalDuration / SAMPLE_INTERVAL ) );
-			var signal = new Signal
-			{
-				Name              = SignalNames.AHI,
-				FrequencyInHz     = 1.0 / SAMPLE_INTERVAL,
-				MinValue          = 0,
-				MaxValue          = 100,
-				UnitOfMeasurement = "",
-				Samples           = samples,
-				StartTime         = session.StartTime,
-				EndTime           = session.EndTime
-			};
-
-			session.Signals.Add( signal );
-
-			// There are much more efficient ways of calculating this Signal, but this is straightforward and efficient enough for the purpose.
-			
-			var endTime = session.StartTime.AddSeconds( signalDuration  - SAMPLE_INTERVAL );
-			for( DateTime time = session.StartTime; time < endTime; time = time.AddSeconds( SAMPLE_INTERVAL ) )
-			{
-				while( events.Count > 0 && events[ 0 ].StartTime <= time )
-				{
-					stack.Add( events[ 0 ] );
-					events.RemoveAt( 0 );
-				}
-
-				while( stack.Count > 0 && stack[ 0 ].StartTime <= time.AddHours( -1 ) )
-				{
-					stack.RemoveAt( 0 );
-				}
-
-				samples.Add( stack.Count );
-			}
-			
-			// Ensure that the Signal always drops to zero at the end. This is mostly cosmetic, tbh. 
-			samples.Add( 0 );
-
-			// It's not really a problem if the Signal length exceeds the Session length, except that this isn't a recorded Signal
-			// so there's no good reason to have it extend the Session length to accomodate it. 
-			Debug.Assert( Math.Abs( samples.Count * SAMPLE_INTERVAL - signalDuration ) <= 0.01, "Signal length exceeds Session length" );
-		}
-
 		private static void GenerateEvents( DailyReport day )
 		{
 			GenerateLeakEvents( day );
