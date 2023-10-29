@@ -14,6 +14,8 @@ namespace cpaplib
 		public const string TidalVolume     = "Tidal Volume";
 		public const string MinuteVent      = "Minute Vent";
 		public const string FlowLimit       = "Flow Limit";
+		public const string InspirationTime = "Inspiration Time";
+		public const string ExpirationTime  = "Expiration Time";
 		public const string AHI             = "AHI";
 		public const string Snore           = "Snore";
 		public const string SpO2            = "SpO2";

@@ -32,19 +32,16 @@ public static class SignalChartConfigurationStore
 		var mapping = StorageService.CreateMapping<SignalChartConfiguration>( "chart_config" );
 
 		// Have to add the DisplayedEvents column manually, as CreateMapping only handles value types and strings. 
-		var eventsColumn = new ColumnMapping( nameof( SignalChartConfiguration.DisplayedEvents ), nameof( SignalChartConfiguration.DisplayedEvents ), typeof( SignalChartConfiguration ) )
+		mapping.Columns.Add( new ColumnMapping( nameof( SignalChartConfiguration.DisplayedEvents ), nameof( SignalChartConfiguration.DisplayedEvents ), typeof( SignalChartConfiguration ) )
 		{
 			Converter = new EnumListBlobConverter<EventType>(),
-		};
-		mapping.Columns.Add( eventsColumn );
+		} );
 
+		// Note that CreateTable() won't do anything if the table already exists ("CREATE TABLE IF NOT EXISTS...")
 		store.CreateTable<SignalChartConfiguration>();
 
+		// Retrieve the list of records that are already in the database (if any already exist)
 		var records = store.SelectAll<SignalChartConfiguration>();
-		if( records.Count > 0 )
-		{
-			return;
-		}
 		
 		// The code below is intended to create reasonable defaults for the known signal types 
 
@@ -54,11 +51,17 @@ public static class SignalChartConfigurationStore
 			var signalName = signalNames[ i ];
 			var plotColor  = DataColors.GetDataColor( i );
 
+			// Skip any configurations that already exist in the database.
+			if( records.Any( x => x.SignalName == signalName ) )
+			{
+				continue;
+			}
+
 			var config = new SignalChartConfiguration
 			{
 				Title               = signalName,
 				SignalName          = signalName,
-				DisplayOrder        = i,
+				DisplayOrder        = records.Count,
 				IsPinned            = false,
 				IsVisible           = (signalName != SignalNames.EPAP && signalName != SignalNames.MaskPressureLow),
 				FillBelow           = false,
@@ -89,6 +92,14 @@ public static class SignalChartConfigurationStore
 					break;
 				
 				case SignalNames.MaskPressure:
+					config.AxisMinValue = 0;
+					config.AxisMaxValue = 20;
+					config.ScalingMode  = AxisScalingMode.Override;
+					break;
+				
+				case SignalNames.MaskPressureLow:
+					config.Title        = SignalNames.MaskPressure;
+					config.AxisMinValue = 0;
 					config.AxisMaxValue = 20;
 					config.ScalingMode  = AxisScalingMode.Override;
 					break;
@@ -127,6 +138,7 @@ public static class SignalChartConfigurationStore
 					break;
 				
 				case SignalNames.RespirationRate:
+					config.Title        = "Resp. Rate";
 					config.BaselineHigh = 24;
 					config.BaselineLow  = 10;
 					config.AxisMinValue = 0;
@@ -162,8 +174,23 @@ public static class SignalChartConfigurationStore
 					config.ScalingMode = AxisScalingMode.AutoFit;
 					config.DisplayedEvents.AddRange( EventTypes.Apneas );
 					break;
+				
+				case SignalNames.InspirationTime:
+					config.Title        = "Insp. Time";
+					config.ScalingMode  = AxisScalingMode.Defaults;
+					config.AxisMinValue = 0;
+					config.AxisMaxValue = 8;
+					break;
+				
+				case SignalNames.ExpirationTime:
+					config.Title        = "Exp. Time";
+					config.ScalingMode  = AxisScalingMode.Defaults;
+					config.AxisMinValue = 0;
+					config.AxisMaxValue = 8;
+					break;
 			}
 
+			records.Add( config );
 			store.Insert( config );
 		}
 	}

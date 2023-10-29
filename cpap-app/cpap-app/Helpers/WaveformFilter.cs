@@ -4,15 +4,19 @@ namespace cpap_app.Helpers;
 
 public class WaveformFilter
 {
+	public enum PassType
+	{
+		Lowpass,
+		Highpass,
+	}
+
 	private readonly double a1, a2, a3, b1, b2;
 
 	private double[] inputHistory  = new double[ 2 ];
 	private double[] outputHistory = new double[ 3 ];
 
-	public WaveformFilter( double frequency, int sampleRate, PassType passType = PassType.Lowpass, double resonance = 0 )
+	public WaveformFilter( double frequency, int sampleRate, PassType passType = PassType.Lowpass, double resonance = 1.414213562373095 )
 	{
-		resonance = resonance <= 0 ? Math.Sqrt( 2.0 ) : resonance;
-
 		double c;
 		
 		switch( passType )
@@ -33,13 +37,9 @@ public class WaveformFilter
 				b1 = 2.0f * (c * c - 1.0f) * a1;
 				b2 = (1.0f - resonance * c + c * c) * a1;
 				break;
+			default:
+				throw new ArgumentOutOfRangeException( nameof( passType ), passType, null );
 		}
-	}
-
-	public enum PassType
-	{
-		Highpass,
-		Lowpass,
 	}
 
 	public double Update( double newInput )

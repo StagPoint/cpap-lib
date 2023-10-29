@@ -142,7 +142,7 @@ public partial class SignalChart : UserControl
 	
 	#region Private fields
 
-	private const double MINIMUM_TIME_WINDOW = 30;
+	private const double MINIMUM_TIME_WINDOW = 15;
 
 	private SignalChartConfiguration? _chartConfiguration;
 	private CustomChartStyle          _chartStyle;
@@ -191,6 +191,12 @@ public partial class SignalChart : UserControl
 		ChartLabel.PointerMoved       += ChartLabelOnPointerMoved;
 
 		//Chart.ContextMenu = null;
+		
+		btnSettings.Visualizations.Add( new SignalMenuItem
+		{
+			Header  = "Noise Filter",
+			Command = VisualizeNoiseFilter
+		} );
 		
 		btnSettings.Visualizations.Add( new SignalMenuItem
 		{
@@ -670,6 +676,53 @@ public partial class SignalChart : UserControl
 	
 	#region Private functions
 
+	private void VisualizeNoiseFilter()
+	{
+		Debug.Assert( _day != null,               nameof( _day ) + " != null" );
+	
+		var timeRange = Chart.Plot.GetAxisLimits();
+		var startTime = _day.RecordingStartTime.AddSeconds( timeRange.XMin );
+		var endTime   = _day.RecordingStartTime.AddSeconds( timeRange.XMax );
+
+		foreach( var signal in _signals )
+		{
+			if( !DateHelper.RangesOverlap( signal.StartTime, signal.EndTime, startTime, endTime ) )
+			{
+				continue;
+			}
+
+			var filtered = ButterworthFilter.Filter( signal.Samples.ToArray(), signal.FrequencyInHz, 0.75 );
+			// var filtered = SmoothingFilter.Filter( signal.Samples, 3, 1.0 / 3.0 );
+
+			var graph = Chart.Plot.AddSignal( filtered, signal.FrequencyInHz, Color.Magenta, "Filtered" );
+			graph.OffsetX    = (signal.StartTime - _day.RecordingStartTime).TotalSeconds;
+			graph.LineStyle  = LineStyle.Dash;
+			graph.MarkerSize = 0;
+
+			_visualizations.Add( graph );
+
+		}
+		
+		Chart.RenderRequest();
+	}
+
+	private class BreathRecord
+	{
+		public DateTime StartInspiration { get; set; }
+		public DateTime StartExpiration  { get; set; }
+		public DateTime EndTime          { get; set; }
+		
+		public DateTime TimeOfPeakInspiration { get; set; }
+		public DateTime TimeOfPeakExpiration  { get; set; }
+		
+		public double MinValue { get; set; }
+		public double MaxValue { get; set; }
+
+		public double InspirationLength => (StartExpiration - StartInspiration).TotalSeconds;
+		public double ExpirationLength  => (EndTime - StartExpiration).TotalSeconds;
+		public double TotalLength       => (EndTime - StartInspiration).TotalSeconds;
+	}
+
 	private void VisualizeRespirations()
 	{
 		Debug.Assert( _day != null, nameof( _day ) + " != null" );
@@ -685,32 +738,107 @@ public partial class SignalChart : UserControl
 				continue;
 			}
 
+			var breaths = DetectBreaths( signal );
+
 			double signalOffset = (signal.StartTime - _day.RecordingStartTime).TotalSeconds;
-			double interval     = 1.0 / signal.FrequencyInHz;
 
-			double startOffset = (startTime - signal.StartTime).TotalSeconds;
-			int    startIndex  = Math.Max( (int)Math.Floor( startOffset * signal.FrequencyInHz ), 0 );
-			
-			double endOffset = (endTime - signal.StartTime).TotalSeconds;
-			int    endIndex  = Math.Min( (int)Math.Floor( endOffset * signal.FrequencyInHz ), signal.Samples.Count - 1 );
-
-			var lastSign = signal.Samples[ startIndex ] >= 0 ? 1 : -1;
-			for( int i = startIndex; i < endIndex; i++ )
+			foreach( var breath in breaths )
 			{
-				var sign = signal.Samples[ i ] >= 0 ? 1 : -1;
-				if( sign != lastSign )
-				{
-					var lineOffset = signalOffset + i * interval; 
-					Chart.Plot.AddVerticalLine( lineOffset, Color.Red, 1f, LineStyle.Solid );
-
-					lastSign = sign;
-
-					i += Math.Max( (int)signal.FrequencyInHz, 1 );
-				}
+				var breathOffset = (breath.EndTime - signal.StartTime).TotalSeconds;
+				
+				Chart.Plot.AddVerticalLine( signalOffset + breathOffset, Color.Red, 1f, LineStyle.Solid );
 			}
 		}
 		
 		Chart.RenderRequest();
+	}
+
+	private static List<BreathRecord> DetectBreaths( Signal signal )
+	{
+		const double MIN_BREATH_LENGTH = 1.0;
+
+		var results = new List<BreathRecord>();
+		
+		var filtered = ButterworthFilter.Filter( signal.Samples.ToArray(), signal.FrequencyInHz, 0.75 );
+
+		var lastSign          = filtered[ 0 ] >= 0 ? 1 : -1;
+		var lastStartIndex    = 0;
+		var lastSignFlipIndex = 0;
+		
+		var minValue            = 0.0;
+		var peakExpirationIndex = 0;
+		
+		var maxValue             = 0.0;
+		var peakInspirationIndex = 0;
+
+		for( int i = 0; i < filtered.Length; i++ )
+		{
+			var sample = signal.Samples[ i ];
+
+			if( sample <= minValue )
+			{
+				minValue            = sample;
+				peakExpirationIndex = i;
+			}
+
+			if( sample >= maxValue )
+			{
+				maxValue             = sample;
+				peakInspirationIndex = i;
+			}
+			
+			var sign = filtered[ i ] >= 0 ? 1 : -1;
+			if( sign == lastSign )
+			{
+				continue;
+			}
+			
+			if( sign == 1 )
+			{
+				var breath = new BreathRecord
+				{
+					StartInspiration      = signal.StartTime.AddSeconds( lastStartIndex / signal.FrequencyInHz ),
+					StartExpiration       = signal.StartTime.AddSeconds( lastSignFlipIndex / signal.FrequencyInHz ),
+					EndTime               = signal.StartTime.AddSeconds( i / signal.FrequencyInHz ),
+					TimeOfPeakInspiration = signal.StartTime.AddSeconds( peakInspirationIndex / signal.FrequencyInHz ),
+					TimeOfPeakExpiration  = signal.StartTime.AddSeconds( peakExpirationIndex / signal.FrequencyInHz ),
+					MinValue              = minValue,
+					MaxValue              = maxValue,
+				};
+
+				// If the breath is longer than a reasonable amount of time for a very short breath, add it to the list
+				if( breath.TotalLength > MIN_BREATH_LENGTH )
+				{
+					results.Add( breath );
+				}
+				// otherwise, extend the time of the last breath to merge with this "breath"
+				else if( results.Count > 0 )
+				{
+					// Note that this "merge" process effectively extends the length of the expiratory phase, which seems
+					// perfectly reasonable given the description of ResMed's "fuzzy logic" for phase determination given
+					// in https://doi.org/10.2147/MDER.S70062 (although obviously this code is not an implementation of
+					// that logic per se). 
+					// TODO: Implement "fuzzy logic" breath detection? Could use topographical persistence peak finding? Would handle baseline wandering better, I think.
+					
+					var lastIndex = results.Count - 1;
+					results[ lastIndex ].EndTime  = breath.EndTime;
+					results[ lastIndex ].MinValue = Math.Min( results[ lastIndex ].MinValue, minValue );
+					results[ lastIndex ].MaxValue = Math.Max( results[ lastIndex ].MaxValue, maxValue );
+				}
+
+				lastStartIndex       = i;
+				peakInspirationIndex = i;
+				peakExpirationIndex  = i;
+				
+				minValue             = 0;
+				maxValue             = 0;
+			}
+
+			lastSign          = sign;
+			lastSignFlipIndex = i;
+		}
+
+		return results;
 	}
 
 	private void VisualizePercentile95()
@@ -1158,7 +1286,7 @@ public partial class SignalChart : UserControl
 			Chart.Plot.Clear();
 
 			// Always display the name of the Signal, even when there is no data available
-			ChartLabel.Text = ChartConfiguration.SignalName;
+			ChartLabel.Text = ChartConfiguration.Title;
 
 			// Check to see if there are any sessions with the named Signal. If not, display the "No Data Available" message and eject.
 			_hasDataAvailable = day.Sessions.FirstOrDefault( x => x.GetSignalByName( ChartConfiguration.SignalName ) != null ) != null;
@@ -1482,7 +1610,7 @@ public partial class SignalChart : UserControl
 		plot.XAxis.TickLabelFormat( TickFormatter );
 		//plot.XAxis.TickLabelFormat( x => $"{TimeSpan.FromSeconds( x ):c}" );
 		plot.XAxis.MinimumTickSpacing( 1f );
-		plot.XAxis.SetZoomInLimit( MINIMUM_TIME_WINDOW ); // Make smallest zoom window possible be 1 minute 
+		plot.XAxis.SetZoomInLimit( MINIMUM_TIME_WINDOW );
 		plot.XAxis.Layout( padding: 0 );
 		plot.XAxis.MajorGrid( false );
 		plot.XAxis.AxisTicks.MajorTickLength = 15;

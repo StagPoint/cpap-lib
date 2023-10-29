@@ -49,9 +49,10 @@ namespace cpaplib
 			for( int i = 0; i < days.Count; i++ )
 			{
 				var day = days[ i ];
-				
-				tasks[i] = Task.Run( () =>
+
+				tasks[ i ] = Task.Run( () =>
 				{
+					// Loads all event and session data for the given day
 					LoadSessionsForDay( folderPath, day );
 				} );
 			}
@@ -60,11 +61,19 @@ namespace cpaplib
 #else
 			foreach( var day in Days )
 			{
+				// Loads all event and session data for the given day
 				LoadSessionsForDay( folderPath, day );
 			}
 #endif
 			
-			// Remove all days that do not have any sessions 
+			// TODO: How to better handle dates where the SD Card wasn't inserted?
+			// The only reason I've seen so far for the session directory to not exist for a given day is when
+			// the user has forgotten to put the SD Card back into the machine. On such days, you will still 
+			// have summary information available (such as settings, AHI, mask times, etc), but no graph data
+			// will be found. 
+			// 
+			// For now (due to downstream code not handling the issue properly) these dates are not even
+			// imported. This needs to get fixed. 
 			days.RemoveAll( x => x.Sessions.Count == 0 );
 
 			// Make sure that each Session has its Source set (sessions may be created by other processes, such as
@@ -78,8 +87,8 @@ namespace cpaplib
 			}
 			
 			// Fix up the ReportDate field to eliminate the stupid 12 hour time offset added by the ResMed machine. 
-			// It was important to retain it during some phases of the import process, but now import is done
-			// and we don't need that offset anymore.
+			// It was important (or at least conveniently useful) to retain it during some phases of the import process,
+			// but now import is done and we don't need that offset anymore.
 			foreach( var day in days )
 			{
 				day.ReportDate = day.ReportDate.Date;
@@ -172,7 +181,17 @@ namespace cpaplib
 			var logFolder = Path.Combine( rootFolder, $@"DATALOG\{day.ReportDate:yyyyMMdd}" );
 			if( !Directory.Exists( logFolder ) )
 			{
-				Debug.WriteLine( $"Could not find the session directory for {logFolder}" );
+				// TODO: How to better handle dates where the SD Card wasn't inserted?
+				
+				// The only reason I've seen so far for the session directory to not exist for a given day is when
+				// the user has forgotten to put the SD Card back into the machine. On such days, you will still 
+				// have summary information available (such as settings, AHI, mask times, etc), but no graph data
+				// will be found. 
+				// 
+				// For now, these dates are not even imported. This needs to get fixed. 
+				
+				Debug.WriteLine( $"Could not find the session directory for {logFolder}. Likely missing SD Card storage for this day." );
+				
 				return;
 			}
 
@@ -439,8 +458,91 @@ namespace cpaplib
 		{
 			// TODO: Generate the "Inspiration Time" and "Expiration Time" signals? Are those important enough to do so?
 			GenerateSignalAHI( day, session );
+			GenerateBreathTimingSignals( day, session );
 		}
 		
+		private static void GenerateBreathTimingSignals( DailyReport day, Session session )
+		{
+			// We need the Flow Rate signal's data to calculate inspiration and expiration times
+			var flowRate = session.GetSignalByName( SignalNames.FlowRate );
+			if( flowRate == null )
+			{
+				return;
+			}
+
+			var respirationRate = session.GetSignalByName( SignalNames.RespirationRate );
+			if( respirationRate == null )
+			{
+				return;
+			}
+
+			var signalDuration = Math.Floor( flowRate.Duration.TotalSeconds );
+			
+			var inspirationSamples = new List<double>( (int)Math.Ceiling( signalDuration ) );
+			var inspirationSignal = new Signal
+			{
+				Name              = SignalNames.InspirationTime,
+				FrequencyInHz     = 1.0,
+				MinValue          = 0,
+				MaxValue          = 30,
+				UnitOfMeasurement = "sec",
+				Samples           = inspirationSamples,
+				StartTime         = session.StartTime.AddSeconds( 1 ),
+				EndTime           = session.EndTime
+			};
+
+			var expirationSamples = new List<double>( (int)Math.Ceiling( signalDuration ) );
+			var expirationSignal = new Signal
+			{
+				Name              = SignalNames.ExpirationTime,
+				FrequencyInHz     = 1.0,
+				MinValue          = 0,
+				MaxValue          = 30,
+				UnitOfMeasurement = "sec",
+				Samples           = expirationSamples,
+				StartTime         = session.StartTime.AddSeconds( 1 ),
+				EndTime           = session.EndTime
+			};
+
+			// Apply a bit of filtering to the signal data to remove high frequency oscillations near the zero line
+			// It's probably not actually necessary to do this since we're not tracking individual breaths, but it
+			// does seem to produce more plausible results. 
+			var filtered = ButterworthFilter.Filter( flowRate.Samples.ToArray(), flowRate.FrequencyInHz, 0.5 );
+
+			var inspirationSum = 0.0;
+			var expirationSum  = 0.0;
+			var sampleInterval = 1.0 / flowRate.FrequencyInHz;
+			var outputInterval = (int)flowRate.FrequencyInHz;
+
+			for( int i = 0; i < filtered.Length; i++ )
+			{
+				// Subtract the sample interval before adding new samples 
+				if( i > outputInterval * 60 )
+				{
+					inspirationSum -= sampleInterval;
+					expirationSum  -= sampleInterval;
+				}
+
+				// Add sampleInterval to the appropriate rolling sum 
+				if( filtered[ i ] > 0 )
+					inspirationSum += sampleInterval;
+				else
+					expirationSum += sampleInterval;
+
+				// Output the sum of time spent in either inspiration or expiration during the last period  
+				if( i > 0 && i % outputInterval == 0 )
+				{
+					inspirationSamples.Add( inspirationSum );
+					expirationSamples.Add( expirationSum );
+				}
+			}
+			
+			Debug.Assert( inspirationSamples.Count == (int)(inspirationSignal.EndTime - inspirationSignal.StartTime).TotalSeconds );
+			
+			session.Signals.Add( inspirationSignal );
+			session.Signals.Add( expirationSignal );
+		}
+
 		private static void GenerateSignalAHI( DailyReport day, Session session )
 		{
 			const double SAMPLE_INTERVAL = 2;
