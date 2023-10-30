@@ -7,7 +7,7 @@ namespace cpaplib
 {
 	internal static class DerivedSignals
 	{
-		internal static void GenerateSignalAHI( DailyReport day, Session session )
+		internal static void GenerateApneaIndexSignal( DailyReport day, Session session )
 		{
 			const double SAMPLE_INTERVAL = 2;
 
@@ -66,7 +66,7 @@ namespace cpaplib
 			Debug.Assert( Math.Abs( samples.Count * SAMPLE_INTERVAL - signalDuration ) <= 0.01, "Signal length exceeds Session length" );
 		}
 		
-		internal static void GenerateRespirationSignals( DailyReport day, Session session )
+		internal static void GenerateMissingRespirationSignals( DailyReport day, Session session )
 		{
 			// We need the Flow Rate signal's data to calculate respiration rate, minute ventilation, inspiration and expiration times, etc.
 			var flowRateSignal = session.GetSignalByName( SignalNames.FlowRate );
@@ -76,7 +76,7 @@ namespace cpaplib
 			}
 
 			// Extract breath information from the Flow Rate data, which can be used to derive other Signals.
-			var breaths = BreathDetection.DetectBreaths( flowRateSignal );
+			var breaths = BreathDetection.DetectBreaths( flowRateSignal, 0.75 );
 			if( breaths == null || breaths.Count == 0 )
 			{
 				return;
@@ -96,6 +96,15 @@ namespace cpaplib
 				GenerateTidalVolumeSignal( session, breaths, respirationRateSignal );
 			}
 
+			// Generate the Minute Ventilation signal if it is not already available.
+			if( session.GetSignalByName( SignalNames.MinuteVent ) == null )
+			{
+				var tidalVolumeSignal     = session.GetSignalByName( SignalNames.TidalVolume );
+				var respirationRateSignal = session.GetSignalByName( SignalNames.RespirationRate );
+				
+				GenerateMinuteVentilationSignal( session, tidalVolumeSignal, respirationRateSignal );
+			}
+
 			// Generate the Inspiration Time and Expiration Time signals if they are not available 
 			if( session.GetSignalByName( SignalNames.InspirationTime ) == null )
 			{
@@ -103,6 +112,33 @@ namespace cpaplib
 			}
 		}
 		
+		private static void GenerateMinuteVentilationSignal( Session session, Signal tidalVolume, Signal respirationRate )
+		{
+			Debug.Assert( tidalVolume.StartTime == respirationRate.StartTime, "Tidal Volume and Respiration Rate signals do not start at the same time" );
+			
+			Debug.Assert( Math.Abs( tidalVolume.FrequencyInHz - respirationRate.FrequencyInHz ) < float.Epsilon, "Tidal Volume and Respiration Rate signals do not have the same frequency" );
+			
+			var minuteVentilationSamples = new List<double>( tidalVolume.Samples.Count );
+			var minuteVentilationSignal = new Signal
+			{
+				Name              = SignalNames.MinuteVent,
+				FrequencyInHz     = tidalVolume.FrequencyInHz,
+				MinValue          = 0,
+				MaxValue          = 30.0,
+				UnitOfMeasurement = "L/min",
+				Samples           = minuteVentilationSamples,
+				StartTime         = tidalVolume.StartTime,
+				EndTime           = tidalVolume.EndTime,
+			};
+
+			for( int i = 0; i < tidalVolume.Samples.Count; i++ )
+			{
+				minuteVentilationSamples.Add( tidalVolume[ i ] * respirationRate[ i ] / 1000.0 );
+			}
+
+			session.AddSignal( minuteVentilationSignal );
+		}
+
 		private static void GenerateTidalVolumeSignal( Session session, List<BreathRecord> breaths, Signal respirationRate )
 		{
 			const double FREQUENCY = 0.5;
@@ -127,21 +163,29 @@ namespace cpaplib
 
 			var currentBreathIndex = 0;
 
+			var smoother = new MovingAverageCalculator( 3 );
+
 			for( DateTime currentTime = firstBreath.StartInspiration; currentTime < lastBreath.EndTime; currentTime = currentTime.AddSeconds( INTERVAL ) )
 			{
 				// Advance to the breath that overlaps the current timestamp
-				while( breaths[ currentBreathIndex ].EndTime <= currentTime )
+				while( currentBreathIndex < breaths.Count - 1 && breaths[ currentBreathIndex ].EndTime < currentTime )
 				{
 					currentBreathIndex += 1;
-				}
+				} 
 
 				var currentBreath = breaths[ currentBreathIndex ];
 
-				var rr      = Math.Max( respirationRate[ tidalVolumeSamples.Count ], 1 );
-				var Vt      = currentBreath.TotalInspiration / currentBreath.InspirationLength / 60 / rr * 1000;
-				var clamped = MathUtil.Clamp( tidalVolumeSignal.MinValue, tidalVolumeSignal.MaxValue, Vt );
+				var rr      = respirationRate[ tidalVolumeSamples.Count ];
+				var vT      = currentBreath.TotalInspiration / currentBreath.InspirationLength / 60 * 1000;
 				
-				tidalVolumeSamples.Add( clamped );
+				var clamped = MathUtil.Clamp( tidalVolumeSignal.MinValue, tidalVolumeSignal.MaxValue, vT / rr );
+
+				// Using a moving "Root Mean Squares" value seems to get the results closer to the ResMed values,
+				// which must indicate an issue somewhere else since the tidal volume calculations do not normally 
+				// require this. 
+				smoother.AddObservation( clamped * clamped );
+
+				tidalVolumeSamples.Add( (rr < 1) ? 0 : Math.Sqrt( smoother.Average ) );
 			}
 
 			session.AddSignal( tidalVolumeSignal );
@@ -175,7 +219,7 @@ namespace cpaplib
 			for( DateTime currentTime = firstBreath.StartInspiration; currentTime < lastBreath.EndTime; currentTime = currentTime.AddSeconds( INTERVAL ) )
 			{
 				// Remove breaths that ended more than a minute ago
-				while( window.Count > 0 && window[ 0 ].EndTime < currentTime.AddMinutes( -1 ) )
+				while( window.Count > 0 && window[ 0 ].EndTime <= currentTime.AddSeconds( -60 ) )
 				{
 					window.RemoveAt( 0 );
 				}
@@ -184,6 +228,12 @@ namespace cpaplib
 				while( currentBreathIndex < breaths.Count - 1 && breaths[ currentBreathIndex ].StartInspiration <= currentTime )
 				{
 					window.Add( breaths[ currentBreathIndex++ ] );
+				}
+
+				if( currentBreathIndex < 3 )
+				{
+					respirationSamples.Add( 0 );
+					continue;
 				}
 
 				var multiplier = (window.Count <= 1) ? 1.0 : (60.0 / (window[ window.Count - 1 ].EndTime - window[ 0 ].StartInspiration).TotalSeconds);

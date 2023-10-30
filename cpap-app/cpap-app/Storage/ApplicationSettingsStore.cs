@@ -1,4 +1,7 @@
-﻿using cpap_app.Configuration;
+﻿using Avalonia;
+using Avalonia.Styling;
+
+using cpap_app.Configuration;
 
 using cpap_db;
 
@@ -40,7 +43,13 @@ public class ApplicationSettingsStore
 			return;
 		}
 
-		var defaultSettings = new ApplicationSettings();
+		var isDarkTheme = Application.Current?.ActualThemeVariant == ThemeVariant.Dark;
+		
+		var defaultSettings = new ApplicationSettings()
+		{
+			Theme = isDarkTheme ? ApplicationThemeType.Dark : ApplicationThemeType.Light
+		};
+		
 		store.Insert( defaultSettings, primaryKeyValue: 0 );
 	}
 }

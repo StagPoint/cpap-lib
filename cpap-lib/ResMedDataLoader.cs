@@ -456,8 +456,8 @@ namespace cpaplib
 		
 		private static void GenerateCalculatedSignals( DailyReport day, Session session )
 		{
-			DerivedSignals.GenerateSignalAHI( day, session );
-			DerivedSignals.GenerateRespirationSignals( day, session );
+			DerivedSignals.GenerateApneaIndexSignal( day, session );
+			DerivedSignals.GenerateMissingRespirationSignals( day, session );
 		}
 		
 		private static void GenerateEvents( DailyReport day )

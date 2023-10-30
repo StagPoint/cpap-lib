@@ -54,14 +54,14 @@ namespace cpaplib
 			return result;
 		}
 
-		public static double[] Filter( List<double> data, int order, double beta = 0.5 )
+		public static List<double> Filter( List<double> data, int order, double beta = 0.5 )
 		{
 			var filter = new SmoothingFilter( order, beta );
-			var result = new double[ data.Count ];
+			var result = new List<double>( data.Count );
 
-			for( int i = 0; i < result.Length; i++ )
+			for( int i = 0; i < data.Count; i++ )
 			{
-				result[ i ] = filter.Filter( data[ i ] );
+				result.Add( filter.Filter( data[ i ] ) );
 			}
 
 			return result;

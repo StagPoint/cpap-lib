@@ -691,8 +691,11 @@ public partial class SignalChart : UserControl
 				continue;
 			}
 
-			var filtered = ButterworthFilter.Filter( signal.Samples.ToArray(), signal.FrequencyInHz, 0.75 );
-			// var filtered = SmoothingFilter.Filter( signal.Samples, 3, 1.0 / 3.0 );
+			#if TRUE
+				var filtered = ButterworthFilter.Filter( signal.Samples.ToArray(), signal.FrequencyInHz, 1 );
+			#else
+				var filtered = SmoothingFilter.Filter( signal.Samples, 3, 1.0 / 3.0 );
+			#endif
 
 			var graph = Chart.Plot.AddSignal( filtered, signal.FrequencyInHz, Color.Magenta, "Filtered" );
 			graph.OffsetX    = (signal.StartTime - _day.RecordingStartTime).TotalSeconds;
@@ -774,7 +777,7 @@ public partial class SignalChart : UserControl
 		bool first = true;
 		foreach( var signal in _signals )
 		{
-			var windowSize = (int)(60 * signal.FrequencyInHz);
+			var windowSize = (int)(2 * signal.FrequencyInHz);
 			var calc       = new MovingAverageCalculator( windowSize );
 
 			var samples = new double[ signal.Samples.Count ];

@@ -26,23 +26,18 @@ namespace cpaplib
 			get => (EndTime - StartExpiration).TotalSeconds;
 		}
 
-		public double TotalLength
+		public double TotalCycleTime
 		{
 			get => (EndTime - StartInspiration).TotalSeconds;
 		}
 
 		public bool CanMerge( BreathRecord other )
 		{
-			return (TotalLength < 30);
+			return TotalCycleTime < 10;
 		}
 
 		public void Merge( BreathRecord other )
 		{
-			// Note that this "merge" process effectively extends the length of the expiratory phase, which seems
-			// perfectly reasonable given the description of ResMed's "fuzzy logic" for phase determination given
-			// in https://doi.org/10.2147/MDER.S70062 (although obviously this code is not an implementation of
-			// that logic). 
-
 			EndTime = other.EndTime;
 
 			if( other.MinValue < MinValue )
@@ -55,13 +50,11 @@ namespace cpaplib
 
 	public static class BreathDetection
 	{
-		public static List<BreathRecord> DetectBreaths( Signal signal )
+		public static List<BreathRecord> DetectBreaths( Signal signal, double filterCutoff = 0.75 )
 		{
-			const double MIN_BREATH_LENGTH = 1.5;
-
 			var results = new List<BreathRecord>();
 
-			var filtered = ButterworthFilter.Filter( signal.Samples.ToArray(), signal.FrequencyInHz, 0.75 );
+			var filtered = ButterworthFilter.Filter( signal.Samples.ToArray(), signal.FrequencyInHz, filterCutoff );
 
 			var lastSign          = filtered[ 0 ] >= 0 ? 1 : -1;
 			var lastStartIndex    = 0;
@@ -84,7 +77,7 @@ namespace cpaplib
 
 			for( int i = startIndex; i < filtered.Length; i++ )
 			{
-				var sample = signal.Samples[ i ];
+				var sample = filtered[ i ];
 
 				if( sample <= minValue )
 				{
@@ -98,7 +91,7 @@ namespace cpaplib
 					peakInspirationIndex = i;
 				}
 
-				var sign = filtered[ i ] >= 0 ? 1 : -1;
+				var sign = filtered[ i ] > 0 ? 1 : -1;
 
 				// Keep track of all flow during the inspiration phase
 				if( sign == 1 )
@@ -125,23 +118,23 @@ namespace cpaplib
 						MaxValue              = maxValue,
 						TotalInspiration      = totalInspiration,
 					};
+					
+#if true
+					results.Add( breath );
+#else
+					const double MIN_BREATH_LENGTH = 60.0 / 40.0;
 
 					// If the breath is longer than a reasonable amount of time for a very short breath, add it to the list
-					if( breath.TotalLength >= MIN_BREATH_LENGTH )
+					if( breath.TotalCycleTime >= MIN_BREATH_LENGTH && breath.MaxValue >= 5.0 )
 					{
 						results.Add( breath );
 					}
 					// otherwise, extend the time of the last breath to merge with this "breath"
 					else if( results.Count > 0 )
 					{
-						// Note that this "merge" process effectively extends the length of the expiratory phase, which seems
-						// perfectly reasonable given the description of ResMed's "fuzzy logic" for phase determination given
-						// in https://doi.org/10.2147/MDER.S70062 (although obviously this code is not an implementation of
-						// that logic). 
-						// TODO: Implement "fuzzy logic" breath detection? Could use topographical persistence peak finding? Would handle baseline wandering better, I think.
-
+						// Note that this "merge" process effectively just extends the length of the expiratory phase. 
+					
 						var lastBreath = results[ results.Count - 1 ];
-
 						if( lastBreath.CanMerge( breath ) )
 						{
 							lastBreath.Merge( breath );
@@ -151,6 +144,7 @@ namespace cpaplib
 							results.Add( breath );
 						}
 					}
+#endif
 
 					lastStartIndex       = i;
 					peakInspirationIndex = i;
