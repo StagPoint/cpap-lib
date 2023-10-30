@@ -69,14 +69,14 @@ namespace cpaplib
 		internal static void GenerateRespirationSignals( DailyReport day, Session session )
 		{
 			// We need the Flow Rate signal's data to calculate respiration rate, minute ventilation, inspiration and expiration times, etc.
-			var flowRate = session.GetSignalByName( SignalNames.FlowRate );
-			if( flowRate == null )
+			var flowRateSignal = session.GetSignalByName( SignalNames.FlowRate );
+			if( flowRateSignal == null )
 			{
 				return;
 			}
 
 			// Extract breath information from the Flow Rate data, which can be used to derive other Signals.
-			var breaths = BreathDetection.DetectBreaths( flowRate );
+			var breaths = BreathDetection.DetectBreaths( flowRateSignal );
 			if( breaths == null || breaths.Count == 0 )
 			{
 				return;
@@ -88,13 +88,65 @@ namespace cpaplib
 				GenerateRespirationRateSignal( session, breaths );
 			}
 
+			// Generate the Tidal Volume signal if it doesn't already exist. This signal may be used to derive other signals as well. 
+			if( session.GetSignalByName( SignalNames.TidalVolume ) == null )
+			{
+				var respirationRateSignal = session.GetSignalByName( SignalNames.RespirationRate );
+				
+				GenerateTidalVolumeSignal( session, breaths, respirationRateSignal );
+			}
+
 			// Generate the Inspiration Time and Expiration Time signals if they are not available 
 			if( session.GetSignalByName( SignalNames.InspirationTime ) == null )
 			{
-				GenerateRespirationTimeSignals( session, flowRate, breaths );
+				GenerateRespirationTimeSignals( session, flowRateSignal, breaths );
 			}
 		}
 		
+		private static void GenerateTidalVolumeSignal( Session session, List<BreathRecord> breaths, Signal respirationRate )
+		{
+			const double FREQUENCY = 0.5;
+			const double INTERVAL  = 1.0 / FREQUENCY;
+			
+			var firstBreath   = breaths[ 0 ];
+			var lastBreath    = breaths[ breaths.Count - 1 ];
+			var totalDuration = (lastBreath.EndTime - firstBreath.StartInspiration).TotalSeconds;
+
+			var tidalVolumeSamples = new List<double>( (int)(totalDuration * FREQUENCY) );
+			var tidalVolumeSignal = new Signal
+			{
+				Name              = SignalNames.TidalVolume,
+				FrequencyInHz     = FREQUENCY,
+				MinValue          = 0,
+				MaxValue          = 4000.0,
+				UnitOfMeasurement = "ml",
+				Samples           = tidalVolumeSamples,
+				StartTime         = firstBreath.StartInspiration,
+				EndTime           = lastBreath.EndTime,
+			};
+
+			var currentBreathIndex = 0;
+
+			for( DateTime currentTime = firstBreath.StartInspiration; currentTime < lastBreath.EndTime; currentTime = currentTime.AddSeconds( INTERVAL ) )
+			{
+				// Advance to the breath that overlaps the current timestamp
+				while( breaths[ currentBreathIndex ].EndTime <= currentTime )
+				{
+					currentBreathIndex += 1;
+				}
+
+				var currentBreath = breaths[ currentBreathIndex ];
+
+				var rr      = Math.Max( respirationRate[ tidalVolumeSamples.Count ], 1 );
+				var Vt      = currentBreath.TotalInspiration / currentBreath.InspirationLength / 60 / rr * 1000;
+				var clamped = MathUtil.Clamp( tidalVolumeSignal.MinValue, tidalVolumeSignal.MaxValue, Vt );
+				
+				tidalVolumeSamples.Add( clamped );
+			}
+
+			session.AddSignal( tidalVolumeSignal );
+		}
+
 		private static void GenerateRespirationRateSignal( Session session, List<BreathRecord> breaths )
 		{
 			const double FREQUENCY = 0.5;
@@ -134,10 +186,10 @@ namespace cpaplib
 					window.Add( breaths[ currentBreathIndex++ ] );
 				}
 
-				var multiplier = (window.Count == 0) ? 1.0 : (60.0 / (window[ window.Count - 1 ].EndTime - window[ 0 ].StartInspiration).TotalSeconds);
+				var multiplier = (window.Count <= 1) ? 1.0 : (60.0 / (window[ window.Count - 1 ].EndTime - window[ 0 ].StartInspiration).TotalSeconds);
 				
 				// Output the number of breaths that overlap the last minute
-				respirationSamples.Add( window.Count * multiplier );
+				respirationSamples.Add( MathUtil.Clamp( respirationSignal.MinValue, respirationSignal.MaxValue, window.Count * multiplier ) );
 			}
 			
 			// Add the Signal to the Session 
@@ -209,8 +261,8 @@ namespace cpaplib
 					expirationLength  = MathUtil.Lerp( currentBreath.ExpirationLength,  nextBreath.ExpirationLength,  t );
 				}
 
-				inspirationSamples.Add( inspirationLength );
-				expirationSamples.Add( expirationLength );
+				inspirationSamples.Add( MathUtil.Clamp( 0, 30, inspirationLength ) );
+				expirationSamples.Add( MathUtil.Clamp( 0,  30, expirationLength ) );
 			}
 		
 			// Add the signals to the Session 

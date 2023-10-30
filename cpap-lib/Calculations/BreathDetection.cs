@@ -12,8 +12,9 @@ namespace cpaplib
 		public DateTime TimeOfPeakInspiration { get; set; }
 		public DateTime TimeOfPeakExpiration  { get; set; }
 
-		public double MinValue { get; set; }
-		public double MaxValue { get; set; }
+		public double MinValue         { get; set; }
+		public double MaxValue         { get; set; }
+		public double TotalInspiration { get; set; }
 
 		public double InspirationLength
 		{
@@ -71,6 +72,7 @@ namespace cpaplib
 
 			var maxValue             = 0.0;
 			var peakInspirationIndex = 0;
+			var totalInspiration     = double.Epsilon;
 
 			// Always start on an inspiration. As far as I can tell this happens by default on the ResMed AirSense 10 Auto, 
 			// but I don't know if that always holds true, or if it's true for other models or manufacturers. 
@@ -97,6 +99,14 @@ namespace cpaplib
 				}
 
 				var sign = filtered[ i ] >= 0 ? 1 : -1;
+
+				// Keep track of all flow during the inspiration phase
+				if( sign == 1 )
+				{
+					totalInspiration += sample;
+				}
+				
+				// If the signal has not crossed the zero line, keep searching 
 				if( sign == lastSign )
 				{
 					continue;
@@ -113,6 +123,7 @@ namespace cpaplib
 						TimeOfPeakExpiration  = signal.StartTime.AddSeconds( peakExpirationIndex / signal.FrequencyInHz ),
 						MinValue              = minValue,
 						MaxValue              = maxValue,
+						TotalInspiration      = totalInspiration,
 					};
 
 					// If the breath is longer than a reasonable amount of time for a very short breath, add it to the list
@@ -145,8 +156,9 @@ namespace cpaplib
 					peakInspirationIndex = i;
 					peakExpirationIndex  = i;
 
-					minValue = 0;
-					maxValue = 0;
+					minValue         = 0;
+					maxValue         = 0;
+					totalInspiration = double.Epsilon;
 				}
 
 				lastSign          = sign;

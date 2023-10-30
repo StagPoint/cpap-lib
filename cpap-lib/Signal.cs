@@ -9,6 +9,8 @@ namespace cpaplib
 {
 	public class Signal
 	{
+		#region Public properties 
+		
 		/// <summary>
 		/// The name of the channel, such as SaO2, Flow, Mask Pressure, etc.
 		/// </summary>
@@ -53,6 +55,21 @@ namespace cpaplib
 		/// The duration of this recording session
 		/// </summary>
 		public TimeSpan Duration { get => EndTime - StartTime; }
+		
+		#endregion 
+		
+		#region Indexer
+
+		/// <summary>
+		/// Returns the value of the sample at the given index (shorthand for Signal.Samples[index])
+		/// </summary>
+		/// <param name="index"></param>
+		public double this[ int index ]
+		{
+			get => Samples[ index ];
+		}
+
+		#endregion 
 		
 		#region Public functions
 

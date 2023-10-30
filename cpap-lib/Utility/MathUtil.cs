@@ -1,10 +1,17 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 namespace cpaplib
 {
 	internal static class MathUtil
 	{
+		[MethodImpl( MethodImplOptions.AggressiveInlining)]
+		public static double Clamp( double min, double max, double value )
+		{
+			return Math.Min( max, Math.Max( min, value ) );
+		}
+		
 		[MethodImpl( MethodImplOptions.AggressiveInlining)]
 		public static double InverseLerp( double a, double b, double v )
 		{
