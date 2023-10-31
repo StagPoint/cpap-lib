@@ -184,7 +184,7 @@ public partial class SignalChartContainer : UserControl
 
 	private void ChartDisplayedRangeChanged( object? sender, DateTimeRangeRoutedEventArgs e )
 	{
-		foreach( var control in _charts.Where( control => control != sender ) )
+		foreach( var control in _charts.Where( control => control != e.Source ) )
 		{
 			control.SetDisplayedRange( e.StartTime, e.EndTime );
 		}

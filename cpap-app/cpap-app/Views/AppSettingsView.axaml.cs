@@ -8,8 +8,14 @@ using System.Text;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform;
+using Avalonia.VisualTree;
 
 using cpap_app.ViewModels;
+
+using FluentAvalonia.UI.Controls;
+
+using MsBox.Avalonia;
+using MsBox.Avalonia.Enums;
 
 namespace cpap_app.Views;
 
@@ -18,6 +24,8 @@ public partial class AppSettingsView : UserControl
 	public AppSettingsView()
 	{
 		InitializeComponent();
+		
+		AddHandler( SettingsExpander.ClickEvent, SettingsExpander_OnClick );
 
 		DataContext = new AppSettingsViewModel();
 
@@ -54,6 +62,24 @@ public partial class AppSettingsView : UserControl
 		Process.Start( new ProcessStartInfo( uri.ToString() ) { UseShellExecute = true, Verb = "open" } );
 	}
 
+	private async void SettingsExpander_OnClick( object? sender, RoutedEventArgs e )
+	{
+		if( e.Source is not SettingsExpander setting )
+		{
+			return;
+		}
+
+		if( setting.Tag == null && setting.Footer == null && setting.ItemCount == 0 )
+		{
+			var msgBox = MessageBoxManager.GetMessageBoxStandard(
+				"Application Settings",
+				"This functionality has not yet been implemented.",
+				ButtonEnum.Ok,
+				Icon.Info );
+
+			await msgBox.ShowWindowDialogAsync( this.FindAncestorOfType<Window>() );
+		}
+	}
 }
 
 public class DependencyInfoItem

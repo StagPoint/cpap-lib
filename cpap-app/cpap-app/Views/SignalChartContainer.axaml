@@ -3,6 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:views="clr-namespace:cpap_app.Views"
+             xmlns:fui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="800"
              x:Class="cpap_app.Views.SignalChartContainer"
              views:SignalChart.DisplayedRangeChanged="ChartDisplayedRangeChanged"
@@ -12,6 +13,33 @@
         <StackPanel Name="PinnedCharts" DockPanel.Dock="Top" Background="{DynamicResource SolidBackgroundFillColorSecondaryBrush}">
             <!-- Pinned charts will be added here by the code-behind -->
         </StackPanel>
+        <Grid DockPanel.Dock="Bottom" Background="{DynamicResource SolidBackgroundFillColorSecondaryBrush}">
+            <Button HorizontalAlignment="Right" BorderThickness="2" CornerRadius="0" Padding="8 2" Margin="8 4">
+                <Button.Flyout>
+                    <fui:FAMenuFlyout Placement="Top">
+                        <fui:MenuFlyoutItem Text="Item 1" IconSource="Copy" />
+                        <fui:MenuFlyoutItem Text="Item 2" IconSource="Paste" />
+                        <fui:MenuFlyoutSeparator />
+                        <fui:MenuFlyoutSubItem Text="SubMenu">
+                            <fui:MenuFlyoutItem Text="Subitem 1" />
+                            <fui:MenuFlyoutItem Text="Subitem 2" />
+                            <fui:MenuFlyoutItem Text="Subitem 3" />
+                        </fui:MenuFlyoutSubItem>
+                        <fui:MenuFlyoutSeparator />
+                        <fui:ToggleMenuFlyoutItem Text="Toggle Item" IconSource="Bold" />
+                        <fui:MenuFlyoutSeparator />
+                        <fui:RadioMenuFlyoutItem Text="Radio Menu Item" IsChecked="True"
+                                                      GroupName="Test Group"
+                                                      IconSource="Games"/>
+                        <fui:RadioMenuFlyoutItem Text="Radio Menu Item 2"
+                                                      IconSource="Icons"
+                                                      GroupName="Test Group" />
+                    </fui:FAMenuFlyout>
+                </Button.Flyout>
+                📈 12 of 14 Graphs
+            </Button>
+        </Grid>
+        <Separator DockPanel.Dock="Bottom" Background="{DynamicResource FocusStrokeColorOuterBrush}"/>
         <ScrollViewer
             Name="ScrollContainer"
             DockPanel.Dock="Top"

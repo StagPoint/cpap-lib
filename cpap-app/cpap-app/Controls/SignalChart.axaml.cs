@@ -650,6 +650,7 @@ public partial class SignalChart : UserControl
 		{
 			return;
 		}
+
 		var offsetStart = (startTime - _day.RecordingStartTime).TotalSeconds;
 		var offsetEnd   = (endTime - _day.RecordingStartTime).TotalSeconds;
 
@@ -1039,31 +1040,33 @@ public partial class SignalChart : UserControl
 
 	private void ZoomTo( double startTime, double endTime )
 	{
+		Debug.Assert( _day != null, nameof( _day ) + " != null" );
+		
 		if( !IsEnabled || !Chart.IsEnabled )
 		{
 			return;
 		}
 		
-		// Don't allow zooming in closer than one minute
-		if( endTime - startTime < 60 )
+		// Don't allow zooming in closer than MINIMUM_TIME_WINDOW
+		if( endTime - startTime < MINIMUM_TIME_WINDOW )
 		{
-			Debug.Assert( _day != null, nameof( _day ) + " != null" );
-			
 			var center = (endTime + startTime) * 0.5;
 			startTime = Math.Max( 0, center - 30 );
 			endTime   = Math.Min( _day.TotalTimeSpan.TotalSeconds, center + 30 );
 		}
 
 		// disable events briefly to avoid an infinite loop
+		var wasAxisChangedEventEnabled = Chart.Configuration.AxesChangedEventEnabled;
 		Chart.Configuration.AxesChangedEventEnabled = false;
 		{
 			var currentAxisLimits  = Chart.Plot.GetAxisLimits();
 			var modifiedAxisLimits = new AxisLimits( startTime, endTime, currentAxisLimits.YMin, currentAxisLimits.YMax );
 
+			//Chart.Configuration.Quality = ScottPlot.Control.QualityMode.Low;
 			Chart.Plot.SetAxisLimits( modifiedAxisLimits );
-			Chart.RenderRequest( RenderType.LowQualityThenHighQualityDelayed );
+			Chart.RenderRequest();
 		}
-		Chart.Configuration.AxesChangedEventEnabled = true;
+		Chart.Configuration.AxesChangedEventEnabled = wasAxisChangedEventEnabled;
 	}
 	
 	internal void UpdateTimeMarker( DateTime time )
