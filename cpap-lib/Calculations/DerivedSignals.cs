@@ -156,7 +156,7 @@ namespace cpaplib
 
 		public static Signal GenerateTidalVolumeSignal( Signal flowRate, Signal respirationRate )
 		{
-			const int HISTORY_WINDOW_SIZE = 20;
+			const int HISTORY_WINDOW_SIZE = 15;
 			
 			double rrSampleFrequency   = respirationRate.FrequencyInHz;
 			double rrSampleInterval    = 1.0 / rrSampleFrequency;
@@ -172,23 +172,24 @@ namespace cpaplib
 				MaxValue          = 4000.0,
 				UnitOfMeasurement = "ml",
 				Samples           = tidalVolumeSamples,
-				StartTime         = respirationRate.StartTime,
-				EndTime           = respirationRate.EndTime,
+				StartTime         = flowRate.StartTime,
+				EndTime           = flowRate.EndTime,
 			};
+
+			int flowWindowSize = (int)(HISTORY_WINDOW_SIZE * flowSampleFrequency);
 
 			double inspiratoryFlow = 0.0;
 			double inspiratoryTime = 0.0;
-			int    flowWindowSize  = (int)(HISTORY_WINDOW_SIZE * flowSampleFrequency);
+			double lastOutputTime  = int.MinValue;
 
-			DateTime? startTime = null;
-			DateTime endTime   = respirationRate.EndTime;
-
-			var smoother = new SmoothingFilter( 3, 0.5 );			
+			var smoother = new MovingAverageCalculator( 3 );
 
 			for( int i = 0; i < flowRate.Samples.Count; i++ )
 			{
-				var sample = flowRate[ i ];
-				
+				var sample      = flowRate[ i ];
+				var currentTime = i * flowSampleInterval;
+				var emitSample  = (currentTime - lastOutputTime) >= rrSampleInterval;
+
 				if( sample > 0 )
 				{
 					inspiratoryFlow += sample;
@@ -197,6 +198,12 @@ namespace cpaplib
 
 				if( i < flowWindowSize )
 				{
+					if( emitSample )
+					{
+						tidalVolumeSamples.Add( 0 );
+						lastOutputTime = currentTime;
+					}
+					
 					continue;
 				}
 
@@ -207,29 +214,31 @@ namespace cpaplib
 					inspiratoryTime -= 1;
 				}
 
-				var currentTime = i * flowSampleInterval;
-				if( currentTime % rrSampleInterval > float.Epsilon )
-				{
+				if( !emitSample )
+				{	
 					continue;
 				}
 
-				startTime = (!startTime.HasValue) ? flowRate.StartTime.AddSeconds( currentTime ) : startTime;
-				endTime   = flowRate.StartTime.AddSeconds( currentTime );
-
-				var averageInspiratoryFlow = inspiratoryFlow / HISTORY_WINDOW_SIZE; // * (60.0 / HISTORY_WINDOW_SIZE);
+				var averageInspiratoryFlow = inspiratoryFlow / HISTORY_WINDOW_SIZE;
 				var respirationIndex       = (int)(currentTime / rrSampleInterval);
 				var inspirationRatio       = inspiratoryTime / flowWindowSize;
 
 				var rr   = respirationRate[ respirationIndex ];
 				var tv = averageInspiratoryFlow / inspirationRatio / rr / 60 * 1000;
 
-				tidalVolumeSamples.Add( tv );
+				// Cannot output a realistic value without a valid RR (and a zero RR value results in tv being Infinity)
+				var output = rr > 0 ? tv : 0;
+				smoother.AddObservation( output );
+
+				tidalVolumeSamples.Add( smoother.Average );
+				lastOutputTime = currentTime;
 			}
 
-			// Patch up the start and end times to match the data 
-			Debug.Assert( startTime != null, nameof( startTime ) + " != null" );
-			tidalVolumeSignal.StartTime = startTime.Value;
-			tidalVolumeSignal.EndTime   = endTime;
+			while( flowRate.StartTime.AddSeconds( lastOutputTime ) < tidalVolumeSignal.EndTime )
+			{
+				tidalVolumeSamples.Add( 0 );
+				lastOutputTime += rrSampleInterval;
+			}
 
 			return tidalVolumeSignal;
 		}
@@ -282,7 +291,8 @@ namespace cpaplib
 				var multiplier = (window.Count <= 1) ? 1.0 : (60.0 / (window[ window.Count - 1 ].EndTime - window[ 0 ].StartInspiration).TotalSeconds);
 				
 				// Output the number of breaths that overlap the last minute
-				respirationSamples.Add( MathUtil.Clamp( respirationSignal.MinValue, respirationSignal.MaxValue, window.Count * multiplier ) );
+				var outputValue = MathUtil.Clamp( respirationSignal.MinValue, respirationSignal.MaxValue, window.Count * multiplier );
+				respirationSamples.Add( outputValue );
 			}
 			
 			return respirationSignal;
