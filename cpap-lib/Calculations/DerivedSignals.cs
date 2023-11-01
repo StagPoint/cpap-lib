@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace cpaplib
 {
+	[SuppressMessage( "ReSharper", "MergeConditionalExpression" )]
 	public static class DerivedSignals
 	{
 		internal static void GenerateApneaIndexSignal( DailyReport day, Session session )
@@ -98,7 +100,7 @@ namespace cpaplib
 			var tidalVolumeSignal = session.GetSignalByName( SignalNames.TidalVolume );
 			if( tidalVolumeSignal == null )
 			{
-				tidalVolumeSignal = GenerateTidalVolumeSignal( breaths, respirationRateSignal );
+				tidalVolumeSignal = GenerateTidalVolumeSignal( flowRateSignal, respirationRateSignal );
 				
 				if( tidalVolumeSignal != null )
 				{
@@ -152,20 +154,20 @@ namespace cpaplib
 			return minuteVentilationSignal;
 		}
 
-		public static Signal GenerateTidalVolumeSignal( List<BreathRecord> breaths, Signal respirationRate )
+		public static Signal GenerateTidalVolumeSignal( Signal flowRate, Signal respirationRate )
 		{
-			double sampleFrequency = respirationRate.FrequencyInHz;
-			double sampleInterval  = 1.0 / sampleFrequency;
+			const int HISTORY_WINDOW_SIZE = 20;
 			
-			var firstBreath   = breaths[ 0 ];
-			var lastBreath    = breaths[ breaths.Count - 1 ];
-			var totalDuration = (lastBreath.EndTime - firstBreath.StartInspiration).TotalSeconds;
-
-			var tidalVolumeSamples = new List<double>( (int)(totalDuration * sampleFrequency) );
+			double rrSampleFrequency   = respirationRate.FrequencyInHz;
+			double rrSampleInterval    = 1.0 / rrSampleFrequency;
+			double flowSampleFrequency = flowRate.FrequencyInHz;
+			double flowSampleInterval  = 1.0 / flowSampleFrequency;
+			
+			var tidalVolumeSamples = new List<double>( respirationRate.Samples.Count );
 			var tidalVolumeSignal = new Signal
 			{
 				Name              = SignalNames.TidalVolume,
-				FrequencyInHz     = sampleFrequency,
+				FrequencyInHz     = rrSampleFrequency,
 				MinValue          = 0,
 				MaxValue          = 4000.0,
 				UnitOfMeasurement = "ml",
@@ -174,24 +176,60 @@ namespace cpaplib
 				EndTime           = respirationRate.EndTime,
 			};
 
-			var currentBreathIndex = 0;
+			double inspiratoryFlow = 0.0;
+			double inspiratoryTime = 0.0;
+			int    flowWindowSize  = (int)(HISTORY_WINDOW_SIZE * flowSampleFrequency);
 
-			for( DateTime currentTime = respirationRate.StartTime; currentTime < respirationRate.EndTime; currentTime = currentTime.AddSeconds( sampleInterval ) )
+			DateTime? startTime = null;
+			DateTime endTime   = respirationRate.EndTime;
+
+			var smoother = new SmoothingFilter( 3, 0.5 );			
+
+			for( int i = 0; i < flowRate.Samples.Count; i++ )
 			{
-				// Advance to the breath that overlaps the current timestamp
-				while( currentBreathIndex < breaths.Count - 1 && breaths[ currentBreathIndex ].EndTime < currentTime )
+				var sample = flowRate[ i ];
+				
+				if( sample > 0 )
 				{
-					currentBreathIndex += 1;
-				} 
+					inspiratoryFlow += sample;
+					inspiratoryTime += 1;
+				}
 
-				var currentBreath = breaths[ currentBreathIndex ];
+				if( i < flowWindowSize )
+				{
+					continue;
+				}
 
-				var rr   = respirationRate[ tidalVolumeSamples.Count ];
-				var flow = currentBreath.TotalFlow / currentBreath.TotalCycleTime / currentBreath.InspirationToExpirationRatio;
-				var vT   = flow / rr / 60 * 1000;
+				var historySample = flowRate[ i - flowWindowSize ];
+				if( historySample > 0 )
+				{
+					inspiratoryFlow -= historySample;
+					inspiratoryTime -= 1;
+				}
 
-				tidalVolumeSamples.Add( (rr <= 1) ? 0 : vT );
+				var currentTime = i * flowSampleInterval;
+				if( currentTime % rrSampleInterval > float.Epsilon )
+				{
+					continue;
+				}
+
+				startTime = (!startTime.HasValue) ? flowRate.StartTime.AddSeconds( currentTime ) : startTime;
+				endTime   = flowRate.StartTime.AddSeconds( currentTime );
+
+				var averageInspiratoryFlow = inspiratoryFlow / HISTORY_WINDOW_SIZE; // * (60.0 / HISTORY_WINDOW_SIZE);
+				var respirationIndex       = (int)(currentTime / rrSampleInterval);
+				var inspirationRatio       = inspiratoryTime / flowWindowSize;
+
+				var rr   = respirationRate[ respirationIndex ];
+				var tv = averageInspiratoryFlow / inspirationRatio / rr / 60 * 1000;
+
+				tidalVolumeSamples.Add( tv );
 			}
+
+			// Patch up the start and end times to match the data 
+			Debug.Assert( startTime != null, nameof( startTime ) + " != null" );
+			tidalVolumeSignal.StartTime = startTime.Value;
+			tidalVolumeSignal.EndTime   = endTime;
 
 			return tidalVolumeSignal;
 		}

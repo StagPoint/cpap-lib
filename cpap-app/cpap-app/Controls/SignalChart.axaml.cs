@@ -740,9 +740,9 @@ public partial class SignalChart : UserControl
 			}
 
 			var session         = _day.Sessions[ signalIndex ];
-			var breaths         = BreathDetection.DetectBreaths( _day.Sessions[ signalIndex ].GetSignalByName( SignalNames.FlowRate ), 0.5 );
+			var flowRate        = session.GetSignalByName( SignalNames.FlowRate );
 			var respirationRate = session.GetSignalByName( SignalNames.RespirationRate );
-			var tidalVolume     = DerivedSignals.GenerateTidalVolumeSignal( breaths, respirationRate );
+			var tidalVolume     = DerivedSignals.GenerateTidalVolumeSignal( flowRate, respirationRate );
 
 			var graph = Chart.Plot.AddSignal( tidalVolume.Samples.ToArray(), 0.5, Color.Magenta, "Filtered" );
 			graph.OffsetX    = (tidalVolume.StartTime - _day.RecordingStartTime).TotalSeconds;
