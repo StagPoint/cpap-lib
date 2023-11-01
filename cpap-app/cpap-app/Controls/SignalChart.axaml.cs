@@ -194,14 +194,26 @@ public partial class SignalChart : UserControl
 		
 		btnSettings.Visualizations.Add( new SignalMenuItem
 		{
-			Header  = "Noise Filter",
-			Command = VisualizeNoiseFilter
+			Header  = "Calculate Tidal Volume",
+			Command = VisualizeTidalVolume
+		} );
+		
+		btnSettings.Visualizations.Add( new SignalMenuItem
+		{
+			Header  = "Calculate Respiration Rate",
+			Command = VisualizeRespirationRate
 		} );
 		
 		btnSettings.Visualizations.Add( new SignalMenuItem
 		{
 			Header  = "Mark Respirations",
 			Command = VisualizeRespirations
+		} );
+		
+		btnSettings.Visualizations.Add( new SignalMenuItem
+		{
+			Header  = "Noise Filter",
+			Command = VisualizeNoiseFilter
 		} );
 		
 		btnSettings.Visualizations.Add( new SignalMenuItem
@@ -710,6 +722,100 @@ public partial class SignalChart : UserControl
 		Chart.RenderRequest();
 	}
 
+	private void VisualizeTidalVolume()
+	{
+		Debug.Assert( _day != null, nameof( _day ) + " != null" );
+
+		var timeRange = Chart.Plot.GetAxisLimits();
+		var startTime = _day.RecordingStartTime.AddSeconds( timeRange.XMin );
+		var endTime   = _day.RecordingStartTime.AddSeconds( timeRange.XMax );
+
+		int signalIndex = 0;
+		foreach( var signal in _signals )
+		{
+			if( !DateHelper.RangesOverlap( signal.StartTime, signal.EndTime, startTime, endTime ) )
+			{
+				signalIndex += 1;
+				continue;
+			}
+
+			var session         = _day.Sessions[ signalIndex ];
+			var breaths         = BreathDetection.DetectBreaths( _day.Sessions[ signalIndex ].GetSignalByName( SignalNames.FlowRate ), 0.5 );
+			var respirationRate = session.GetSignalByName( SignalNames.RespirationRate );
+			var tidalVolume     = DerivedSignals.GenerateTidalVolumeSignal( breaths, respirationRate );
+
+			var graph = Chart.Plot.AddSignal( tidalVolume.Samples.ToArray(), 0.5, Color.Magenta, "Filtered" );
+			graph.OffsetX    = (tidalVolume.StartTime - _day.RecordingStartTime).TotalSeconds;
+			graph.LineStyle  = LineStyle.Solid;
+			graph.MarkerSize = 0;
+
+			_visualizations.Add( graph );
+
+			break;
+		}
+		
+		Chart.RenderRequest();
+	}
+	
+	private void VisualizeRespirationRate()
+	{
+		Debug.Assert( _day != null, nameof( _day ) + " != null" );
+
+		var timeRange = Chart.Plot.GetAxisLimits();
+		var startTime = _day.RecordingStartTime.AddSeconds( timeRange.XMin );
+		var endTime   = _day.RecordingStartTime.AddSeconds( timeRange.XMax );
+
+		int signalIndex = 0;
+		foreach( var signal in _signals )
+		{
+			if( !DateHelper.RangesOverlap( signal.StartTime, signal.EndTime, startTime, endTime ) )
+			{
+				signalIndex += 1;
+				continue;
+			}
+
+			var breaths       = BreathDetection.DetectBreaths( _day.Sessions[ signalIndex ].GetSignalByName( SignalNames.FlowRate ), 0.5 );
+			var firstBreath   = breaths[ 0 ];
+			var lastBreath    = breaths[ breaths.Count - 1 ];
+			
+			var window             = new List<BreathRecord>();
+			var respirationSamples = new List<double>();
+			int currentBreathIndex = 0;
+
+			for( DateTime currentTime = firstBreath.StartInspiration; currentTime < lastBreath.EndTime; currentTime = currentTime.AddSeconds( 2 ) )
+			{
+				// Add any breaths that overlap the current time 
+				while( currentBreathIndex < breaths.Count - 1 && breaths[ currentBreathIndex ].StartInspiration <= currentTime )
+				{
+					window.Add( breaths[ currentBreathIndex++ ] );
+				}
+
+				// Remove breaths that ended more than a minute ago
+				var cutoffTime = currentTime.AddSeconds( -60 );
+				while( window.Count > 0 && window[ 0 ].EndTime <= cutoffTime )
+				{
+					window.RemoveAt( 0 );
+				}
+
+				var multiplier = (window.Count <= 1) ? 0.0 : (60.0 / (window[ window.Count - 1 ].EndTime - window[ 0 ].StartInspiration).TotalSeconds);
+				
+				// Output the number of breaths that overlap the last minute
+				respirationSamples.Add( window.Count * multiplier );
+			}
+
+			var graph = Chart.Plot.AddSignal( respirationSamples.ToArray(), 0.5, Color.Magenta, "Filtered" );
+			graph.OffsetX    = (firstBreath.StartInspiration - _day.RecordingStartTime).TotalSeconds;
+			graph.LineStyle  = LineStyle.Dash;
+			graph.MarkerSize = 0;
+
+			_visualizations.Add( graph );
+
+			break;
+		}
+		
+		Chart.RenderRequest();
+	}
+
 	private void VisualizeRespirations()
 	{
 		Debug.Assert( _day != null, nameof( _day ) + " != null" );
@@ -725,13 +831,13 @@ public partial class SignalChart : UserControl
 				continue;
 			}
 
-			var breaths = BreathDetection.DetectBreaths( signal );
+			var breaths = BreathDetection.DetectBreaths( signal, 0.5 );
 
 			double signalOffset = (signal.StartTime - _day.RecordingStartTime).TotalSeconds;
 
 			foreach( var breath in breaths )
 			{
-				var breathOffset = (breath.EndTime - signal.StartTime).TotalSeconds;
+				var breathOffset = (breath.StartInspiration - signal.StartTime).TotalSeconds;
 				
 				Chart.Plot.AddVerticalLine( signalOffset + breathOffset, Color.Red, 1f, LineStyle.Solid );
 			}
@@ -778,7 +884,7 @@ public partial class SignalChart : UserControl
 		bool first = true;
 		foreach( var signal in _signals )
 		{
-			var windowSize = (int)(2 * signal.FrequencyInHz);
+			var windowSize = (int)(60 * signal.FrequencyInHz);
 			var calc       = new MovingAverageCalculator( windowSize );
 
 			var samples = new double[ signal.Samples.Count ];
