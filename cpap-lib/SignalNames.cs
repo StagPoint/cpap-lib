@@ -16,6 +16,7 @@ namespace cpaplib
 		public const string RespirationRate = "Respiration Rate";
 		public const string InspirationTime = "Inspiration Time";
 		public const string ExpirationTime  = "Expiration Time";
+		public const string InspToExpRatio  = "I:E Ratio";
 		public const string AHI             = "AHI";
 		public const string Snore           = "Snore";
 		public const string SpO2            = "SpO2";

@@ -200,6 +200,12 @@ public partial class SignalChart : UserControl
 		
 		btnSettings.Visualizations.Add( new SignalMenuItem
 		{
+			Header  = "Calculate I:E Ratio",
+			Command = VisualizeInspirationRatio
+		} );
+		
+		btnSettings.Visualizations.Add( new SignalMenuItem
+		{
 			Header  = "Calculate Respiration Rate",
 			Command = VisualizeRespirationRate
 		} );
@@ -722,6 +728,40 @@ public partial class SignalChart : UserControl
 		Chart.RenderRequest();
 	}
 
+	private void VisualizeInspirationRatio()
+	{
+		Debug.Assert( _day != null, nameof( _day ) + " != null" );
+
+		var timeRange = Chart.Plot.GetAxisLimits();
+		var startTime = _day.RecordingStartTime.AddSeconds( timeRange.XMin );
+		var endTime   = _day.RecordingStartTime.AddSeconds( timeRange.XMax );
+
+		int signalIndex = 0;
+		foreach( var signal in _signals )
+		{
+			if( !DateHelper.RangesOverlap( signal.StartTime, signal.EndTime, startTime, endTime ) )
+			{
+				signalIndex += 1;
+				continue;
+			}
+
+			var session         = _day.Sessions[ signalIndex ];
+			var flowRate        = session.GetSignalByName( SignalNames.FlowRate );
+			var tidalVolume     = DerivedSignals.GenerateInspirationToExpirationRatioSignal( flowRate );
+
+			var graph = Chart.Plot.AddSignal( tidalVolume.Samples.ToArray(), 0.5, Color.Magenta, "I:E Ratio" );
+			graph.OffsetX    = (tidalVolume.StartTime - _day.RecordingStartTime).TotalSeconds;
+			graph.LineStyle  = LineStyle.Solid;
+			graph.MarkerSize = 0;
+
+			_visualizations.Add( graph );
+
+			break;
+		}
+		
+		Chart.RenderRequest();
+	}
+
 	private void VisualizeTidalVolume()
 	{
 		Debug.Assert( _day != null, nameof( _day ) + " != null" );
@@ -744,7 +784,7 @@ public partial class SignalChart : UserControl
 			var respirationRate = session.GetSignalByName( SignalNames.RespirationRate );
 			var tidalVolume     = DerivedSignals.GenerateTidalVolumeSignal( flowRate, respirationRate );
 
-			var graph = Chart.Plot.AddSignal( tidalVolume.Samples.ToArray(), 0.5, Color.Magenta, "Filtered" );
+			var graph = Chart.Plot.AddSignal( tidalVolume.Samples.ToArray(), 0.5, Color.Magenta, "Tidal Volume" );
 			graph.OffsetX    = (tidalVolume.StartTime - _day.RecordingStartTime).TotalSeconds;
 			graph.LineStyle  = LineStyle.Solid;
 			graph.MarkerSize = 0;
@@ -803,7 +843,7 @@ public partial class SignalChart : UserControl
 				respirationSamples.Add( window.Count * multiplier );
 			}
 
-			var graph = Chart.Plot.AddSignal( respirationSamples.ToArray(), 0.5, Color.Magenta, "Filtered" );
+			var graph = Chart.Plot.AddSignal( respirationSamples.ToArray(), 0.5, Color.Magenta, "Resp. Rate" );
 			graph.OffsetX    = (firstBreath.StartInspiration - _day.RecordingStartTime).TotalSeconds;
 			graph.LineStyle  = LineStyle.Dash;
 			graph.MarkerSize = 0;
@@ -1220,7 +1260,15 @@ public partial class SignalChart : UserControl
 			{
 				var value = signal.GetValueAtTime( time, !ChartConfiguration.ShowStepped );
 
-				CurrentValue.Text = $"{time:T}        {ChartConfiguration.Title}: {value:N2} {signal.UnitOfMeasurement}";
+				var valueText = $"{value:N2} {signal.UnitOfMeasurement}";
+				
+				// TODO: This shouldn't have to be a special case (at least not at this location in the code). Maybe pass in a formatter?
+				if( ChartConfiguration.SignalName == SignalNames.InspToExpRatio )
+				{
+					valueText = value >= 1 ? $"1.0 \u2236 {value:F1}" : $"{value:F1} \u2236 1.0";
+				}
+
+				CurrentValue.Text = $"{time:T}        {ChartConfiguration.Title}: {valueText}";
 
 				break;
 			}

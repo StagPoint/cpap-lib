@@ -64,9 +64,9 @@
                                 <ComboBoxItem>Override</ComboBoxItem>
                             </ComboBox>
                             <fui:NumberBox Grid.Column="2" Grid.Row="1" Name="NumberAxisMinValue" Width="100" SmallChange="5" 
-                                           LargeChange="10" Minimum="0" Value="{Binding AxisMinValue}" ValueChanged="AxisScalingValue_OnValueChanged"/>
+                                           LargeChange="10" Minimum="0" ValueChanged="AxisScalingValue_OnValueChanged"/>
                             <fui:NumberBox Grid.Column="4" Grid.Row="1" Name="NumberAxisMaxValue" Width="100" SmallChange="5"
-                                           LargeChange="10" Minimum="0" Value="{Binding AxisMaxValue}" ValueChanged="AxisScalingValue_OnValueChanged"/>
+                                           LargeChange="10" Minimum="0" ValueChanged="AxisScalingValue_OnValueChanged"/>
                         </Grid>
                     </MenuItem>
                     

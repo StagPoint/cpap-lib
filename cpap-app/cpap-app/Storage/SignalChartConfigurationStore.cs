@@ -87,6 +87,7 @@ public static class SignalChartConfigurationStore
 				
 				case SignalNames.Pressure:
 					config.SecondarySignalName = SignalNames.EPAP;
+					config.AxisMinValue        = 0;
 					config.AxisMaxValue        = 20;
 					config.ScalingMode         = AxisScalingMode.Override;
 					break;
@@ -187,6 +188,14 @@ public static class SignalChartConfigurationStore
 					config.ScalingMode  = AxisScalingMode.Override;
 					config.AxisMinValue = 0;
 					config.AxisMaxValue = 10;
+					break;
+				
+				case SignalNames.InspToExpRatio:
+					config.Title        = "I:E Ratio";
+					config.IsVisible    = false;
+					config.AxisMinValue = 0;
+					config.AxisMaxValue = 4;
+					config.ScalingMode  = AxisScalingMode.Override;
 					break;
 			}
 

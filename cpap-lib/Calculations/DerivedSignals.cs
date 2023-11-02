@@ -71,6 +71,7 @@ namespace cpaplib
 		internal static void GenerateMissingRespirationSignals( DailyReport day, Session session )
 		{
 			// We need the Flow Rate signal's data to calculate respiration rate, minute ventilation, inspiration and expiration times, etc.
+			// Note that it is assumed that the Flow Rate signal's physical unit is "Liters per Minute"
 			var flowRateSignal = session.GetSignalByName( SignalNames.FlowRate );
 			if( flowRateSignal == null )
 			{
@@ -120,6 +121,17 @@ namespace cpaplib
 				}
 			}
 
+			var inspirationRatioSignal = session.GetSignalByName( SignalNames.InspToExpRatio );
+			if( inspirationRatioSignal == null )
+			{
+				inspirationRatioSignal = GenerateInspirationToExpirationRatioSignal( flowRateSignal );
+
+				if( inspirationRatioSignal != null )
+				{
+					session.AddSignal( inspirationRatioSignal );
+				}
+			}
+
 			// Generate the Inspiration Time and Expiration Time signals if they are not available 
 			if( session.GetSignalByName( SignalNames.InspirationTime ) == null )
 			{
@@ -127,31 +139,93 @@ namespace cpaplib
 			}
 		}
 		
-		private static Signal GenerateMinuteVentilationSignal( Signal tidalVolume, Signal respirationRate )
+		public static Signal GenerateInspirationToExpirationRatioSignal( Signal flowRate )
 		{
-			Debug.Assert( tidalVolume.StartTime == respirationRate.StartTime, "Tidal Volume and Respiration Rate signals do not start at the same time" );
+			const int    HISTORY_WINDOW_SIZE = 15;
+			const double OUTPUT_FREQUENCY    = 0.5;
+			const double OUTPUT_INTERVAL     = 1.0 / OUTPUT_FREQUENCY;
 			
-			Debug.Assert( Math.Abs( tidalVolume.FrequencyInHz - respirationRate.FrequencyInHz ) < float.Epsilon, "Tidal Volume and Respiration Rate signals do not have the same frequency" );
+			double flowSampleFrequency = flowRate.FrequencyInHz;
+			double flowSampleInterval  = 1.0 / flowSampleFrequency;
 			
-			var minuteVentilationSamples = new List<double>( tidalVolume.Samples.Count );
-			var minuteVentilationSignal = new Signal
+			var outputSamples = new List<double>();
+			var outputSignal = new Signal
 			{
-				Name              = SignalNames.MinuteVent,
-				FrequencyInHz     = tidalVolume.FrequencyInHz,
+				Name              = SignalNames.InspToExpRatio,
+				FrequencyInHz     = OUTPUT_FREQUENCY,
 				MinValue          = 0,
-				MaxValue          = 30.0,
-				UnitOfMeasurement = "L/min",
-				Samples           = minuteVentilationSamples,
-				StartTime         = tidalVolume.StartTime,
-				EndTime           = tidalVolume.EndTime,
+				MaxValue          = 8.0,
+				UnitOfMeasurement = "",
+				Samples           = outputSamples,
+				StartTime         = flowRate.StartTime,
+				EndTime           = flowRate.EndTime,
 			};
 
-			for( int i = 0; i < tidalVolume.Samples.Count; i++ )
+			int flowWindowSize = (int)(HISTORY_WINDOW_SIZE * flowSampleFrequency);
+
+			double inspiratoryTime = 0.0;
+			double expiratoryTime  = 0.0;
+			double lastOutputTime  = int.MinValue;
+			int    lastSign        = -1;
+			int    flipCount       = 0;
+
+			for( int i = 0; i < flowRate.Samples.Count; i++ )
 			{
-				minuteVentilationSamples.Add( tidalVolume[ i ] * respirationRate[ i ] / 1000.0 );
+				var sample      = flowRate[ i ];
+				var currentTime = i * flowSampleInterval;
+				var emitSample  = (currentTime - lastOutputTime) >= OUTPUT_INTERVAL;
+
+				inspiratoryTime += (sample > 0) ? OUTPUT_INTERVAL : 0;
+				expiratoryTime  += (sample <= 0) ? OUTPUT_INTERVAL : 0;
+
+				var sign = (sample > 0) ? 1 : -1;
+				if( sign != lastSign )
+				{
+					flipCount += 1;
+					lastSign  =  sign;
+				}
+
+				// Wait until we have tracked at least one full breath cycle
+				if( flipCount < 3 )
+				{
+					if( emitSample )
+					{
+						outputSamples.Add( 0 );
+						lastOutputTime = currentTime;
+					}
+					
+					continue;
+				}
+
+				// Maintain the window by removing old entries 
+				if( i > flowWindowSize )
+				{
+					var historySample = flowRate[ i - flowWindowSize ];
+					if( historySample > 0 )
+					{
+						inspiratoryTime -= (sample > 0) ? OUTPUT_INTERVAL : 0;
+						expiratoryTime  -= (sample <= 0) ? OUTPUT_INTERVAL : 0;
+					}
+				}
+
+				if( !emitSample )
+				{	
+					continue;
+				}
+
+				var output = expiratoryTime / inspiratoryTime;
+
+				outputSamples.Add( output );
+				lastOutputTime = currentTime;
 			}
 
-			return minuteVentilationSignal;
+			while( flowRate.StartTime.AddSeconds( lastOutputTime ) < outputSignal.EndTime )
+			{
+				outputSamples.Add( 0 );
+				lastOutputTime += OUTPUT_INTERVAL;
+			}
+
+			return outputSignal;
 		}
 
 		public static Signal GenerateTidalVolumeSignal( Signal flowRate, Signal respirationRate )
@@ -223,7 +297,7 @@ namespace cpaplib
 				var respirationIndex       = (int)(currentTime / rrSampleInterval);
 				var inspirationRatio       = inspiratoryTime / flowWindowSize;
 
-				var rr   = respirationRate[ respirationIndex ];
+				var rr = respirationRate[ respirationIndex ];
 				var tv = averageInspiratoryFlow / inspirationRatio / rr / 60 * 1000;
 
 				// Cannot output a realistic value without a valid RR (and a zero RR value results in tv being Infinity)
@@ -241,6 +315,33 @@ namespace cpaplib
 			}
 
 			return tidalVolumeSignal;
+		}
+
+		private static Signal GenerateMinuteVentilationSignal( Signal tidalVolume, Signal respirationRate )
+		{
+			Debug.Assert( tidalVolume.StartTime == respirationRate.StartTime, "Tidal Volume and Respiration Rate signals do not start at the same time" );
+			
+			Debug.Assert( Math.Abs( tidalVolume.FrequencyInHz - respirationRate.FrequencyInHz ) < float.Epsilon, "Tidal Volume and Respiration Rate signals do not have the same frequency" );
+			
+			var minuteVentilationSamples = new List<double>( tidalVolume.Samples.Count );
+			var minuteVentilationSignal = new Signal
+			{
+				Name              = SignalNames.MinuteVent,
+				FrequencyInHz     = tidalVolume.FrequencyInHz,
+				MinValue          = 0,
+				MaxValue          = 30.0,
+				UnitOfMeasurement = "L/min",
+				Samples           = minuteVentilationSamples,
+				StartTime         = tidalVolume.StartTime,
+				EndTime           = tidalVolume.EndTime,
+			};
+
+			for( int i = 0; i < tidalVolume.Samples.Count; i++ )
+			{
+				minuteVentilationSamples.Add( tidalVolume[ i ] * respirationRate[ i ] / 1000.0 );
+			}
+
+			return minuteVentilationSignal;
 		}
 
 		private static Signal GenerateRespirationRateSignal( List<BreathRecord> breaths )
