@@ -121,6 +121,7 @@ namespace cpaplib
 				}
 			}
 
+			// Generate the I:E Ratio signal if it's missing. 
 			var inspirationRatioSignal = session.GetSignalByName( SignalNames.InspToExpRatio );
 			if( inspirationRatioSignal == null )
 			{

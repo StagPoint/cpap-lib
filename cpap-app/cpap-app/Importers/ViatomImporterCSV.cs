@@ -212,14 +212,14 @@ public class ViatomImporterCSV : IOximetryImporter
 		// Apparently Viatom/Wellue will occasionally just randomly change their file format for no apparent reason, 
 		// and one of those recent changes involves the timestamp format. Sheesh. 
 		
-		// Example format "10:00:45 PM Oct 25 2023"
-		if( DateTime.TryParse( lineData, out currentDateTime ) )
+		// Example format "22:48:36 26/10/2023"
+		if( DateTime.TryParseExact( lineData, "HH:mm:ss dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out currentDateTime ) )
 		{
 			return true;
 		}
 
-		// Example format "22:48:36 26/10/2023"
-		if( DateTime.TryParseExact( lineData, "HH:mm:ss dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out currentDateTime ) )
+		// Example format "10:00:45 PM Oct 25 2023"
+		if( DateTime.TryParse( lineData, out currentDateTime ) )
 		{
 			return true;
 		}

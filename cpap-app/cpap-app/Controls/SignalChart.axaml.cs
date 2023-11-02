@@ -344,7 +344,12 @@ public partial class SignalChart : UserControl
 				}
 				break;
 			case nameof( ChartConfiguration ):
-				btnSettings.ChartConfiguration = change.NewValue as SignalChartConfiguration;
+				ChartConfiguration             = change.NewValue as SignalChartConfiguration;
+				btnSettings.ChartConfiguration = ChartConfiguration;
+				
+				// Always display the name of the Signal, even when there is no data available
+				ChartLabel.Text  = ChartConfiguration?.Title;
+				NoDataLabel.Text = $"There is no {ChartConfiguration?.Title ?? "signal"} data available";
 				break;
 		}
 	}
@@ -1339,10 +1344,7 @@ public partial class SignalChart : UserControl
 		{
 			Chart.Configuration.AxesChangedEventEnabled = false;
 			Chart.Plot.Clear();
-
-			// Always display the name of the Signal, even when there is no data available
-			ChartLabel.Text = ChartConfiguration.Title;
-
+			
 			// Check to see if there are any sessions with the named Signal. If not, display the "No Data Available" message and eject.
 			_hasDataAvailable = day.Sessions.FirstOrDefault( x => x.GetSignalByName( ChartConfiguration.SignalName ) != null ) != null;
 			if( !_hasDataAvailable )
@@ -1357,6 +1359,7 @@ public partial class SignalChart : UserControl
 				CurrentValue.IsVisible = true;
 				Chart.IsEnabled        = true;
 				this.IsEnabled         = true;
+				btnSettings.IsEnabled  = true;
 			}
 			
 			var isDarkTheme  = Application.Current?.ActualThemeVariant == ThemeVariant.Dark;
@@ -1631,6 +1634,7 @@ public partial class SignalChart : UserControl
 		CurrentValue.IsVisible = false;
 		Chart.IsEnabled        = false;
 		this.IsEnabled         = false;
+		btnSettings.IsEnabled  = false;
 
 		Chart.Plot.XAxis.ManualTickSpacing( 3600 );
 		Chart.Plot.YAxis.ManualTickSpacing( 5 );
