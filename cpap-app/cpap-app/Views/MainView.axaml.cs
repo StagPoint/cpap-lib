@@ -62,7 +62,7 @@ public partial class MainView : UserControl
 	
 	#region Private fields
 
-	private UserProfile _activeUserProfile;
+	private UserProfile _activeUserProfile = null!;
 	
 	#endregion 
 	

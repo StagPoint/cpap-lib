@@ -189,64 +189,8 @@ public partial class SignalChart : UserControl
 		ChartLabel.PointerReleased    += ChartLabelOnPointerReleased;
 		ChartLabel.PointerCaptureLost += ChartLabelOnPointerCaptureLost;
 		ChartLabel.PointerMoved       += ChartLabelOnPointerMoved;
-
-		//Chart.ContextMenu = null;
-		
-		btnSettings.Visualizations.Add( new SignalMenuItem
-		{
-			Header  = "Calculate Tidal Volume",
-			Command = VisualizeTidalVolume
-		} );
-		
-		btnSettings.Visualizations.Add( new SignalMenuItem
-		{
-			Header  = "Calculate I:E Ratio",
-			Command = VisualizeInspirationRatio
-		} );
-		
-		btnSettings.Visualizations.Add( new SignalMenuItem
-		{
-			Header  = "Calculate Respiration Rate",
-			Command = VisualizeRespirationRate
-		} );
-		
-		btnSettings.Visualizations.Add( new SignalMenuItem
-		{
-			Header  = "Mark Respirations",
-			Command = VisualizeRespirations
-		} );
-		
-		btnSettings.Visualizations.Add( new SignalMenuItem
-		{
-			Header  = "Noise Filter",
-			Command = VisualizeNoiseFilter
-		} );
-		
-		btnSettings.Visualizations.Add( new SignalMenuItem
-		{
-			Header  = "Sliding Average (60sec)",
-			Command = VisualizeSlidingAverage
-		} );
-		
-		btnSettings.Visualizations.Add( new SignalMenuItem
-		{
-			Header  = "Standard Deviation (60sec)",
-			Command = VisualizeStandardDeviation
-		} );
-		
-		btnSettings.Visualizations.Add( new SignalMenuItem
-		{
-			Header = "Average (Entire series)",
-			Command = VisualizeAverage
-		});
-		
-		btnSettings.Visualizations.Add( new SignalMenuItem
-		{
-			Header = "95th Percentile",
-			Command = VisualizePercentile95
-		});
 	}
-
+	
 	#endregion 
 	
 	#region Base class overrides 
@@ -346,6 +290,11 @@ public partial class SignalChart : UserControl
 			case nameof( ChartConfiguration ):
 				ChartConfiguration             = change.NewValue as SignalChartConfiguration;
 				btnSettings.ChartConfiguration = ChartConfiguration;
+
+				if( btnSettings.Visualizations.Count == 0 )
+				{
+					InitializeVisualizationsMenu();
+				}
 				
 				// Always display the name of the Signal, even when there is no data available
 				ChartLabel.Text  = ChartConfiguration?.Title;
@@ -375,7 +324,11 @@ public partial class SignalChart : UserControl
 				Chart.RenderRequest();
 				break;
 			case nameof( SignalChartConfiguration.ScalingMode ):
+			case nameof( SignalChartConfiguration.AxisMinValue ):
+			case nameof( SignalChartConfiguration.AxisMaxValue ) :
 				// TODO: Refresh the chart's scaling mode
+				RefreshChartAxisLimits();
+				Chart.RenderRequest();
 				break;
 		}
 
@@ -487,8 +440,8 @@ public partial class SignalChart : UserControl
 				break;
 			case GraphInteractionMode.Panning:
 				// The chart was rendered in low quality while panning, so re-render in high quality now that we're done 
-				Chart.Configuration.Quality = ScottPlot.Control.QualityMode.LowWhileDragging;
-				Chart.RenderRequest();
+				//Chart.Configuration.Quality = ScottPlot.Control.QualityMode.LowWhileDragging;
+				//Chart.RenderRequest();
 				break;
 		}
 
@@ -700,6 +653,34 @@ public partial class SignalChart : UserControl
 	
 	#region Private functions
 
+	private void InitializeVisualizationsMenu()
+	{
+		Debug.Assert( ChartConfiguration != null, nameof( ChartConfiguration ) + " != null" );
+
+		List<SignalMenuItem> standardItems = new List<SignalMenuItem>
+		{
+			new SignalMenuItem( "Sliding Average (60sec)",    VisualizeSlidingAverage ),
+			new SignalMenuItem( "Standard Deviation (60sec)", VisualizeStandardDeviation ),
+			new SignalMenuItem( "Average (Entire series)",    VisualizeAverage ),
+			new SignalMenuItem( "Mediam (Entire series)",     VisualizeMedian ),
+			new SignalMenuItem( "95th Percentile",            VisualizePercentile95 ),
+		};
+
+		if( ChartConfiguration.SignalName == SignalNames.FlowRate )
+		{
+			btnSettings.Visualizations.Add( new SignalMenuItem( "Show Baseline",     VisualizeBaseline ) );
+			btnSettings.Visualizations.Add( new SignalMenuItem( "Mark Respirations", VisualizeRespirations ) );
+			btnSettings.Visualizations.Add( new SignalMenuItem( "Noise Filter",      VisualizeNoiseFilter ) );
+		}
+		else
+		{
+			btnSettings.Visualizations.AddRange( standardItems );
+		}
+
+		btnSettings.Visualizations.Add( new SignalMenuItem( "-",                    () => { } ) );
+		btnSettings.Visualizations.Add( new SignalMenuItem( "Clear Visualizations", ClearVisualizations ) );
+	}
+
 	private void VisualizeNoiseFilter()
 	{
 		Debug.Assert( _day != null,               nameof( _day ) + " != null" );
@@ -708,6 +689,8 @@ public partial class SignalChart : UserControl
 		var startTime = _day.RecordingStartTime.AddSeconds( timeRange.XMin );
 		var endTime   = _day.RecordingStartTime.AddSeconds( timeRange.XMax );
 
+		bool first = true;
+		
 		foreach( var signal in _signals )
 		{
 			if( !DateHelper.RangesOverlap( signal.StartTime, signal.EndTime, startTime, endTime ) )
@@ -721,141 +704,14 @@ public partial class SignalChart : UserControl
 				var filtered = SmoothingFilter.Filter( signal.Samples, 3, 1.0 / 3.0 );
 			#endif
 
-			var graph = Chart.Plot.AddSignal( filtered, signal.FrequencyInHz, Color.Magenta, "Filtered" );
+			var graph = Chart.Plot.AddSignal( filtered, signal.FrequencyInHz, Color.Magenta, first ? "Filtered" : null );
 			graph.OffsetX    = (signal.StartTime - _day.RecordingStartTime).TotalSeconds;
-			graph.LineStyle  = LineStyle.Dash;
-			graph.MarkerSize = 0;
-
-			_visualizations.Add( graph );
-
-		}
-		
-		Chart.RenderRequest();
-	}
-
-	private void VisualizeInspirationRatio()
-	{
-		Debug.Assert( _day != null, nameof( _day ) + " != null" );
-
-		var timeRange = Chart.Plot.GetAxisLimits();
-		var startTime = _day.RecordingStartTime.AddSeconds( timeRange.XMin );
-		var endTime   = _day.RecordingStartTime.AddSeconds( timeRange.XMax );
-
-		int signalIndex = 0;
-		foreach( var signal in _signals )
-		{
-			if( !DateHelper.RangesOverlap( signal.StartTime, signal.EndTime, startTime, endTime ) )
-			{
-				signalIndex += 1;
-				continue;
-			}
-
-			var session         = _day.Sessions[ signalIndex ];
-			var flowRate        = session.GetSignalByName( SignalNames.FlowRate );
-			var tidalVolume     = DerivedSignals.GenerateInspirationToExpirationRatioSignal( flowRate );
-
-			var graph = Chart.Plot.AddSignal( tidalVolume.Samples.ToArray(), 0.5, Color.Magenta, "I:E Ratio" );
-			graph.OffsetX    = (tidalVolume.StartTime - _day.RecordingStartTime).TotalSeconds;
 			graph.LineStyle  = LineStyle.Solid;
 			graph.MarkerSize = 0;
 
 			_visualizations.Add( graph );
 
-			break;
-		}
-		
-		Chart.RenderRequest();
-	}
-
-	private void VisualizeTidalVolume()
-	{
-		Debug.Assert( _day != null, nameof( _day ) + " != null" );
-
-		var timeRange = Chart.Plot.GetAxisLimits();
-		var startTime = _day.RecordingStartTime.AddSeconds( timeRange.XMin );
-		var endTime   = _day.RecordingStartTime.AddSeconds( timeRange.XMax );
-
-		int signalIndex = 0;
-		foreach( var signal in _signals )
-		{
-			if( !DateHelper.RangesOverlap( signal.StartTime, signal.EndTime, startTime, endTime ) )
-			{
-				signalIndex += 1;
-				continue;
-			}
-
-			var session         = _day.Sessions[ signalIndex ];
-			var flowRate        = session.GetSignalByName( SignalNames.FlowRate );
-			var respirationRate = session.GetSignalByName( SignalNames.RespirationRate );
-			var tidalVolume     = DerivedSignals.GenerateTidalVolumeSignal( flowRate, respirationRate );
-
-			var graph = Chart.Plot.AddSignal( tidalVolume.Samples.ToArray(), 0.5, Color.Magenta, "Tidal Volume" );
-			graph.OffsetX    = (tidalVolume.StartTime - _day.RecordingStartTime).TotalSeconds;
-			graph.LineStyle  = LineStyle.Solid;
-			graph.MarkerSize = 0;
-
-			_visualizations.Add( graph );
-
-			break;
-		}
-		
-		Chart.RenderRequest();
-	}
-	
-	private void VisualizeRespirationRate()
-	{
-		Debug.Assert( _day != null, nameof( _day ) + " != null" );
-
-		var timeRange = Chart.Plot.GetAxisLimits();
-		var startTime = _day.RecordingStartTime.AddSeconds( timeRange.XMin );
-		var endTime   = _day.RecordingStartTime.AddSeconds( timeRange.XMax );
-
-		int signalIndex = 0;
-		foreach( var signal in _signals )
-		{
-			if( !DateHelper.RangesOverlap( signal.StartTime, signal.EndTime, startTime, endTime ) )
-			{
-				signalIndex += 1;
-				continue;
-			}
-
-			var breaths       = BreathDetection.DetectBreaths( _day.Sessions[ signalIndex ].GetSignalByName( SignalNames.FlowRate ), 0.5 );
-			var firstBreath   = breaths[ 0 ];
-			var lastBreath    = breaths[ breaths.Count - 1 ];
-			
-			var window             = new List<BreathRecord>();
-			var respirationSamples = new List<double>();
-			int currentBreathIndex = 0;
-
-			for( DateTime currentTime = firstBreath.StartInspiration; currentTime < lastBreath.EndTime; currentTime = currentTime.AddSeconds( 2 ) )
-			{
-				// Add any breaths that overlap the current time 
-				while( currentBreathIndex < breaths.Count - 1 && breaths[ currentBreathIndex ].StartInspiration <= currentTime )
-				{
-					window.Add( breaths[ currentBreathIndex++ ] );
-				}
-
-				// Remove breaths that ended more than a minute ago
-				var cutoffTime = currentTime.AddSeconds( -60 );
-				while( window.Count > 0 && window[ 0 ].EndTime <= cutoffTime )
-				{
-					window.RemoveAt( 0 );
-				}
-
-				var multiplier = (window.Count <= 1) ? 0.0 : (60.0 / (window[ window.Count - 1 ].EndTime - window[ 0 ].StartInspiration).TotalSeconds);
-				
-				// Output the number of breaths that overlap the last minute
-				respirationSamples.Add( window.Count * multiplier );
-			}
-
-			var graph = Chart.Plot.AddSignal( respirationSamples.ToArray(), 0.5, Color.Magenta, "Resp. Rate" );
-			graph.OffsetX    = (firstBreath.StartInspiration - _day.RecordingStartTime).TotalSeconds;
-			graph.LineStyle  = LineStyle.Dash;
-			graph.MarkerSize = 0;
-
-			_visualizations.Add( graph );
-
-			break;
+			first = false;
 		}
 		
 		Chart.RenderRequest();
@@ -882,11 +738,29 @@ public partial class SignalChart : UserControl
 
 			foreach( var breath in breaths )
 			{
+				if( !DateHelper.RangesOverlap( breath.StartInspiration, breath.EndTime, startTime, endTime ) )
+				{
+					continue;
+				}
+				
 				var breathOffset = (breath.StartInspiration - signal.StartTime).TotalSeconds;
 				
-				Chart.Plot.AddVerticalLine( signalOffset + breathOffset, Color.Red, 1f, LineStyle.Solid );
+				var line = Chart.Plot.AddVerticalLine( signalOffset + breathOffset, Color.Red, 1f, LineStyle.Solid );
+				_visualizations.Add( line );
 			}
 		}
+		
+		Chart.RenderRequest();
+	}
+
+	private void ClearVisualizations()
+	{
+		foreach( var loop in _visualizations )
+		{
+			Chart.Plot.Remove( loop );
+		}
+		
+		_visualizations.Clear();
 		
 		Chart.RenderRequest();
 	}
@@ -896,12 +770,40 @@ public partial class SignalChart : UserControl
 		Debug.Assert( _day != null,               nameof( _day ) + " != null" );
 		Debug.Assert( ChartConfiguration != null, nameof( ChartConfiguration ) + " != null" );
 		
-		var stats = _day.Statistics.FirstOrDefault( x => x.SignalName == ChartConfiguration.Title );
+		var stats = _day.Statistics.FirstOrDefault( x => x.SignalName == ChartConfiguration.SignalName );
 		if( stats != null )
 		{
 			var color = DataColors.GetDataColor( _visualizations.Count + 8 ).ToDrawingColor();
 
-			_visualizations.Add( Chart.Plot.AddHorizontalLine( stats.Percentile95, color, 1f, LineStyle.Dash, "95%" ) );
+			_visualizations.Add( Chart.Plot.AddHorizontalLine( stats.Percentile95, color, 1f, LineStyle.Dot, "95%" ) );
+			Chart.RenderRequest();
+		}
+	}
+
+	private void VisualizeBaseline()
+	{
+		Debug.Assert( _day != null,               nameof( _day ) + " != null" );
+		Debug.Assert( ChartConfiguration != null, nameof( ChartConfiguration ) + " != null" );
+
+		var line = Chart.Plot.AddHorizontalLine( 0, Color.Red, 1f, LineStyle.Dot, "Baseline" );
+		Chart.Plot.MoveFirst( line );
+		
+		_visualizations.Add( line );
+		
+		Chart.RenderRequest();
+	}
+
+	private void VisualizeMedian()
+	{
+		Debug.Assert( _day != null,               nameof( _day ) + " != null" );
+		Debug.Assert( ChartConfiguration != null, nameof( ChartConfiguration ) + " != null" );
+		
+		var stats = _day.Statistics.FirstOrDefault( x => x.SignalName == ChartConfiguration.SignalName );
+		if( stats != null )
+		{
+			var color = DataColors.GetDataColor( _visualizations.Count + 8 ).ToDrawingColor();
+
+			_visualizations.Add( Chart.Plot.AddHorizontalLine( stats.Median, color, 1f, LineStyle.Dot, "Median" ) );
 			Chart.RenderRequest();
 		}
 	}
@@ -911,12 +813,12 @@ public partial class SignalChart : UserControl
 		Debug.Assert( _day != null,               nameof( _day ) + " != null" );
 		Debug.Assert( ChartConfiguration != null, nameof( ChartConfiguration ) + " != null" );
 		
-		var stats = _day.Statistics.FirstOrDefault( x => x.SignalName == ChartConfiguration.Title );
+		var stats = _day.Statistics.FirstOrDefault( x => x.SignalName == ChartConfiguration.SignalName );
 		if( stats != null )
 		{
 			var color = DataColors.GetDataColor( _visualizations.Count + 8 ).ToDrawingColor();
 
-			_visualizations.Add( Chart.Plot.AddHorizontalLine( stats.Average, color, 1f, LineStyle.Dash, "Avg" ) );
+			_visualizations.Add( Chart.Plot.AddHorizontalLine( stats.Average, color, 1f, LineStyle.Dot, "Avg" ) );
 			Chart.RenderRequest();
 		}
 	}
@@ -925,7 +827,8 @@ public partial class SignalChart : UserControl
 	{
 		Debug.Assert( _day != null, nameof( _day ) + " != null" );
 		var  color = DataColors.GetDataColor( _visualizations.Count + 8 ).ToDrawingColor();
-		
+		color = Color.Red;
+
 		bool first = true;
 		foreach( var signal in _signals )
 		{
@@ -944,7 +847,7 @@ public partial class SignalChart : UserControl
 
 			var graph = Chart.Plot.AddSignal( samples, signal.FrequencyInHz, color, first ? "Avg" : null );
 			graph.OffsetX    = (signal.StartTime - _day.RecordingStartTime).TotalSeconds;
-			graph.LineStyle  = LineStyle.Dash;
+			//graph.LineStyle  = LineStyle.Dash;
 			graph.MarkerSize = 0;
 
 			_visualizations.Add( graph );
@@ -959,6 +862,8 @@ public partial class SignalChart : UserControl
 	{
 		Debug.Assert( _day != null, nameof( _day ) + " != null" );
 		var color = DataColors.GetDataColor( _visualizations.Count + 8 ).ToDrawingColor();
+
+		color = Color.Red;
 		
 		bool first = true;
 		foreach( var signal in _signals )
@@ -974,10 +879,12 @@ public partial class SignalChart : UserControl
 				calc.AddObservation( sample );
 
 				samples[ i ] = calc.Average + calc.StandardDeviation;
+
+				Debug.Assert( !double.IsNaN( samples[ i ] ) && !double.IsInfinity( samples[ i ] ), "Unexpected invalid value in data" );
 			}
 
 			var graph = Chart.Plot.AddSignal( samples, signal.FrequencyInHz, color, first ? "StdDev" : null );
-			graph.LineStyle  = LineStyle.Dash;
+			graph.LineStyle  = LineStyle.Solid;
 			graph.OffsetX    = (signal.StartTime - _day.RecordingStartTime).TotalSeconds;
 			graph.MarkerSize = 0;
 
@@ -1003,6 +910,59 @@ public partial class SignalChart : UserControl
 		Chart.RenderRequest();
 	}
 
+	private void RefreshChartAxisLimits()
+	{
+		Debug.Assert( ChartConfiguration != null, nameof( ChartConfiguration ) + " != null" );
+
+		if( _signals.Count == 0 )
+		{
+			// This function might be called before initialization has been performed, or before data is available. 
+			// In this case, it's okay to just return because init and data loading will perform the necessary
+			// work when they happen.
+
+			return;
+		}
+		
+		var config            = ChartConfiguration;
+		var signal            = _signals[ 0 ];
+		var currentAxisLimits = Chart.Plot.GetAxisLimits();
+
+		switch( config.ScalingMode )
+		{
+			case AxisScalingMode.Defaults:
+				Chart.Plot.SetAxisLimits( currentAxisLimits.WithY( signal.MinValue, signal.MaxValue ) );
+				break;
+			case AxisScalingMode.AutoFit:
+				setAutoFitAxisLimits();
+				break;
+			case AxisScalingMode.Override:
+				Chart.Plot.SetAxisLimits( currentAxisLimits.WithY( config.AxisMinValue ?? signal.MinValue, config.AxisMaxValue ?? signal.MaxValue ) );
+				break;
+			default:
+				throw new ArgumentOutOfRangeException();
+		}
+		
+		return;
+
+		void setAutoFitAxisLimits()
+		{
+			var minDataValue = signal.MinValue >= 0 ? signal.MinValue : double.MaxValue;
+			var maxDataValue = double.MinValue;
+
+			foreach( var loop in _signals )
+			{
+				for( int i = 0; i < loop.Samples.Count; i++ )
+				{
+					var sample = loop[ i ];
+					minDataValue = Math.Min( minDataValue, sample );
+					maxDataValue = Math.Max( maxDataValue, sample );
+				}
+			}
+			
+			Chart.Plot.SetAxisLimits( currentAxisLimits.WithY( minDataValue, maxDataValue ) );
+		}
+	}
+
 	private void RefreshPlotFill( bool renderImmediately = false)
 	{
 		Debug.Assert( ChartConfiguration != null, nameof( ChartConfiguration ) + " != null" );
@@ -1021,7 +981,17 @@ public partial class SignalChart : UserControl
 			}
 			else
 			{
-				plot.FillBelow( plot.Color, Colors.Transparent.ToDrawingColor(), alpha );
+				if( ChartConfiguration.SignalName == SignalNames.FlowRate )
+				{
+					var fillColor = plot.Color;
+					plot.FillAboveAndBelow( Color.Transparent, fillColor, Color.Transparent, fillColor, alpha );
+					plot.BaselineColor = fillColor.MultiplyAlpha( (float)alpha );
+					plot.BaselineWidth = 1;
+				}
+				else
+				{
+					plot.FillBelow( plot.Color, Colors.Transparent.ToDrawingColor(), alpha );
+				}
 			}
 		}
 
@@ -1660,7 +1630,7 @@ public partial class SignalChart : UserControl
 		Chart.Configuration.LockVerticalAxis     = true;
 		Chart.Configuration.LeftClickDragPan     = false;
 		Chart.Configuration.RightClickDragZoom   = false;
-		Chart.Configuration.Quality              = ScottPlot.Control.QualityMode.LowWhileDragging;
+		Chart.Configuration.Quality              = ScottPlot.Control.QualityMode.Low;
 
 		plot.Style( _chartStyle );
 		plot.Layout( 0, 0, 0, 8 );

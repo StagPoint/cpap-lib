@@ -67,6 +67,17 @@ namespace cpaplib
 			return result;
 		}
 
+		public static void FilterInPlace( List<double> data, int order, double beta = 0.5 )
+		{
+			var filter = new SmoothingFilter( order, beta );
+			var result = new List<double>( data.Count );
+
+			for( int i = 0; i < data.Count; i++ )
+			{
+				data[i] = filter.Filter( data[ i ] );
+			}
+		}
+
 		#endregion
 
 		#region Private functions

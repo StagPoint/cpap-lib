@@ -121,26 +121,23 @@ namespace cpaplib
 				}
 			}
 
-			// Generate the I:E Ratio signal if it's missing. 
-			var inspirationRatioSignal = session.GetSignalByName( SignalNames.InspToExpRatio );
-			if( inspirationRatioSignal == null )
-			{
-				inspirationRatioSignal = GenerateInspirationToExpirationRatioSignal( flowRateSignal );
+			// Generate the Inspiration Time, Expiration Time, and I:E Ratio signals if they are not available 
+			(Signal inspirationTimeSignal, Signal expirationTimeSignal, Signal inspirationRatioSignal) = GenerateRespirationTimeSignals( breaths );
 
-				if( inspirationRatioSignal != null )
-				{
-					session.AddSignal( inspirationRatioSignal );
-				}
-			}
-
-			// Generate the Inspiration Time and Expiration Time signals if they are not available 
 			if( session.GetSignalByName( SignalNames.InspirationTime ) == null )
 			{
-				GenerateRespirationTimeSignals( session, flowRateSignal, breaths );
+				session.AddSignal( inspirationTimeSignal );
+				session.AddSignal( expirationTimeSignal );
+			}
+
+			if( session.GetSignalByName( SignalNames.InspToExpRatio ) == null )
+			{
+				session.AddSignal( inspirationRatioSignal );
 			}
 		}
 		
-		public static Signal GenerateInspirationToExpirationRatioSignal( Signal flowRate )
+		[Obsolete]
+		private static Signal GenerateInspirationToExpirationRatioSignal( Signal flowRate )
 		{
 			const int    HISTORY_WINDOW_SIZE = 15;
 			const double OUTPUT_FREQUENCY    = 0.5;
@@ -400,7 +397,7 @@ namespace cpaplib
 			return respirationSignal;
 		}
 
-		internal static void GenerateRespirationTimeSignals( Session session, Signal flowRate, List<BreathRecord> breaths )
+		internal static ( Signal, Signal, Signal ) GenerateRespirationTimeSignals( List<BreathRecord> breaths )
 		{
 			const double FREQUENCY = 0.5;
 			const double INTERVAL  = 1.0 / FREQUENCY;
@@ -434,7 +431,21 @@ namespace cpaplib
 				StartTime         = firstBreath.StartInspiration,
 				EndTime           = lastBreath.EndTime,
 			};
-			
+
+			var ratioSamples = new List<double>( (int)(totalDuration * FREQUENCY) );
+			var ratioSignal = new Signal
+			{
+				Name              = SignalNames.InspToExpRatio,
+				FrequencyInHz     = FREQUENCY,
+				MinValue          = 0,
+				MaxValue          = 8.0,
+				UnitOfMeasurement = "",
+				Samples           = ratioSamples,
+				StartTime         = firstBreath.StartInspiration,
+				EndTime           = lastBreath.EndTime,
+			};
+
+
 			var currentBreathIndex = 0;
 
 			for( DateTime currentTime = firstBreath.StartInspiration; currentTime < lastBreath.EndTime; currentTime = currentTime.AddSeconds( INTERVAL ) )
@@ -467,11 +478,15 @@ namespace cpaplib
 
 				inspirationSamples.Add( MathUtil.Clamp( 0, 30, inspirationLength ) );
 				expirationSamples.Add( MathUtil.Clamp( 0,  30, expirationLength ) );
+				ratioSamples.Add( expirationLength / inspirationLength );
 			}
-		
-			// Add the signals to the Session 
-			session.AddSignal( inspirationSignal );
-			session.AddSignal( expirationSignal );
+
+			// Apply a bit of smoothing to remove the noise inherent in using periodic measurements rather than continuous data
+			ButterworthFilter.FilterInPlace( inspirationSamples, 20, 1 );
+			ButterworthFilter.FilterInPlace( expirationSamples,  20, 1 );
+			ButterworthFilter.FilterInPlace( ratioSamples,       20, 1 );
+			
+			return (inspirationSignal, expirationSignal, ratioSignal);
 		}
 	}
 }

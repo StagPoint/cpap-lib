@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace cpaplib
 {
@@ -39,14 +40,16 @@ namespace cpaplib
 
 	public static class BreathDetection
 	{
-		public static List<BreathRecord> DetectBreaths( Signal signal, double filterCutoff = 1.0 )
+		public static List<BreathRecord> DetectBreaths( Signal flowSignal, double filterCutoff = 1.0 )
 		{
+			Debug.Assert( flowSignal.Name == SignalNames.FlowRate, $"Expected a signal named {SignalNames.FlowRate}" );
+			
 			// The size of the window used to calculate the baseline (10 seconds times the number of samples per second) 
-			int baselineWindowSize = (int)(10 * signal.FrequencyInHz); 
+			int baselineWindowSize = (int)(10 * flowSignal.FrequencyInHz); 
 				
 			var results = new List<BreathRecord>();
 
-			var filtered    = ButterworthFilter.Filter( signal.Samples.ToArray(), signal.FrequencyInHz, filterCutoff );
+			var filtered    = ButterworthFilter.Filter( flowSignal.Samples.ToArray(), flowSignal.FrequencyInHz, filterCutoff );
 			var slidingMean = new MovingAverageCalculator( baselineWindowSize );
 
 			// Always start on an inspiration. This happens by default on ResMed machines as far as I can tell, but better to be certain.  
@@ -84,7 +87,7 @@ namespace cpaplib
 				}
 				
 				// Keep track of all inspiratory and expiratory flow (unfiltered, not adjusted for baseline)
-				totalFlow += Math.Abs( signal[ i ] );
+				totalFlow += Math.Abs( flowSignal[ i ] );
 
 				// // What we're really interested in is the flow rate relative to the (moving) baseline, which may not be zero
 				// // Inspiration is anything above baseline, expiration is baseline or below
@@ -146,7 +149,7 @@ namespace cpaplib
 
 			DateTime timeAtIndex( int index )
 			{
-				return signal.StartTime.AddSeconds( index / signal.FrequencyInHz );
+				return flowSignal.StartTime.AddSeconds( index / flowSignal.FrequencyInHz );
 			}
 		}
 	}

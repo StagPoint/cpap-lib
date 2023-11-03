@@ -485,9 +485,10 @@ namespace cpaplib
 			
 			// HACK: Don't add any flow limitation events that coincide with a RERA event, since the two are related
 			// and we don't want to double-count the events when calculating the RDI
+			var eventTypeList = EventTypes.Apneas.Concat( EventTypes.RespiratoryDisturbance ).ToArray();
 			foreach( var flowLimit in flowLimitEvents )
 			{
-				if( !day.Events.Any( x => x.Type == EventType.RERA && ReportedEvent.TimesOverlap( x, flowLimit ) ) )
+				if( !day.Events.Any( x => eventTypeList.Contains( x.Type ) && ReportedEvent.TimesOverlap( x, flowLimit ) ) )
 				{
 					day.Events.Add( flowLimit );
 				}

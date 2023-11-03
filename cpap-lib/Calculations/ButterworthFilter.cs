@@ -1,9 +1,17 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace cpaplib
 {
 	internal class ButterworthFilter
 	{
+		public static void FilterInPlace( List<double> sourceData, double sourceFrequency, double cutOff )
+		{
+			var result = Filter( sourceData.ToArray(), sourceFrequency, cutOff );
+			sourceData.Clear();
+			sourceData.AddRange( result );
+		}
+		
 		public static double[] Filter( double[] sourceData, double sourceFrequency, double cutOff )
 		{
 			if( cutOff == 0 ) return sourceData;

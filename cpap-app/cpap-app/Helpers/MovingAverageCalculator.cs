@@ -10,7 +10,7 @@ public class MovingAverageCalculator
 
 	public double Average
 	{
-		get => _average;
+		get => double.IsNaN( _average ) || double.IsInfinity( _average ) ? 0 : _average;
 	}
 
 	public double StandardDeviation

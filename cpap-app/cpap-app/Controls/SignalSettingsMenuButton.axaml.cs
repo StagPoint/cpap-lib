@@ -82,15 +82,22 @@ public partial class SignalSettingsMenuButton : UserControl
 		{
 			foreach( var item in Visualizations )
 			{
-				var menuItem = new MenuItem()
+				if( item.Header.Equals( "-", StringComparison.Ordinal ) )
 				{
-					Header = item.Header,
-					Tag    = item.Command,
-				};
-				
-				menuItem.AddHandler( MenuItem.ClickEvent, MenuItemClickHandler );
+					mnuVisualizations.Items.Add( new Separator() );
+				}
+				else
+				{
+					var menuItem = new MenuItem()
+					{
+						Header = item.Header,
+						Tag    = item.Command,
+					};
 
-				mnuVisualizations.Items.Add( menuItem );
+					menuItem.AddHandler( MenuItem.ClickEvent, MenuItemClickHandler );
+
+					mnuVisualizations.Items.Add( menuItem );
+				}
 			}
 		}
 	}
@@ -291,10 +298,20 @@ public partial class SignalSettingsMenuButton : UserControl
 	private void AxisScalingValue_OnValueChanged( NumberBox sender, NumberBoxValueChangedEventArgs args )
 	{
 		Debug.Assert( ChartConfiguration != null, nameof( ChartConfiguration ) + " != null" );
-
+		
 		var propertyName = sender == NumberAxisMinValue 
 			? nameof( ChartConfiguration.AxisMinValue ) 
 			: nameof( ChartConfiguration.AxisMaxValue );
+		
+		// Data binding might be disabled due to annoying quirks of the NumberBox control that haven't been fixed yet
+		if( sender == NumberAxisMinValue )
+		{
+			ChartConfiguration.AxisMinValue = args.NewValue;
+		}
+		else
+		{
+			ChartConfiguration.AxisMaxValue = args.NewValue;
+		}
 		
 		RaiseChangedEvent( propertyName );
 	}
@@ -304,4 +321,10 @@ public class SignalMenuItem
 {
 	public string Header  { get; set; }
 	public Action Command { get; set; }
+
+	public SignalMenuItem( string header, Action command )
+	{
+		Header  = header;
+		Command = command;
+	}
 }
