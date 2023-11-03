@@ -36,13 +36,22 @@ public partial class MainView : UserControl
 {
 	#region Public events
 
-	public static readonly RoutedEvent<RoutedEventArgs> ImportRequestEvent =
-		RoutedEvent.Register<MainView, RoutedEventArgs>( nameof( ImportRequested ), RoutingStrategies.Bubble );
+	public static readonly RoutedEvent<RoutedEventArgs> ImportCpapRequestedEvent =
+		RoutedEvent.Register<MainView, RoutedEventArgs>( nameof( ImportCpapRequested ), RoutingStrategies.Bubble );
 
-	public event EventHandler<RoutedEventArgs> ImportRequested
+	public event EventHandler<RoutedEventArgs> ImportCpapRequested
 	{
-		add => AddHandler( ImportRequestEvent, value );
-		remove => RemoveHandler( ImportRequestEvent, value );
+		add => AddHandler( ImportCpapRequestedEvent, value );
+		remove => RemoveHandler( ImportCpapRequestedEvent, value );
+	}
+
+	public static readonly RoutedEvent<RoutedEventArgs> ImportOximetryRequestedEvent =
+		RoutedEvent.Register<MainView, RoutedEventArgs>( nameof( ImportOximetryRequested ), RoutingStrategies.Bubble );
+
+	public event EventHandler<RoutedEventArgs> ImportOximetryRequested
+	{
+		add => AddHandler( ImportOximetryRequestedEvent, value );
+		remove => RemoveHandler( ImportOximetryRequestedEvent, value );
 	}
 
 	#endregion 
@@ -77,9 +86,11 @@ public partial class MainView : UserControl
 
 		NavView.SelectedItem = navHome;
 
-		AddHandler( ImportRequestEvent, HandleImportRequestCPAP );
+		AddHandler( ImportCpapRequestedEvent,     HandleImportRequestCPAP );
+		AddHandler( ImportOximetryRequestedEvent, HandleImportRequestOximetry );
 
-		btnImportCPAP.Tapped += HandleImportRequestCPAP;
+		btnImportCPAP.Tapped     += HandleImportRequestCPAP;
+		btnImportOximetry.Tapped += HandleImportRequestOximetry;
 		
 		foreach( var importer in OximetryImporterRegistry.RegisteredImporters )
 		{
@@ -94,7 +105,7 @@ public partial class MainView : UserControl
 
 		navProfile.MenuItemsSource = UserProfileStore.SelectAll();
 	}
-	
+
 	#endregion 
 	
 	#region Base class overrides
@@ -184,6 +195,12 @@ public partial class MainView : UserControl
 					break;
 			}
 		}
+	}
+
+	private void HandleImportRequestOximetry( object? sender, TappedEventArgs e )
+	{
+		// TODO: This really needs to be changed so that it's a generic "Import Oximetry CSV File" which selects the importer based on individual files selected
+		HandleImportRequestOximetry( OximetryImporterRegistry.RegisteredImporters[ 0 ] );
 	}
 	
 	private async void HandleImportRequestOximetry( IOximetryImporter importer )
@@ -396,6 +413,12 @@ public partial class MainView : UserControl
 		}
 	}
 
+	private void HandleImportRequestOximetry( object? sender, RoutedEventArgs e )
+	{
+		// TODO: This really needs to be changed so that it's a generic "Import Oximetry CSV File" which selects the importer based on individual files selected
+		HandleImportRequestOximetry( OximetryImporterRegistry.RegisteredImporters[ 0 ] );
+	}
+	
 	private async void HandleImportRequestCPAP( object? sender, RoutedEventArgs e )
 	{
 		string importPath = string.Empty;

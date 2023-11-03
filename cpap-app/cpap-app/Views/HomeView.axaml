@@ -17,11 +17,19 @@
             "Import" button below and selecting the CPAP data folder which contains the STR.edf file, or select a destination 
             from the navigation menu to the left.
         </TextBlock>
-        <Button Name="btnImport" HorizontalAlignment="Center" ClickMode="Press" Classes="accent" Padding="20 10" Click="BtnImport_OnClick">
-            <StackPanel Orientation="Horizontal">
-                <ui:FontIcon Glyph="&#xE7F1;" FontSize="18" FontFamily="{DynamicResource SymbolThemeFontFamily}" FontWeight="Normal" FontStyle="Normal" Margin="0 -2 10 0"/>
-                <TextBlock>Import CPAP Data</TextBlock>
-            </StackPanel>
-        </Button>
+        <StackPanel Orientation="Horizontal" Spacing="32" HorizontalAlignment="Center">
+            <Button Name="btnImportCPAP" HorizontalAlignment="Center" ClickMode="Press" Classes="accent" Padding="20 10" Click="BtnImportCPAP_OnClick">
+                <StackPanel Orientation="Horizontal">
+                    <ui:FontIcon Glyph="&#xE7F1;" FontSize="18" FontFamily="{DynamicResource SymbolThemeFontFamily}" FontWeight="Normal" FontStyle="Normal" Margin="0 -2 10 0"/>
+                    <TextBlock>Import CPAP Data</TextBlock>
+                </StackPanel>
+            </Button>
+            <Button Name="btnImportSPO2" HorizontalAlignment="Center" ClickMode="Press" Classes="accent" Padding="20 10" Click="BtnImportOximetry_Click">
+                <StackPanel Orientation="Horizontal">
+                    <ui:FontIcon Glyph="&#xEB42;" FontSize="18" FontFamily="{DynamicResource SymbolThemeFontFamily}" FontWeight="Normal" FontStyle="Normal" Margin="0 -2 10 0"/>
+                    <TextBlock>Import Oximetry Data</TextBlock>
+                </StackPanel>
+            </Button>
+        </StackPanel>
     </StackPanel>
 </UserControl>

@@ -30,8 +30,13 @@ public partial class HomeView : UserControl
 		InitializeComponent();
 	}
 
-	private void BtnImport_OnClick( object? sender, RoutedEventArgs e )
+	private void BtnImportCPAP_OnClick( object? sender, RoutedEventArgs e )
 	{
-		RaiseEvent( new RoutedEventArgs( MainView.ImportRequestEvent ) );
+		RaiseEvent( new RoutedEventArgs( MainView.ImportCpapRequestedEvent ) );
+	}
+
+	private void BtnImportOximetry_Click( object? sender, RoutedEventArgs e )
+	{
+		RaiseEvent( new RoutedEventArgs( MainView.ImportOximetryRequestedEvent ) );
 	}
 }
