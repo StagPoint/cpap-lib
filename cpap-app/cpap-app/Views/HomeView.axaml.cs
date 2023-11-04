@@ -1,25 +1,11 @@
 ﻿using System;
-using System.Diagnostics;
-using System.IO;
-using System.Threading.Tasks;
 
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
-using Avalonia.Platform.Storage;
-using Avalonia.Threading;
-using Avalonia.VisualTree;
 
 using cpap_app.ViewModels;
 
 using cpap_db;
-
-using cpaplib;
-
-using FluentAvalonia.UI.Controls;
-
-using MsBox.Avalonia;
-using MsBox.Avalonia.Enums;
 
 namespace cpap_app.Views;
 
@@ -28,6 +14,27 @@ public partial class HomeView : UserControl
 	public HomeView()
 	{
 		InitializeComponent();
+	}
+
+	protected override void OnLoaded( RoutedEventArgs e )
+	{
+		base.OnLoaded( e );
+
+		using var db = StorageService.Connect();
+		
+		var profileID = UserProfileStore.GetLastUserProfile().UserProfileID;
+		var date      = db.GetMostRecentStoredDate( profileID );
+
+		if( date > DateTime.Today.AddDays( -30 ) )
+		{
+			var day = db.LoadDailyReport( profileID, date );
+
+			DailyGoals.DataContext = new DailyGoalsSummaryViewModel( day );
+		}
+		else
+		{
+			DailyGoals.IsVisible = false;
+		}
 	}
 
 	private void BtnImportCPAP_OnClick( object? sender, RoutedEventArgs e )

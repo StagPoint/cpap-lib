@@ -104,6 +104,8 @@ public partial class MainView : UserControl
 		ActiveUserProfile = UserProfileStore.GetLastUserProfile();
 
 		navProfile.MenuItemsSource = UserProfileStore.SelectAll();
+		
+		NavView.PaneDisplayMode = NavigationViewPaneDisplayMode.Left;
 	}
 
 	#endregion 
@@ -166,14 +168,14 @@ public partial class MainView : UserControl
 						throw new InvalidCastException( $"The type {pageType} could not be cast to an appropriate view type" );
 					}
 
-					var transition = e.RecommendedNavigationTransitionInfo;
+					NavigationTransitionInfo transition = new FadeNavigationTransitionInfo();
 					
 					if( page is DailyReportView dailyReportView )
 					{
 						dailyReportView.ActiveUserProfile = ActiveUserProfile;
 						
 						// DailyReportView is way too heavy to deal with complex animations 
-						//transition = new SuppressNavigationTransitionInfo();
+						transition = new SuppressNavigationTransitionInfo();
 					}
 					
 					LoadTabPage( page, transition );
@@ -184,7 +186,6 @@ public partial class MainView : UserControl
 					}
 					else if( object.ReferenceEquals( NavView.SelectedItem, navHome ) )
 					{
-						navView.PaneDisplayMode = NavigationViewPaneDisplayMode.LeftCompact;
 						SetNavViewDisplayMode( NavigationViewPaneDisplayMode.Left );
 					}
 

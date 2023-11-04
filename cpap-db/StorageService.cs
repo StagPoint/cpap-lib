@@ -286,8 +286,8 @@ namespace cpap_db
 		public DateTime GetMostRecentStoredDate( int profileID )
 		{
 			var reportMapping  = GetMapping<DailyReport>();
-			
-			var query   = $"SELECT IFNULL( [{nameof(DailyReport.ReportDate)}], datetime('now','-180 day','localtime') ) FROM [{reportMapping.TableName}] WHERE [{reportMapping.ForeignKey.ColumnName}] = ? ORDER BY ReportDate DESC LIMIT 1";
+
+			var query = $"SELECT IFNULL( [{nameof( DailyReport.ReportDate )}], datetime('now','-180 day','localtime') ) FROM [{reportMapping.TableName}] WHERE [{reportMapping.ForeignKey.ColumnName}] = ? ORDER BY ReportDate DESC LIMIT 1";
 			
 			return Connection.ExecuteScalar<DateTime>( query, profileID );
 		}
@@ -296,8 +296,10 @@ namespace cpap_db
 		{
 			var reportMapping = GetMapping<DailyReport>();
 		
-			var query = $"SELECT [{nameof(DailyReport.ReportDate)}] FROM [{reportMapping.TableName}] WHERE [{reportMapping.ForeignKey.ColumnName}] = ? ORDER BY [{reportMapping.PrimaryKey.ColumnName}]";
+			var query = $"SELECT [{nameof(DailyReport.ReportDate)}] FROM [{reportMapping.TableName}] WHERE [{reportMapping.ForeignKey.ColumnName}] = ? ORDER BY [ReportDate] DESC";
 			var list  = Connection.QueryScalars<DateTime>( query, profileID );
+			
+			list.Sort();
 
 			return list;
 		}

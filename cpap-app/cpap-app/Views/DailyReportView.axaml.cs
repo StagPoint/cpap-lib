@@ -123,7 +123,8 @@ public partial class DailyReportView : UserControl
 
 		using var store = StorageService.Connect();
 		
-		_datesWithData = store.GetStoredDates( ActiveUserProfile.UserProfileID );
+		// Note that ActiveUserProfile will not always be available (such as in Preview mode in design view)
+		_datesWithData = store.GetStoredDates( ActiveUserProfile?.UserProfileID ?? 0 );
 
 		// TODO: Keep DisplayDateStart/DisplayDateEnd up to date (after importing, etc.)
 		if( _datesWithData.Count == 0 )

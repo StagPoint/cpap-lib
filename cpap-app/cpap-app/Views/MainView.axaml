@@ -19,7 +19,7 @@
                            AlwaysShowHeader="False"
                            PaneTitle="Navigation"
                            IsSettingsVisible="True"
-                           IsPaneOpen="False"
+                           IsPaneOpen="True"
                            SelectionChanged="NavView_OnSelectionChanged">
             <ui:NavigationView.Styles>
                 <Style Selector="ui|NavigationView /template/ TextBlock#PaneTitleTextBlock">
