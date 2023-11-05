@@ -1,17 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 using Avalonia;
-using Avalonia.Animation;
-using Avalonia.Animation.Easings;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
-using Avalonia.LogicalTree;
-using Avalonia.Styling;
-using Avalonia.Threading;
 
 using cpap_app.ViewModels;
 
@@ -56,9 +49,9 @@ public partial class DailyScoreSummaryView : UserControl
 	private void LoadDate( StorageService db, int profileID, DateTime date, List<DateTime> dates )
 	{
 		var day      = db.LoadDailyReport( profileID, date );
-		var prevDate = dates.Where( x => x < date ).Max();
+		var prevDate = dates.LastOrDefault( x => x < date );
 
-		DailyReport? previousDay = (dates.Count > 1) ? db.LoadDailyReport( profileID, prevDate ) : null;
+		DailyReport? previousDay = (prevDate > DateTime.MinValue) ? db.LoadDailyReport( profileID, prevDate ) : null;
 
 		DataContext = new DailyScoreSummaryViewModel( day, previousDay );
 	}
@@ -75,46 +68,8 @@ public partial class DailyScoreSummaryView : UserControl
 				var       profileID = UserProfileStore.GetLastUserProfile().UserProfileID;
 				var       dates     = db.GetStoredDates( profileID );
 
-				var progressBars = this.GetLogicalDescendants().Where( x => x is ProgressBar progressBar && progressBar.Classes.Contains( "Counter" ) ).ToList();
-				foreach( var control in progressBars )
-				{
-					new Avalonia.Animation.Animation
-					{
-						Duration = TimeSpan.FromSeconds( change.OldValue == null ? 1.5 : 0.2 ),
-						Delay    = TimeSpan.FromSeconds( 0.01 ),
-						FillMode = FillMode.None,
-						Easing   = new QuarticEaseInOut(),
-						Children =
-						{
-							new KeyFrame
-							{
-								Setters =
-								{
-									new Setter( ProgressBar.ValueProperty, 0.0 ),
-								},
-								Cue = new Cue( 0d )
-							},
-						},
-					}.RunAsync( (control as Animatable)! );
-				}
-
-				btnPrevDay.IsEnabled = false;
-				btnNextDay.IsEnabled = false;
-
-				Task.Run( () =>
-				{
-					Thread.Sleep( 200 );
-
-					Dispatcher.UIThread.Post( () =>
-					{
-						btnPrevDay.IsEnabled = dates.Any( x => x < vm.Date );
-						btnNextDay.IsEnabled = dates.Any( x => x > vm.Date );
-					} );
-				} );
-			}
-			else
-			{
-				LoadLastAvailableDate();
+				btnPrevDay.IsEnabled = dates.Any( x => x < vm.Date );
+				btnNextDay.IsEnabled = dates.Any( x => x > vm.Date );
 			}
 		}
 	}

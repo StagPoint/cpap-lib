@@ -482,9 +482,9 @@ namespace cpaplib
 			}
 
 			// Apply a bit of smoothing to remove the noise inherent in using periodic measurements rather than continuous data
-			ButterworthFilter.FilterInPlace( inspirationSamples, 20, 1 );
-			ButterworthFilter.FilterInPlace( expirationSamples,  20, 1 );
-			ButterworthFilter.FilterInPlace( ratioSamples,       20, 1 );
+			ButterworthFilter.FilterInPlace( inspirationSamples, 20, 2 );
+			ButterworthFilter.FilterInPlace( expirationSamples,  20, 2 );
+			ButterworthFilter.FilterInPlace( ratioSamples,       20, 2 );
 			
 			return (inspirationSignal, expirationSignal, ratioSignal);
 		}

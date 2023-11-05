@@ -586,12 +586,15 @@ public partial class MainView : UserControl
 			}
 		}, DispatcherPriority.Loaded );
 
+		// Page transitions disabled. They look neat, but don't really work well for pages with a lot of layout on slow machines. 
+		/*
 		// Post the animation otherwise pages that take slightly longer to load won't
 		// have an animation since it will run before layout is complete
 		Dispatcher.UIThread.Post( () =>
 		{
 			transition.RunAnimation( page, CancellationToken.None );
 		}, DispatcherPriority.Render );
+		*/
 	}
 
 	private void SetNavViewDisplayMode( NavigationViewPaneDisplayMode mode )

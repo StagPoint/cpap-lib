@@ -9,11 +9,11 @@
     <StackPanel Width="800" Orientation="Vertical" VerticalAlignment="Top">
         <Image Source="/Assets/cpap-sd-card-128.png"
                DockPanel.Dock="Left"
-               Height="128"
-               Margin="30"
+               Height="96"
+               Margin="20"
                RenderOptions.BitmapInterpolationMode="HighQuality"/>
         <TextBlock Text="Welcome to the CPAP Data Viewer" HorizontalAlignment="Center" Theme="{StaticResource TitleLargeTextBlockStyle}" />
-        <TextBlock TextWrapping="Wrap" Width="600" HorizontalAlignment="Center" FontSize="16" Margin="20">
+        <TextBlock TextWrapping="Wrap" Width="600" HorizontalAlignment="Center" FontSize="16" Margin="16">
             To begin, please import your CPAP data (typically found on the SD Card in your CPAP machine) by clicking the 
             "Import" button below and selecting the CPAP data folder or drive which contains the STR.edf file, or select a destination 
             from the navigation menu to the left.
