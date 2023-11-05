@@ -1,11 +1,14 @@
 ﻿using System;
 
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 
 using cpap_app.ViewModels;
 
 using cpap_db;
+
+using cpaplib;
 
 namespace cpap_app.Views;
 
@@ -16,24 +19,13 @@ public partial class HomeView : UserControl
 		InitializeComponent();
 	}
 
-	protected override void OnLoaded( RoutedEventArgs e )
+	protected override void OnPropertyChanged( AvaloniaPropertyChangedEventArgs change )
 	{
-		base.OnLoaded( e );
+		base.OnPropertyChanged( change );
 
-		using var db = StorageService.Connect();
-		
-		var profileID = UserProfileStore.GetLastUserProfile().UserProfileID;
-		var date      = db.GetMostRecentStoredDate( profileID );
-
-		if( date > DateTime.Today.AddDays( -30 ) )
+		if( change.Property.Name == nameof( DataContext ) )
 		{
-			var day = db.LoadDailyReport( profileID, date );
-
-			DailyGoals.DataContext = new DailyGoalsSummaryViewModel( day );
-		}
-		else
-		{
-			DailyGoals.IsVisible = false;
+			DailyScore.DataContext = change.NewValue;
 		}
 	}
 

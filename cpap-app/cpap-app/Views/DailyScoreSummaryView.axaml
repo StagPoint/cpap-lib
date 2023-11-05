@@ -1,0 +1,52 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewModels="clr-namespace:cpap_app.ViewModels"
+             xmlns:controls="clr-namespace:cpap_app.Controls"
+             xmlns:fui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="450"
+             x:Class="cpap_app.Views.DailyScoreSummaryView"
+             x:DataType="viewModels:DailyScoreSummaryViewModel">
+    <!--<UserControl.Styles>
+        <Style Selector="ProgressBar.Counter">
+            <Style.Animations>
+                <Animation Duration="0:0:1.5" Delay="0.01" Easing="QuarticEaseInOut" FillMode="None"> 
+                    <KeyFrame Cue="0%">
+                        <Setter Property="Value" Value="0"/>
+                    </KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+    </UserControl.Styles>-->
+    <Border CornerRadius="8" BorderThickness="1" BorderBrush="{DynamicResource ControlStrokeColorSecondaryBrush}"
+            Background="{DynamicResource SolidBackgroundFillColorSecondaryBrush}" Padding="16 8">
+        <StackPanel HorizontalAlignment="Stretch">
+            <TextBlock Text="Daily Score" Theme="{DynamicResource SubtitleTextBlockStyle}" HorizontalAlignment="Center" Margin="0 0 0 8" />
+            <Grid HorizontalAlignment="Center" Margin="0 0 0 8" Height="20" ColumnDefinitions="Auto,200,Auto">
+                <Button Grid.Column="0" Name="btnPrevDay" Padding="5" IsEnabled="False" VerticalAlignment="Center" BorderThickness="0" Background="Transparent" Click="BtnPrevDay_OnClick">
+                    <fui:SymbolIcon Symbol="ChevronLeft" VerticalAlignment="Center" FontSize="18" />
+                </Button>
+                <TextBlock Grid.Column="1" Text="{Binding Date, StringFormat={}{0:D}}" 
+                           Theme="{DynamicResource BodyStrongTextBlockStyle}" 
+                           VerticalAlignment="Center"
+                           HorizontalAlignment="Center" 
+                           TextWrapping="NoWrap"/>
+                <Button Grid.Column="2" Name="btnNextDay" Padding="5" IsEnabled="False" VerticalAlignment="Center" BorderThickness="0" Background="Transparent" Click="BtnNextDay_OnClick">
+                    <fui:SymbolIcon Symbol="ChevronRight" VerticalAlignment="Center" FontSize="18" />
+                </Button>
+            </Grid>
+            <Border Background="{DynamicResource AccentTextFillColorTertiaryBrush}" CornerRadius="20" HorizontalAlignment="Center" MinWidth="80" Padding="20 8">
+                <TextBlock Text="{Binding #DailyScoreProgress.Value, Mode=OneWay, StringFormat={}{0:N0}}" Theme="{DynamicResource TitleTextBlockStyle}" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}"/>
+            </Border>
+            <ProgressBar Name="DailyScoreProgress" Opacity="0" MinWidth="30" Width="30" Maximum="{Binding MaximumScore}" Minimum="0" Value="{Binding DailyScore}" Margin="0 0 0 24" Classes="Counter" />
+            <ItemsRepeater Name="DailyGoals" ItemsSource="{Binding Items}" Grid.IsSharedSizeScope="True">
+                <ItemsRepeater.ItemTemplate>
+                    <DataTemplate DataType="viewModels:DailyScoreItemViewModel">
+                        <controls:DailyScoreItemView />
+                    </DataTemplate>
+                </ItemsRepeater.ItemTemplate>
+            </ItemsRepeater>
+        </StackPanel>
+    </Border>
+</UserControl>

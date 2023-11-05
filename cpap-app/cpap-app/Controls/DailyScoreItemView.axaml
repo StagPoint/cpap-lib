@@ -1,0 +1,50 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:fui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+             xmlns:viewModels="clr-namespace:cpap_app.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="cpap_app.Controls.DailyScoreItemView"
+             x:DataType="viewModels:DailyScoreItemViewModel">
+    <UserControl.Styles>
+        <Style Selector="ProgressBar.Counter">
+            <Style.Animations>
+                <Animation Duration="1.5" Delay="0" Easing="QuarticEaseInOut" FillMode="Forward"> 
+                    <KeyFrame Cue="0%">
+                        <Setter Property="Value" Value="0"/>
+                    </KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+    </UserControl.Styles>
+    <Grid Margin="0 0 0 16" RowDefinitions="Auto,Auto">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" SharedSizeGroup="C0" />
+            <ColumnDefinition Width="Auto" SharedSizeGroup="C1" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" SharedSizeGroup="C3" />
+            <ColumnDefinition Width="Auto" SharedSizeGroup="C4" />
+            <ColumnDefinition Width="Auto" SharedSizeGroup="C5" />
+        </Grid.ColumnDefinitions>
+        <ProgressBar Name="AnimProgress" Grid.Column="0" Grid.ColumnSpan="6" Grid.Row="1"
+                     Maximum="{Binding MaximumScore}" Minimum="0" Value="{Binding DailyScore}"
+                     Classes="Counter" />
+        <TextBlock IsVisible="{Binding IsImprovement}" Grid.Column="0" Grid.Row="0" Text="▲" FontSize="16" Foreground="Green"
+                        VerticalAlignment="Bottom" Margin="0 0 8 0" />
+        <TextBlock IsVisible="{Binding !IsImprovement}" Grid.Column="0" Grid.Row="0" Text="▼" FontSize="16" Foreground="Red"
+                        VerticalAlignment="Bottom" Margin="0 0 8 0" />
+        <TextBlock Grid.Column="1" Grid.Row="0" Text="{Binding Data}" Theme="{DynamicResource SubtitleTextBlockStyle}"
+                   VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0 0 8 0" />
+        <TextBlock Grid.Column="2" Grid.Row="0" Text="{Binding Label}" Theme="{DynamicResource BodyTextBlockStyle}"
+                   VerticalAlignment="Center" HorizontalAlignment="Left" Margin="0 0 8 0" />
+        <TextBlock Grid.Column="3" Grid.Row="0" Text="{Binding #AnimProgress.Value, StringFormat={}{0:N0}}"
+                   Theme="{DynamicResource SubtitleTextBlockStyle}"
+                   VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0 0 4 0" />
+        <TextBlock Grid.Column="4" Grid.Row="0" Text="{Binding MaximumScore, StringFormat={}/ {0}}"
+                   VerticalAlignment="Center" Margin="0 0 8 0" />
+        <fui:SymbolIcon Grid.Column="5" Grid.Row="0" Symbol="ChevronRight" FontSize="18"
+                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                        VerticalAlignment="Center" />
+    </Grid>
+</UserControl>

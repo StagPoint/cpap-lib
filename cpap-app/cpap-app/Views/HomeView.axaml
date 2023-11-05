@@ -32,6 +32,6 @@
                 </StackPanel>
             </Button>
         </StackPanel>
-        <views:DailyGoalsSummary Name="DailyGoals" Width="350" Margin="50"/>
+        <views:DailyScoreSummaryView Name="DailyScore" Width="350" Margin="50"/>
     </StackPanel>
 </UserControl>

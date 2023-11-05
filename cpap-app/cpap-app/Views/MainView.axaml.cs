@@ -402,14 +402,18 @@ public partial class MainView : UserControl
 		}
 		else
 		{
+			using var db = StorageService.Connect();
+					
+			var profileID = ActiveUserProfile.UserProfileID;
+
 			if( NavFrame.Content is DailyReportView { DataContext: DailyReport dailyReport } dailyReportView )
 			{
-				using var db = StorageService.Connect();
-					
-				var profileID = ActiveUserProfile.UserProfileID;
-
 				dailyReportView.ActiveUserProfile = ActiveUserProfile;
 				dailyReportView.DataContext       = db.LoadDailyReport( profileID, dailyReport.ReportDate.Date );
+			}
+			else if( NavFrame.Content is HomeView homeView )
+			{
+				homeView.DataContext = db.LoadDailyReport( profileID, db.GetMostRecentStoredDate( profileID ) );
 			}
 		}
 	}
@@ -544,8 +548,8 @@ public partial class MainView : UserControl
 
 						var profileID = ActiveUserProfile.UserProfileID;
 
-						NavView.SelectedItem = navDailyReport;
-						DataContext          = store.LoadDailyReport( profileID, mostRecentDay.Value );
+						//NavView.SelectedItem = navDailyReport;
+						DataContext = store.LoadDailyReport( profileID, mostRecentDay.Value );
 					}
 					else
 					{
