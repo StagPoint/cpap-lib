@@ -16,10 +16,16 @@ namespace cpap_app.Views;
 
 public partial class DailyScoreSummaryView : UserControl
 {
+	#region Constructor 
+	
 	public DailyScoreSummaryView()
 	{
 		InitializeComponent();
 	}
+	
+	#endregion 
+	
+	#region Base class overrides 
 
 	protected override void OnLoaded( RoutedEventArgs e )
 	{
@@ -28,10 +34,15 @@ public partial class DailyScoreSummaryView : UserControl
 		LoadLastAvailableDate();
 	}
 	
-	private void LoadLastAvailableDate()
+	#endregion 
+	
+	#region Public functions 
+	
+	public void LoadLastAvailableDate()
 	{
 		using var db = StorageService.Connect();
 
+		// TODO: ProfileID should be retrieved from a central service
 		var profileID = UserProfileStore.GetLastUserProfile().UserProfileID;
 		var dates     = db.GetStoredDates( profileID );
 
@@ -45,6 +56,10 @@ public partial class DailyScoreSummaryView : UserControl
 			IsVisible = false;
 		}
 	}
+	
+	#endregion 
+	
+	#region Private functions 
 
 	private void LoadDate( StorageService db, int profileID, DateTime date, List<DateTime> dates )
 	{
@@ -105,5 +120,7 @@ public partial class DailyScoreSummaryView : UserControl
 
 		LoadDate( db, profileID, nextDate, dates );
 	}
+	
+	#endregion 
 }
 

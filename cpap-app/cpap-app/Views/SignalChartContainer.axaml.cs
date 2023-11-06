@@ -67,6 +67,8 @@ public partial class SignalChartContainer : UserControl
 	}
 	
 	#endregion
+	
+	#region Base class overrides 
 
 	protected override void OnUnloaded( RoutedEventArgs e )
 	{
@@ -77,6 +79,8 @@ public partial class SignalChartContainer : UserControl
 			_dragTimer.Stop();
 		}
 	}
+	
+	#endregion 
 
 	#region Event handlers
 

@@ -662,7 +662,7 @@ public partial class SignalChart : UserControl
 			new SignalMenuItem( "Sliding Average (60sec)",    VisualizeSlidingAverage ),
 			new SignalMenuItem( "Standard Deviation (60sec)", VisualizeStandardDeviation ),
 			new SignalMenuItem( "Average (Entire series)",    VisualizeAverage ),
-			new SignalMenuItem( "Mediam (Entire series)",     VisualizeMedian ),
+			new SignalMenuItem( "Median (Entire series)",     VisualizeMedian ),
 			new SignalMenuItem( "95th Percentile",            VisualizePercentile95 ),
 		};
 
@@ -775,7 +775,7 @@ public partial class SignalChart : UserControl
 		{
 			var color = DataColors.GetDataColor( _visualizations.Count + 8 ).ToDrawingColor();
 
-			_visualizations.Add( Chart.Plot.AddHorizontalLine( stats.Percentile95, color, 1f, LineStyle.Dot, "95%" ) );
+			_visualizations.Add( Chart.Plot.AddHorizontalLine( stats.Percentile95, color, 1f, LineStyle.Solid, "95%" ) );
 			Chart.RenderRequest();
 		}
 	}
@@ -785,7 +785,7 @@ public partial class SignalChart : UserControl
 		Debug.Assert( _day != null,               nameof( _day ) + " != null" );
 		Debug.Assert( ChartConfiguration != null, nameof( ChartConfiguration ) + " != null" );
 
-		var line = Chart.Plot.AddHorizontalLine( 0, Color.Red, 1f, LineStyle.Dot, "Baseline" );
+		var line = Chart.Plot.AddHorizontalLine( 0, Color.Red, 1f, LineStyle.Solid, "Baseline" );
 		Chart.Plot.MoveFirst( line );
 		
 		_visualizations.Add( line );
@@ -803,7 +803,7 @@ public partial class SignalChart : UserControl
 		{
 			var color = DataColors.GetDataColor( _visualizations.Count + 8 ).ToDrawingColor();
 
-			_visualizations.Add( Chart.Plot.AddHorizontalLine( stats.Median, color, 1f, LineStyle.Dot, "Median" ) );
+			_visualizations.Add( Chart.Plot.AddHorizontalLine( stats.Median, color, 1f, LineStyle.Solid, "Median" ) );
 			Chart.RenderRequest();
 		}
 	}
@@ -818,7 +818,7 @@ public partial class SignalChart : UserControl
 		{
 			var color = DataColors.GetDataColor( _visualizations.Count + 8 ).ToDrawingColor();
 
-			_visualizations.Add( Chart.Plot.AddHorizontalLine( stats.Average, color, 1f, LineStyle.Dot, "Avg" ) );
+			_visualizations.Add( Chart.Plot.AddHorizontalLine( stats.Average, color, 1f, LineStyle.Solid, "Avg" ) );
 			Chart.RenderRequest();
 		}
 	}

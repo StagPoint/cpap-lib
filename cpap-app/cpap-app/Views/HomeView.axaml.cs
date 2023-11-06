@@ -25,7 +25,8 @@ public partial class HomeView : UserControl
 
 		if( change.Property.Name == nameof( DataContext ) )
 		{
-			DailyScore.DataContext = change.NewValue;
+			// Currently this only happens when an import completes, so just load the latest date stored. 
+			DailyScore.LoadLastAvailableDate();
 		}
 	}
 

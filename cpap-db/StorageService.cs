@@ -343,7 +343,7 @@ namespace cpap_db
 			return mapping.Delete( Connection, primaryKeyValue );
 		}
 
-		public bool Update<T>( T record, object primaryKeyValue ) where T : class, new()
+		public bool Update<T>( T record, object primaryKeyValue = null ) where T : class, new()
 		{
 			var mapping = GetMapping<T>();
 			

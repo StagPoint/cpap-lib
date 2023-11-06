@@ -18,7 +18,7 @@ namespace cpaplib
 
 			// Compile a list of AHI-relevant events that happened during the Session
 			var events = day.Events.Where( x => x.StartTime >= session.StartTime && x.StartTime + x.Duration <= session.EndTime ).ToList();
-			events.RemoveAll( x => !EventTypes.Apneas.Contains( x.Type ) );
+			events.RemoveAll( x => !EventTypes.RespiratoryDisturbance.Contains( x.Type ) );
 			
 			// Events aren't stored in chronological order, but we want chronological order here
 			events.Sort( ( a, b ) => a.StartTime.CompareTo( b.StartTime ) );
@@ -57,7 +57,7 @@ namespace cpaplib
 					stack.RemoveAt( 0 );
 				}
 
-				samples.Add( stack.Count );
+				samples.Add( Math.Min( stack.Count, signal.MaxValue ) );
 			}
 			
 			// Ensure that the Signal always drops to zero at the end. This is mostly cosmetic, tbh. 
@@ -482,9 +482,9 @@ namespace cpaplib
 			}
 
 			// Apply a bit of smoothing to remove the noise inherent in using periodic measurements rather than continuous data
-			ButterworthFilter.FilterInPlace( inspirationSamples, 20, 2 );
-			ButterworthFilter.FilterInPlace( expirationSamples,  20, 2 );
-			ButterworthFilter.FilterInPlace( ratioSamples,       20, 2 );
+			ButterworthFilter.FilterInPlace( inspirationSamples, 10, 1.0 );
+			ButterworthFilter.FilterInPlace( expirationSamples,  10, 1.0 );
+			ButterworthFilter.FilterInPlace( ratioSamples,       10, 1.0 );
 			
 			return (inspirationSignal, expirationSignal, ratioSignal);
 		}

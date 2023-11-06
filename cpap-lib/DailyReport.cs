@@ -76,6 +76,11 @@ namespace cpaplib
 		/// </summary>
 		public List<SignalStatistics> Statistics { get; set; } = new List<SignalStatistics>();
 
+		/// <summary>
+		/// Any notes that should be saved along with this daily report
+		/// </summary>
+		public string Notes { get; set; } = string.Empty;
+
 		#endregion 
 
 		#region Public functions

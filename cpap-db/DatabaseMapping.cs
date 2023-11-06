@@ -179,8 +179,8 @@ public class DatabaseMapping
 
 					if( !column.IsNullable )
 					{
-						//string defaultValue = column.Type == typeof( string ) ? "''" : "0"; 
-						sql += $" NOT NULL DEFAULT (0)";
+						string defaultValue = column.Type == typeof( string ) ? "''" : "0"; 
+						sql += $" NOT NULL DEFAULT ({defaultValue})";
 					}
 
 					connection.Execute( sql );

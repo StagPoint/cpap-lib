@@ -2,7 +2,47 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="cpap_app.Views.DailyNotesView">
-    Daily Notes
+             xmlns:controls="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+             xmlns:cpaplib="clr-namespace:cpaplib;assembly=cpap-lib"
+             mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="700"
+             x:Class="cpap_app.Views.DailyNotesView"
+             x:DataType="cpaplib:DailyReport">
+    <ScrollViewer>
+        <StackPanel Name="pnlOximetryInfo" Orientation="Vertical">
+            <Expander
+                ExpandDirection="Down"
+                IsExpanded="True"
+                VerticalAlignment="Top"
+                Margin="0 10 0 0"
+                Padding="10">
+                <Expander.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <controls:SymbolIcon Symbol="Flag" FontSize="24" Margin="0 0 10 0" />
+                        <TextBlock Text="Annotations" FontSize="16" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                    </StackPanel>
+                </Expander.Header>
+                <StackPanel Orientation="Vertical">
+                    <TextBlock>PlaceHolder</TextBlock>
+                </StackPanel>
+            </Expander>
+
+            <Expander
+                ExpandDirection="Down"
+                IsExpanded="True"
+                VerticalAlignment="Top"
+                Margin="0 10 0 0"
+                Padding="10">
+                <Expander.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <controls:SymbolIcon Symbol="Edit" FontSize="24" Margin="0 0 10 0" />
+                        <TextBlock Text="Notes" FontSize="16" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                    </StackPanel>
+                </Expander.Header>
+                <StackPanel Orientation="Vertical">
+                    <TextBox Name="Notes" Text="{Binding Notes}" Watermark="Use this text entry field to write any notes that you'd like to have saved with this day. Notes will save automatically as you type." TextWrapping="Wrap" AcceptsReturn="True" AcceptsTab="True" VerticalAlignment="Stretch" MinHeight="150" TextChanged="Notes_OnTextChanged">
+                    </TextBox>
+                </StackPanel>
+            </Expander>
+        </StackPanel>
+    </ScrollViewer>
 </UserControl>

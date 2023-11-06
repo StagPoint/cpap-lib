@@ -20,10 +20,10 @@ public class DailyScoreSummaryViewModel
 	{
 		Date = day.ReportDate.Date;
 		
-		Items.Add( ScoreUsageHours( day, previousDay, 0, 7, 70 ) );
-		Items.Add( ScoreRespiratoryEvents( day, previousDay, 12, 0, 10 ) );
-		Items.Add( ScoreMaskSeal( day, previousDay, 24, 8, 5 ) );
-		Items.Add( ScoreSessionCount( day, previousDay, 10, 0, 5 ) );
+		Items.Add( ScoreUsageHours( day, previousDay, 0, 7, 60 ) );
+		Items.Add( ScoreRespiratoryEvents( day, previousDay, 20, 0, 10 ) );
+		Items.Add( ScoreMaskSeal( day, previousDay, 24, 8, 10 ) );
+		Items.Add( ScoreSessionCount( day, previousDay, 10, 0, 10 ) );
 		Items.Add( ScoreOxygenSaturation( day, previousDay, 90, 98, 10 ) );
 
 		for( int i = 0; i < Items.Count; i++ )
