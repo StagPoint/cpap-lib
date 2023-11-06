@@ -139,7 +139,15 @@ public partial class DailyReportView : UserControl
 		{
 			DateSelector.DisplayDateStart = _datesWithData.Min();
 			DateSelector.DisplayDateEnd   = _datesWithData.Max();
-			DateSelector.SelectedDate     = _datesWithData.Max();
+
+			if( DataContext is DailyReport day )
+			{
+				DateSelector.SelectedDate = day.ReportDate.Date;
+			}
+			else
+			{
+				DateSelector.SelectedDate = _datesWithData.Max();
+			}
 
 			DateSelector.IsEnabled = true;
 		}
@@ -220,7 +228,7 @@ public partial class DailyReportView : UserControl
 	private void DateSelector_OnSelectedDateChanged( object? sender, SelectionChangedEventArgs e )
 	{
 		using var store = StorageService.Connect();
-
+		
 		var profileID = ActiveUserProfile.UserProfileID;
 
 		// Keep this up-to-date. Probably unnecessary and overkill, but it's quick and not terribly wasteful.

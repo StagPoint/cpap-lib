@@ -4,8 +4,10 @@ using System.Linq;
 
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 
+using cpap_app.Events;
 using cpap_app.ViewModels;
 
 using cpap_db;
@@ -32,6 +34,74 @@ public partial class DailyScoreSummaryView : UserControl
 		base.OnLoaded( e );
 
 		LoadLastAvailableDate();
+	}
+	
+	protected override void OnPropertyChanged( AvaloniaPropertyChangedEventArgs change )
+	{
+		base.OnPropertyChanged( change );
+
+		if( change.Property.Name == nameof( DataContext ) )
+		{
+			if( change.NewValue is DailyScoreSummaryViewModel vm )
+			{
+				using var db        = StorageService.Connect();
+				var       profileID = UserProfileStore.GetLastUserProfile().UserProfileID;
+				var       dates     = db.GetStoredDates( profileID );
+
+				btnPrevDay.IsEnabled = dates.Any( x => x < vm.Date );
+				btnNextDay.IsEnabled = dates.Any( x => x > vm.Date );
+			}
+		}
+	}
+	
+	#endregion 
+	
+	#region Event handlers 
+	private void DisplayedDate_OnPointerPressed( object? sender, PointerPressedEventArgs e )
+	{
+		if( DataContext is not DailyScoreSummaryViewModel vm )
+		{
+			return;
+		}
+
+		RaiseEvent( new DateTimeRoutedEventArgs
+		{
+			DateTime    = vm.Date,
+			RoutedEvent = MainView.LoadDateRequestedEvent,
+			Source      = this,
+		} );
+	}
+	
+	private void BtnPrevDay_OnClick( object? sender, RoutedEventArgs e )
+	{
+		if( DataContext is not DailyScoreSummaryViewModel vm )
+		{
+			return;
+		}
+		
+		using var db        = StorageService.Connect();
+		var       profileID = UserProfileStore.GetLastUserProfile().UserProfileID;
+		var       dates     = db.GetStoredDates( profileID );
+
+		var prevDate = dates.Where( x => x < vm.Date ).Max();
+
+		LoadDate( db, profileID, prevDate, dates );
+	}
+	
+	private void BtnNextDay_OnClick( object? sender, RoutedEventArgs e )
+	{
+		if( DataContext is not DailyScoreSummaryViewModel vm )
+		{
+			return;
+		}
+		
+		using var db        = StorageService.Connect();
+		var       profileID = UserProfileStore.GetLastUserProfile().UserProfileID;
+		var       dates     = db.GetStoredDates( profileID );
+
+		var nextDate = dates.Where( x => x > vm.Date ).Min();
+
+		LoadDate( db, profileID, nextDate, dates );
 	}
 	
 	#endregion 
@@ -71,56 +141,6 @@ public partial class DailyScoreSummaryView : UserControl
 		DataContext = new DailyScoreSummaryViewModel( day, previousDay );
 	}
 
-	protected override void OnPropertyChanged( AvaloniaPropertyChangedEventArgs change )
-	{
-		base.OnPropertyChanged( change );
-
-		if( change.Property.Name == nameof( DataContext ) )
-		{
-			if( change.NewValue is DailyScoreSummaryViewModel vm )
-			{
-				using var db        = StorageService.Connect();
-				var       profileID = UserProfileStore.GetLastUserProfile().UserProfileID;
-				var       dates     = db.GetStoredDates( profileID );
-
-				btnPrevDay.IsEnabled = dates.Any( x => x < vm.Date );
-				btnNextDay.IsEnabled = dates.Any( x => x > vm.Date );
-			}
-		}
-	}
-	
-	private void BtnPrevDay_OnClick( object? sender, RoutedEventArgs e )
-	{
-		if( DataContext is not DailyScoreSummaryViewModel vm )
-		{
-			return;
-		}
-		
-		using var db        = StorageService.Connect();
-		var       profileID = UserProfileStore.GetLastUserProfile().UserProfileID;
-		var       dates     = db.GetStoredDates( profileID );
-
-		var prevDate = dates.Where( x => x < vm.Date ).Max();
-
-		LoadDate( db, profileID, prevDate, dates );
-	}
-	
-	private void BtnNextDay_OnClick( object? sender, RoutedEventArgs e )
-	{
-		if( DataContext is not DailyScoreSummaryViewModel vm )
-		{
-			return;
-		}
-		
-		using var db        = StorageService.Connect();
-		var       profileID = UserProfileStore.GetLastUserProfile().UserProfileID;
-		var       dates     = db.GetStoredDates( profileID );
-
-		var nextDate = dates.Where( x => x > vm.Date ).Min();
-
-		LoadDate( db, profileID, nextDate, dates );
-	}
-	
-	#endregion 
+	#endregion
 }
 

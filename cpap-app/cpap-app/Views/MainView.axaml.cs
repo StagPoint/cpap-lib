@@ -16,6 +16,7 @@ using Avalonia.Threading;
 using Avalonia.VisualTree;
 
 using cpap_app.Animation;
+using cpap_app.Events;
 using cpap_app.Importers;
 using cpap_app.ViewModels;
 
@@ -54,6 +55,15 @@ public partial class MainView : UserControl
 		remove => RemoveHandler( ImportOximetryRequestedEvent, value );
 	}
 
+	public static readonly RoutedEvent<DateTimeRoutedEventArgs> LoadDateRequestedEvent =
+		RoutedEvent.Register<MainView, DateTimeRoutedEventArgs>( nameof( LoadDateRequested ), RoutingStrategies.Bubble );
+
+	public event EventHandler<DateTimeRoutedEventArgs> LoadDateRequested
+	{
+		add => AddHandler( LoadDateRequestedEvent, value );
+		remove => RemoveHandler( LoadDateRequestedEvent, value );
+	}
+
 	#endregion 
 	
 	#region Public properties
@@ -88,6 +98,7 @@ public partial class MainView : UserControl
 
 		AddHandler( ImportCpapRequestedEvent,     HandleImportRequestCPAP );
 		AddHandler( ImportOximetryRequestedEvent, HandleImportRequestOximetry );
+		AddHandler( LoadDateRequestedEvent,       HandleLoadDateRequest );
 
 		btnImportCPAP.Tapped     += HandleImportRequestCPAP;
 		btnImportOximetry.Tapped += HandleImportRequestOximetry;
@@ -406,16 +417,27 @@ public partial class MainView : UserControl
 					
 			var profileID = ActiveUserProfile.UserProfileID;
 
-			if( NavFrame.Content is DailyReportView { DataContext: DailyReport dailyReport } dailyReportView )
+			switch( NavFrame.Content )
 			{
-				dailyReportView.ActiveUserProfile = ActiveUserProfile;
-				dailyReportView.DataContext       = db.LoadDailyReport( profileID, dailyReport.ReportDate.Date );
-			}
-			else if( NavFrame.Content is HomeView homeView )
-			{
-				homeView.DataContext = db.LoadDailyReport( profileID, db.GetMostRecentStoredDate( profileID ) );
+				case DailyReportView { DataContext: DailyReport dailyReport } dailyReportView:
+					dailyReportView.ActiveUserProfile = ActiveUserProfile;
+					dailyReportView.DataContext       = db.LoadDailyReport( profileID, dailyReport.ReportDate.Date );
+					break;
+				case HomeView homeView:
+					homeView.DataContext = db.LoadDailyReport( profileID, db.GetMostRecentStoredDate( profileID ) );
+					break;
 			}
 		}
+	}
+
+	private void HandleLoadDateRequest( object? sender, DateTimeRoutedEventArgs e )
+	{
+		using var db = StorageService.Connect();
+						
+		var day = db.LoadDailyReport( ActiveUserProfile.UserProfileID, e.DateTime );
+		DataContext = day;
+
+		NavView.SelectedItem = navDailyReport;
 	}
 
 	private void HandleImportRequestOximetry( object? sender, RoutedEventArgs e )
