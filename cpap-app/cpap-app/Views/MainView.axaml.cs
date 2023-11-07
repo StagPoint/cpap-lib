@@ -617,6 +617,11 @@ public partial class MainView : UserControl
 			transition.RunAnimation( page, CancellationToken.None );
 		}, DispatcherPriority.Render );
 		*/
+		
+		Dispatcher.UIThread.Post( () =>
+		{
+			GC.Collect( 0 );
+		}, DispatcherPriority.Background );
 	}
 
 	private void SetNavViewDisplayMode( NavigationViewPaneDisplayMode mode )

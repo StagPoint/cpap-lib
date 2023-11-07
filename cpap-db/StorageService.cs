@@ -308,8 +308,11 @@ namespace cpap_db
 		{
 			var day = LoadDailyReport( profileID, date );
 
+			var signalNames = new string[] { SignalNames.SpO2, SignalNames.Pulse, SignalNames.Movement };
+
 			day.Events.RemoveAll( x => x.SourceType == SourceType.PulseOximetry );
 			day.Sessions.RemoveAll( x => x.SourceType == SourceType.PulseOximetry );
+			day.Statistics.RemoveAll( x => signalNames.Contains( x.SignalName ) );
 			
 			day.RefreshTimeRange();
 			

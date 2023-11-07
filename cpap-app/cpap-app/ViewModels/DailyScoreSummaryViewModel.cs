@@ -51,7 +51,7 @@ public class DailyScoreSummaryViewModel
 
 		return new DailyScoreItemViewModel
 		{
-			Label         = "Events per hour",
+			Label         = "Resp. events (per hour)",
 			Data          = rdi.ToString( "F1" ),
 			DailyScore    = dailyScore,
 			MaximumScore  = weight,
@@ -67,7 +67,7 @@ public class DailyScoreSummaryViewModel
 		{
 			return new DailyScoreItemViewModel
 			{
-				Label         = "Oxygen Saturation",
+				Label         = "Oxygen saturation (%)",
 				Data          = "N/A",
 				DailyScore    = 0,
 				MaximumScore  = weight,
@@ -88,8 +88,8 @@ public class DailyScoreSummaryViewModel
 
 		return new DailyScoreItemViewModel
 		{
-			Label         = "Oxygen Saturation",
-			Data          = $"{(int)stat.Average}%",
+			Label         = "Oxygen saturation (%)",
+			Data          = $"{(int)stat.Average}",
 			DailyScore    = dailyScore,
 			MaximumScore  = weight,
 			IsHidden      = false,
@@ -104,7 +104,7 @@ public class DailyScoreSummaryViewModel
 		{
 			return new DailyScoreItemViewModel
 			{
-				Label         = "Mask leak",
+				Label         = "Mask leak (L/min)",
 				Data          = "N/A",
 				DailyScore    = 0,
 				MaximumScore  = weight,
@@ -125,7 +125,7 @@ public class DailyScoreSummaryViewModel
 
 		return new DailyScoreItemViewModel
 		{
-			Label         = "Mask leak",
+			Label         = "Mask leak (L/min)",
 			Data          = stat.Percentile95.ToString( "F1" ),
 			DailyScore    = dailyScore,
 			MaximumScore  = weight,
@@ -149,7 +149,7 @@ public class DailyScoreSummaryViewModel
 
 		return new DailyScoreItemViewModel
 		{
-			Label         = "Session Count",
+			Label         = "Session count",
 			Data          = $"{sessionCount}",
 			DailyScore    = dailyScore,
 			MaximumScore  = weight,

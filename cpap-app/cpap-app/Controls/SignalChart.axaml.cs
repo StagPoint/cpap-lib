@@ -547,9 +547,10 @@ public partial class SignalChart : UserControl
 				}
 
 				var timeRangeSelected = TimeSpan.FromSeconds( _selectionSpan.X2 - _selectionSpan.X1 );
+				var totalSeconds      = timeRangeSelected.TotalSeconds;
 
-				EventTooltip.Tag       = FormattedTimespanConverter.FormatTimeSpan( timeRangeSelected, TimespanFormatType.Long, true );
-				EventTooltip.IsVisible = timeRangeSelected.TotalSeconds > double.Epsilon;
+				EventTooltip.Tag       = totalSeconds > 1.0 ? FormattedTimespanConverter.FormatTimeSpan( timeRangeSelected, TimespanFormatType.Long, false ) : $"{totalSeconds:N1} seconds";
+				EventTooltip.IsVisible = totalSeconds > double.Epsilon;
 				
 				eventArgs.Handled = true;
 			
@@ -668,6 +669,8 @@ public partial class SignalChart : UserControl
 
 		if( ChartConfiguration.SignalName == SignalNames.FlowRate )
 		{
+			btnSettings.Visualizations.Add( new SignalMenuItem( "RMS Flow (short)",  VisualeFlowShort ) );
+			btnSettings.Visualizations.Add( new SignalMenuItem( "RMS Flow (long)",   VisualeFlowLong ) );
 			btnSettings.Visualizations.Add( new SignalMenuItem( "Show Baseline",     VisualizeBaseline ) );
 			btnSettings.Visualizations.Add( new SignalMenuItem( "Mark Respirations", VisualizeRespirations ) );
 			btnSettings.Visualizations.Add( new SignalMenuItem( "Noise Filter",      VisualizeNoiseFilter ) );
@@ -679,6 +682,110 @@ public partial class SignalChart : UserControl
 
 		btnSettings.Visualizations.Add( new SignalMenuItem( "-",                    () => { } ) );
 		btnSettings.Visualizations.Add( new SignalMenuItem( "Clear Visualizations", ClearVisualizations ) );
+	}
+	
+	private void VisualeFlowLong()
+	{
+		VisualizeRMS( 120, Color.DeepPink, "RMS (long)" );
+
+		Chart.RenderRequest();
+	}
+	
+	private void VisualeFlowShort()
+	{
+		VisualizeRMS( 2, Color.Magenta, "RMS (short)" );
+
+		Chart.RenderRequest();
+	}
+	
+	private void VisualizeRMS( int windowLength, Color color, string label )
+	{
+		const double FLOW_REDUCTION_THRESHOLD = 0.5;
+		
+		Debug.Assert( _day != null, nameof( _day ) + " != null" );
+
+		var timeRange = Chart.Plot.GetAxisLimits();
+		var startTime = _day.RecordingStartTime.AddSeconds( timeRange.XMin );
+		var endTime   = _day.RecordingStartTime.AddSeconds( timeRange.XMax );
+
+		bool first = true;
+
+		foreach( var signal in _signals )
+		{
+			if( !DateHelper.RangesOverlap( signal.StartTime, signal.EndTime, startTime, endTime ) )
+			{
+				continue;
+			}
+
+			var absFlow      = signal.Samples.Select( x => x = Math.Abs( x ) ).ToArray();
+			var filteredFlow = ButterworthFilter.Filter( absFlow, signal.FrequencyInHz, 1 );
+
+			var calc   = new MovingAverageCalculator( (int)(windowLength * signal.FrequencyInHz) );
+			var output = new double[ signal.Samples.Count ];
+
+			var interval   = 1.0 / signal.FrequencyInHz;
+			var state      = 0;
+			var startIndex = 0;
+			var threshold  = 0.0;
+
+			for( int i = 0; i < signal.Samples.Count; i++ )
+			{
+				var sample = filteredFlow[ i ];
+				
+				calc.AddObservation( sample );
+
+				if( !calc.HasFullPeriod )
+				{
+					output[ i ] = 0;
+					continue;
+				}
+
+				var rms = calc.Average + calc.StandardDeviation;
+
+				output[ i ] = rms;
+
+				switch( state )
+				{
+					case 0:
+					{
+						threshold = rms * FLOW_REDUCTION_THRESHOLD;
+						if( sample <= threshold )
+						{
+							startIndex = i;
+							state      = 1;
+						}
+						break;
+					}
+					case 1 when sample >= threshold:
+					{
+						var time = (i - startIndex) * interval;
+
+						if( time >= 8.0 )
+						{
+							var spanStart = (startIndex * interval) + (signal.StartTime - _day.RecordingStartTime).TotalSeconds;
+							var spanEnd   = i * interval + (signal.StartTime - _day.RecordingStartTime).TotalSeconds;
+							var span      = Chart.Plot.AddHorizontalSpan( spanStart, spanEnd, Color.Red.MultiplyAlpha( 0.15f ) );
+
+							Chart.Plot.MoveFirst( span );
+						
+							_visualizations.Add( span );
+						}
+					
+						state = 0;
+						break;
+					}
+				}
+			}
+
+			var graph = Chart.Plot.AddSignal( output, signal.FrequencyInHz, color, first ? label : null );
+			graph.OffsetX    = (signal.StartTime - _day.RecordingStartTime).TotalSeconds;
+			graph.LineStyle  = LineStyle.Solid;
+			graph.MarkerSize = 0;
+
+			_visualizations.Add( graph );
+
+			first = false;
+		}
 	}
 
 	private void VisualizeNoiseFilter()

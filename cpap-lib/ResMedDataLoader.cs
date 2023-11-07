@@ -462,10 +462,89 @@ namespace cpaplib
 		
 		private static void GenerateEvents( DailyReport day )
 		{
+			GenerateFlowReductionEvents( day );
 			GenerateLeakEvents( day );
 			GenerateFlowLimitEvents( day );
 		}
-		
+
+		private static void GenerateFlowReductionEvents( DailyReport day )
+		{
+			const double FLOW_REDUCTION_THRESHOLD = 0.5;
+			const int    WINDOW_LENGTH            = 120;
+
+			foreach( var session in day.Sessions )
+			{
+				var signal = session.GetSignalByName( SignalNames.FlowRate );
+				if( signal == null )
+				{
+					return;
+				}
+
+				var absFlow      = signal.Samples.Select( x => x = Math.Abs( x ) ).ToArray();
+				var filteredFlow = ButterworthFilter.Filter( absFlow, signal.FrequencyInHz, 1 );
+				var calc         = new MovingAverageCalculator( (int)(WINDOW_LENGTH * signal.FrequencyInHz) );
+
+				var interval   = 1.0 / signal.FrequencyInHz;
+				var state      = 0;
+				var startIndex = 0;
+				var threshold  = 0.0;
+
+				for( int i = 0; i < signal.Samples.Count; i++ )
+				{
+					var sample = filteredFlow[ i ];
+
+					calc.AddObservation( sample );
+
+					if( !calc.HasFullPeriod )
+					{
+						continue;
+					}
+
+					var rms = calc.Average + calc.StandardDeviation;
+
+					switch( state )
+					{
+						case 0:
+							threshold = rms * FLOW_REDUCTION_THRESHOLD;
+							if( sample <= threshold )
+							{
+								startIndex = i;
+								state      = 1;
+							}
+							break;
+
+						case 1:
+							if( sample >= threshold )
+							{
+								var duration = (i - startIndex) * interval;
+
+								if( duration >= 8.0 )
+								{
+									var eventStart = signal.StartTime.AddSeconds( startIndex * interval );
+
+									var newEvent = new ReportedEvent
+									{
+										Type      = EventType.FlowReduction,
+										StartTime = eventStart,
+										Duration  = TimeSpan.FromSeconds( duration ),
+									};
+
+									// Because this is an application-generated event, allow machine-generated events to take
+									// precedence by not generating any events that overlap in time. 
+									if( !day.Events.Any( x => ReportedEvent.TimesOverlap( x, newEvent ) ) )
+									{
+										day.Events.Add( newEvent );
+									}
+								}
+
+								state = 0;
+							}
+							break;
+					}
+				}
+			}
+		}
+
 		private static void GenerateFlowLimitEvents( DailyReport day )
 		{
 			// TODO: Flow Limitation event parameters need to be a configurable value 

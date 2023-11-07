@@ -39,7 +39,7 @@ namespace cpaplib
 		/// </summary>
 		CSR,
 		/// <summary>
-		/// A reduction in airflow of between 25% and 50% and lasting for at least 1 second
+		/// A Flow Limitation value of greater than 25% and lasting for at least 1 second
 		/// </summary>
 		FlowLimitation,
 		/// <summary>
@@ -85,6 +85,11 @@ namespace cpaplib
 		/// Pulse rate exceeded the threshold difference from baseline
 		/// </summary>
 		PulseRateChange,
+		/// <summary>
+		/// A reduction in flow detected by the application and unreported by the PAP machine.
+		/// The percentage of flow reduction and the minimum length of the event are application-defined. 
+		/// </summary>
+		FlowReduction,
 	}
 
 	/// <summary>
