@@ -669,8 +669,8 @@ public partial class SignalChart : UserControl
 
 		if( ChartConfiguration.SignalName == SignalNames.FlowRate )
 		{
-			btnSettings.Visualizations.Add( new SignalMenuItem( "RMS Flow (short)",  VisualeFlowShort ) );
-			btnSettings.Visualizations.Add( new SignalMenuItem( "RMS Flow (long)",   VisualeFlowLong ) );
+			btnSettings.Visualizations.Add( new SignalMenuItem( "RMS Flow (short)",  VisualiseFlowShort ) );
+			btnSettings.Visualizations.Add( new SignalMenuItem( "RMS Flow (long)",   VisualizeFlowLong ) );
 			btnSettings.Visualizations.Add( new SignalMenuItem( "Show Baseline",     VisualizeBaseline ) );
 			btnSettings.Visualizations.Add( new SignalMenuItem( "Mark Respirations", VisualizeRespirations ) );
 			btnSettings.Visualizations.Add( new SignalMenuItem( "Noise Filter",      VisualizeNoiseFilter ) );
@@ -684,14 +684,14 @@ public partial class SignalChart : UserControl
 		btnSettings.Visualizations.Add( new SignalMenuItem( "Clear Visualizations", ClearVisualizations ) );
 	}
 	
-	private void VisualeFlowLong()
+	private void VisualizeFlowLong()
 	{
 		VisualizeRMS( 120, Color.DeepPink, "RMS (long)" );
 
 		Chart.RenderRequest();
 	}
 	
-	private void VisualeFlowShort()
+	private void VisualiseFlowShort()
 	{
 		VisualizeRMS( 2, Color.Magenta, "RMS (short)" );
 
@@ -700,8 +700,6 @@ public partial class SignalChart : UserControl
 	
 	private void VisualizeRMS( int windowLength, Color color, string label )
 	{
-		const double FLOW_REDUCTION_THRESHOLD = 0.5;
-		
 		Debug.Assert( _day != null, nameof( _day ) + " != null" );
 
 		var timeRange = Chart.Plot.GetAxisLimits();
@@ -723,11 +721,6 @@ public partial class SignalChart : UserControl
 			var calc   = new MovingAverageCalculator( (int)(windowLength * signal.FrequencyInHz) );
 			var output = new double[ signal.Samples.Count ];
 
-			var interval   = 1.0 / signal.FrequencyInHz;
-			var state      = 0;
-			var startIndex = 0;
-			var threshold  = 0.0;
-
 			for( int i = 0; i < signal.Samples.Count; i++ )
 			{
 				var sample = filteredFlow[ i ];
@@ -743,38 +736,6 @@ public partial class SignalChart : UserControl
 				var rms = calc.Average + calc.StandardDeviation;
 
 				output[ i ] = rms;
-
-				switch( state )
-				{
-					case 0:
-					{
-						threshold = rms * FLOW_REDUCTION_THRESHOLD;
-						if( sample <= threshold )
-						{
-							startIndex = i;
-							state      = 1;
-						}
-						break;
-					}
-					case 1 when sample >= threshold:
-					{
-						var time = (i - startIndex) * interval;
-
-						if( time >= 8.0 )
-						{
-							var spanStart = (startIndex * interval) + (signal.StartTime - _day.RecordingStartTime).TotalSeconds;
-							var spanEnd   = i * interval + (signal.StartTime - _day.RecordingStartTime).TotalSeconds;
-							var span      = Chart.Plot.AddHorizontalSpan( spanStart, spanEnd, Color.Red.MultiplyAlpha( 0.15f ) );
-
-							Chart.Plot.MoveFirst( span );
-						
-							_visualizations.Add( span );
-						}
-					
-						state = 0;
-						break;
-					}
-				}
 			}
 
 			var graph = Chart.Plot.AddSignal( output, signal.FrequencyInHz, color, first ? label : null );
@@ -1640,6 +1601,7 @@ public partial class SignalChart : UserControl
 				var markerConfig = MarkerConfiguration.FirstOrDefault( x => x.EventType == eventFlag.Type );
 				if( markerConfig == null || markerConfig.EventMarkerType == EventMarkerType.None )
 				{
+					Debug.WriteLine( $"Missing event marker configuration for {eventFlag.Type}" );
 					continue;
 				}
 					

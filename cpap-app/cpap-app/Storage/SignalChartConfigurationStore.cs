@@ -72,17 +72,7 @@ public static class SignalChartConfigurationStore
 			{
 				case SignalNames.FlowRate:
 					config.BaselineHigh    = 0;
-					config.DisplayedEvents = new List<EventType>()
-					{
-						EventType.Arousal, 
-						EventType.Hypopnea, 
-						EventType.Unclassified, 
-						EventType.ClearAirway, 
-						EventType.ObstructiveApnea, 
-						EventType.PeriodicBreathing, 
-						EventType.CSR, 
-						EventType.RERA
-					};
+					config.DisplayedEvents = new List<EventType>( EventTypes.RespiratoryDisturbance );
 					break;
 				
 				case SignalNames.Pressure:
@@ -171,6 +161,7 @@ public static class SignalChartConfigurationStore
 					break;
 				
 				case SignalNames.AHI:
+					config.Title       = "RDI";
 					config.ShowStepped = true;
 					config.ScalingMode = AxisScalingMode.AutoFit;
 					config.DisplayedEvents.AddRange( EventTypes.Apneas );

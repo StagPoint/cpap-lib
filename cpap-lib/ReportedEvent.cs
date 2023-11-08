@@ -119,6 +119,12 @@ namespace cpaplib
 				case EventType.VibratorySnore:
 					markerPosition = EventMarkerPosition.AfterDuration;
 					break;
+				case EventType.FlowLimitation:
+					markerPosition = EventMarkerPosition.BeforeDuration;
+					break;
+				case EventType.FlowReduction:
+					markerPosition = EventMarkerPosition.AfterDuration;
+					break;
 				default:
 					markerPosition = EventMarkerPosition.BeforeDuration;
 					break;

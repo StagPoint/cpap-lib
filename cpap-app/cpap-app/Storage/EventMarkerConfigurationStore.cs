@@ -56,6 +56,7 @@ public class EventMarkerConfigurationStore
 				case EventType.RERA:
 				case EventType.Unclassified:
 				case EventType.CSR:
+				case EventType.FlowReduction:
 					eventMarkerType     = EventMarkerType.Flag;
 					eventMarkerPosition = EventMarkerPosition.AtEnd;
 					break;

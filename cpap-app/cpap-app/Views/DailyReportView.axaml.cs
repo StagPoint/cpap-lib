@@ -14,7 +14,6 @@ using Avalonia.VisualTree;
 
 using cpap_app.Animation;
 using cpap_app.Events;
-using cpap_app.ViewModels;
 
 using cpap_db;
 
@@ -62,7 +61,7 @@ public partial class DailyReportView : UserControl
 	
 	#region Public properties
 	
-	public UserProfile ActiveUserProfile { get; set; }
+	public UserProfile? ActiveUserProfile { get; set; }
 	
 	#endregion 
 	
@@ -119,12 +118,17 @@ public partial class DailyReportView : UserControl
 	{
 		base.OnLoaded( e );
 
+		if( ActiveUserProfile == null )
+		{
+			throw new NullReferenceException( $"There is no {nameof( ActiveUserProfile )} value assigned." );
+		}
+
 		LoadTabPage( new DailyDetailsView() { DataContext = DataContext } );
 
 		using var store = StorageService.Connect();
 		
 		// Note that ActiveUserProfile will not always be available (such as in Preview mode in design view)
-		_datesWithData = store.GetStoredDates( ActiveUserProfile?.UserProfileID ?? 0 );
+		_datesWithData = store.GetStoredDates( ActiveUserProfile.UserProfileID );
 
 		// TODO: Keep DisplayDateStart/DisplayDateEnd up to date (after importing, etc.)
 		if( _datesWithData.Count == 0 )
@@ -217,6 +221,13 @@ public partial class DailyReportView : UserControl
 		// Load the cached view into the frame 
 		TabFrame.Content = page;
 
+		// Switching to a tab that's already been loaded in the past means that it could still
+		// have a reference to the current DataContext, so only assign it if necessary.
+		if( !object.ReferenceEquals( page.DataContext, DataContext ) )
+		{
+			page.DataContext = DataContext;
+		}
+
 		// Post the animation otherwise pages that take slightly longer to load won't
 		// have an animation since it will run before layout is complete
 		Dispatcher.UIThread.Post( () =>
@@ -227,6 +238,11 @@ public partial class DailyReportView : UserControl
 
 	private void DateSelector_OnSelectedDateChanged( object? sender, SelectionChangedEventArgs e )
 	{
+		if( ActiveUserProfile == null )
+		{
+			throw new NullReferenceException( $"There is no {nameof( ActiveUserProfile )} value assigned." );
+		}
+
 		using var store = StorageService.Connect();
 		
 		var profileID = ActiveUserProfile.UserProfileID;
@@ -289,6 +305,11 @@ public partial class DailyReportView : UserControl
 	
 	private async void DailySpO2View_OnDeletionRequested( object? sender, DateTimeRoutedEventArgs e )
 	{
+		if( ActiveUserProfile == null )
+		{
+			throw new NullReferenceException( $"There is no {nameof( ActiveUserProfile )} value assigned." );
+		}
+
 		var dialog = MessageBoxManager.GetMessageBoxStandard(
 			"Delete Pulse Oximetry Data",
 			$"Are you sure you wish to delete pulse oximetry data for {e.DateTime:D}?",
@@ -361,12 +382,14 @@ public partial class DailyReportView : UserControl
 		{
 			return;
 		}
+
+		var inputText = input.Text.TrimEnd( '_', ':' );
 		
-		if( !TimeSpan.TryParse( input.Text, out TimeSpan time ) )
+		if( !TimeSpan.TryParse( inputText, out TimeSpan time ) )
 		{
 			var msgBox = MessageBoxManager.GetMessageBoxStandard(
 				"Go to a specific time",
-				$"The value '{input.Text}' is not a valid time code",
+				$"The value '{inputText}' is not a valid time code",
 				ButtonEnum.Ok,
 				Icon.Error );
 

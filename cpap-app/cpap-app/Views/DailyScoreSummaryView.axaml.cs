@@ -120,6 +120,8 @@ public partial class DailyScoreSummaryView : UserControl
 		{
 			var date = dates[ ^1 ];
 			LoadDate( db, profileID, date, dates );
+
+			IsVisible = true;
 		}
 		else
 		{

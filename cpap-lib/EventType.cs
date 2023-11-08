@@ -86,7 +86,7 @@ namespace cpaplib
 		/// </summary>
 		PulseRateChange,
 		/// <summary>
-		/// A reduction in flow detected by the application and unreported by the PAP machine.
+		/// A reduction in flow detected by the application and not otherwise scored as an apnea by the PAP machine.
 		/// The percentage of flow reduction and the minimum length of the event are application-defined. 
 		/// </summary>
 		FlowReduction,
@@ -114,6 +114,7 @@ namespace cpaplib
 			EventType.Unclassified,
 			EventType.RERA,
 			EventType.FlowLimitation,
+			EventType.FlowReduction,
 		};
 
 		public static readonly EventType[] OxygenSaturation =

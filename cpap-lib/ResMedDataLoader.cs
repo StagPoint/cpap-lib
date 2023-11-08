@@ -520,7 +520,9 @@ namespace cpaplib
 
 								if( duration >= 8.0 )
 								{
-									var eventStart = signal.StartTime.AddSeconds( startIndex * interval );
+									// Note that all machine-generated events "start" at the end of the event.
+									// TODO: It might be better to rename ReportedEvent.StartTime to ReportedEvent.MarkerTime
+									var eventStart = signal.StartTime.AddSeconds( i * interval );
 
 									var newEvent = new ReportedEvent
 									{

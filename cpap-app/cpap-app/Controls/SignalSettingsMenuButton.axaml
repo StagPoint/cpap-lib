@@ -36,21 +36,20 @@
                     
                     <Separator />
                     
-                    <MenuItem Header="Signal Color..." Click="ConfigureSignalColor_OnClick">
-                        <MenuItem.Icon>
-                            <fui:SymbolIcon Symbol="ColorLine" />
-                        </MenuItem.Icon>
-                    </MenuItem>
-                    
                     <MenuItem Header="Rendering">
-                        <MenuItem Header="High Quality" StaysOpenOnClick="True">
+                        <MenuItem Header="Signal Color..." Click="ConfigureSignalColor_OnClick">
                             <MenuItem.Icon>
-                                <fui:SymbolIcon Name="mnuHighQuality" Symbol="Checkmark" IsVisible="False"/>
+                                <fui:SymbolIcon Symbol="ColorLine" />
                             </MenuItem.Icon>
                         </MenuItem>
                         <MenuItem Header="Gradient Fill" Click="FillBelow_OnClick">
                             <MenuItem.Icon>
                                 <fui:SymbolIcon Name="mnuFillBelow" Symbol="Checkmark" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Header="High Quality" StaysOpenOnClick="True">
+                            <MenuItem.Icon>
+                                <fui:SymbolIcon Name="mnuHighQuality" Symbol="Checkmark" IsVisible="False"/>
                             </MenuItem.Icon>
                         </MenuItem>
                     </MenuItem>
