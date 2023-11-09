@@ -22,6 +22,7 @@ namespace cpap_db
 		public const string FaultMapping     = "fault";
 		public const string ReportedEvent    = "event";
 		public const string SignalStatistics = "signal_stats";
+		public const string Annotation      = "annotations";
 		
 		public const string MachineSettings = "machine_settings";
 		public const string MachineInfo     = "machine_info";
@@ -66,6 +67,9 @@ namespace cpap_db
 
 			var eventMapping = CreateMapping<ReportedEvent>( TableNames.ReportedEvent );
 			eventMapping.ForeignKey = new ForeignKeyColumn( dayMapping );
+
+			var annotationMapping = CreateMapping<Annotation>( TableNames.Annotation );
+			annotationMapping.ForeignKey = new ForeignKeyColumn( dayMapping );
 			
 			var sessionMapping = CreateMapping<Session>( TableNames.Session );
 			sessionMapping.PrimaryKey = new PrimaryKeyColumn( "id", typeof( int ), true );
@@ -195,6 +199,7 @@ namespace cpap_db
 			day.Fault            = SelectByForeignKey<FaultInfo>( dayID ).First();
 			day.Statistics       = SelectByForeignKey<SignalStatistics>( dayID );
 			day.Events           = SelectByForeignKey<ReportedEvent>( dayID );
+			day.Annotations      = SelectByForeignKey<Annotation>( dayID );
 			day.Settings         = SelectByForeignKey<MachineSettings>( dayID, out int settingsID );
 			day.Settings.AutoSet = SelectByForeignKey<AutoSetSettings>( settingsID ).First();
 			day.Settings.CPAP    = SelectByForeignKey<CpapSettings>( settingsID ).First();
@@ -251,6 +256,11 @@ namespace cpap_db
 				foreach( var evt in day.Events )
 				{
 					Insert( evt, foreignKeyValue: dayID );
+				}
+
+				foreach( var note in day.Annotations )
+				{
+					Insert( note, foreignKeyValue: dayID );
 				}
 
 				foreach( var stat in day.Statistics )

@@ -36,11 +36,11 @@
                     <DataTemplate DataType="{x:Type viewModels:EventGroupSummary}">
                         <Grid RowDefinitions="Auto" Classes="EventGroup">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition SharedSizeGroup="G0" />
+                                <ColumnDefinition SharedSizeGroup="EventSummaryG0" />
                                 <ColumnDefinition Width="12" />
-                                <ColumnDefinition SharedSizeGroup="G1" />
+                                <ColumnDefinition SharedSizeGroup="EventSummaryG1" />
                                 <ColumnDefinition Width="12" />
-                                <ColumnDefinition SharedSizeGroup="G2" />
+                                <ColumnDefinition SharedSizeGroup="EventSummaryG2" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Text="{Binding Name}" />
                             <TextBlock Grid.Column="2" Text="{Binding IndexValue, Mode=OneWay, StringFormat={}{0:F2}}" />
@@ -55,10 +55,10 @@
         <Border Classes="ColumnHeader" IsVisible="{Binding Items.Count}">
             <Grid RowDefinitions="Auto">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition SharedSizeGroup="C0" />
-                    <ColumnDefinition SharedSizeGroup="C1" />
-                    <ColumnDefinition SharedSizeGroup="C2" />
-                    <ColumnDefinition SharedSizeGroup="C3" />
+                    <ColumnDefinition SharedSizeGroup="EventSummaryC0" />
+                    <ColumnDefinition SharedSizeGroup="EventSummaryC1" />
+                    <ColumnDefinition SharedSizeGroup="EventSummaryC2" />
+                    <ColumnDefinition SharedSizeGroup="EventSummaryC3" />
                 </Grid.ColumnDefinitions>
                 <TextBlock Grid.Column="0" Grid.Row="0" Text="Event" />
                 <TextBlock Grid.Column="1" Grid.Row="0" Text="#/Hour" HorizontalAlignment="Center" />
@@ -82,10 +82,10 @@
                     <Border Classes="SelectionRect" Tapped="EventType_Tapped" Tag="{Binding Type}" IsVisible="{Binding TotalCount}">
                         <Grid RowDefinitions="Auto" Classes="TableData">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition SharedSizeGroup="C0" />
-                                <ColumnDefinition SharedSizeGroup="C1" />
-                                <ColumnDefinition SharedSizeGroup="C2" />
-                                <ColumnDefinition SharedSizeGroup="C3" />
+                                <ColumnDefinition SharedSizeGroup="EventSummaryC0" />
+                                <ColumnDefinition SharedSizeGroup="EventSummaryC1" />
+                                <ColumnDefinition SharedSizeGroup="EventSummaryC2" />
+                                <ColumnDefinition SharedSizeGroup="EventSummaryC3" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0"

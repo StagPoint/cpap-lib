@@ -23,11 +23,11 @@
             <DataTemplate DataType="{x:Type cpaplib:Session}">
                 <Grid>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" SharedSizeGroup="C0" />
+                        <ColumnDefinition Width="*" SharedSizeGroup="SPO2_C0" />
                         <ColumnDefinition Width="12" />
-                        <ColumnDefinition Width="*" SharedSizeGroup="C1" />
+                        <ColumnDefinition Width="*" SharedSizeGroup="SPO2_C1" />
                         <ColumnDefinition Width="20" />
-                        <ColumnDefinition Width="*" SharedSizeGroup="C2" />
+                        <ColumnDefinition Width="*" SharedSizeGroup="SPO2_C2" />
                     </Grid.ColumnDefinitions>
                     <TextBlock Grid.Column="0" Text="{Binding StartTime, Mode=OneWay, StringFormat={}{0:d}}"></TextBlock>
                     <TextBlock Grid.Column="2">

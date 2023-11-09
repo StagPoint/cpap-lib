@@ -365,7 +365,7 @@ public partial class DailyReportView : UserControl
 			},
 		};
 
-		var task = dialog.ShowAsync();
+		var task = dialog.ShowAsync( TopLevel.GetTopLevel( this ) );
 		Dispatcher.UIThread.Post( () =>
 		{
 			input.Focus();

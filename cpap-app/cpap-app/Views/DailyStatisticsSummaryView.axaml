@@ -43,14 +43,14 @@
                     </controls:FAMenuFlyout>
                 </Grid.ContextFlyout>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" SharedSizeGroup="C0" />
-                    <ColumnDefinition Width="{Binding Minimum, Converter={StaticResource BooleanToGridLength}}" SharedSizeGroup="C1" />
-                    <ColumnDefinition Width="{Binding Average, Converter={StaticResource BooleanToGridLength}}" SharedSizeGroup="C2" />
-                    <ColumnDefinition Width="{Binding Median, Converter={StaticResource BooleanToGridLength}}" SharedSizeGroup="C3" />
-                    <ColumnDefinition Width="{Binding Percentile95, Converter={StaticResource BooleanToGridLength}}" SharedSizeGroup="C4" />
-                    <ColumnDefinition Width="{Binding Percentile995, Converter={StaticResource BooleanToGridLength}}" SharedSizeGroup="C5" />
-                    <ColumnDefinition Width="{Binding Maximum, Converter={StaticResource BooleanToGridLength}}" SharedSizeGroup="C6" />
-                    <ColumnDefinition Width="{Binding AverageDeviation, Converter={StaticResource BooleanToGridLength}}" SharedSizeGroup="C7" />
+                    <ColumnDefinition Width="Auto" SharedSizeGroup="DailyStatsC0" />
+                    <ColumnDefinition Width="{Binding Minimum, Converter={StaticResource BooleanToGridLength}}" SharedSizeGroup="DailyStatsC1" />
+                    <ColumnDefinition Width="{Binding Average, Converter={StaticResource BooleanToGridLength}}" SharedSizeGroup="DailyStatsC2" />
+                    <ColumnDefinition Width="{Binding Median, Converter={StaticResource BooleanToGridLength}}" SharedSizeGroup="DailyStatsC3" />
+                    <ColumnDefinition Width="{Binding Percentile95, Converter={StaticResource BooleanToGridLength}}" SharedSizeGroup="DailyStatsC4" />
+                    <ColumnDefinition Width="{Binding Percentile995, Converter={StaticResource BooleanToGridLength}}" SharedSizeGroup="DailyStatsC5" />
+                    <ColumnDefinition Width="{Binding Maximum, Converter={StaticResource BooleanToGridLength}}" SharedSizeGroup="DailyStatsC6" />
+                    <ColumnDefinition Width="{Binding AverageDeviation, Converter={StaticResource BooleanToGridLength}}" SharedSizeGroup="DailyStatsC7" />
                 </Grid.ColumnDefinitions>
                 <TextBlock Grid.Column="0" Text="Name" />
                 <Rectangle Classes="HeaderSeparator" Grid.Column="1" IsVisible="{Binding Minimum}" />
@@ -75,14 +75,14 @@
                     <Border Classes="SelectionRect">
                         <Grid Classes="TableData">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" SharedSizeGroup="C0" />
-                                <ColumnDefinition Width="Auto" SharedSizeGroup="C1" />
-                                <ColumnDefinition Width="Auto" SharedSizeGroup="C2" />
-                                <ColumnDefinition Width="Auto" SharedSizeGroup="C3" />
-                                <ColumnDefinition Width="Auto" SharedSizeGroup="C4" />
-                                <ColumnDefinition Width="Auto" SharedSizeGroup="C5" />
-                                <ColumnDefinition Width="Auto" SharedSizeGroup="C6" />
-                                <ColumnDefinition Width="Auto" SharedSizeGroup="C7" />
+                                <ColumnDefinition Width="Auto" SharedSizeGroup="DailyStatsC0" />
+                                <ColumnDefinition Width="Auto" SharedSizeGroup="DailyStatsC1" />
+                                <ColumnDefinition Width="Auto" SharedSizeGroup="DailyStatsC2" />
+                                <ColumnDefinition Width="Auto" SharedSizeGroup="DailyStatsC3" />
+                                <ColumnDefinition Width="Auto" SharedSizeGroup="DailyStatsC4" />
+                                <ColumnDefinition Width="Auto" SharedSizeGroup="DailyStatsC5" />
+                                <ColumnDefinition Width="Auto" SharedSizeGroup="DailyStatsC6" />
+                                <ColumnDefinition Width="Auto" SharedSizeGroup="DailyStatsC7" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Text="{Binding SignalName}" />
                             <TextBlock Grid.Column="1" Text="{Binding Minimum, Mode=OneWay, StringFormat={}{0:f2}}" />

@@ -66,6 +66,11 @@ namespace cpaplib
 		/// </summary>
 		VibratorySnore,
 		/// <summary>
+		/// A reduction in flow detected by the application and not otherwise scored as an apnea by the PAP machine.
+		/// The percentage of flow reduction and the minimum length of the event are application-defined. 
+		/// </summary>
+		FlowReduction,
+		/// <summary>
 		/// A period of low blood oxygen saturation (less than 90%) lasting for at least 1 second
 		/// </summary>
 		Hypoxemia,
@@ -85,11 +90,6 @@ namespace cpaplib
 		/// Pulse rate exceeded the threshold difference from baseline
 		/// </summary>
 		PulseRateChange,
-		/// <summary>
-		/// A reduction in flow detected by the application and not otherwise scored as an apnea by the PAP machine.
-		/// The percentage of flow reduction and the minimum length of the event are application-defined. 
-		/// </summary>
-		FlowReduction,
 	}
 
 	/// <summary>

@@ -4,6 +4,7 @@
     <option name="projectPerEditor">
       <map>
         <entry key="cpap-app/cpap-app/App.axaml" value="cpap-app/cpap-app.Desktop/cpap-app.Desktop.csproj" />
+        <entry key="cpap-app/cpap-app/Controls/AnnotationView.axaml" value="cpap-app/cpap-app.Desktop/cpap-app.Desktop.csproj" />
         <entry key="cpap-app/cpap-app/Controls/CheckMarkMenuItem.axaml" value="cpap-app/cpap-app.Desktop/cpap-app.Desktop.csproj" />
         <entry key="cpap-app/cpap-app/Controls/DailyGoalItemView.axaml" value="cpap-app/cpap-app.Desktop/cpap-app.Desktop.csproj" />
         <entry key="cpap-app/cpap-app/Controls/DailyScoreItemView.axaml" value="cpap-app/cpap-app.Desktop/cpap-app.Desktop.csproj" />

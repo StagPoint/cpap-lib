@@ -27,11 +27,11 @@
     </UserControl.Styles>
     <Grid Margin="0 0 0 16" RowDefinitions="Auto,Auto">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto" SharedSizeGroup="C0" />
-            <ColumnDefinition Width="Auto" SharedSizeGroup="C1" />
+            <ColumnDefinition Width="Auto" SharedSizeGroup="DailyScoreItemC0" />
+            <ColumnDefinition Width="Auto" SharedSizeGroup="DailyScoreItemC1" />
             <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="Auto" SharedSizeGroup="C3" />
-            <ColumnDefinition Width="Auto" SharedSizeGroup="C4" />
+            <ColumnDefinition Width="Auto" SharedSizeGroup="DailyScoreItemC3" />
+            <ColumnDefinition Width="Auto" SharedSizeGroup="DailyScoreItemC4" />
         </Grid.ColumnDefinitions>
         <ProgressBar Name="AnimProgress" Grid.Column="0" Grid.ColumnSpan="5" Grid.Row="1"
                      Maximum="{Binding MaximumScore, Mode=OneWay}" Minimum="0" Value="{Binding DailyScore, Mode=OneWay}"

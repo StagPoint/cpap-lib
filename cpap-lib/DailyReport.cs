@@ -81,6 +81,11 @@ namespace cpaplib
 		/// </summary>
 		public string Notes { get; set; } = string.Empty;
 
+		/// <summary>
+		/// The list of <see cref="Annotation"/> items entered by the user for this <see cref="DailyReport"/>
+		/// </summary>
+		public List<Annotation> Annotations { get; set; } = new List<Annotation>();
+
 		#endregion 
 
 		#region Public functions

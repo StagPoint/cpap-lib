@@ -52,18 +52,13 @@
                     <TreeDataTemplate DataType="cpaplib:ReportedEvent">
                         <Grid Background="Transparent">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="24"/>
-                                <ColumnDefinition Width="4"/>
                                 <ColumnDefinition Width="Auto" SharedSizeGroup="EventTreeView0" />
                                 <ColumnDefinition Width="24"/>
                                 <ColumnDefinition Width="Auto" SharedSizeGroup="EventTreeView1" />
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <Button Tag="{Binding}" Grid.Column="0" Padding="2" VerticalAlignment="Center">
-                                <controls:SymbolIcon Symbol="Edit" />
-                            </Button>
-                            <TextBlock Grid.Column="2" Text="{Binding StartTime, Mode=OneWay, StringFormat={}{0:T}}" VerticalAlignment="Center" />
-                            <TextBlock Grid.Column="4" VerticalAlignment="Center"
+                            <TextBlock Grid.Column="0" Text="{Binding StartTime, Mode=OneWay, StringFormat={}{0:T}}" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="2" VerticalAlignment="Center"
                                 Text="{Binding Duration, Mode=OneWay, Converter={StaticResource FormattedTimeSpan}, ConverterParameter=Short.Empty}" />
                         </Grid>
                     </TreeDataTemplate>

@@ -97,9 +97,9 @@
                                             <DataTemplate DataType="{x:Type views:DependencyInfoItem}">
                                                 <Grid>
                                                     <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="Auto" SharedSizeGroup="C0" />
-                                                        <ColumnDefinition Width="Auto" SharedSizeGroup="C1" />
-                                                        <ColumnDefinition Width="Auto" SharedSizeGroup="C2" />
+                                                        <ColumnDefinition Width="Auto" SharedSizeGroup="DependenciesC0" />
+                                                        <ColumnDefinition Width="Auto" SharedSizeGroup="DependenciesC1" />
+                                                        <ColumnDefinition Width="Auto" SharedSizeGroup="DependenciesC2" />
                                                     </Grid.ColumnDefinitions>
                                                     <TextBlock Grid.Column="0" Text="{Binding Name}"
                                                                VerticalAlignment="Center"

@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using System.Threading;
 using System.Threading.Tasks;
 
 using Avalonia;
@@ -243,6 +242,7 @@ public partial class MainView : UserControl
 
 		var td = new TaskDialog
 		{
+			XamlRoot        = this.FindAncestorOfType<Window>(),
 			Title           = $"Import from {importer.FriendlyName}",
 			ShowProgressBar = true,
 			IconSource      = new SymbolIconSource { Symbol = Symbol.Upload },
@@ -257,8 +257,9 @@ public partial class MainView : UserControl
 		var appWindow = TopLevel.GetTopLevel( this ) as AppWindow;
 		appWindow?.PlatformFeatures.SetTaskBarProgressBarState( TaskBarProgressBarState.Indeterminate );
 
-		bool dataWasImported        = false;
-		bool operationWasCanccelled = false;
+		bool dataWasImported       = false;
+		bool alreadyUpToDate       = true;
+		bool operationWasCancelled = false;
 
 		td.Opened += async ( _, _ ) =>
 		{
@@ -401,11 +402,14 @@ public partial class MainView : UserControl
 		td.XamlRoot = (Visual)VisualRoot!;
 		await td.ShowAsync();	
 
-		if( !operationWasCanccelled && metaSessions.Count == 0 || !dataWasImported )
+		if( !operationWasCancelled && metaSessions.Count == 0 || !dataWasImported )
 		{
+			var upToDate     = "All pulse oximetry data was already up to date.";
+			var noMatchFound = "One or more of the files you selected could not be matched to any existing CPAP sessions.";
+			
 			var dialog = MessageBoxManager.GetMessageBoxStandard(
 				$"Import from {importer.FriendlyName}",
-				$"There was no data imported. \nThe files you selected could not be matched to any existing CPAP sessions.",
+				alreadyUpToDate ? upToDate : noMatchFound,
 				ButtonEnum.Ok,
 				Icon.Warning );
 
@@ -525,6 +529,7 @@ public partial class MainView : UserControl
 
 		var td = new TaskDialog
 		{
+			XamlRoot        = this.FindAncestorOfType<Window>(),
 			Title           = "Import CPAP Data",
 			ShowProgressBar = true,
 			IconSource      = new SymbolIconSource { Symbol = Symbol.Upload },

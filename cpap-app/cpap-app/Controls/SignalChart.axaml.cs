@@ -11,6 +11,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Styling;
+using Avalonia.Threading;
 
 using cpap_app.Configuration;
 using cpap_app.Controls;
@@ -20,6 +21,8 @@ using cpap_app.Styling;
 using cpap_app.Helpers;
 
 using cpaplib;
+
+using FluentAvalonia.UI.Controls;
 
 using ScottPlot;
 using ScottPlot.Avalonia;
@@ -207,55 +210,63 @@ public partial class SignalChart : UserControl
 
 	protected override void OnKeyDown( KeyEventArgs args )
 	{
-		if( args.Key is Key.Left or Key.Right )
+		switch( args.Key )
 		{
-			var  axisLimits  = Chart.Plot.GetAxisLimits();
-			var  startTime   = axisLimits.XMin;
-			var  endTime     = axisLimits.XMax;
-			bool isShiftDown = (args.KeyModifiers & KeyModifiers.Shift) != 0;
-			var  amount      = axisLimits.XSpan * (isShiftDown ? 0.25 : 0.10);
-
-			if( args.Key == Key.Left )
+			case Key.Left or Key.Right:
 			{
-				startTime -= amount;
-				endTime   =  startTime + axisLimits.XSpan;
-			}
-			else
-			{
-				endTime   += amount;
-				startTime =  endTime - axisLimits.XSpan;
-			}
-			
-			Chart.Plot.SetAxisLimits( startTime, endTime );
-			
-			HideTimeMarker();
-			Chart.RenderRequest();
-			
-			args.Handled = true;
-		}
-		else if( args.Key is Key.Up or Key.Down )
-		{
-			double increment = ((args.KeyModifiers & KeyModifiers.Shift) != 0) ? 0.25 : 0.1;
-			double amount    = (args.Key == Key.Up ? 1.0 : -1.0) * increment + 1.0;
-			
-			Chart.Plot.AxisZoom( amount, 1.0 );
+				var  axisLimits  = Chart.Plot.GetAxisLimits();
+				var  startTime   = axisLimits.XMin;
+				var  endTime     = axisLimits.XMax;
+				bool isShiftDown = (args.KeyModifiers & KeyModifiers.Shift) != 0;
+				var  amount      = axisLimits.XSpan * (isShiftDown ? 0.25 : 0.10);
 
-			args.Handled = true;
-
-			HideTimeMarker();
-			Chart.RenderRequest();
-		}
-		else if( args.Key == Key.Escape )
-		{
-			if( _interactionMode == GraphInteractionMode.Selecting )
-			{
-				_interactionMode         = GraphInteractionMode.None;
-				_selectionStartTime      = 0;
-				_selectionEndTime        = 0;
-				_selectionSpan.IsVisible = false;
-				EventTooltip.IsVisible   = false;
-				
+				if( args.Key == Key.Left )
+				{
+					startTime -= amount;
+					endTime   =  startTime + axisLimits.XSpan;
+				}
+				else
+				{
+					endTime   += amount;
+					startTime =  endTime - axisLimits.XSpan;
+				}
+			
+				Chart.Plot.SetAxisLimits( startTime, endTime );
+			
+				HideTimeMarker();
 				Chart.RenderRequest();
+			
+				args.Handled = true;
+				break;
+			}
+			case Key.Up or Key.Down:
+			{
+				double increment = ((args.KeyModifiers & KeyModifiers.Shift) != 0) ? 0.25 : 0.1;
+				double amount    = (args.Key == Key.Up ? 1.0 : -1.0) * increment + 1.0;
+			
+				Chart.Plot.AxisZoom( amount, 1.0 );
+
+				args.Handled = true;
+
+				HideTimeMarker();
+				Chart.RenderRequest();
+				break;
+			}
+			case Key.Escape:
+			{
+				if( _interactionMode == GraphInteractionMode.Selecting )
+				{
+					CancelSelectionMode();
+				}
+				break;
+			}
+			case Key.A:
+			{
+				if( _interactionMode == GraphInteractionMode.Selecting )
+				{
+					AddAnnotationForCurrentSelection();
+				}
+				break;
 			}
 		}
 	}
@@ -474,7 +485,7 @@ public partial class SignalChart : UserControl
 			return;
 		}
 		
-		if( eventArgs.KeyModifiers == KeyModifiers.None && !point.Properties.IsRightButtonPressed )
+		if( eventArgs.KeyModifiers == KeyModifiers.None && point.Properties.IsLeftButtonPressed )
 		{
 			(_selectionStartTime, _) = Chart.GetMouseCoordinates();
 			_selectionEndTime        = _selectionStartTime;
@@ -653,6 +664,63 @@ public partial class SignalChart : UserControl
 	#endregion 
 	
 	#region Private functions
+
+	private void CancelSelectionMode()
+	{
+		_interactionMode         = GraphInteractionMode.None;
+		_selectionStartTime      = 0;
+		_selectionEndTime        = 0;
+		_selectionSpan.IsVisible = false;
+		EventTooltip.IsVisible   = false;
+
+		Chart.RenderRequest();
+	}
+	
+	private async void AddAnnotationForCurrentSelection()
+	{
+		Debug.Assert( ChartConfiguration != null, nameof( ChartConfiguration ) + " != null" );
+		Debug.Assert( _day != null,               nameof( _day ) + " != null" );
+
+		var newAnnotation = new cpaplib.Annotation
+		{
+			Signal    = ChartConfiguration.SignalName,
+			StartTime = _day.RecordingStartTime.AddSeconds( _selectionStartTime ),
+			EndTime   = _day.RecordingStartTime.AddSeconds( _selectionEndTime ),
+			Notes     = "",
+		};
+		
+		var input = new AnnotationView()
+		{
+			DataContext = newAnnotation
+		};
+
+		input.cboSignalName.ItemsSource  = typeof( SignalNames ).GetAllPublicConstantValues<string>();
+		input.cboSignalName.SelectedItem = ChartConfiguration.SignalName;
+
+		var dialog = new ContentDialog()
+		{
+			Title             = "Add new Annotation",
+			PrimaryButtonText = "Save",
+			CloseButtonText   = "Cancel",
+			DefaultButton     = ContentDialogButton.Primary,
+			Content           = input,
+		};
+		
+		CancelSelectionMode();
+
+		var task = dialog.ShowAsync( TopLevel.GetTopLevel( this ) );
+		Dispatcher.UIThread.Post( () =>
+		{
+			input.Notes.Focus();
+		}, DispatcherPriority.Loaded );
+
+		var result = await task;
+		if( result == ContentDialogResult.Primary )
+		{
+			// TODO: Add AnnotationStore or some other entity responsible for saving Annotation objects
+			_day.Annotations.Add( newAnnotation );
+		}
+	}
 
 	private void InitializeVisualizationsMenu()
 	{

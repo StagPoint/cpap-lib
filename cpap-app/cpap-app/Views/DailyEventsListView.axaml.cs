@@ -8,18 +8,30 @@ using Avalonia.Interactivity;
 using cpap_app.Events;
 using cpap_app.ViewModels;
 
+using cpap_db;
+
 using cpaplib;
 
 namespace cpap_app.Views;
 
 public partial class DailyEventsListView : UserControl
 {
+	#region Public properties 
+	
 	public EventType? SelectedEventType { get; set; }
+	
+	#endregion 
+	
+	#region Constructor 
 	
 	public DailyEventsListView()
 	{
 		InitializeComponent();
 	}
+	
+	#endregion 
+	
+	#region Base class overrides 
 
 	protected override void OnLoaded( RoutedEventArgs e )
 	{
@@ -61,7 +73,11 @@ public partial class DailyEventsListView : UserControl
 			}
 		}
 	}
-
+	
+	#endregion 
+	
+	#region Event handlers 
+	
 	private void TvwEvents_OnSelectionChanged( object? sender, SelectionChangedEventArgs e )
 	{
 		if( tvwEvents.SelectedItem is not ReportedEvent evt )
@@ -78,5 +94,7 @@ public partial class DailyEventsListView : UserControl
 			
 		RaiseEvent( eventArgs  );
 	}
+	
+	#endregion 
 }
 
