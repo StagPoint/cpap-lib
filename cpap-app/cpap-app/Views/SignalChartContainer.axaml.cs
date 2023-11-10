@@ -224,9 +224,25 @@ public partial class SignalChartContainer : UserControl
 
 	public void ShowEventType( EventType eventType )
 	{
+		Debug.Assert( !_charts.Any( x => x.ChartConfiguration == null ), $"At least one chart does not have a {nameof( SignalChart.ChartConfiguration )} value assigned." );
+		
+		// First search to see if there's already a chart that's visible that displays the event type
 		foreach( var chart in _charts )
 		{
-			if( chart.ChartConfiguration != null && chart.ChartConfiguration.DisplayedEvents.Contains( eventType ) )
+			if( chart.ChartConfiguration!.DisplayedEvents.Contains( eventType ) )
+			{
+				if( chart.IsEffectivelyVisible )
+				{
+					chart.Focus();
+					return;
+				}
+			}
+		}
+		
+		// Search for a chart that is configured to show the event type, and scroll the first one found into view
+		foreach( var chart in _charts )
+		{
+			if( chart.ChartConfiguration!.DisplayedEvents.Contains( eventType ) )
 			{
 				if( !chart.ChartConfiguration.IsPinned )
 				{

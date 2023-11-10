@@ -19,6 +19,7 @@ using cpap_app.Converters;
 using cpap_app.Events;
 using cpap_app.Styling;
 using cpap_app.Helpers;
+using cpap_app.ViewModels;
 
 using cpaplib;
 
@@ -185,6 +186,8 @@ public partial class SignalChart : UserControl
 		PointerPressed      += OnPointerPressed;
 		PointerReleased     += OnPointerReleased;
 		PointerMoved        += OnPointerMoved;
+		GotFocus            += OnGotFocus;
+		LostFocus           += OnLostFocus;
 		
 		Chart.AxesChanged     += OnAxesChanged;
 		
@@ -193,7 +196,7 @@ public partial class SignalChart : UserControl
 		ChartLabel.PointerCaptureLost += ChartLabelOnPointerCaptureLost;
 		ChartLabel.PointerMoved       += ChartLabelOnPointerMoved;
 	}
-	
+
 	#endregion 
 	
 	#region Base class overrides 
@@ -262,9 +265,15 @@ public partial class SignalChart : UserControl
 			}
 			case Key.A:
 			{
-				if( _interactionMode == GraphInteractionMode.Selecting )
+				switch( _interactionMode )
 				{
-					AddAnnotationForCurrentSelection();
+					case GraphInteractionMode.Selecting:
+						AddAnnotationForCurrentSelection();
+						break;
+					case GraphInteractionMode.None when _selectionStartTime > 0:
+						_selectionEndTime = _selectionStartTime;
+						AddAnnotationForCurrentSelection();
+						break;
 				}
 				break;
 			}
@@ -317,6 +326,16 @@ public partial class SignalChart : UserControl
 	#endregion 
 	
 	#region Event Handlers
+
+	private void OnLostFocus( object? sender, RoutedEventArgs e )
+	{
+		FocusAdornerBorder.Classes.Remove( "FocusAdorner" );
+	}
+	
+	private void OnGotFocus( object? sender, GotFocusEventArgs e )
+	{
+		FocusAdornerBorder.Classes.Add( "FocusAdorner" );
+	}
 
 	private void OnChartConfigurationChanged( object? sender, ChartConfigurationChangedEventArgs e )
 	{
@@ -441,6 +460,14 @@ public partial class SignalChart : UserControl
 
 	private void OnPointerReleased( object? sender, PointerReleasedEventArgs e )
 	{
+		// Don't attempt to do anything if some of the necessary objects have not yet been created.
+		// This was added mostly to prevent exceptions from being thrown in the previewer in design mode.
+		// ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+		if( Chart.Configuration == null || _selectionSpan == null )
+		{
+			return;
+		}
+		
 		_selectionSpan.IsVisible = false;
 		EventTooltip.IsVisible   = false;
 		
@@ -461,6 +488,14 @@ public partial class SignalChart : UserControl
 
 	private void OnPointerPressed( object? sender, PointerPressedEventArgs eventArgs )
 	{
+		// Don't attempt to do anything if some of the necessary objects have not yet been created.
+		// This was added mostly to prevent exceptions from being thrown in the previewer in design mode.
+		// ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+		if( Chart.Configuration == null || _selectionSpan == null )
+		{
+			return;
+		}
+		
 		if( eventArgs.Handled || _interactionMode != GraphInteractionMode.None )
 		{
 			return;
@@ -681,12 +716,18 @@ public partial class SignalChart : UserControl
 		Debug.Assert( ChartConfiguration != null, nameof( ChartConfiguration ) + " != null" );
 		Debug.Assert( _day != null,               nameof( _day ) + " != null" );
 
-		var newAnnotation = new cpaplib.Annotation
+		if( _selectionEndTime < _selectionStartTime )
 		{
-			Signal    = ChartConfiguration.SignalName,
-			StartTime = _day.RecordingStartTime.AddSeconds( _selectionStartTime ),
-			EndTime   = _day.RecordingStartTime.AddSeconds( _selectionEndTime ),
-			Notes     = "",
+			(_selectionStartTime, _selectionEndTime) = (_selectionEndTime, _selectionStartTime);
+		}
+
+		var newAnnotation = new AnnotationViewModel
+		{
+			Signal     = ChartConfiguration.SignalName,
+			StartTime  = _day.RecordingStartTime.AddSeconds( _selectionStartTime ),
+			EndTime    = _day.RecordingStartTime.AddSeconds( _selectionEndTime ),
+			ShowMarker = (_selectionEndTime - _selectionStartTime) <= 30,
+			Notes      = "",
 		};
 		
 		var input = new AnnotationView()
@@ -1343,6 +1384,7 @@ public partial class SignalChart : UserControl
 		var dims          = Chart.Plot.XAxis.Dims;
 		var mousePosition = dims.PxPerUnit * (timeOffset - dims.Min) + dataRect.Left;
 
+		_selectionStartTime      = double.MinValue;
 		TimeMarkerLine.IsVisible = false;
 		EventTooltip.IsVisible   = false;
 		CurrentValue.Text        = "";
@@ -1362,6 +1404,8 @@ public partial class SignalChart : UserControl
 		TimeMarkerLine.StartPoint = new Point( mousePosition, dataRect.Top );
 		TimeMarkerLine.EndPoint   = new Point( mousePosition, dataRect.Bottom + Chart.Plot.XAxis.AxisTicks.MajorTickLength );
 		TimeMarkerLine.IsVisible  = true;
+
+		_selectionStartTime = timeOffset;
 
 		foreach( var signal in _signals )
 		{

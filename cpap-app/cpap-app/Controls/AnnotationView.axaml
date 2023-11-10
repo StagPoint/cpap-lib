@@ -2,12 +2,12 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:cpaplib="clr-namespace:cpaplib;assembly=cpap-lib"
+             xmlns:viewModels="clr-namespace:cpap_app.ViewModels"
              mc:Ignorable="d" 
              Width="400" 
              MinHeight="300"
              x:Class="cpap_app.Controls.AnnotationView"
-             x:DataType="cpaplib:Annotation">
+             x:DataType="viewModels:AnnotationViewModel">
     <UserControl.Styles>
         <Style Selector="#Form > TextBlock">
             <Setter Property="Theme" Value="{DynamicResource BodyStrongTextBlockStyle}" />
@@ -15,20 +15,32 @@
             <Setter Property="HorizontalAlignment" Value="Right" /> 
             <Setter Property="Margin" Value="0 0 8 4" />
         </Style>
+        <Style Selector="#Form > Border.ValidationError">
+            <Setter Property="BorderBrush" Value="Red" />
+            <Setter Property="Background" Value="PaleVioletRed" />
+            <Setter Property="BorderThickness" Value="0" />
+        </Style>
     </UserControl.Styles>
-    <Grid Name="Form" ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,20,Auto,*" VerticalAlignment="Top" Margin="8">
+    <Grid Name="Form" ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,20,Auto,*" VerticalAlignment="Top" Margin="8">
+        
         <TextBlock Grid.Column="0" Grid.Row="0" Text="Signal" />
-        <ComboBox Grid.Column="1" Grid.Row="0" Name="cboSignalName" Width="200" SelectedValue="{Binding Signal}" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="0 0 0 8">
-        </ComboBox>
+        <ComboBox Grid.Column="1" Grid.Row="0" Name="cboSignalName" Width="200" SelectedValue="{Binding Signal}" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="0 0 0 4" />
         
         <TextBlock Grid.Column="0" Grid.Row="1" Text="Start Time" />
-        <MaskedTextBox Grid.Column="1" Grid.Row="1" IsEnabled="False" Name="StartTime" Width="100" Mask="00:00:00" Text="{Binding StartTime, StringFormat={}{0:hh\:mm\:ss}}" HorizontalAlignment="Left" Margin="0 0 0 8"/>
+        <Border Grid.Column="1" Grid.Row="1" HorizontalAlignment="Left"  Margin="0 0 0 4" >
+            <MaskedTextBox IsEnabled="False" Name="StartTime" Width="100" Mask="00:00:00" Text="{Binding StartTime, StringFormat={}{0:hh\:mm\:ss}, Mode=OneWay}" HorizontalAlignment="Left" TextChanged="DateTime_OnTextChanged" Tag="{Binding $parent[Border]}" />
+        </Border>
         
         <TextBlock Grid.Column="0" Grid.Row="2" Text="End Time" />
-        <MaskedTextBox Grid.Column="1" Grid.Row="2" IsEnabled="False" Name="EndTime" Width="100" Mask="00:00:00" Text="{Binding EndTime, StringFormat={}{0:hh\:mm\:ss}}" HorizontalAlignment="Left"/>
+        <Border Grid.Column="1" Grid.Row="2" HorizontalAlignment="Left">
+            <MaskedTextBox IsEnabled="False" Name="EndTime" Width="100" Mask="00:00:00" Text="{Binding EndTime, StringFormat={}{0:hh\:mm\:ss}, Mode=OneWay}" HorizontalAlignment="Left" TextChanged="DateTime_OnTextChanged" Tag="{Binding $parent[Border]}" />
+        </Border>
         
-        <TextBlock Grid.Column="0" Grid.Row="4" Text="Notes" HorizontalAlignment="Left" Margin="0 0 0 4" />
-        <TextBox Grid.Column="0" Grid.Row="5" Grid.ColumnSpan="2" Name="Notes" Text="{Binding Notes}" HorizontalAlignment="Stretch" Height="150" Watermark="Use this text entry field to write any notes that you'd like to have saved about the specified time period." TextWrapping="Wrap" AcceptsReturn="True" AcceptsTab="True">
+        <TextBlock Grid.Column="0" Grid.Row="3" Text="Show Marker" />
+        <CheckBox Grid.Column="1" Grid.Row="3" Width="20" Name="ShowMarker" IsChecked="{Binding ShowMarker}" HorizontalAlignment="Left" Margin="0"/>
+        
+        <TextBlock Grid.Column="0" Grid.Row="5" Text="Notes" HorizontalAlignment="Left" Margin="0 0 0 4" />
+        <TextBox Grid.Column="0" Grid.Row="6" Grid.ColumnSpan="2" Name="Notes" Text="{Binding Notes}" HorizontalAlignment="Stretch" Height="150" Watermark="Use this text entry field to write any notes that you'd like to have saved about the specified time period." TextWrapping="Wrap" AcceptsReturn="True" AcceptsTab="True">
         </TextBox>
     </Grid>
 </UserControl>

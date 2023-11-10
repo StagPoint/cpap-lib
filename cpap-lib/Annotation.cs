@@ -26,6 +26,11 @@ namespace cpaplib
 		/// The end time of the period that the <see cref="Annotation"/> covers
 		/// </summary>
 		public DateTime EndTime { get; set; }
+		
+		/// <summary>
+		/// Indicates whether to show a marker on the <see cref="Signal"/> graph for this <see cref="Annotation"/>
+		/// </summary>
+		public bool ShowMarker { get; set; }
 
 		/// <summary>
 		/// A description and any notes supplied by the user for this <see cref="Annotation"/>

@@ -692,6 +692,12 @@ namespace cpaplib
 				// Automatically calculate statistics for all Signals whose value range is zero or above
 				if( signal.MinValue >= 0 && signal.MaxValue > signal.MinValue )
 				{
+					// Skip the AHI signal, though
+					if( signal.Name == SignalNames.AHI )
+					{
+						continue;
+					}
+					
 					var calculator = new SignalStatCalculator();
 					day.Statistics.Add( calculator.CalculateStats( signal.Name, day.Sessions ) );
 				}

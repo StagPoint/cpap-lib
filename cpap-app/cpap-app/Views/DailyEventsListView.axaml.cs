@@ -8,8 +8,6 @@ using Avalonia.Interactivity;
 using cpap_app.Events;
 using cpap_app.ViewModels;
 
-using cpap_db;
-
 using cpaplib;
 
 namespace cpap_app.Views;
@@ -84,15 +82,24 @@ public partial class DailyEventsListView : UserControl
 		{
 			return;
 		}
-		
-		var eventArgs = new DateTimeRoutedEventArgs
+
+		var timeSelectedEventArgs = new DateTimeRoutedEventArgs
 		{
-			Route       = RoutingStrategies.Bubble | RoutingStrategies.Tunnel,
 			RoutedEvent = DailyReportView.TimeSelectedEvent,
-			DateTime        = evt.StartTime
+			Source      = sender,
+			DateTime    = evt.StartTime,
 		};
 			
-		RaiseEvent( eventArgs  );
+		RaiseEvent( timeSelectedEventArgs  );
+
+		var eventTypeEventArgs = new ReportedEventTypeArgs
+		{
+			RoutedEvent = DailyReportView.ReportedEventTypeSelectedEvent,
+			Source      = sender,
+			Type        = evt.Type
+		};
+
+		RaiseEvent( eventTypeEventArgs );
 	}
 	
 	#endregion 
