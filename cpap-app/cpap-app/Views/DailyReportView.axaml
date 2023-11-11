@@ -13,7 +13,6 @@
              events:TimeSelection.TimeSelected="OnTimeSelected"
              events:TimeSelection.TimeRangeSelected="OnTimeRangeSelected"
              events:EventSelection.ReportedEventTypeSelected="DailyReportView_OnReportedEventTypeSelected"
-             events:AnnotationList.AnnotationListChanged="OnAnnotationListChanged"
              views:DailySessionsList.SessionSelected="OnTimeRangeSelected">
     <Grid>
         <Grid.ColumnDefinitions>

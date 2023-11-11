@@ -733,11 +733,15 @@ public partial class SignalChart : UserControl
 		Debug.Assert( ChartConfiguration != null, nameof( ChartConfiguration ) + " != null" );
 		Debug.Assert( _day != null,               nameof( _day ) + " != null" );
 
+		if( _day is not DailyReportViewModel dayVM )
+		{
+			throw new NullReferenceException();
+		}
+
 		if( _selectionEndTime < _selectionStartTime )
 		{
 			(_selectionStartTime, _selectionEndTime) = (_selectionEndTime, _selectionStartTime);
 		}
-
 
 		var annotationVM = new AnnotationViewModel
 		{
@@ -778,22 +782,7 @@ public partial class SignalChart : UserControl
 		var result = await task;
 		if( result == ContentDialogResult.Primary )
 		{
-			// TODO: Add AnnotationStore or some other entity responsible for dealing specifically with Annotation storage
-
-			var newAnnotation = (Annotation)annotationVM;
-			
-			// using var db = StorageService.Connect();
-			// db.Insert( newAnnotation, foreignKeyValue: _day.ID );
-			
-			_day.Annotations.Add( newAnnotation );
-
-			RaiseEvent( new AnnotationListEventArgs
-			{
-				Route       = RoutingStrategies.Direct,
-				RoutedEvent = AnnotationList.AnnotationListChangedEvent,
-				Change      = AnnotationListEventType.Added,
-				Annotation  = newAnnotation,
-			} );
+			dayVM.AddAnnotation( annotationVM );
 		}
 	}
 

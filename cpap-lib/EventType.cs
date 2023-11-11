@@ -107,7 +107,7 @@ namespace cpaplib
 
 		public static readonly EventType[] RespiratoryDisturbance =
 		{
-			// TODO: The ResMed AirSense 10 reports RERA as "Arousal"? Can RERA be correlated with Flow Limit to differentiate from non-effort-related Arousal? A cursory investigation suggests yes.
+			// TODO: The ResMed AirSense 10 reports RERA as "Arousal"? Should RERA be correlated with Flow Limit to differentiate from non-effort-related Arousal? Or does ResMed simply not report RERA as such? 
 			EventType.ObstructiveApnea,
 			EventType.Hypopnea,
 			EventType.ClearAirway,

@@ -14,6 +14,7 @@ using Avalonia.VisualTree;
 
 using cpap_app.Animation;
 using cpap_app.Events;
+using cpap_app.ViewModels;
 
 using cpap_db;
 
@@ -130,19 +131,6 @@ public partial class DailyReportView : UserControl
 	
 	#region Event handlers 
 
-	private void OnAnnotationListChanged( object? sender, AnnotationListEventArgs eventArgs )
-	{
-		if( ReferenceEquals( eventArgs.Source, this ) )
-		{
-			return;
-		}
-		
-		// Notify descendents as well
-		eventArgs.Source = this;
-		
-		RaiseEvent( eventArgs );
-	}
-
 	private void OnTimeRangeSelected( object? sender, DateTimeRangeRoutedEventArgs e )
 	{
 		Charts.SelectTimeRange( e.StartTime, e.EndTime );
@@ -235,6 +223,12 @@ public partial class DailyReportView : UserControl
 		// TODO: Implement visual indication of "no data available" to match previous viewer codebase
 		var day = store.LoadDailyReport( profileID, DateSelector.SelectedDate ?? _datesWithData[ ^1 ] );
 
+		if( day != null )
+		{
+			// Turn the DailyReport into a DailyReportViewModel instead
+			day = new DailyReportViewModel( day );
+		}
+		
 		DataContext = day;
 
 		btnPrevDay.IsEnabled   = day != null && _datesWithData.Any( x => x < day.ReportDate.Date );

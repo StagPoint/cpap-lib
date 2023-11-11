@@ -5,10 +5,9 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
-using Avalonia.Layout;
-using Avalonia.Markup.Xaml;
 
 using cpap_app.Events;
+using cpap_app.ViewModels;
 
 using cpap_db;
 
@@ -18,17 +17,36 @@ namespace cpap_app.Controls;
 
 public partial class AnnotationListView : UserControl
 {
+	private DailyReportViewModel? _day = null;
+	
 	public AnnotationListView()
 	{
 		InitializeComponent();
 		
 		AddHandler( TappedEvent, Item_OnTapped );
-		AnnotationList.AddAnnotationListChangedHandler( this, OnAnnotationListChanged );
+	}
+
+	protected override void OnPropertyChanged( AvaloniaPropertyChangedEventArgs change )
+	{
+		base.OnPropertyChanged( change );
+
+		if( change.Property.Name == nameof( DataContext ) )
+		{
+			if( change.NewValue is DailyReportViewModel vm )
+			{
+				_day                  =  vm;
+				vm.AnnotationsChanged += VmOnAnnotationsChanged;
+			}
+			else
+			{
+				_day = null;
+			}
+		}
 	}
 	
-	private static void OnAnnotationListChanged( object? sender, RoutedEventArgs e )
+	private void VmOnAnnotationsChanged( object? sender, AnnotationListEventArgs e )
 	{
-		throw new NotImplementedException();
+		Debug.WriteLine( $"Annotations list changed: {e.Change}" );
 	}
 
 	private void Item_OnTapped( object? sender, TappedEventArgs e )

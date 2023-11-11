@@ -23,7 +23,7 @@
                     </StackPanel>
                 </Expander.Header>
                 <StackPanel Orientation="Vertical">
-                    <controls1:AnnotationListView />
+                    <controls1:AnnotationListView DataContext="{Binding $parent.DataContext}" />
                 </StackPanel>
             </Expander>
 
