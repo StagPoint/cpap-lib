@@ -28,37 +28,6 @@ namespace cpap_app.Views;
 
 public partial class DailyReportView : UserControl
 {
-	#region Events 
-	
-	public static readonly RoutedEvent<ReportedEventTypeArgs> ReportedEventTypeSelectedEvent =
-		RoutedEvent.Register<DailyReportView, ReportedEventTypeArgs>( nameof( ReportedEventTypeSelected ), RoutingStrategies.Bubble );
-
-	public static readonly RoutedEvent<DateTimeRangeRoutedEventArgs> TimeRangeSelectedEvent =
-		RoutedEvent.Register<DailyReportView, DateTimeRangeRoutedEventArgs>( nameof( TimeRangeSelected ), RoutingStrategies.Bubble );
-
-	public static readonly RoutedEvent<DateTimeRoutedEventArgs> TimeSelectedEvent =
-		RoutedEvent.Register<DailyReportView, DateTimeRoutedEventArgs>( nameof( TimeSelected ), RoutingStrategies.Bubble );
-	
-	public event EventHandler<ReportedEventTypeArgs> ReportedEventTypeSelected
-	{
-		add => AddHandler( ReportedEventTypeSelectedEvent, value );
-		remove => RemoveHandler( ReportedEventTypeSelectedEvent, value );
-	}
-	
-	public event EventHandler<DateTimeRangeRoutedEventArgs> TimeRangeSelected
-	{
-		add => AddHandler( TimeRangeSelectedEvent, value );
-		remove => RemoveHandler( TimeRangeSelectedEvent, value );
-	}
-	
-	public event EventHandler<DateTimeRoutedEventArgs> TimeSelected
-	{
-		add => AddHandler( TimeSelectedEvent, value );
-		remove => RemoveHandler( TimeSelectedEvent, value );
-	}
-	
-	#endregion 
-	
 	#region Public properties
 	
 	public UserProfile? ActiveUserProfile { get; set; }
@@ -161,6 +130,19 @@ public partial class DailyReportView : UserControl
 	
 	#region Event handlers 
 
+	private void OnAnnotationListChanged( object? sender, AnnotationListEventArgs eventArgs )
+	{
+		if( ReferenceEquals( eventArgs.Source, this ) )
+		{
+			return;
+		}
+		
+		// Notify descendents as well
+		eventArgs.Source = this;
+		
+		RaiseEvent( eventArgs );
+	}
+
 	private void OnTimeRangeSelected( object? sender, DateTimeRangeRoutedEventArgs e )
 	{
 		Charts.SelectTimeRange( e.StartTime, e.EndTime );
@@ -168,7 +150,7 @@ public partial class DailyReportView : UserControl
 
 	private void OnTimeSelected( object? sender, DateTimeRoutedEventArgs e )
 	{
-		Charts.SelectTimeRange( e.DateTime - TimeSpan.FromMinutes( 3 ), e.DateTime + TimeSpan.FromMinutes( 3 ) );
+		Charts.SelectTimeRange( e.DateTime - TimeSpan.FromMinutes( 2 ), e.DateTime + TimeSpan.FromMinutes( 2 ) );
 	}
 
 	private void DetailTypes_OnSelectionChanged( object? sender, SelectionChangedEventArgs e )
@@ -430,6 +412,6 @@ public partial class DailyReportView : UserControl
 		Charts.SelectTimeRange( dateTime - TimeSpan.FromMinutes( 2 ), dateTime + TimeSpan.FromMinutes( 2 ) );
 	}
 
-	#endregion 
+	#endregion
 }
 

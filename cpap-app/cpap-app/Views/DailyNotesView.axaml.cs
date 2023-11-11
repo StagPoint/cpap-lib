@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.ObjectModel;
+using System.Diagnostics;
 
 using Avalonia;
 using Avalonia.Controls;
@@ -48,6 +50,10 @@ public partial class DailyNotesView : UserControl
 		if( change.Property.Name == nameof( DataContext ) )
 		{
 			_lastLoaded = Environment.TickCount;
+
+			if( change.NewValue is DailyReport day )
+			{
+			}
 		}
 	}
 

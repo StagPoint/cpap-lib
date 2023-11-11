@@ -2,7 +2,7 @@
 
 namespace cpaplib
 {
-	public class Annotation
+	public class Annotation : IComparable<Annotation>
 	{
 		#region Public properties
 
@@ -47,5 +47,14 @@ namespace cpaplib
 		}
 
 		#endregion
+		
+		#region IComparable interface implementation 
+		
+		public int CompareTo( Annotation other )
+		{
+			return StartTime.CompareTo( other.StartTime );
+		}
+
+		#endregion 
 	}
 }

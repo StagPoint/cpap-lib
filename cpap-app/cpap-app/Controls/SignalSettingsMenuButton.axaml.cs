@@ -24,7 +24,8 @@ public partial class SignalSettingsMenuButton : UserControl
 {
 	#region Events 
 	
-	public static readonly RoutedEvent<ChartConfigurationChangedEventArgs> ChartConfigurationChangedEvent = RoutedEvent.Register<SignalSettingsMenuButton, ChartConfigurationChangedEventArgs>( nameof( ChartConfigurationChanged ), RoutingStrategies.Bubble );
+	public static readonly RoutedEvent<ChartConfigurationChangedEventArgs> ChartConfigurationChangedEvent = 
+		RoutedEvent.Register<SignalSettingsMenuButton, ChartConfigurationChangedEventArgs>( nameof( ChartConfigurationChanged ), RoutingStrategies.Bubble );
 
 	public static void AddChartConfigurationChangedHandler( IInputElement element, EventHandler<ChartConfigurationChangedEventArgs> handler )
 	{

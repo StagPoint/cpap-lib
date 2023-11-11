@@ -85,7 +85,7 @@ public partial class DailyEventsListView : UserControl
 
 		var timeSelectedEventArgs = new DateTimeRoutedEventArgs
 		{
-			RoutedEvent = DailyReportView.TimeSelectedEvent,
+			RoutedEvent = TimeSelection.TimeSelectedEvent,
 			Source      = sender,
 			DateTime    = evt.StartTime,
 		};
@@ -94,7 +94,7 @@ public partial class DailyEventsListView : UserControl
 
 		var eventTypeEventArgs = new ReportedEventTypeArgs
 		{
-			RoutedEvent = DailyReportView.ReportedEventTypeSelectedEvent,
+			RoutedEvent = EventSelection.ReportedEventTypeSelectedEvent,
 			Source      = sender,
 			Type        = evt.Type
 		};

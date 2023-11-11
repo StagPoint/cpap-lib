@@ -218,6 +218,7 @@ namespace cpap_db
 			
 			day.Events.Sort();
 			day.Sessions.Sort();
+			day.Annotations.Sort();
 
 			return day;
 		}

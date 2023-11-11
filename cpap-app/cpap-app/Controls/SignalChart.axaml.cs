@@ -21,6 +21,8 @@ using cpap_app.Styling;
 using cpap_app.Helpers;
 using cpap_app.ViewModels;
 
+using cpap_db;
+
 using cpaplib;
 
 using FluentAvalonia.UI.Controls;
@@ -29,6 +31,7 @@ using ScottPlot;
 using ScottPlot.Avalonia;
 using ScottPlot.Plottable;
 
+using Annotation = cpaplib.Annotation;
 using Brushes = Avalonia.Media.Brushes;
 using Color = System.Drawing.Color;
 using Point = Avalonia.Point;
@@ -151,6 +154,7 @@ public partial class SignalChart : UserControl
 	private SignalChartConfiguration? _chartConfiguration;
 	private CustomChartStyle          _chartStyle;
 	private DailyReport?              _day                = null;
+	private bool                      _hasInputFocus      = false;
 	private bool                      _hasDataAvailable   = false;
 	private bool                      _chartInitialized   = false;
 	private double                    _selectionStartTime = 0;
@@ -190,6 +194,9 @@ public partial class SignalChart : UserControl
 		LostFocus           += OnLostFocus;
 		
 		Chart.AxesChanged     += OnAxesChanged;
+
+		// TODO: Replace the default ScottPlot context menu with a bespoke version 
+		//Chart.ContextMenu = null;
 		
 		ChartLabel.PointerPressed     += ChartLabelOnPointerPressed;
 		ChartLabel.PointerReleased    += ChartLabelOnPointerReleased;
@@ -330,11 +337,15 @@ public partial class SignalChart : UserControl
 	private void OnLostFocus( object? sender, RoutedEventArgs e )
 	{
 		FocusAdornerBorder.Classes.Remove( "FocusAdorner" );
+		_hasInputFocus = false;
+		
+		CancelSelectionMode();
 	}
 	
 	private void OnGotFocus( object? sender, GotFocusEventArgs e )
 	{
 		FocusAdornerBorder.Classes.Add( "FocusAdorner" );
+		_hasInputFocus = true;
 	}
 
 	private void OnChartConfigurationChanged( object? sender, ChartConfigurationChangedEventArgs e )
@@ -432,7 +443,7 @@ public partial class SignalChart : UserControl
 
 	private void OnPointerEntered( object? sender, PointerEventArgs e )
 	{
-		this.Focus();
+		//this.Focus();
 		
 		if( _day == null || !IsEnabled )
 		{
@@ -463,7 +474,7 @@ public partial class SignalChart : UserControl
 		// Don't attempt to do anything if some of the necessary objects have not yet been created.
 		// This was added mostly to prevent exceptions from being thrown in the previewer in design mode.
 		// ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
-		if( Chart.Configuration == null || _selectionSpan == null )
+		if( ChartConfiguration == null || _selectionSpan == null )
 		{
 			return;
 		}
@@ -491,7 +502,13 @@ public partial class SignalChart : UserControl
 		// Don't attempt to do anything if some of the necessary objects have not yet been created.
 		// This was added mostly to prevent exceptions from being thrown in the previewer in design mode.
 		// ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
-		if( Chart.Configuration == null || _selectionSpan == null )
+		if( ChartConfiguration == null || _selectionSpan == null )
+		{
+			return;
+		}
+
+		// First click within a Signal graph should focus the control, and nothing else
+		if( !_hasInputFocus )
 		{
 			return;
 		}
@@ -721,9 +738,10 @@ public partial class SignalChart : UserControl
 			(_selectionStartTime, _selectionEndTime) = (_selectionEndTime, _selectionStartTime);
 		}
 
-		var newAnnotation = new AnnotationViewModel
+
+		var annotationVM = new AnnotationViewModel
 		{
-			Signal     = ChartConfiguration.SignalName,
+			Signal     = ChartConfiguration.Title,
 			StartTime  = _day.RecordingStartTime.AddSeconds( _selectionStartTime ),
 			EndTime    = _day.RecordingStartTime.AddSeconds( _selectionEndTime ),
 			ShowMarker = (_selectionEndTime - _selectionStartTime) <= 30,
@@ -732,11 +750,13 @@ public partial class SignalChart : UserControl
 		
 		var input = new AnnotationView()
 		{
-			DataContext = newAnnotation
+			DataContext = annotationVM
 		};
 
-		input.cboSignalName.ItemsSource  = typeof( SignalNames ).GetAllPublicConstantValues<string>();
-		input.cboSignalName.SelectedItem = ChartConfiguration.SignalName;
+		var allSignalConfigurations = SignalChartConfigurationStore.GetSignalConfigurations().Select( x => x.Title ).ToList();
+
+		input.cboSignalName.ItemsSource  = allSignalConfigurations;
+		input.cboSignalName.SelectedItem = ChartConfiguration.Title;
 
 		var dialog = new ContentDialog()
 		{
@@ -758,8 +778,22 @@ public partial class SignalChart : UserControl
 		var result = await task;
 		if( result == ContentDialogResult.Primary )
 		{
-			// TODO: Add AnnotationStore or some other entity responsible for saving Annotation objects
+			// TODO: Add AnnotationStore or some other entity responsible for dealing specifically with Annotation storage
+
+			var newAnnotation = (Annotation)annotationVM;
+			
+			// using var db = StorageService.Connect();
+			// db.Insert( newAnnotation, foreignKeyValue: _day.ID );
+			
 			_day.Annotations.Add( newAnnotation );
+
+			RaiseEvent( new AnnotationListEventArgs
+			{
+				Route       = RoutingStrategies.Direct,
+				RoutedEvent = AnnotationList.AnnotationListChangedEvent,
+				Change      = AnnotationListEventType.Added,
+				Annotation  = newAnnotation,
+			} );
 		}
 	}
 
@@ -1405,7 +1439,8 @@ public partial class SignalChart : UserControl
 		TimeMarkerLine.EndPoint   = new Point( mousePosition, dataRect.Bottom + Chart.Plot.XAxis.AxisTicks.MajorTickLength );
 		TimeMarkerLine.IsVisible  = true;
 
-		_selectionStartTime = timeOffset;
+		// TODO: Review why this specific line of code is so important to panning (without it, can't pan with right button, other panning is super slow)
+		_selectionStartTime = _selectionEndTime = timeOffset;
 
 		foreach( var signal in _signals )
 		{

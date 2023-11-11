@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:controls="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
              xmlns:cpaplib="clr-namespace:cpaplib;assembly=cpap-lib"
+             xmlns:controls1="clr-namespace:cpap_app.Controls"
              mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="700"
              x:Class="cpap_app.Views.DailyNotesView"
              x:DataType="cpaplib:DailyReport">
@@ -22,7 +23,7 @@
                     </StackPanel>
                 </Expander.Header>
                 <StackPanel Orientation="Vertical">
-                    <TextBlock>PlaceHolder</TextBlock>
+                    <controls1:AnnotationListView />
                 </StackPanel>
             </Expander>
 

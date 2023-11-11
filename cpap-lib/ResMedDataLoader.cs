@@ -447,8 +447,35 @@ namespace cpaplib
 			day.RecordingEndTime   = lastRecordedTime;
 			day.TotalSleepTime     = TimeSpan.FromSeconds( day.Sessions.Sum( x => x.Duration.TotalSeconds ) );
 
+
+/* Unmerged change from project 'cpap-lib'
+Before:
 			// Calculate statistics (min, avg, median, max, etc) for each Signal
 			CalculateSignalStatistics( day );
+After:
+            // Calculate statistics (min, avg, median, max, etc) for each Signal
+            ResMedDataLoader.CalculateSignalStatistics( day );
+*/
+
+/* Unmerged change from project 'cpap-lib'
+Before:
+			// Calculate statistics (min, avg, median, max, etc) for each Signal
+			CalculateSignalStatistics( day );
+After:
+            // Calculate statistics (min, avg, median, max, etc) for each Signal
+            ResMedDataLoader.CalculateSignalStatistics( day );
+*/
+
+/* Unmerged change from project 'cpap-lib'
+Before:
+			// Calculate statistics (min, avg, median, max, etc) for each Signal
+			CalculateSignalStatistics( day );
+After:
+            // Calculate statistics (min, avg, median, max, etc) for each Signal
+            ResMedDataLoader.CalculateSignalStatistics( day );
+*/
+            // Calculate statistics (min, avg, median, max, etc) for each Signal
+            CalculateSignalStatistics( day );
 			
 			// Generate events that are of interest which are not reported by the ResMed machine
 			GenerateEvents( day );
@@ -668,7 +695,7 @@ namespace cpaplib
 			return events;
 		}
 
-		private void CalculateSignalStatistics( DailyReport day )
+		private static void CalculateSignalStatistics( DailyReport day )
 		{
 			// Determine the maximum sort buffer size we'll need so that we only need to allocate and reuse one buffer.
 			var maxBufferSize = 0;

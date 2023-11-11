@@ -35,7 +35,7 @@ public partial class OximetrySessionsList : UserControl
 			var eventArgs = new DateTimeRangeRoutedEventArgs
 			{
 				Route       = RoutingStrategies.Bubble | RoutingStrategies.Tunnel,
-				RoutedEvent = DailyReportView.TimeRangeSelectedEvent,
+				RoutedEvent = TimeSelection.TimeRangeSelectedEvent,
 				StartTime   = session.StartTime,
 				EndTime     = session.EndTime
 			};

@@ -13,10 +13,18 @@
              ChartBackground="{DynamicResource ControlOnImageFillColorDefaultBrush}"
              ChartBorderColor="{DynamicResource ControlStrokeColorSecondaryBrush}"
              ChartGridLineColor="{DynamicResource TextFillColorSecondaryBrush}"
-             Background="Transparent">
+             Background="{DynamicResource LayerFillColorDefaultBrush}">
     <UserControl.Styles>
         <Style Selector="Border.FocusAdorner">
             <Setter Property="BorderBrush" Value="{DynamicResource AccentFillColorDefaultBrush}" /> 
+        </Style>
+        <Style Selector="Border">
+            <Setter Property="Transitions">
+                <Transitions>
+                    <!-- Apparently BrushTransition is broken and useless -->
+                    <!-- <BrushTransition Property="BorderBrush" Duration="00:00:0.15" /> -->
+                </Transitions>
+            </Setter>
         </Style>
     </UserControl.Styles>
     <Border Name="FocusAdornerBorder" BorderThickness="4 0 0 0" Background="Transparent">
