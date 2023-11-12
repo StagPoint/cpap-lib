@@ -8,43 +8,6 @@
              d:DesignWidth="400"
              d:DesignHeight="450"
              x:DataType="cpaplib:DailyReport">
-    <ListBox Name="lstSessions" Grid.IsSharedSizeScope="True" Margin="0">
-        <ListBox.Styles>
-            <Style Selector="ListBoxItem">
-                <Setter Property="Padding" Value="8,0,8,1"/>
-                <Setter Property="MinHeight" Value="0"/>
-                <Setter Property="MinWidth" Value="0"/>
-                <Setter Property="Margin" Value="-1"/>
-                <Setter Property="CornerRadius" Value="0"/>
-                <Setter Property="Background" Value="Transparent"/>
-            </Style>
-        </ListBox.Styles>
-        <ListBox.ItemTemplate>
-            <DataTemplate DataType="{x:Type cpaplib:Session}">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" SharedSizeGroup="SESSIONS_C0" />
-                        <ColumnDefinition Width="12" />
-                        <ColumnDefinition Width="*" SharedSizeGroup="SESSIONS_C1" />
-                        <ColumnDefinition Width="20" />
-                        <ColumnDefinition Width="*" SharedSizeGroup="SESSIONS_C2" />
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" Text="{Binding StartTime, Mode=OneWay, StringFormat={}{0:d}}"></TextBlock>
-                    <TextBlock Grid.Column="2">
-                        <TextBox.Text>
-                            <MultiBinding StringFormat="{}{0:T} 🠚 {1:T}">
-                                <Binding Path="StartTime" />
-                                <Binding Path="EndTime" />
-                            </MultiBinding>
-                        </TextBox.Text>
-                    </TextBlock>
-                    <TextBlock Grid.Column="4" Text="{Binding Duration, Mode=OneWay}" />
-                </Grid>
-            </DataTemplate>
-        </ListBox.ItemTemplate>
-    </ListBox>
-
-    <!--
     <UserControl.Styles>
         <StyleInclude Source="/Styling/GridStyles.axaml" />
         <Style Selector="Border.SelectionRect">
@@ -53,12 +16,12 @@
     </UserControl.Styles>
     
     <Grid>
-        <ItemsRepeater Name="Repeater">
+        <ItemsRepeater Name="lstSessions">
             <ItemsRepeater.ItemTemplate>
                 <DataTemplate DataType="{x:Type cpaplib:Session}">
                     <Border Classes="SelectionRect" Tapped="lstSessions_Tapped" Tag="{Binding}">
                         
-                        ~1~ 
+                        <!-- 
                         NOTE: We can't use IsSharedSizeScope="True" here, and are forced to use fixed-width columns, because
                         Avalonia apparently has an issue with layouts where because this control often starts out outside of the
                         visible area of a ScrollViewer, the layout engine enters an infinite layout cycle and brings the application
@@ -67,8 +30,8 @@
                         Similarly, we cannot rely on data binding to set whether a row is visible or not, and must eliminate visible
                         rows in the data model, which is why this control has a different data model than nearly identical controls
                         elsewhere in the application.  
-`                       @1@ 
-                        <Grid RowDefinitions="20" ColumnDefinitions="85,190,85">
+`                       --> 
+                        <Grid RowDefinitions="22" ColumnDefinitions="85,190,85">
                             <TextBlock Grid.Column="0" Text="{Binding StartTime, Mode=OneWay, StringFormat={}{0:d}}"
                                        TextWrapping="NoWrap" />
                             <TextBlock Grid.Column="1" TextWrapping="NoWrap">
@@ -87,6 +50,5 @@
             </ItemsRepeater.ItemTemplate>
         </ItemsRepeater>
     </Grid>
-    -->
     
 </UserControl>

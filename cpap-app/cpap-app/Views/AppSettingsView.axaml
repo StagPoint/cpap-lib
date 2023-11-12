@@ -82,7 +82,7 @@
                         <StackPanel Spacing="20">
                             <Border BorderThickness="1" BorderBrush="{DynamicResource SurfaceStrokeColorDefaultBrush}"
                                     Background="{DynamicResource SolidBackgroundFillColorBaseBrush}" Padding="8">
-                                <StackPanel Spacing="12">
+                                <StackPanel Spacing="12" Grid.IsSharedSizeScope="True">
                                     <TextBlock Text="Dependencies" Theme="{DynamicResource SubtitleTextBlockStyle}" />
                                     <TextBlock TextWrapping="Wrap"
                                                Foreground="{DynamicResource TextFillColorPrimaryBrush}">
@@ -92,10 +92,11 @@
                                                Foreground="{DynamicResource TextFillColorPrimaryBrush}">
                                         This application uses several third-party open source libraries, including:
                                     </TextBlock>
-                                    <ItemsRepeater Name="Dependencies" Grid.IsSharedSizeScope="True">
+                                    <ItemsRepeater Name="Dependencies">
                                         <ItemsRepeater.ItemTemplate>
                                             <DataTemplate DataType="{x:Type views:DependencyInfoItem}">
-                                                <Grid>
+                                                <!-- NOTE: The fixed width and height are assigned to compensate for bugs in ItemsRepeater that lead to layout cycles -->
+                                                <Grid Height="40" Width="600" HorizontalAlignment="Left">
                                                     <Grid.ColumnDefinitions>
                                                         <ColumnDefinition Width="Auto" SharedSizeGroup="DependenciesC0" />
                                                         <ColumnDefinition Width="Auto" SharedSizeGroup="DependenciesC1" />

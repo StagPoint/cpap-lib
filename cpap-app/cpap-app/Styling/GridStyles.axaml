@@ -9,6 +9,7 @@
     <Style Selector="Border.SelectionRect">
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Padding" Value="2 0 0 2" />
+        <Setter Property="Height" Value="22" />
     </Style>
     <Style Selector="Border.SelectionRect > Grid > TextBlock">
         <Setter Property="IsHitTestVisible" Value="False" />

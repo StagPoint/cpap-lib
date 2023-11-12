@@ -1521,7 +1521,7 @@ public partial class SignalChart : UserControl
 			PlotSignal( Chart, day, ChartConfiguration.SignalName, ChartConfiguration.AxisMinValue, ChartConfiguration.AxisMaxValue );
 			RefreshPlotFill( false );
 
-			// TODO: This should come *before* ChartSignal(), but relies on the axis limits being finalized first. Fix that.
+			// TODO: This should come *before* PlotSignal(), but relies on the axis limits being finalized first. Fix that.
 			CreateEventMarkers( day );
 			CreateAnnotationMarkers( day );
 
