@@ -11,7 +11,6 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Styling;
-using Avalonia.Threading;
 
 using cpap_app.Configuration;
 using cpap_app.Controls;
@@ -21,17 +20,12 @@ using cpap_app.Styling;
 using cpap_app.Helpers;
 using cpap_app.ViewModels;
 
-using cpap_db;
-
 using cpaplib;
-
-using FluentAvalonia.UI.Controls;
 
 using ScottPlot;
 using ScottPlot.Avalonia;
 using ScottPlot.Plottable;
 
-using Annotation = cpaplib.Annotation;
 using Brushes = Avalonia.Media.Brushes;
 using Color = System.Drawing.Color;
 using Point = Avalonia.Point;
@@ -168,9 +162,10 @@ public partial class SignalChart : UserControl
 	private HSpan          _hoverMarkerSpan;
 	private ReportedEvent? _hoverEvent = null;
 
-	private List<IPlottable>    _visualizations = new();
-	private List<IPlottable>    _eventMarkers   = new();
-	private List<ReportedEvent> _events         = new();
+	private List<IPlottable>    _visualizations    = new();
+	private List<IPlottable>    _eventMarkers      = new();
+	private List<ReportedEvent> _events            = new();
+	private List<IPlottable>    _annotationMarkers = new();
 	
 	private List<Signal>     _signals          = new();
 	private List<SignalPlot> _signalPlots      = new();
@@ -507,12 +502,12 @@ public partial class SignalChart : UserControl
 			return;
 		}
 
-		// First click within a Signal graph should focus the control, and nothing else
-		if( !_hasInputFocus )
+		var point = eventArgs.GetCurrentPoint( this );
+		if( point.Properties.IsMiddleButtonPressed )
 		{
 			return;
 		}
-		
+
 		if( eventArgs.Handled || _interactionMode != GraphInteractionMode.None )
 		{
 			return;
@@ -522,12 +517,6 @@ public partial class SignalChart : UserControl
 		_selectionEndTime   = 0;
 		
 		HideTimeMarker();
-
-		var point = eventArgs.GetCurrentPoint( this );
-		if( point.Properties.IsMiddleButtonPressed )
-		{
-			return;
-		}
 
 		// We will want to do different things depending on where the PointerPressed happens, such 
 		// as within the data area of the graph versus on the chart title, etc. 
@@ -551,6 +540,11 @@ public partial class SignalChart : UserControl
 		}
 		else if( (eventArgs.KeyModifiers & KeyModifiers.Control) != 0 || point.Properties.IsRightButtonPressed )
 		{
+			if( !_hasInputFocus )
+			{
+				Focus();
+			}
+			
 			Chart.Configuration.Quality = ScottPlot.Control.QualityMode.Low;
 
 			_pointerDownPosition   = point.Position;
@@ -728,7 +722,7 @@ public partial class SignalChart : UserControl
 		Chart.RenderRequest();
 	}
 	
-	private async void AddAnnotationForCurrentSelection()
+	private void AddAnnotationForCurrentSelection()
 	{
 		Debug.Assert( ChartConfiguration != null, nameof( ChartConfiguration ) + " != null" );
 		Debug.Assert( _day != null,               nameof( _day ) + " != null" );
@@ -737,53 +731,18 @@ public partial class SignalChart : UserControl
 		{
 			throw new NullReferenceException();
 		}
-
+		
 		if( _selectionEndTime < _selectionStartTime )
 		{
 			(_selectionStartTime, _selectionEndTime) = (_selectionEndTime, _selectionStartTime);
 		}
 
-		var annotationVM = new AnnotationViewModel
-		{
-			Signal     = ChartConfiguration.Title,
-			StartTime  = _day.RecordingStartTime.AddSeconds( _selectionStartTime ),
-			EndTime    = _day.RecordingStartTime.AddSeconds( _selectionEndTime ),
-			ShowMarker = (_selectionEndTime - _selectionStartTime) <= 30,
-			Notes      = "",
-		};
-		
-		var input = new AnnotationView()
-		{
-			DataContext = annotationVM
-		};
+		var startTime = _day.RecordingStartTime.AddSeconds( _selectionStartTime );
+		var endTime   = _day.RecordingStartTime.AddSeconds( _selectionEndTime );
 
-		var allSignalConfigurations = SignalChartConfigurationStore.GetSignalConfigurations().Select( x => x.Title ).ToList();
-
-		input.cboSignalName.ItemsSource  = allSignalConfigurations;
-		input.cboSignalName.SelectedItem = ChartConfiguration.Title;
-
-		var dialog = new ContentDialog()
-		{
-			Title             = "Add new Annotation",
-			PrimaryButtonText = "Save",
-			CloseButtonText   = "Cancel",
-			DefaultButton     = ContentDialogButton.Primary,
-			Content           = input,
-		};
+		dayVM.CreateNewAnnotation( ChartConfiguration.Title, startTime, endTime );
 		
 		CancelSelectionMode();
-
-		var task = dialog.ShowAsync( TopLevel.GetTopLevel( this ) );
-		Dispatcher.UIThread.Post( () =>
-		{
-			input.Notes.Focus();
-		}, DispatcherPriority.Loaded );
-
-		var result = await task;
-		if( result == ContentDialogResult.Primary )
-		{
-			dayVM.AddAnnotation( annotationVM );
-		}
 	}
 
 	private void InitializeVisualizationsMenu()
@@ -1503,6 +1462,12 @@ public partial class SignalChart : UserControl
 
 	private void LoadData( DailyReport day )
 	{
+		if( ReferenceEquals( _day, day ) )
+		{
+			// TODO: Find out why graphs are being loaded twice (only at startup? Not sure, but definitely then at least)
+			Debug.WriteLine( $"Re-loading {day.ReportDate}" );
+		}
+		
 		_day = day;
 		
 		_events.Clear();
@@ -1558,6 +1523,7 @@ public partial class SignalChart : UserControl
 
 			// TODO: This should come *before* ChartSignal(), but relies on the axis limits being finalized first. Fix that.
 			CreateEventMarkers( day );
+			CreateAnnotationMarkers( day );
 
 			_selectionSpan                = Chart.Plot.AddHorizontalSpan( -1, -1, Color.Red.MultiplyAlpha( 0.2f ), null );
 			_selectionSpan.IgnoreAxisAuto = true;
@@ -1719,6 +1685,41 @@ public partial class SignalChart : UserControl
 
 			double tickSpacing = extents / 4;
 			chart.Plot.YAxis.ManualTickSpacing( tickSpacing );
+		}
+	}
+
+	private void CreateAnnotationMarkers( DailyReport day )
+	{
+		Debug.Assert( ChartConfiguration != null, nameof( ChartConfiguration ) + " != null" );
+		
+		_annotationMarkers.Clear();
+
+		var limits = Chart.Plot.GetAxisLimits();
+		var dims   = Chart.Plot.YAxis.Dims;
+		var top    = limits.YMax - dims.UnitsPerPx;
+		var bottom = top - dims.UnitsPerPx * 6;
+
+		foreach( var annotation in day.Annotations )
+		{
+			if( !annotation.ShowMarker || annotation.Signal != ChartConfiguration.Title )
+			{
+				continue;
+			}
+
+			var startOffset = (annotation.StartTime - day.RecordingStartTime).TotalSeconds;
+			var endOffset   = (annotation.EndTime - day.RecordingStartTime).TotalSeconds;
+
+			if( annotation.StartTime == annotation.EndTime )
+			{
+				startOffset -= 0.5;
+				endOffset   += 0.5;
+			}
+			
+			var marker = Chart.Plot.AddRectangle( startOffset, endOffset, bottom, top );
+			marker.Color = Color.Yellow;
+				
+			_annotationMarkers.Add( marker );
+			Chart.Plot.MoveFirst( marker );
 		}
 	}
 	

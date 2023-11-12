@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 
@@ -13,6 +14,7 @@ using Avalonia.Threading;
 using Avalonia.VisualTree;
 
 using cpap_app.Animation;
+using cpap_app.Controls;
 using cpap_app.Events;
 using cpap_app.ViewModels;
 
@@ -77,6 +79,12 @@ public partial class DailyReportView : UserControl
 
 		if( change.Property.Name == nameof( DataContext ) )
 		{
+			if( change.NewValue is DailyReport day and not DailyReportViewModel )
+			{
+				DataContext = WrapDailyReport( day );
+				return;
+			}
+			
 			if( TabFrame.Content is Control control )
 			{
 				control.DataContext = change.NewValue;
@@ -226,7 +234,7 @@ public partial class DailyReportView : UserControl
 		if( day != null )
 		{
 			// Turn the DailyReport into a DailyReportViewModel instead
-			day = new DailyReportViewModel( day );
+			day = WrapDailyReport( day );
 		}
 		
 		DataContext = day;
@@ -246,6 +254,108 @@ public partial class DailyReportView : UserControl
 		}
 	}
 	
+	private DailyReportViewModel WrapDailyReport( DailyReport day )
+	{
+		var viewModel = new DailyReportViewModel( day );
+		viewModel.CreateNewAnnotation = CreateNewAnnotation;
+		viewModel.EditAnnotation      = EditAnnotation;
+
+		return viewModel;
+	}
+	
+	private async void EditAnnotation( Annotation annotation )
+	{
+		var viewModel = DataContext as DailyReportViewModel;
+		Debug.Assert( viewModel != null, $"{nameof(DataContext)} != {nameof( DailyReportViewModel )}" );
+
+		var annotationVM = new AnnotationViewModel( annotation );
+		
+		var input = new AnnotationEditor()
+		{
+			DataContext = annotationVM
+		};
+
+		var allSignalConfigurations = SignalChartConfigurationStore.GetSignalConfigurations().Select( x => x.Title ).ToList();
+
+		input.cboSignalName.ItemsSource  = allSignalConfigurations;
+		input.cboSignalName.SelectedItem = annotation.Signal;
+
+		var dialog = new TaskDialog()
+		{
+			Title            = "Edit Annotation",
+			Content          = input,
+			FooterVisibility = TaskDialogFooterVisibility.Never,
+			Buttons =
+			{
+				TaskDialogButton.OKButton,
+				TaskDialogButton.CancelButton
+			},
+			XamlRoot = (Visual)VisualRoot!,
+		};
+		
+		var task = dialog.ShowAsync();
+		Dispatcher.UIThread.Post( () =>
+		{
+			input.Notes.Focus();
+		}, DispatcherPriority.Loaded );
+
+		var result = await task;
+		if( (TaskDialogStandardResult)result == TaskDialogStandardResult.OK )
+		{
+			viewModel.UpdateAnnotation( annotationVM );
+		}
+	}
+
+	private async void CreateNewAnnotation( string signalName, DateTime startTime, DateTime endTime )
+	{
+		var viewModel = DataContext as DailyReportViewModel;
+		Debug.Assert( viewModel != null, $"{nameof(DataContext)} != {nameof( DailyReportViewModel )}" );
+		
+		var annotationVM = new AnnotationViewModel
+		{
+			Signal     = signalName,
+			StartTime  = startTime,
+			EndTime    = endTime,
+			ShowMarker = (endTime - startTime).TotalSeconds <= 30,
+			Notes      = "",
+		};
+		
+		var input = new AnnotationEditor()
+		{
+			DataContext = annotationVM
+		};
+
+		var allSignalConfigurations = SignalChartConfigurationStore.GetSignalConfigurations().Select( x => x.Title ).ToList();
+
+		input.cboSignalName.ItemsSource  = allSignalConfigurations;
+		input.cboSignalName.SelectedItem = signalName;
+
+		var dialog = new TaskDialog()
+		{
+			Title            = "Add new Annotation",
+			Content          = input,
+			FooterVisibility = TaskDialogFooterVisibility.Never,
+			Buttons =
+			{
+				TaskDialogButton.OKButton,
+				TaskDialogButton.CancelButton
+			},
+			XamlRoot = (Visual)VisualRoot!,
+		};
+		
+		var task = dialog.ShowAsync();
+		Dispatcher.UIThread.Post( () =>
+		{
+			input.Notes.Focus();
+		}, DispatcherPriority.Loaded );
+
+		var result = await task;
+		if( (TaskDialogStandardResult)result == TaskDialogStandardResult.OK )
+		{
+			viewModel.AddAnnotation( annotationVM );
+		}
+	}
+
 	private void BtnLastDay_OnClick( object? sender, RoutedEventArgs e )
 	{
 		DateSelector.SelectedDate = _datesWithData[ ^1 ];
@@ -266,8 +376,13 @@ public partial class DailyReportView : UserControl
 			DateSelector.SelectedDate = _datesWithData.Where( x => x.Date > day.ReportDate.Date ).Min();
 		}
 	}
+
+	private void OnSignalSelected( object? sender, SignalSelectionArgs eventArgs )
+	{
+		Charts.SelectSignal( eventArgs.SignalName );
+	}
 	
-	private void DailyReportView_OnReportedEventTypeSelected( object? sender, ReportedEventTypeArgs eventArgs )
+	private void OnReportedEventTypeSelected( object? sender, ReportedEventTypeArgs eventArgs )
 	{
 		DetailTypes.SelectedItem = TabEvents;
 		

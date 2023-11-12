@@ -10,9 +10,10 @@
              x:Class="cpap_app.Views.DailyReportView"
              x:DataType="cpaplib:DailyReport"
              Background="{DynamicResource LayerFillColorDefaultBrush}"
+             events:SignalSelection.SignalSelected="OnSignalSelected"
              events:TimeSelection.TimeSelected="OnTimeSelected"
              events:TimeSelection.TimeRangeSelected="OnTimeRangeSelected"
-             events:EventSelection.ReportedEventTypeSelected="DailyReportView_OnReportedEventTypeSelected"
+             events:EventSelection.EventTypeSelected="OnReportedEventTypeSelected"
              views:DailySessionsList.SessionSelected="OnTimeRangeSelected">
     <Grid>
         <Grid.ColumnDefinitions>

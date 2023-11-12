@@ -3,9 +3,10 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:cpaplib="clr-namespace:cpaplib;assembly=cpap-lib"
+             xmlns:viewModels="clr-namespace:cpap_app.ViewModels"
              mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="450"
              x:Class="cpap_app.Controls.AnnotationListView"
-             x:DataType="cpaplib:DailyReport">
+             x:DataType="viewModels:DailyReportViewModel">
     <UserControl.Styles>
         <StyleInclude Source="/Styling/GridStyles.axaml" />
     </UserControl.Styles>
@@ -36,12 +37,10 @@
             </ItemsRepeater.Styles>
             <ItemsRepeater.ItemTemplate>
                 <DataTemplate DataType="{x:Type cpaplib:Annotation}">
-                    <Border Classes="SelectionRect">
+                    <Border Classes="SelectionRect" DoubleTapped="Row_OnDoubleTapped" Tapped="Row_OnTapped" Tag="{Binding}" ToolTip.Tip="{Binding Notes}">
                         <Border.ContextFlyout>
                             <MenuFlyout>
-                                <MenuItem Header="View" Tag="{Binding}" />
-                                <Separator />
-                                <MenuItem Header="Edit" Tag="{Binding}" />
+                                <MenuItem Header="Edit" Tag="{Binding}" Click="Edit_OnTapped" />
                                 <MenuItem Header="Delete" Tag="{Binding}" Click="Delete_OnTapped" />
                             </MenuFlyout>
                         </Border.ContextFlyout>
@@ -53,7 +52,7 @@
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Text="{Binding StartTime, StringFormat={}{0:h\:mm\:ss tt}}" />
                             <TextBlock Grid.Column="1" TextWrapping="NoWrap" MaxLines="1" Text="{Binding Signal}" />
-                            <TextBlock Grid.Column="2" TextWrapping="NoWrap" MaxLines="1" Text="{Binding Notes}" />
+                            <TextBlock Grid.Column="2" TextWrapping="NoWrap" MaxLines="1" Text="{Binding Notes}"/>
                         </Grid>
                     </Border>
                 </DataTemplate>

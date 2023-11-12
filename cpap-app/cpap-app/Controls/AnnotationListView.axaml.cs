@@ -9,8 +9,6 @@ using Avalonia.Interactivity;
 using cpap_app.Events;
 using cpap_app.ViewModels;
 
-using cpap_db;
-
 using cpaplib;
 
 namespace cpap_app.Controls;
@@ -32,23 +30,10 @@ public partial class AnnotationListView : UserControl
 
 		if( change.Property.Name == nameof( DataContext ) )
 		{
-			if( change.NewValue is DailyReportViewModel vm )
-			{
-				_day                  =  vm;
-				vm.AnnotationsChanged += VmOnAnnotationsChanged;
-			}
-			else
-			{
-				_day = null;
-			}
+			_day = change.NewValue as DailyReportViewModel;
 		}
 	}
 	
-	private void VmOnAnnotationsChanged( object? sender, AnnotationListEventArgs e )
-	{
-		Debug.WriteLine( $"Annotations list changed: {e.Change}" );
-	}
-
 	private void Item_OnTapped( object? sender, TappedEventArgs e )
 	{
 		Debug.WriteLine( sender  );
@@ -56,21 +41,70 @@ public partial class AnnotationListView : UserControl
 
 	private void Delete_OnTapped( object? sender, RoutedEventArgs routedEventArgs )
 	{
+		Debug.Assert( _day != null, nameof( _day ) + " != null" );
+		
 		if( routedEventArgs.Source is MenuItem { Tag: Annotation annotation } )
 		{
-			if( DataContext is DailyReport day )
-			{
-				using var db = StorageService.Connect();
-				if( db.Delete( annotation ) )
-				{
-					day.Annotations.Remove( annotation );
-
-					// TODO: This code is awful. Look for a way to update a "Header grid plus ItemsRepeater grid rows" layout without doing this. 
-					DataContext = null;
-					DataContext = day;
-				}
-			}
+			_day.DeleteAnnotation( annotation );
 		}
+	}
+	
+	private void Row_OnDoubleTapped( object? sender, TappedEventArgs e )
+	{
+		Debug.Assert( _day != null, nameof( _day ) + " != null" );
+
+		if( e.Source is not Control { Tag: Annotation annotation } )
+		{
+			throw new InvalidCastException( $"Expected a {nameof( Control )}.{nameof( Control.Tag )} property that was assigned a {nameof( Annotation )} value" );
+		}
+
+		ShowAnnotationOnGraph( annotation );
+		_day.EditAnnotation( annotation );
+	}
+	
+	private void Edit_OnTapped( object? sender, RoutedEventArgs e )
+	{
+		Debug.Assert( _day != null, nameof( _day ) + " != null" );
+
+		if( e.Source is not Control { Tag: Annotation annotation } )
+		{
+			throw new InvalidCastException( $"Expected a {nameof( Control )}.{nameof( Control.Tag )} property that was assigned a {nameof( Annotation )} value" );
+		}
+
+		ShowAnnotationOnGraph( annotation );
+		_day.EditAnnotation( annotation );
+	}
+
+	private void Row_OnTapped( object? sender, TappedEventArgs e )
+	{
+		if( e.Source is not Control { Tag: Annotation annotation } )
+		{
+			throw new InvalidCastException( $"Expected a {nameof( Control )}.{nameof( Control.Tag )} property that was assigned a {nameof( Annotation )} value" );
+		}
+
+		ShowAnnotationOnGraph( annotation );
+	}
+	
+	private void ShowAnnotationOnGraph( Annotation annotation )
+	{
+		// Ensure that we show at least the surrounding four minutes
+		var startTime = annotation.StartTime.AddMinutes( -2 );
+		var endTime   = annotation.EndTime.AddMinutes( 2 );
+
+		RaiseEvent( new DateTimeRangeRoutedEventArgs
+		{
+			RoutedEvent = TimeSelection.TimeRangeSelectedEvent,
+			Source      = this,
+			StartTime   = startTime,
+			EndTime     = endTime
+		} );
+
+		RaiseEvent( new SignalSelectionArgs
+		{
+			RoutedEvent = SignalSelection.SignalSelectedEvent,
+			SignalName  = annotation.Signal,
+			Source      = this,
+		} );
 	}
 }
 

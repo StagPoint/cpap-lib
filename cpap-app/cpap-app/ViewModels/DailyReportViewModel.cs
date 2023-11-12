@@ -1,4 +1,6 @@
 ﻿using System;
+using System.ComponentModel;
+using System.Linq;
 using System.Reflection;
 
 using cpap_app.Events;
@@ -9,11 +11,21 @@ using cpaplib;
 
 namespace cpap_app.ViewModels;
 
-public class DailyReportViewModel : DailyReport
+public class DailyReportViewModel : DailyReport, INotifyPropertyChanged
 {
 	#region Events
 
+	public event PropertyChangedEventHandler? PropertyChanged;
+
 	public event EventHandler<AnnotationListEventArgs>? AnnotationsChanged;
+	
+	#endregion 
+	
+	#region Public properties
+
+	public Action<string, DateTime, DateTime> CreateNewAnnotation { get; set; } = CreateNewAnnotation_DEFAULT;
+
+	public Action<Annotation> EditAnnotation { get; set; } = EditAnnotation_DEFAULT;
 	
 	#endregion 
 	
@@ -42,6 +54,9 @@ public class DailyReportViewModel : DailyReport
 		db.Insert( annotation, foreignKeyValue: ID );
 		
 		Annotations.Add( annotation );
+		Annotations.Sort();
+
+		PropertyChanged?.Invoke( this, new PropertyChangedEventArgs( nameof( Annotations ) ) );
 		
 		AnnotationsChanged?.Invoke( this, new AnnotationListEventArgs()
 		{
@@ -50,15 +65,48 @@ public class DailyReportViewModel : DailyReport
 		} );
 	}
 
+	public void UpdateAnnotation( Annotation annotation )
+	{
+		var replaced = Annotations.FirstOrDefault( x => x.AnnotationID == annotation.AnnotationID );
+		if( replaced == null )
+		{
+			throw new InvalidOperationException( $"Could not find and existing {nameof( Annotation )} matching the argument" );
+		}
+
+		using var db = StorageService.Connect();
+
+		if( !db.Update( annotation ) )
+		{
+			throw new Exception( $"Failed to update {annotation}" );
+		}
+		
+		// Replace the annotation with the edited version 
+		if( !ReferenceEquals( replaced, annotation ) )
+		{
+			Annotations.Remove( replaced );
+			Annotations.Add( annotation );
+			Annotations.Sort();
+		}
+
+		PropertyChanged?.Invoke( this, new PropertyChangedEventArgs( nameof( Annotations ) ) );
+		
+		AnnotationsChanged?.Invoke( this, new AnnotationListEventArgs()
+		{
+			Change     = AnnotationListEventType.Changed,
+			Annotation = annotation,
+		} );
+	}
+
 	public void DeleteAnnotation( Annotation annotation )
 	{
 		using var db = StorageService.Connect();
-		if( !db.Delete( annotation, ID ) )
+		if( !db.Delete( annotation ) )
 		{
 			throw new InvalidOperationException( $"Failed to delete {nameof( Annotation )}: {annotation}" );
 		}
 		
 		Annotations.Remove( annotation );
+		Annotations.Sort();
 		
 		AnnotationsChanged?.Invoke( this, new AnnotationListEventArgs()
 		{
@@ -67,5 +115,27 @@ public class DailyReportViewModel : DailyReport
 		} );
 	}
 	
+	public void SaveNotes( string notesText )
+	{
+		this.Notes = notesText;
+		
+		using var db = StorageService.Connect();
+		db.Update( (DailyReport)this );
+	}
+	
+	#endregion
+	
+	#region Private functions
+
+	private static void EditAnnotation_DEFAULT( Annotation annotation )
+	{
+		throw new NullReferenceException( $"Caller attempted to invoke {nameof( EditAnnotation )}, but no delegate has been assigned" );
+	}
+	
+	private static void CreateNewAnnotation_DEFAULT( string arg1, DateTime arg2, DateTime arg3 )
+	{
+		throw new NullReferenceException( $"Caller attempted to invoke {nameof( CreateNewAnnotation )}, but no delegate has been assigned" );
+	}
+
 	#endregion 
 }

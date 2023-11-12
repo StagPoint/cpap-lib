@@ -222,6 +222,20 @@ public partial class SignalChartContainer : UserControl
 	
 	#region Public functions
 
+	public void SelectSignal( string signalName )
+	{
+		Debug.Assert( !_charts.Any( x => x.ChartConfiguration == null ), $"At least one chart does not have a {nameof( SignalChart.ChartConfiguration )} value assigned." );
+		
+		foreach( var chart in _charts )
+		{
+			if( chart.ChartConfiguration!.SignalName == signalName || chart.ChartConfiguration!.Title == signalName )
+			{
+				chart.Focus();
+				return;
+			}
+		}
+	}
+
 	public void ShowEventType( EventType eventType )
 	{
 		Debug.Assert( !_charts.Any( x => x.ChartConfiguration == null ), $"At least one chart does not have a {nameof( SignalChart.ChartConfiguration )} value assigned." );

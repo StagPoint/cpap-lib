@@ -7,9 +7,9 @@ using Avalonia.Markup.Xaml;
 
 namespace cpap_app.Controls;
 
-public partial class AnnotationView : UserControl
+public partial class AnnotationEditor : UserControl
 {
-	public AnnotationView()
+	public AnnotationEditor()
 	{
 		InitializeComponent();
 	}

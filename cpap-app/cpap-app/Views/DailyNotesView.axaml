@@ -23,7 +23,7 @@
                     </StackPanel>
                 </Expander.Header>
                 <StackPanel Orientation="Vertical">
-                    <controls1:AnnotationListView DataContext="{Binding $parent.DataContext}" />
+                    <controls1:AnnotationListView Name="Annotations" />
                 </StackPanel>
             </Expander>
 
@@ -44,6 +44,24 @@
                     </TextBox>
                 </StackPanel>
             </Expander>
+            
+            <Expander
+                ExpandDirection="Down"
+                IsExpanded="True"
+                VerticalAlignment="Top"
+                Margin="0 10 0 0"
+                Padding="10">
+                <Expander.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <controls:SymbolIcon Symbol="Bookmark" FontSize="24" Margin="0 0 10 0" />
+                        <TextBlock Text="Bookmarks" FontSize="16" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                    </StackPanel>
+                </Expander.Header>
+                <StackPanel Orientation="Vertical">
+                    <TextBlock Text="This functionality has not yet been implemented" MaxLines="4" TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorDisabledBrush}"/>
+                </StackPanel>
+            </Expander>
+
         </StackPanel>
     </ScrollViewer>
 </UserControl>

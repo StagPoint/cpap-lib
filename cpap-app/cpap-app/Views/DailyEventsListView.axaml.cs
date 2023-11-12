@@ -94,7 +94,7 @@ public partial class DailyEventsListView : UserControl
 
 		var eventTypeEventArgs = new ReportedEventTypeArgs
 		{
-			RoutedEvent = EventSelection.ReportedEventTypeSelectedEvent,
+			RoutedEvent = EventSelection.EventTypeSelectedEvent,
 			Source      = sender,
 			Type        = evt.Type
 		};

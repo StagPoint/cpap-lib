@@ -14,11 +14,11 @@ public class ReportedEventTypeArgs : RoutedEventArgs
 
 public class EventSelection
 {
-	public static readonly RoutedEvent<ReportedEventTypeArgs> ReportedEventTypeSelectedEvent =
-		RoutedEvent.Register<EventSelection, ReportedEventTypeArgs>( "ReportedEventTypeSelected", RoutingStrategies.Bubble | RoutingStrategies.Tunnel ); 
+	public static readonly RoutedEvent<ReportedEventTypeArgs> EventTypeSelectedEvent =
+		RoutedEvent.Register<EventSelection, ReportedEventTypeArgs>( "EventTypeSelected", RoutingStrategies.Bubble | RoutingStrategies.Tunnel ); 
 
-	public static void AddReportedEventTypeSelectedHandler( IInputElement element, EventHandler<ReportedEventTypeArgs> handler )
+	public static void AddEventTypeSelectedHandler( IInputElement element, EventHandler<ReportedEventTypeArgs> handler )
 	{
-		element.AddHandler( ReportedEventTypeSelectedEvent, handler );
+		element.AddHandler( EventTypeSelectedEvent, handler );
 	}
 }

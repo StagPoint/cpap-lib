@@ -48,7 +48,7 @@ public partial class DailySessionsList : UserControl
 		if( change.NewValue is DailyReport day )
 		{
 			// Filter the day's Sessions to only those that were produced by the CPAP machine
-			Repeater.ItemsSource = day.Sessions.Where( x => x.SourceType == SourceType.CPAP );
+			lstSessions.ItemsSource = day.Sessions.Where( x => x.SourceType == SourceType.CPAP );
 		}
 	}
 

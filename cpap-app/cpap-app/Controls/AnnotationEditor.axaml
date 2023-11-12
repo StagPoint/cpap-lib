@@ -5,8 +5,8 @@
              xmlns:viewModels="clr-namespace:cpap_app.ViewModels"
              mc:Ignorable="d" 
              Width="400" 
-             MinHeight="300"
-             x:Class="cpap_app.Controls.AnnotationView"
+             MinHeight="200"
+             x:Class="cpap_app.Controls.AnnotationEditor"
              x:DataType="viewModels:AnnotationViewModel">
     <UserControl.Styles>
         <Style Selector="#Form > TextBlock">
@@ -40,7 +40,7 @@
         <CheckBox Grid.Column="1" Grid.Row="3" Width="20" Name="ShowMarker" IsChecked="{Binding ShowMarker}" HorizontalAlignment="Left" Margin="0"/>
         
         <TextBlock Grid.Column="0" Grid.Row="5" Text="Notes" HorizontalAlignment="Left" Margin="0 0 0 4" />
-        <TextBox Grid.Column="0" Grid.Row="6" Grid.ColumnSpan="2" Name="Notes" Text="{Binding Notes}" HorizontalAlignment="Stretch" Height="150" Watermark="Use this text entry field to write any notes that you'd like to have saved about the specified time period." TextWrapping="Wrap" AcceptsReturn="True" AcceptsTab="True">
+        <TextBox Grid.Column="0" Grid.Row="6" Grid.ColumnSpan="2" Name="Notes" MaxLength="255" Text="{Binding Notes}" HorizontalAlignment="Stretch" Height="75" Watermark="Use this text entry field to write any notes that you'd like to have saved about the specified time period." TextWrapping="Wrap" AcceptsReturn="True" AcceptsTab="True">
         </TextBox>
     </Grid>
 </UserControl>
