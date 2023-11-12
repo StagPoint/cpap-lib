@@ -419,8 +419,8 @@ public partial class DailyReportView : UserControl
 
 		using var connection = StorageService.Connect();
 		connection.DeletePulseOximetryData( profileID, e.DateTime );
-		
-		DataContext = connection.LoadDailyReport( profileID, e.DateTime );
+
+		DataContext = WrapDailyReport( connection.LoadDailyReport( profileID, e.DateTime ) );
 	}
 
 	#endregion 

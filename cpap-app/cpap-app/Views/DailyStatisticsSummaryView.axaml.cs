@@ -1,6 +1,8 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
 
+using cpap_app.Events;
 using cpap_app.ViewModels;
 
 using cpaplib;
@@ -24,6 +26,19 @@ public partial class DailyStatisticsSummaryView : UserControl
 			{
 				StatsGrid.DataContext = new DailyStatisticsViewModel( day );
 			}
+		}
+	}
+	
+	private void Row_OnTapped( object? sender, TappedEventArgs e )
+	{
+		if( e.Source is Control { Tag: SignalStatistics stats } )
+		{
+			RaiseEvent( new SignalSelectionArgs
+			{
+				RoutedEvent = SignalSelection.SignalSelectedEvent,
+				Source      = this,
+				SignalName  = stats.SignalName,
+			} );
 		}
 	}
 }

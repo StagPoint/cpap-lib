@@ -417,18 +417,17 @@ public partial class MainView : UserControl
 		}
 		else
 		{
-			using var db = StorageService.Connect();
-					
 			var profileID = ActiveUserProfile.UserProfileID;
 
 			switch( NavFrame.Content )
 			{
 				case DailyReportView { DataContext: DailyReport dailyReport } dailyReportView:
+					// TODO: Because DailyReportView has its own flow for loading a DailyReport, this leaves open the possibility of bypassing things like event subscription, etc.
 					dailyReportView.ActiveUserProfile = ActiveUserProfile;
-					dailyReportView.DataContext       = db.LoadDailyReport( profileID, dailyReport.ReportDate.Date );
+					dailyReportView.DataContext       = LoadDailyReport( profileID, dailyReport.ReportDate.Date );
 					break;
 				case HomeView homeView:
-					homeView.DataContext = db.LoadDailyReport( profileID, db.GetMostRecentStoredDate( profileID ) );
+					homeView.DataContext = LoadDailyReport( profileID, null );
 					break;
 			}
 		}
@@ -436,10 +435,8 @@ public partial class MainView : UserControl
 
 	private void HandleLoadDateRequest( object? sender, DateTimeRoutedEventArgs e )
 	{
-		using var db = StorageService.Connect();
-						
-		var day = db.LoadDailyReport( ActiveUserProfile.UserProfileID, e.DateTime );
-		DataContext = day;
+		var day = LoadDailyReport( ActiveUserProfile.UserProfileID, e.DateTime );
+		DataContext = new DailyReportViewModel( day );
 
 		NavView.SelectedItem = navDailyReport;
 	}
@@ -571,12 +568,11 @@ public partial class MainView : UserControl
 
 					if( mostRecentDay != null )
 					{
-						using var store = StorageService.Connect();
-
 						var profileID = ActiveUserProfile.UserProfileID;
 
 						//NavView.SelectedItem = navDailyReport;
-						DataContext = store.LoadDailyReport( profileID, mostRecentDay.Value );
+						// TODO: Because DailyReportView has its own flow for loading a DailyReport, this leaves open the possibility of bypassing things like event subscription, etc.
+						DataContext = LoadDailyReport( profileID, mostRecentDay.Value );
 					}
 					else
 					{
@@ -593,11 +589,20 @@ public partial class MainView : UserControl
 		td.XamlRoot = (Visual)VisualRoot!;
 		await td.ShowAsync();	
 	}
-	
+
 	#endregion 
 	
 	#region Private functions
 
+	private static DailyReport LoadDailyReport( int profileId, DateTime? date )
+	{
+		using var store = StorageService.Connect();
+
+		var day = store.LoadDailyReport( profileId, date ?? store.GetMostRecentStoredDate( profileId ) );
+
+		return day;
+	}
+	
 	private void LoadTabPage( Control page, NavigationTransitionInfo? transition = null )
 	{
 		transition ??= new FadeNavigationTransitionInfo();

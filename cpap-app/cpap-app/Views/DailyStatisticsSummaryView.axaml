@@ -72,7 +72,7 @@
         <ItemsControl Name="Repeater" Grid.Row="1" ItemsSource="{Binding Statistics}" Margin="0 2 0 0">
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
-                    <Border Classes="SelectionRect">
+                    <Border Classes="SelectionRect" Tapped="Row_OnTapped" Tag="{Binding}">
                         <Grid Classes="TableData">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" SharedSizeGroup="DailyStatsC0" />

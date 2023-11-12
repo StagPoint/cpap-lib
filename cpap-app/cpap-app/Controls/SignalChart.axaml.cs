@@ -329,6 +329,26 @@ public partial class SignalChart : UserControl
 	
 	#region Event Handlers
 
+	private void OnAnnotationsChanged( object? sender, AnnotationListEventArgs e )
+	{
+		Debug.Assert( _day != null,               nameof( _day ) + " != null" );
+		Debug.Assert( ChartConfiguration != null, nameof( ChartConfiguration ) + " != null" );
+
+		if( _annotationMarkers.Count == 0 && !_day.Annotations.Any( x => x.Signal == ChartConfiguration.Title ) )
+		{
+			return;
+		}
+		
+		foreach( var marker in _annotationMarkers )
+		{
+			Chart.Plot.Remove( marker );	
+		}
+
+		CreateAnnotationMarkers( _day );
+		
+		Chart.Render();
+	}
+
 	private void OnLostFocus( object? sender, RoutedEventArgs e )
 	{
 		FocusAdornerBorder.Classes.Remove( "FocusAdorner" );
@@ -1462,6 +1482,13 @@ public partial class SignalChart : UserControl
 
 	private void LoadData( DailyReport day )
 	{
+		Debug.Assert( day != null, $"{nameof( day )} == null" );
+		
+		if( day is not DailyReportViewModel viewModel )
+		{
+			throw new InvalidOperationException( $"Expected a {nameof( DailyReportViewModel )} instance" );
+		}
+
 		if( ReferenceEquals( _day, day ) )
 		{
 			// TODO: Find out why graphs are being loaded twice (only at startup? Not sure, but definitely then at least)
@@ -1469,6 +1496,9 @@ public partial class SignalChart : UserControl
 		}
 		
 		_day = day;
+		
+		// Subscribe to events that allow us to keep everything synchronized with the rest of the User Interface
+		viewModel.AnnotationsChanged += OnAnnotationsChanged;
 		
 		_events.Clear();
 
