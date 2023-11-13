@@ -22,12 +22,18 @@
         <ListBox.ItemTemplate>
             <DataTemplate DataType="{x:Type cpaplib:Session}">
                 <Grid>
+                    <Grid.ContextFlyout>
+                        <MenuFlyout>
+                            <MenuItem Header="View Details" Tag="{Binding}" Click="ViewDetails_OnTapped" />
+                            <MenuItem Header="Delete" Tag="{Binding}" Click="Delete_OnTapped" />
+                        </MenuFlyout>
+                    </Grid.ContextFlyout>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" SharedSizeGroup="SPO2_C0" />
+                        <ColumnDefinition Width="Auto" SharedSizeGroup="SPO2_C0" />
                         <ColumnDefinition Width="12" />
                         <ColumnDefinition Width="*" SharedSizeGroup="SPO2_C1" />
                         <ColumnDefinition Width="20" />
-                        <ColumnDefinition Width="*" SharedSizeGroup="SPO2_C2" />
+                        <ColumnDefinition Width="Auto" SharedSizeGroup="SPO2_C2" />
                     </Grid.ColumnDefinitions>
                     <TextBlock Grid.Column="0" Text="{Binding StartTime, Mode=OneWay, StringFormat={}{0:d}}"></TextBlock>
                     <TextBlock Grid.Column="2">

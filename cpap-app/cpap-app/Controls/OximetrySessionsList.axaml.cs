@@ -2,6 +2,7 @@
 
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 
 using cpap_app.Events;
@@ -32,18 +33,38 @@ public partial class OximetrySessionsList : UserControl
 	{
 		if( lstSessions.SelectedItem is Session session )
 		{
-			var eventArgs = new DateTimeRangeRoutedEventArgs
+			var timeRangeEventArgs = new DateTimeRangeRoutedEventArgs
 			{
 				Route       = RoutingStrategies.Bubble | RoutingStrategies.Tunnel,
 				RoutedEvent = TimeSelection.TimeRangeSelectedEvent,
 				StartTime   = session.StartTime,
-				EndTime     = session.EndTime
+				EndTime     = session.EndTime,
+				Source      = this,
 			};
 			
-			RaiseEvent( eventArgs  );
+			RaiseEvent( timeRangeEventArgs  );
+
+			var signalEventArgs = new SignalSelectionArgs
+			{
+				RoutedEvent = SignalSelection.SignalSelectedEvent,
+				Source      = this,
+				SignalName  = SignalNames.SpO2,
+			};
+
+			RaiseEvent( signalEventArgs );
 			
 			lstSessions.SelectedItem = null;
 		}
+	}
+	
+	private void ViewDetails_OnTapped( object? sender, RoutedEventArgs e )
+	{
+		//throw new System.NotImplementedException();
+	}
+	
+	private void Delete_OnTapped( object? sender, RoutedEventArgs e )
+	{
+		//throw new System.NotImplementedException();
 	}
 }
 

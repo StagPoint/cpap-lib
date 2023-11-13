@@ -56,7 +56,7 @@ public partial class DailySessionsList : UserControl
 	{
 		if( sender is Border { Tag: Session session } )
 		{
-			var eventArgs = new DateTimeRangeRoutedEventArgs
+			var timeRangeEventArgs = new DateTimeRangeRoutedEventArgs
 			{
 				Route       = RoutingStrategies.Bubble,
 				RoutedEvent = SessionSelectedEvent,
@@ -64,8 +64,27 @@ public partial class DailySessionsList : UserControl
 				EndTime     = session.EndTime
 			};
 			
-			RaiseEvent( eventArgs  );
+			RaiseEvent( timeRangeEventArgs  );
+			
+			var signalEventArgs = new SignalSelectionArgs
+			{
+				RoutedEvent = SignalSelection.SignalSelectedEvent,
+				Source      = this,
+				SignalName  = SignalNames.FlowRate,
+			};
+
+			RaiseEvent( signalEventArgs );
 		}
+	}
+	
+	private void ViewDetails_OnTapped( object? sender, RoutedEventArgs e )
+	{
+		//throw new NotImplementedException();
+	}
+	
+	private void Delete_OnTapped( object? sender, RoutedEventArgs e )
+	{
+		//throw new NotImplementedException();
 	}
 }
 

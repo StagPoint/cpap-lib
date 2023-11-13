@@ -109,7 +109,8 @@ public static class SignalChartConfigurationStore
 				
 				case SignalNames.FlowLimit:
 					config.ShowStepped  = true;
-					config.BaselineHigh = 0.3;
+					config.BaselineLow  = 0.25;
+					config.BaselineHigh = 0.5;
 					config.DisplayedEvents = new List<EventType>()
 					{
 						EventType.FlowLimitation
