@@ -45,6 +45,7 @@
                 </StackPanel>
             </Expander>
             
+            <!--
             <Expander
                 ExpandDirection="Down"
                 IsExpanded="True"
@@ -61,6 +62,7 @@
                     <TextBlock Text="This functionality has not yet been implemented" MaxLines="4" TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorDisabledBrush}"/>
                 </StackPanel>
             </Expander>
+            -->
 
         </StackPanel>
     </ScrollViewer>

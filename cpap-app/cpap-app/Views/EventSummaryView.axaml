@@ -31,7 +31,7 @@
 
         <!-- Group Indexes -->
         <Grid IsVisible="{Binding Indexes.Count}" Margin="0 0 0 10">
-            <ItemsRepeater ItemsSource="{Binding Indexes}">
+            <ItemsRepeater ItemsSource="{Binding Indexes}" VerticalCacheLength="100">
                 <ItemsRepeater.ItemTemplate>
                     <DataTemplate DataType="{x:Type viewModels:EventGroupSummary}">
                         <Grid RowDefinitions="Auto" Classes="EventGroup">
@@ -71,7 +71,7 @@
         </Border>
 
         <!-- Events -->
-        <ItemsRepeater ItemsSource="{Binding Items}" Margin="0 2 0 0">
+        <ItemsRepeater ItemsSource="{Binding Items}" Margin="0 2 0 0" VerticalCacheLength="100">
             <ItemsRepeater.Styles>
                 <Style Selector="TextBlock">
                     <Setter Property="IsHitTestVisible" Value="False" />

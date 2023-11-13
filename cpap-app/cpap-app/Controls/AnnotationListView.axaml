@@ -29,7 +29,7 @@
         </Border>
         
         <!-- annotations list -->
-        <ItemsRepeater Name="AnnotationsList" ItemsSource="{Binding Annotations}" Margin="0 2 0 0">
+        <ItemsRepeater Name="AnnotationsList" ItemsSource="{Binding Annotations}" Margin="0 2 0 0" VerticalCacheLength="100">
             <ItemsRepeater.Styles>
                 <Style Selector="TextBlock">
                     <Setter Property="IsHitTestVisible" Value="False" />

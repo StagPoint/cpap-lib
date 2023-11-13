@@ -1,5 +1,7 @@
-﻿using Avalonia.Controls;
+﻿using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Avalonia.Threading;
 using Avalonia.VisualTree;
 
 using cpaplib;
@@ -15,7 +17,7 @@ public partial class DailyDetailsView : UserControl
 	{
 		InitializeComponent();
 	}
-	
+
 	private async void ReimportCurrentDate( object? sender, RoutedEventArgs e )
 	{
 		// TODO: Implement "Re-import this date" functionality

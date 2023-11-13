@@ -53,7 +53,7 @@
                     <TextBlock Grid.Column="2" Grid.Row="0" Text="Total" />
                 </Grid>
             </Border>
-            <ItemsRepeater ItemsSource="{Binding Groupings}" Margin="0 2 0 0">
+            <ItemsRepeater ItemsSource="{Binding Groupings}" Margin="0 2 0 0" VerticalCacheLength="100">
                 <ItemsRepeater.ItemTemplate>
                     <DataTemplate DataType="{x:Type viewModels:DistributionGrouping}">
                         <Border Classes="SelectionRect">

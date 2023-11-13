@@ -24,7 +24,7 @@
             <StackPanel Name="SourcesSummary" x:DataType="viewModels:DailySummaryViewModel"
                         Margin="4 8 0 0">
                 
-                <ItemsRepeater ItemsSource="{Binding Sources}">
+                <ItemsRepeater ItemsSource="{Binding Sources}" VerticalCacheLength="10">
                     <ItemsRepeater.ItemTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal">

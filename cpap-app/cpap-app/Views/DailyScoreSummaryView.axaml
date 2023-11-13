@@ -24,7 +24,7 @@
         </Style>
         <Style Selector="Border.DailyScoreContainer">
             <Style.Animations>
-                <Animation Duration="1.0" Delay="0.01" Easing="SineEaseInOut" FillMode="Forward">
+                <Animation Duration="00:00:00.5" Delay="0.01" Easing="QuarticEaseInOut" FillMode="Forward">
                     <KeyFrame Cue="0%">
                         <Setter Property="Opacity" Value="0.0" />
                     </KeyFrame>
@@ -76,7 +76,7 @@
             <ProgressBar Name="DailyScoreProgress" Opacity="0" MinWidth="30" Width="30"
                          Maximum="{Binding MaximumScore, Mode=OneWay}" Minimum="0"
                          Value="{Binding DailyScore, Mode=OneWay}" Margin="0 0 0 24" Classes="Counter" />
-            <ItemsRepeater Name="DailyGoals" ItemsSource="{Binding Items}" Grid.IsSharedSizeScope="True">
+            <ItemsRepeater Name="DailyGoals" ItemsSource="{Binding Items}" Grid.IsSharedSizeScope="True" VerticalCacheLength="100">
                 <ItemsRepeater.ItemTemplate>
                     <DataTemplate DataType="viewModels:DailyScoreItemViewModel">
                         <controls:DailyScoreItemView />

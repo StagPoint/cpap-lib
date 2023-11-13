@@ -92,7 +92,7 @@
                                                Foreground="{DynamicResource TextFillColorPrimaryBrush}">
                                         This application uses several third-party open source libraries, including:
                                     </TextBlock>
-                                    <ItemsRepeater Name="Dependencies">
+                                    <ItemsRepeater Name="Dependencies" VerticalCacheLength="100">
                                         <ItemsRepeater.ItemTemplate>
                                             <DataTemplate DataType="{x:Type views:DependencyInfoItem}">
                                                 <!-- NOTE: The fixed width and height are assigned to compensate for bugs in ItemsRepeater that lead to layout cycles -->
