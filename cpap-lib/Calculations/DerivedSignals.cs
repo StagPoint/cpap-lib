@@ -18,7 +18,7 @@ namespace cpaplib
 
 			// Compile a list of AHI-relevant events that happened during the Session
 			var events = day.Events.Where( x => x.StartTime >= session.StartTime && x.StartTime + x.Duration <= session.EndTime ).ToList();
-			events.RemoveAll( x => !EventTypes.RespiratoryDisturbance.Contains( x.Type ) );
+			events.RemoveAll( x => !EventTypes.Apneas.Contains( x.Type ) );
 			
 			// Events aren't stored in chronological order, but we want chronological order here
 			events.Sort( ( a, b ) => a.StartTime.CompareTo( b.StartTime ) );

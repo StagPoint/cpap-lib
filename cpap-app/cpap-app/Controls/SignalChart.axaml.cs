@@ -26,6 +26,7 @@ using ScottPlot;
 using ScottPlot.Avalonia;
 using ScottPlot.Plottable;
 
+using Annotation = cpaplib.Annotation;
 using Brushes = Avalonia.Media.Brushes;
 using Color = System.Drawing.Color;
 using Point = Avalonia.Point;
@@ -1449,6 +1450,9 @@ public partial class SignalChart : UserControl
 
 		double highlightDistance = 8.0 / Chart.Plot.XAxis.Dims.PxPerUnit;
 		bool   hoveringOverEvent = false;
+
+		double         closestDistance = double.MaxValue;
+		ReportedEvent? closestEvent    = null;
 		
 		// Find any events the mouse might be hovering over
 		foreach( var flag in _events )
@@ -1459,18 +1463,59 @@ public partial class SignalChart : UserControl
 			
 			if( timeOffset >= startTime - highlightDistance && timeOffset <= endTime + highlightDistance )
 			{
-				EventTooltip.Tag = $"{flag.Type.ToName()}";
-				if( flag.Duration.TotalSeconds > 0 )
+				double distance = Math.Abs( timeOffset - startTime );
+				if( timeOffset >= startTime && timeOffset <= endTime )
 				{
-					EventTooltip.Tag += $" ({FormattedTimespanConverter.FormatTimeSpan( flag.Duration, TimespanFormatType.Short, false )})";
+					distance          = 0;
+					highlightDistance = 0;
 				}
-				
+
+				if( distance <= closestDistance )
+				{
+					closestDistance = distance;
+					closestEvent    = flag;
+				}
+			}
+		}
+
+		if( closestEvent != null )
+		{
+			EventTooltip.Tag = $"{closestEvent.Type.ToName()}";
+			if( closestEvent.Duration.TotalSeconds > 0 )
+			{
+				EventTooltip.Tag += $" ({FormattedTimespanConverter.FormatTimeSpan( closestEvent.Duration, TimespanFormatType.Short, false )})";
+			}
+
+			EventTooltip.IsVisible = true;
+
+			ShowEventHoverMarkers( closestEvent );
+			hoveringOverEvent = true;
+		}
+		else
+		{
+			Annotation? closestAnnotation = null;
+
+			var annotationList = _day.Annotations.Where( x => x.Signal == ChartConfiguration.Title || x.Signal == ChartConfiguration.SignalName );
+			foreach( var annotation in annotationList )
+			{
+				var startTime = (annotation.StartTime - _day.RecordingStartTime).TotalSeconds;
+				var endTime   = (annotation.EndTime - _day.RecordingStartTime).TotalSeconds;
+
+				if( timeOffset >= startTime - highlightDistance && timeOffset <= endTime + highlightDistance )
+				{
+					if( timeOffset >= startTime && timeOffset <= endTime )
+					{
+						highlightDistance = 0;
+					}
+
+					closestAnnotation = annotation;
+				}
+			}
+			
+			if( closestAnnotation != null )
+			{
+				EventTooltip.Tag       = closestAnnotation.Notes.Trim();
 				EventTooltip.IsVisible = true;
-				
-				ShowEventHoverMarkers( flag );
-				hoveringOverEvent = true;
-				
-				break;
 			}
 		}
 
@@ -1723,11 +1768,12 @@ public partial class SignalChart : UserControl
 		Debug.Assert( ChartConfiguration != null, nameof( ChartConfiguration ) + " != null" );
 		
 		_annotationMarkers.Clear();
-
-		var limits = Chart.Plot.GetAxisLimits();
-		var dims   = Chart.Plot.YAxis.Dims;
-		var top    = limits.YMax - dims.UnitsPerPx;
-		var bottom = top - dims.UnitsPerPx * 6;
+		
+		var limits       = Chart.Plot.GetAxisLimits();
+		var dims         = Chart.Plot.YAxis.Dims;
+		var markerHeight = 6 * dims.UnitsPerPx;
+		var top          = limits.YMax - dims.UnitsPerPx;
+		var bottom       = top - markerHeight;
 
 		foreach( var annotation in day.Annotations )
 		{
@@ -1744,8 +1790,23 @@ public partial class SignalChart : UserControl
 				startOffset -= 0.5;
 				endOffset   += 0.5;
 			}
+
+			var currentTop    = top;
+			var currentBottom = bottom;
+
+			foreach( var existingMarker in _annotationMarkers )
+			{
+				var bounds     = existingMarker.GetAxisLimits();
+				var isDisjoint = startOffset > bounds.XMax || endOffset < bounds.XMin;
+				
+				if( !isDisjoint )
+				{
+					currentTop    -= markerHeight;
+					currentBottom -= markerHeight;
+				}
+			}
 			
-			var marker = Chart.Plot.AddRectangle( startOffset, endOffset, bottom, top );
+			var marker = Chart.Plot.AddRectangle( startOffset, endOffset, currentBottom, currentTop );
 			marker.Color = Color.Yellow;
 				
 			_annotationMarkers.Add( marker );

@@ -161,7 +161,7 @@ public static class SignalChartConfigurationStore
 					break;
 				
 				case SignalNames.AHI:
-					config.Title       = "RDI";
+					config.Title       = "AHI";
 					config.ShowStepped = true;
 					config.ScalingMode = AxisScalingMode.AutoFit;
 					config.DisplayedEvents.AddRange( EventTypes.Apneas );

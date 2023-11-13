@@ -12,8 +12,10 @@
     </UserControl.Styles>
     <StackPanel Orientation="Vertical" Grid.IsSharedSizeScope="True">
         
+        <TextBlock IsVisible="{Binding !Annotations.Count}" Text="Create an annotation by selecting the relevant area of a graph and pressing the 'A' key." TextWrapping="Wrap" Theme="{DynamicResource BodyTextBlockStyle}" Foreground="{DynamicResource TextFillColorDisabledBrush}" Margin="0 0 0 10"/>
+
         <!-- Column headers for annotations list -->
-        <Border Classes="ColumnHeader">
+        <Border Classes="ColumnHeader" IsVisible="{Binding Annotations.Count}">
             <Grid RowDefinitions="Auto">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition SharedSizeGroup="AnnotationsListViewC0" />
