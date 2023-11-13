@@ -6,7 +6,7 @@ using cpaplib;
 
 namespace cpap_app.ViewModels;
 
-public class DailyEventsViewModel
+public class EventSummaryViewModel
 {
 	public DailyReport Day        { get; set; }
 	public int         TotalCount { get; set; }
@@ -17,7 +17,7 @@ public class DailyEventsViewModel
 	
 	public List<EventTypeSummary>  Items   { get; set; } = new();
 	
-	public DailyEventsViewModel( DailyReport day )
+	public EventSummaryViewModel( DailyReport day )
 	{
 		Day = day;
 		
@@ -44,7 +44,7 @@ public class DailyEventsViewModel
 		IndexValue = TotalCount / day.TotalSleepTime.TotalHours;
 	}
 
-	public DailyEventsViewModel( DailyReport day, params EventType[] filter )
+	public EventSummaryViewModel( DailyReport day, params EventType[] filter )
 	{
 		Day = day;
 		

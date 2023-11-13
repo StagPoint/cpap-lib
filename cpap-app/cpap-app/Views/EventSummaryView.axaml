@@ -6,7 +6,7 @@
              xmlns:converters="clr-namespace:cpap_app.Converters"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="cpap_app.Views.EventSummaryView"
-             x:DataType="viewModels:DailyEventsViewModel"
+             x:DataType="viewModels:EventSummaryViewModel"
              Name="asDSLSDL">
 
     <UserControl.Resources>

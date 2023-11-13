@@ -7,8 +7,11 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 
 using cpap_app.Events;
+using cpap_app.ViewModels;
 
 using cpaplib;
+
+using FluentAvalonia.UI.Controls;
 
 namespace cpap_app.Views;
 
@@ -56,35 +59,65 @@ public partial class DailySessionsList : UserControl
 	{
 		if( sender is Border { Tag: Session session } )
 		{
-			var timeRangeEventArgs = new DateTimeRangeRoutedEventArgs
-			{
-				Route       = RoutingStrategies.Bubble,
-				RoutedEvent = SessionSelectedEvent,
-				StartTime   = session.StartTime,
-				EndTime     = session.EndTime
-			};
-			
-			RaiseEvent( timeRangeEventArgs  );
-			
-			var signalEventArgs = new SignalSelectionArgs
-			{
-				RoutedEvent = SignalSelection.SignalSelectedEvent,
-				Source      = this,
-				SignalName  = SignalNames.FlowRate,
-			};
-
-			RaiseEvent( signalEventArgs );
+			SelectSession( session );
 		}
 	}
 	
-	private void ViewDetails_OnTapped( object? sender, RoutedEventArgs e )
+	private async void ViewDetails_OnTapped( object? sender, RoutedEventArgs e )
 	{
-		//throw new NotImplementedException();
+		if( DataContext is not DailyReport day )
+		{
+			throw new InvalidOperationException( $"{nameof( DataContext )} does not contain a {nameof( DailyReport )} reference" );
+		}
+		
+		if( e.Source is Control { Tag: Session session } )
+		{
+			// Focus the Session in the user interface
+			SelectSession( session );
+			
+			var viewModel = new SessionDetailsViewModel( day, session );
+
+			var statsView = new DailyStatisticsSummaryView()
+			{
+				DataContext = new DailyStatisticsViewModel( viewModel.Statistics ),
+			};
+
+			var dialog = new ContentDialog()
+			{
+				Title           = $"Session Details",
+				Content         = statsView,
+				CloseButtonText = "Done",
+			};
+		
+			await dialog.ShowAsync();
+		}
 	}
 	
 	private void Delete_OnTapped( object? sender, RoutedEventArgs e )
 	{
 		//throw new NotImplementedException();
+	}
+	
+	private void SelectSession( Session session )
+	{
+		var timeRangeEventArgs = new DateTimeRangeRoutedEventArgs
+		{
+			Route       = RoutingStrategies.Bubble,
+			RoutedEvent = SessionSelectedEvent,
+			StartTime   = session.StartTime,
+			EndTime     = session.EndTime
+		};
+
+		RaiseEvent( timeRangeEventArgs );
+
+		var signalEventArgs = new SignalSelectionArgs
+		{
+			RoutedEvent = SignalSelection.SignalSelectedEvent,
+			Source      = this,
+			SignalName  = SignalNames.FlowRate,
+		};
+
+		RaiseEvent( signalEventArgs );
 	}
 }
 

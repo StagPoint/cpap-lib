@@ -21,7 +21,7 @@ public partial class EventSummaryView : UserControl
 	{
 		base.OnPropertyChanged( change );
 
-		if( change.Property.Name == nameof( DataContext ) && change.NewValue != null && change.NewValue is not DailyEventsViewModel )
+		if( change.Property.Name == nameof( DataContext ) && change.NewValue != null && change.NewValue is not EventSummaryViewModel )
 		{
 			DataContext = null;
 		}

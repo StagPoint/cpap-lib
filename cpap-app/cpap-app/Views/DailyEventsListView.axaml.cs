@@ -47,7 +47,7 @@ public partial class DailyEventsListView : UserControl
 				}
 			}
 			
-			if( DataContext is DailyEventsViewModel model )
+			if( DataContext is EventSummaryViewModel model )
 			{
 				// Select the first leaf node that corresponds to the event type
 				var eventNode = model.Day.Events.FirstOrDefault( x => x.Type == SelectedEventType );
@@ -67,7 +67,7 @@ public partial class DailyEventsListView : UserControl
 		{
 			if( change.NewValue is DailyReport day )
 			{
-				DataContext = new DailyEventsViewModel( day );
+				DataContext = new EventSummaryViewModel( day );
 			}
 		}
 	}

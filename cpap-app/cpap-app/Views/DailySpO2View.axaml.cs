@@ -80,8 +80,8 @@ public partial class DailySpO2View : UserControl
 			Sources            = day.Sessions.Where( x => x.SourceType == SourceType.PulseOximetry ).Select( x => x.Source ).Distinct().ToList(),
 		};
 
-		OxygenEvents.DataContext = new DailyEventsViewModel( day, EventTypes.OxygenSaturation );
-		PulseEvents.DataContext  = new DailyEventsViewModel( day, EventTypes.Pulse );
+		OxygenEvents.DataContext = new EventSummaryViewModel( day, EventTypes.OxygenSaturation );
+		PulseEvents.DataContext  = new EventSummaryViewModel( day, EventTypes.Pulse );
 
 		OxygenSummary.DataContext = DataDistribution.GetDataDistribution(
 			day.Sessions,

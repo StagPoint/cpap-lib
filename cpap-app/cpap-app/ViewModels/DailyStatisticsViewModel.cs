@@ -25,6 +25,8 @@ public class DailyStatisticsColumnVisibility : ReactiveObject
 	
 	#endregion
 
+	public bool AllowCustomization { get; set; } = true;
+
 	public bool Minimum
 	{
 		get => _minimum;
@@ -89,23 +91,43 @@ public class DailyStatisticsViewModel
 		}
 	}
 
-	public DailyStatisticsViewModel( DailyReport day )
+	public DailyStatisticsViewModel( List<SignalStatistics> stats, bool allowCustomColumns = false )
 	{
 		using var db = StorageService.Connect();
 
 		// TODO: Should column order be configurable also?
-		// Retrieve the list of visible columns 
-		VisibleColumns = db.SelectById<DailyStatisticsColumnVisibility>( 0 );
-		VisibleColumns.PropertyChanged += VisibleColumnsOnPropertyChanged;
+
+		if( allowCustomColumns )
+		{
+			// Retrieve the list of visible columns 
+			VisibleColumns                    =  db.SelectById<DailyStatisticsColumnVisibility>( 0 );
+			VisibleColumns.AllowCustomization =  true;
+			VisibleColumns.PropertyChanged    += VisibleColumnsOnPropertyChanged;
+		}
+		else
+		{
+			VisibleColumns = new DailyStatisticsColumnVisibility
+			{
+				AllowCustomization = false,
+				Minimum            = true,
+				Average            = true,
+				Median             = true,
+				Percentile95       = true,
+				Percentile995      = true,
+				Maximum            = true,
+				AverageDeviation   = false
+			};
+		}
 
 		// Retrieve the Signal Chart Configurations so that we can re-use the DisplayOrder values the user has configured 
 		var configurations = SignalChartConfigurationStore.GetSignalConfigurations();
 		
 		Statistics = new List<SignalStatistics>();
+		
 		foreach( var configuration in configurations )
 		{
 			// Attempt to retrieve the signal statistic named by the configuration record
-			var stat = day.Statistics.FirstOrDefault( x => x.SignalName.Equals( configuration.SignalName, StringComparison.OrdinalIgnoreCase ) );
+			var stat = stats.FirstOrDefault( x => x.SignalName.Equals( configuration.SignalName, StringComparison.OrdinalIgnoreCase ) );
 			if( stat == null )
 			{
 				continue;
@@ -125,7 +147,7 @@ public class DailyStatisticsViewModel
 			// end of the list of signals, and we want it to appear with the main signal. 
 			if( !string.IsNullOrEmpty( configuration.SecondarySignalName ) )
 			{
-				var secondaryStat = day.Statistics.FirstOrDefault( x => x.SignalName.Equals( configuration.SecondarySignalName, StringComparison.OrdinalIgnoreCase ) );
+				var secondaryStat = stats.FirstOrDefault( x => x.SignalName.Equals( configuration.SecondarySignalName, StringComparison.OrdinalIgnoreCase ) );
 				if( secondaryStat == null )
 				{
 					continue;
@@ -142,7 +164,7 @@ public class DailyStatisticsViewModel
 		}
 		
 		// Add in any statistics that have not yet been included (presumably because there is no configuration record for it)
-		foreach( var stat in day.Statistics )
+		foreach( var stat in stats )
 		{
 			if( !Statistics.Any( x => x.SignalName == stat.SignalName ) )
 			{
@@ -159,6 +181,10 @@ public class DailyStatisticsViewModel
 				stat.SignalName = config.Title;
 			}
 		}
+	}
+
+	public DailyStatisticsViewModel( DailyReport day ) : this( day.Statistics, true )
+	{
 	}
 	
 	private void VisibleColumnsOnPropertyChanged( object? sender, PropertyChangedEventArgs e )

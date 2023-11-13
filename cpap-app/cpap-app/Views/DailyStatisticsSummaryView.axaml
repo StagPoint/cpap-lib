@@ -8,12 +8,7 @@
              xmlns:controls="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
              mc:Ignorable="d" d:DesignWidth="350" d:DesignHeight="450"
              x:Class="cpap_app.Views.DailyStatisticsSummaryView"
-             x:DataType="cpaplib:DailyReport"
              Name="XXXX">
-    <Design.DataContext>
-        <cpaplib:DailyReport />
-    </Design.DataContext>
- 
     <UserControl.Styles>
         <StyleInclude Source="/Styling/GridStyles.axaml" />
     </UserControl.Styles>
@@ -33,13 +28,13 @@
             <Grid Name="HeaderGrid" HorizontalAlignment="Stretch" RowDefinitions="Auto" Background="Transparent" DataContext="{Binding VisibleColumns}">
                 <Grid.ContextFlyout>
                     <controls:FAMenuFlyout Placement="Bottom">
-                        <controls:ToggleMenuFlyoutItem Text="Minimum" IsChecked="{Binding Minimum}" />
-                        <controls:ToggleMenuFlyoutItem Text="Average" IsChecked="{Binding Average}" />
-                        <controls:ToggleMenuFlyoutItem Text="Median" IsChecked="{Binding Median}" />
-                        <controls:ToggleMenuFlyoutItem Text="95%" IsChecked="{Binding Percentile95}" />
-                        <controls:ToggleMenuFlyoutItem Text="99.5%" IsChecked="{Binding Percentile995}" />
-                        <controls:ToggleMenuFlyoutItem Text="Maximum" IsChecked="{Binding Maximum}" />
-                        <controls:ToggleMenuFlyoutItem Text="Mean Standard Deviation" IsChecked="{Binding AverageDeviation}" />
+                        <controls:ToggleMenuFlyoutItem IsVisible="{Binding AllowCustomization}" Text="Minimum" IsChecked="{Binding Minimum}" />
+                        <controls:ToggleMenuFlyoutItem IsVisible="{Binding AllowCustomization}" Text="Average" IsChecked="{Binding Average}" />
+                        <controls:ToggleMenuFlyoutItem IsVisible="{Binding AllowCustomization}" Text="Median" IsChecked="{Binding Median}" />
+                        <controls:ToggleMenuFlyoutItem IsVisible="{Binding AllowCustomization}" Text="95%" IsChecked="{Binding Percentile95}" />
+                        <controls:ToggleMenuFlyoutItem IsVisible="{Binding AllowCustomization}" Text="99.5%" IsChecked="{Binding Percentile995}" />
+                        <controls:ToggleMenuFlyoutItem IsVisible="{Binding AllowCustomization}" Text="Maximum" IsChecked="{Binding Maximum}" />
+                        <controls:ToggleMenuFlyoutItem IsVisible="{Binding AllowCustomization}" Text="Mean Standard Deviation" IsChecked="{Binding AverageDeviation}" />
                     </controls:FAMenuFlyout>
                 </Grid.ContextFlyout>
                 <Grid.ColumnDefinitions>

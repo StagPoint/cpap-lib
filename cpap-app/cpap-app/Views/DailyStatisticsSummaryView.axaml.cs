@@ -1,4 +1,6 @@
-﻿using Avalonia;
+﻿using System;
+
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 

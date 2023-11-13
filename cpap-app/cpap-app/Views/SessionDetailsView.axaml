@@ -1,0 +1,19 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:views="clr-namespace:cpap_app.Views"
+             mc:Ignorable="d" 
+             d:DesignWidth="800" 
+             d:DesignHeight="450"
+             x:Class="cpap_app.Views.SessionDetailsView">
+    <Grid ColumnDefinitions="Auto,30,Auto" RowDefinitions="Auto,Auto">
+        <Rectangle Grid.Column="1" Grid.RowSpan="2" VerticalAlignment="Stretch" HorizontalAlignment="Center" Width="2" Fill="{DynamicResource SubtleFillColorSecondaryBrush}" />
+        
+        <TextBlock Grid.Column="0" Grid.Row="0" Text="Statistics" Theme="{DynamicResource SubtitleTextBlockStyle}" />
+        <views:DailyStatisticsSummaryView Grid.Column="0" Grid.Row="1" />
+        
+        <TextBlock Grid.Column="2" Grid.Row="0" Text="Events" Theme="{DynamicResource SubtitleTextBlockStyle}" />
+        <views:EventSummaryView Grid.Column="2" Grid.Row="1" />
+    </Grid>
+</UserControl>
