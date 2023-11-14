@@ -14,47 +14,72 @@
             <Setter Property="Cursor" Value="Hand" />
         </Style>
     </UserControl.Styles>
-    
-    <Grid>
-        <ItemsRepeater Name="lstSessions" VerticalCacheLength="100">
-            <ItemsRepeater.ItemTemplate>
-                <DataTemplate DataType="{x:Type cpaplib:Session}">
-                    <Border Classes="SelectionRect" Tapped="lstSessions_Tapped" DoubleTapped="lstSessions_DoubleTapped" Tag="{Binding}">
-                        <Border.ContextFlyout>
-                            <MenuFlyout>
-                                <MenuItem Header="View Details" Tag="{Binding}" Click="ViewDetails_OnTapped" />
-                                <MenuItem Header="Delete" Tag="{Binding}" Click="Delete_OnTapped" />
-                            </MenuFlyout>
-                        </Border.ContextFlyout>
 
-                        <!-- 
-                        NOTE: We can't use IsSharedSizeScope="True" here, and are forced to use fixed-width columns, because
-                        Avalonia apparently has an issue with layouts where because this control often starts out outside of the
-                        visible area of a ScrollViewer, the layout engine enters an infinite layout cycle and brings the application
-                        to a screeching halt.
-                        
-                        Similarly, we cannot rely on data binding to set whether a row is visible or not, and must eliminate visible
-                        rows in the data model, which is why this control has a different data model than nearly identical controls
-                        elsewhere in the application.  
-`                       --> 
-                        <Grid RowDefinitions="22" ColumnDefinitions="85,190,85">
-                            <TextBlock Grid.Column="0" Text="{Binding StartTime, Mode=OneWay, StringFormat={}{0:d}}"
-                                       TextWrapping="NoWrap" />
-                            <TextBlock Grid.Column="1" TextWrapping="NoWrap">
-                                <TextBox.Text>
-                                    <MultiBinding StringFormat="{}{0:T} 🠚 {1:T}" Mode="OneWay">
-                                        <Binding Path="StartTime" />
-                                        <Binding Path="EndTime" />
-                                    </MultiBinding>
-                                </TextBox.Text>
-                            </TextBlock>
-                            <TextBlock Grid.Column="2" Text="{Binding Duration, Mode=OneWay}" TextWrapping="NoWrap" />
-                        </Grid>
-                        
-                    </Border>
-                </DataTemplate>
-            </ItemsRepeater.ItemTemplate>
-        </ItemsRepeater>
-    </Grid>
-    
+    <StackPanel Orientation="Vertical">
+
+        <Grid IsSharedSizeScope="True" RowDefinitions="Auto,Auto">
+            
+            <!-- Column headers for event list -->
+            <Border Classes="ColumnHeader" Grid.Row="0">
+                <Grid RowDefinitions="Auto">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" SharedSizeGroup="DSL_C0" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="Auto" SharedSizeGroup="DSL_C2" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="Auto" SharedSizeGroup="DSL_C4" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="Auto" SharedSizeGroup="DSL_C6" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Grid.Row="0" Text="Date" />
+                    <TextBlock Grid.Column="2" Grid.Row="0" Text="Start" />
+                    <TextBlock Grid.Column="4" Grid.Row="0" Text="End" />
+                    <TextBlock Grid.Column="6" Grid.Row="0" Text="Time" />
+                    <Rectangle Grid.Column="2" Grid.Row="0" Classes="HeaderSeparator" />
+                    <Rectangle Grid.Column="4" Grid.Row="0" Classes="HeaderSeparator" />
+                    <Rectangle Grid.Column="6" Grid.Row="0" Classes="HeaderSeparator" />
+                </Grid>
+            </Border>
+
+            <ItemsRepeater Grid.Row="1" Name="lstSessions" VerticalCacheLength="100">
+                <ItemsRepeater.ItemTemplate>
+                    <DataTemplate DataType="{x:Type cpaplib:Session}">
+                        <Border Classes="SelectionRect" Tapped="lstSessions_Tapped"
+                                DoubleTapped="lstSessions_DoubleTapped" Tag="{Binding}">
+                            <Border.ContextFlyout>
+                                <MenuFlyout>
+                                    <MenuItem Header="View Details" Tag="{Binding}" Click="ViewDetails_OnTapped" />
+                                    <MenuItem Header="Delete" Tag="{Binding}" Click="Delete_OnTapped" />
+                                </MenuFlyout>
+                            </Border.ContextFlyout>
+
+                            <Grid RowDefinitions="22">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" SharedSizeGroup="DSL_C0" />
+                                    <ColumnDefinition Width="12" />
+                                    <ColumnDefinition Width="Auto" SharedSizeGroup="DSL_C2" />
+                                    <ColumnDefinition Width="12" />
+                                    <ColumnDefinition Width="Auto" SharedSizeGroup="DSL_C4" />
+                                    <ColumnDefinition Width="12" />
+                                    <ColumnDefinition Width="Auto" SharedSizeGroup="DSL_C6" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0"
+                                           Text="{Binding StartTime, Mode=OneWay, StringFormat={}{0:d}}"
+                                           TextWrapping="NoWrap" />
+                                <TextBlock Grid.Column="2"
+                                           Text="{Binding StartTime, Mode=OneWay, StringFormat={}{0:T}}"
+                                           TextWrapping="NoWrap" />
+                                <TextBlock Grid.Column="4"
+                                           Text="{Binding EndTime, Mode=OneWay, StringFormat={}{0:T}}"
+                                           TextWrapping="NoWrap" />
+                                <TextBlock Grid.Column="6" Text="{Binding Duration, Mode=OneWay}"
+                                           TextWrapping="NoWrap" />
+                            </Grid>
+
+                        </Border>
+                    </DataTemplate>
+                </ItemsRepeater.ItemTemplate>
+            </ItemsRepeater>
+        </Grid>
+    </StackPanel>
 </UserControl>

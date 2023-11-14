@@ -65,6 +65,16 @@ public class EventSummaryViewModel
 			Items.Add( summary );
 		}
 
+		if( session.SourceType == SourceType.CPAP )
+		{
+			Indexes.Add( new EventGroupSummary( "Apnea/Hypopnea Index (AHI)", EventTypes.Apneas, session.Duration, events ) );
+
+			if( events.Any( x => EventTypes.RespiratoryDisturbancesOnly.Contains( x.Type ) ) )
+			{
+				Indexes.Add( new EventGroupSummary( "Respiratory Disturbance (RDI)", EventTypes.RespiratoryDisturbance, session.Duration, events ) );
+			}
+		}
+
 		TotalCount = events.Count;
 		TotalTime  = TimeSpan.FromSeconds( events.Sum( x => x.Duration.TotalSeconds ) );
 		IndexValue = TotalCount / session.Duration.TotalHours;

@@ -68,27 +68,6 @@ public class Scratchpad
 		var duration = TimeSpan.FromSeconds( reader.ReadInt16() );
 		Assert.AreEqual( TimeSpan.FromSeconds( 5316 ), duration );
 
-		// Assert.AreEqual( 0, reader.ReadByte() );
-		// Assert.AreEqual( 0, reader.ReadByte() );
-		//
-		// var oxygenAverage = reader.ReadByte();
-		// Assert.AreEqual( 96, oxygenAverage );
-		//
-		// var oxygenMinimum = reader.ReadByte();
-		// Assert.AreEqual( 91, oxygenMinimum );
-		//
-		// var countODI3 = reader.ReadByte();
-		// Assert.AreEqual( 4, countODI3 );
-		// 		
-		// var countODI4 = reader.ReadByte();
-		// Assert.AreEqual( 1, countODI4 );
-		//
-		// var timeBelow90 = reader.ReadInt32();
-		// Assert.AreEqual( 0, timeBelow90 );
-		//
-		// var o2Score = reader.ReadByte();
-		// Assert.AreEqual( 97, o2Score );
-
 		// Skip the rest of the header, as it doesn't provide any useful information for us. 
 		file.Position = HEADER_SIZE;
 		

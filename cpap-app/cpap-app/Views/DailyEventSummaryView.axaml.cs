@@ -11,8 +11,6 @@ namespace cpap_app.Views;
 
 public partial class DailyEventSummaryView : UserControl
 {
-	private static readonly EventType[] _respiratoryDisturbanceTypes = { EventType.Arousal, EventType.RERA, EventType.FlowLimitation, EventType.FlowReduction };
-	
 	public DailyEventSummaryView()
 	{
 		InitializeComponent();
@@ -37,7 +35,7 @@ public partial class DailyEventSummaryView : UserControl
 				var viewModel = new EventSummaryViewModel( day );
 				viewModel.Indexes.Add( new EventGroupSummary( "Apnea/Hypopnea Index (AHI)", EventTypes.Apneas, day.TotalSleepTime, day.Events ) );
 
-				if( day.Events.Any( x => _respiratoryDisturbanceTypes.Contains( x.Type ) ) )
+				if( day.Events.Any( x => EventTypes.RespiratoryDisturbancesOnly.Contains( x.Type ) ) )
 				{
 					viewModel.Indexes.Add( new EventGroupSummary( "Respiratory Disturbance (RDI)", EventTypes.RespiratoryDisturbance, day.TotalSleepTime, day.Events ) );
 				}

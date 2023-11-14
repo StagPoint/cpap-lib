@@ -117,6 +117,14 @@ namespace cpaplib
 			EventType.FlowReduction,
 		};
 
+		public static readonly EventType[] RespiratoryDisturbancesOnly =
+		{
+			EventType.Arousal, 
+			EventType.RERA, 
+			EventType.FlowLimitation, 
+			EventType.FlowReduction
+		};
+
 		public static readonly EventType[] OxygenSaturation =
 		{
 			EventType.Desaturation,

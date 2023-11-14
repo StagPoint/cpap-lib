@@ -559,6 +559,19 @@ public partial class SignalChart : UserControl
 			
 			eventArgs.Handled = true;
 		}
+		else if( eventArgs.KeyModifiers == KeyModifiers.Shift && point.Properties.IsLeftButtonPressed )
+		{
+			(_selectionStartTime, _) = Chart.GetMouseCoordinates();
+			_selectionEndTime        = _selectionStartTime;
+			_selectionSpan.X1        = _selectionStartTime;
+			_selectionSpan.X2        = _selectionStartTime;
+			_selectionSpan.IsVisible = true;
+
+			// Provide a 3-minute zoom window around the clicked position
+			ZoomTo( _selectionStartTime - 1.5, _selectionEndTime + 1.5 );
+			
+			eventArgs.Handled = true;
+		}
 		else if( (eventArgs.KeyModifiers & KeyModifiers.Control) != 0 || point.Properties.IsRightButtonPressed )
 		{
 			if( !_hasInputFocus )

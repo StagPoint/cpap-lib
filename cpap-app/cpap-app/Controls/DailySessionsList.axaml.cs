@@ -87,7 +87,7 @@ public partial class DailySessionsList : UserControl
 			};
 
 			// Because the dialog is contained in a separate Window, we need to pass along any events it generates 
-			detailView.OnSignalSelected    += ( o, args ) => RaiseEvent( args );
+			detailView.OnSignalSelected += ( o, args ) => RaiseEvent( args );
 			
 			// Actually, it turns out that we cannot raise some types of events, because they cause this control to unload and stop raising those events :/
 			//detailView.OnEventTypeSelected += ( o, args ) => RaiseEvent( args ); 
