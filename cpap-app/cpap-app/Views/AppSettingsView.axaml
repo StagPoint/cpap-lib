@@ -13,7 +13,7 @@
               ColumnDefinitions="*,Auto" RowDefinitions="*,Auto">
 
             <DockPanel>
-                <Image Source="/Assets/cpap-sd-card-128.png"
+                <Image Source="/Assets/cpap-sd-card-256.png"
                        DockPanel.Dock="Left"
                        Height="78"
                        RenderOptions.BitmapInterpolationMode="HighQuality" />

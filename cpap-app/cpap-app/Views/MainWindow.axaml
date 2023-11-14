@@ -9,7 +9,7 @@
         WindowStartupLocation="CenterScreen"
         Width="1280"
         Height="800"
-        Icon="/Assets/cpap-sd-card-128.png"
+        Icon="/Assets/cpap-sd-card-256.png"
         Title="Open Source CPAP Viewer">
         <views:MainView />
 </Window>

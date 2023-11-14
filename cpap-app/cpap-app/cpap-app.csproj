@@ -38,7 +38,7 @@
         <DependentUpon>SignalChart.axaml</DependentUpon>
         <SubType>Code</SubType>
       </Compile>
-      <Compile Update="Controls\DailySessionsList.axaml.cs">
+      <Compile Update="Controls\SessionsListView.axaml.cs">
         <DependentUpon>DailySessionsList.axaml</DependentUpon>
         <SubType>Code</SubType>
       </Compile>

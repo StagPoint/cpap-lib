@@ -6,7 +6,7 @@
         <TargetFramework>net7.0</TargetFramework>
         <Nullable>enable</Nullable>
         <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
-        <ApplicationIcon>..\cpap-app\Assets\cpap-sd-card-128.ico</ApplicationIcon>
+        <ApplicationIcon>..\cpap-app\Assets\cpap-sd-card-256.ico</ApplicationIcon>
     </PropertyGroup>
 
     <PropertyGroup>
@@ -25,11 +25,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <None Include="..\cpap-app\Assets\cpap-sd-card-128.ico">
-        <Link>cpap-sd-card-128.ico</Link>
-      </None>
-      <None Include="..\cpap-app\Assets\cpap-sd-card-128.png">
-        <Link>cpap-sd-card-128.png</Link>
+      <None Include="..\cpap-app\Assets\cpap-sd-card-256.ico">
+        <Link>cpap-sd-card-256.ico</Link>
       </None>
     </ItemGroup>
 </Project>

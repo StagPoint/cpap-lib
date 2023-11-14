@@ -100,7 +100,7 @@
                         <TextBlock Text="Sessions" FontSize="16" Theme="{DynamicResource BodyStrongTextBlockStyle}"/>
                     </StackPanel>
                 </Expander.Header>
-                <views:DailySessionsList Name="DailySessionsList" />
+                <views:SessionsListView Name="DailySessionsList" SessionSourceType="CPAP" />
             </Expander>
 
             <Button HorizontalAlignment="Stretch" Margin="1 12" Click="ReimportCurrentDate">

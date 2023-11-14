@@ -14,7 +14,7 @@
              events:TimeSelection.TimeSelected="OnTimeSelected"
              events:TimeSelection.TimeRangeSelected="OnTimeRangeSelected"
              events:EventSelection.EventTypeSelected="OnReportedEventTypeSelected"
-             views:DailySessionsList.SessionSelected="OnTimeRangeSelected">
+             views:SessionsListView.SessionSelected="OnTimeRangeSelected">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition MinWidth="350" Width="375" />

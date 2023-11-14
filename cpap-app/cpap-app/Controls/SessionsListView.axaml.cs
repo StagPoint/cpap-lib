@@ -15,7 +15,7 @@ using FluentAvalonia.UI.Controls;
 
 namespace cpap_app.Views;
 
-public partial class DailySessionsList : UserControl
+public partial class SessionsListView : UserControl
 {
 	#region Events 
 	
@@ -35,9 +35,21 @@ public partial class DailySessionsList : UserControl
 
 	#endregion 
 	
+	#region Public properties 
+	
+	public static readonly StyledProperty<SourceType> SessionSourceTypeProperty = AvaloniaProperty.Register<SessionsListView, SourceType>( nameof( SessionSourceType ) );
+
+	public SourceType SessionSourceType
+	{
+		get => GetValue( SessionSourceTypeProperty );
+		set => SetValue( SessionSourceTypeProperty, value );
+	}
+
+	#endregion 
+	
 	#region Constructor 
 	
-	public DailySessionsList()
+	public SessionsListView()
 	{
 		InitializeComponent();
 	}
@@ -50,8 +62,8 @@ public partial class DailySessionsList : UserControl
 
 		if( change.NewValue is DailyReport day )
 		{
-			// Filter the day's Sessions to only those that were produced by the CPAP machine
-			lstSessions.ItemsSource = day.Sessions.Where( x => x.SourceType == SourceType.CPAP );
+			// Filter the day's Sessions to only those that match the specified SourceType
+			lstSessions.ItemsSource = day.Sessions.Where( x => x.SourceType == SessionSourceType );
 		}
 	}
 

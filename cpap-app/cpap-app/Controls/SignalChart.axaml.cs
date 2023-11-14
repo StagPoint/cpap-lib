@@ -38,15 +38,6 @@ namespace cpap_app.Views;
 
 public partial class SignalChart : UserControl
 {
-	#region Styled Properties
-
-	public static readonly StyledProperty<IBrush> ChartBackgroundProperty    = AvaloniaProperty.Register<SignalChart, IBrush>( nameof( ChartBackground ) );
-	public static readonly StyledProperty<IBrush> ChartGridLineColorProperty = AvaloniaProperty.Register<SignalChart, IBrush>( nameof( ChartGridLineColor ) );
-	public static readonly StyledProperty<IBrush> ChartForegroundProperty    = AvaloniaProperty.Register<SignalChart, IBrush>( nameof( ChartForeground ) );
-	public static readonly StyledProperty<IBrush> ChartBorderColorProperty   = AvaloniaProperty.Register<SignalChart, IBrush>( nameof( ChartBorderColor ) );
-
-	#endregion
-	
 	#region Events 
 	
 	public static readonly RoutedEvent<DateTimeRangeRoutedEventArgs> DisplayedRangeChangedEvent = RoutedEvent.Register<SignalChart, DateTimeRangeRoutedEventArgs>( nameof( DisplayedRangeChanged ), RoutingStrategies.Bubble );
@@ -102,6 +93,15 @@ public partial class SignalChart : UserControl
 	}
 
 	#endregion 
+	
+	#region Styled Properties
+
+	public static readonly StyledProperty<IBrush> ChartBackgroundProperty    = AvaloniaProperty.Register<SignalChart, IBrush>( nameof( ChartBackground ) );
+	public static readonly StyledProperty<IBrush> ChartGridLineColorProperty = AvaloniaProperty.Register<SignalChart, IBrush>( nameof( ChartGridLineColor ) );
+	public static readonly StyledProperty<IBrush> ChartForegroundProperty    = AvaloniaProperty.Register<SignalChart, IBrush>( nameof( ChartForeground ) );
+	public static readonly StyledProperty<IBrush> ChartBorderColorProperty   = AvaloniaProperty.Register<SignalChart, IBrush>( nameof( ChartBorderColor ) );
+
+	#endregion
 	
 	#region Public properties
 
