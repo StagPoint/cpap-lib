@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 
+using cpap_app.Helpers;
+
 using cpaplib;
 
 namespace cpap_app.ViewModels;
@@ -42,6 +44,30 @@ public class EventSummaryViewModel
 		TotalCount = events.Count;
 		TotalTime  = TimeSpan.FromSeconds( events.Sum( x => x.Duration.TotalSeconds ) );
 		IndexValue = TotalCount / day.TotalSleepTime.TotalHours;
+	}
+
+	public EventSummaryViewModel( DailyReport day, Session session )
+	{
+		Day = day;
+
+		var events = day.Events.Where( x => x.SourceType == session.SourceType && DateHelper.RangesOverlap( session.StartTime, session.EndTime, x.StartTime, x.StartTime + x.Duration ) ).ToList();
+		var types  = events.Select( x => x.Type ).Distinct();
+
+		// Calculate the total time (in hours) for each SourceType
+		var totalSleepTime = new Dictionary<SourceType, double>();
+		totalSleepTime.TryAdd( session.SourceType, 0 );
+		totalSleepTime[ session.SourceType ] += session.Duration.TotalHours;
+		
+		foreach( var type in types )
+		{
+			var summary = new EventTypeSummary( type, totalSleepTime, events );
+			
+			Items.Add( summary );
+		}
+
+		TotalCount = events.Count;
+		TotalTime  = TimeSpan.FromSeconds( events.Sum( x => x.Duration.TotalSeconds ) );
+		IndexValue = TotalCount / session.Duration.TotalHours;
 	}
 
 	public EventSummaryViewModel( DailyReport day, params EventType[] filter )

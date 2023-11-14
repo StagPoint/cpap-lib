@@ -110,7 +110,7 @@ public class DailyStatisticsViewModel
 			{
 				AllowCustomization = false,
 				Minimum            = true,
-				Average            = true,
+				Average            = false,
 				Median             = true,
 				Percentile95       = true,
 				Percentile995      = true,

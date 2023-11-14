@@ -31,9 +31,9 @@ namespace cpaplib
     
     	public SignalStatistics CalculateStats()
     	{
-    		var totalCount           = _signals.Sum( x => x.Samples.Count );
-		    var percentileWindowSize = (int)( totalCount * (1.0 - 0.95) );
-		    var percentileWindow     = new BinaryHeap( percentileWindowSize );
+    		var totalCount             = _signals.Sum( x => x.Samples.Count );
+		    var percentile95WindowSize = (int)( totalCount * (1.0 - 0.95) );
+		    var percentileWindow       = new BinaryHeap( totalCount / 2 );
 
 		    var result = new SignalStatistics
 		    {
@@ -71,8 +71,8 @@ namespace cpaplib
 
 				    if( sample > 0 )
 				    {
-					    result.Minimum = Math.Min( result.Minimum, sample );
-					    foundMinimum   = true;
+					    result.Minimum =  Math.Min( result.Minimum, sample );
+					    foundMinimum   =  true;
 				    }
 
 				    result.Maximum =  Math.Max( result.Maximum, sample );
@@ -98,13 +98,25 @@ namespace cpaplib
 			    result.Minimum = 0;
 		    }
 		    
-		    // TODO: The Percentile95 and Percentile995 values should probably use interpolation to get the precise value 
+		    // TODO: The Median, Percentile95, and Percentile995 values should probably use interpolation to get the precise value 
     
-    		result.Median        = (result.Minimum + result.Maximum) * 0.5;
-    		result.Average       = (double)(sum / totalCount);
+    		result.Median        = percentileWindow.Peek();
+		    result.Average       = (double)(sum / totalCount);
 		    result.MeanDeviation = (double)(deviationSum / deviationTotal) * 100.0;
-		    result.Percentile95  = percentileWindow.Peek();
 
+		    if( double.IsNaN( result.Average ) || double.IsInfinity( result.Average ) )
+		    {
+			    result.Average = 0;
+		    }
+		    
+		    // Now that we've extracted the 50th percentile (median), we need to reduce the window to extract the 95th percentile
+		    while( percentileWindow.Count > percentile95WindowSize )
+		    {
+			    percentileWindow.Dequeue();
+		    }
+		    result.Percentile95 = percentileWindow.Peek();
+
+		    // And now do the same for the 99th percentile
 		    int nn = (int)( totalCount * (1.0 - 0.995) );
     		while( percentileWindow.Count > nn && percentileWindow.Count > 1 )
     		{

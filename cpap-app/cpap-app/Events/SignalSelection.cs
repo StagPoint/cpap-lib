@@ -3,8 +3,6 @@
 using Avalonia.Input;
 using Avalonia.Interactivity;
 
-using cpaplib;
-
 namespace cpap_app.Events;
 
 public class SignalSelectionArgs : RoutedEventArgs

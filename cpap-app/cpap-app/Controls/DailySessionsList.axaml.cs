@@ -63,6 +63,11 @@ public partial class DailySessionsList : UserControl
 		}
 	}
 	
+	private void lstSessions_DoubleTapped( object? sender, TappedEventArgs e )
+	{
+		ViewDetails_OnTapped( sender, e );
+	}
+
 	private async void ViewDetails_OnTapped( object? sender, RoutedEventArgs e )
 	{
 		if( DataContext is not DailyReport day )
@@ -74,19 +79,29 @@ public partial class DailySessionsList : UserControl
 		{
 			// Focus the Session in the user interface
 			SelectSession( session );
-			
-			var viewModel = new SessionDetailsViewModel( day, session );
 
-			var statsView = new DailyStatisticsSummaryView()
+			// Create the view that will show the Session details 
+			var detailView = new SessionDetailsView()
 			{
-				DataContext = new DailyStatisticsViewModel( viewModel.Statistics ),
+				DataContext = new SessionDetailsViewModel( day, session ),
 			};
 
-			var dialog = new ContentDialog()
+			// Because the dialog is contained in a separate Window, we need to pass along any events it generates 
+			detailView.OnSignalSelected    += ( o, args ) => RaiseEvent( args );
+			
+			// Actually, it turns out that we cannot raise some types of events, because they cause this control to unload and stop raising those events :/
+			//detailView.OnEventTypeSelected += ( o, args ) => RaiseEvent( args ); 
+			
+			var dialog = new TaskDialog()
 			{
-				Title           = $"Session Details",
-				Content         = statsView,
-				CloseButtonText = "Done",
+				Title = $"Session Details",
+				Buttons =
+				{
+					TaskDialogButton.OKButton,
+				},
+				XamlRoot = (Visual)VisualRoot!,
+				Content = detailView,
+				MaxWidth = 800,
 			};
 		
 			await dialog.ShowAsync();

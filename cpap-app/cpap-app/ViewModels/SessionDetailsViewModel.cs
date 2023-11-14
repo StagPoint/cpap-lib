@@ -9,7 +9,7 @@ public class SessionDetailsViewModel
 	public DailyReport Day     { get; set; }
 	public Session     Session { get; set; }
 	
-	public List<SignalStatistics> Statistics { get; set; } = new();
+	public DailyStatisticsViewModel Statistics { get; set; }
 	
 	public EventSummaryViewModel Events { get; set; }
 	
@@ -17,12 +17,14 @@ public class SessionDetailsViewModel
 	{
 		Day     = day;
 		Session = session;
-
-		GenerateStatistics( session );
+		Events  = new EventSummaryViewModel( day, session );
+		Statistics = GenerateStatistics( session );
 	}
 	
-	private void GenerateStatistics( Session session )
+	private static DailyStatisticsViewModel GenerateStatistics( Session session )
 	{
+		List<SignalStatistics> stats = new();
+		
 		foreach( var signal in session.Signals )
 		{
 			if( signal.MinValue < 0 && signal.MaxValue > 0 )
@@ -34,7 +36,9 @@ public class SessionDetailsViewModel
 			var calc = new SignalStatCalculator();
 			calc.AddSignal( signal );
 
-			Statistics.Add( calc.CalculateStats() );
+			stats.Add( calc.CalculateStats() );
 		}
+
+		return new DailyStatisticsViewModel( stats, false );
 	}
 }

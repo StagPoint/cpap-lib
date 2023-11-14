@@ -3,17 +3,53 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:views="clr-namespace:cpap_app.Views"
-             mc:Ignorable="d" 
-             d:DesignWidth="800" 
-             d:DesignHeight="450"
-             x:Class="cpap_app.Views.SessionDetailsView">
-    <Grid ColumnDefinitions="Auto,30,Auto" RowDefinitions="Auto,Auto">
-        <Rectangle Grid.Column="1" Grid.RowSpan="2" VerticalAlignment="Stretch" HorizontalAlignment="Center" Width="2" Fill="{DynamicResource SubtleFillColorSecondaryBrush}" />
-        
-        <TextBlock Grid.Column="0" Grid.Row="0" Text="Statistics" Theme="{DynamicResource SubtitleTextBlockStyle}" />
-        <views:DailyStatisticsSummaryView Grid.Column="0" Grid.Row="1" />
-        
-        <TextBlock Grid.Column="2" Grid.Row="0" Text="Events" Theme="{DynamicResource SubtitleTextBlockStyle}" />
-        <views:EventSummaryView Grid.Column="2" Grid.Row="1" />
-    </Grid>
+             xmlns:viewModels="clr-namespace:cpap_app.ViewModels"
+             xmlns:events="clr-namespace:cpap_app.Events"
+             mc:Ignorable="d"
+             MinWidth="500"
+             MinHeight="400"
+             x:Class="cpap_app.Views.SessionDetailsView"
+             x:DataType="viewModels:SessionDetailsViewModel"
+             events:SignalSelection.SignalSelected="Signal_OnSelected"
+             events:EventSelection.EventTypeSelected="EventType_OnSelected">
+    <StackPanel Orientation="Vertical">
+        <Grid Margin="8 10" ColumnDefinitions="Auto,20,Auto,*" RowDefinitions="Auto,Auto,Auto,Auto">
+            <TextBlock Grid.Column="0" Grid.Row="0" Text="Date:"
+                       Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+            <TextBlock Grid.Column="2" Grid.Row="0"
+                       Text="{Binding Day.ReportDate, Mode=OneWay, StringFormat={}{0:D}}" />
+            <TextBlock Grid.Column="0" Grid.Row="1" Text="Session Start:"
+                       Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+            <TextBlock Grid.Column="2" Grid.Row="1"
+                       Text="{Binding Session.StartTime, Mode=OneWay, StringFormat={}{0:g}}" />
+            <TextBlock Grid.Column="0" Grid.Row="2" Text="Session End:"
+                       Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+            <TextBlock Grid.Column="2" Grid.Row="2"
+                       Text="{Binding Session.EndTime, Mode=OneWay, StringFormat={}{0:g}}" />
+            <TextBlock Grid.Column="0" Grid.Row="3" Text="Duration:"
+                       Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+            <TextBlock Grid.Column="2" Grid.Row="3"
+                       Text="{Binding Session.Duration, Mode=OneWay, StringFormat={}{0:T}}" />
+        </Grid>
+        <TabControl>
+            <TabControl.Styles>
+                <Style Selector="TabItem">
+                    <Setter Property="Margin" Value="0" />
+                    <Setter Property="Padding" Value="8, 0" />
+                    <Setter Property="MinHeight" Value="36" />
+                    <Setter Property="Height" Value="38" />
+                    <Setter Property="FontSize" Value="18" />
+                </Style>
+                <Style Selector="TabItem">
+                    <Setter Property="Foreground" Value="{DynamicResource TabItemHeaderForegroundSelected}" />
+                </Style>
+            </TabControl.Styles>
+            <TabItem Header="Statistics">
+                <views:DailyStatisticsSummaryView DataContext="{Binding Statistics}" />
+            </TabItem>
+            <TabItem Header="Events">
+                <views:EventSummaryView HorizontalAlignment="Left" MaxWidth="450" DataContext="{Binding Events}" />
+            </TabItem>
+        </TabControl>
+    </StackPanel>
 </UserControl>

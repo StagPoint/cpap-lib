@@ -19,7 +19,7 @@
         <ItemsRepeater Name="lstSessions" VerticalCacheLength="100">
             <ItemsRepeater.ItemTemplate>
                 <DataTemplate DataType="{x:Type cpaplib:Session}">
-                    <Border Classes="SelectionRect" Tapped="lstSessions_Tapped" Tag="{Binding}">
+                    <Border Classes="SelectionRect" Tapped="lstSessions_Tapped" DoubleTapped="lstSessions_DoubleTapped" Tag="{Binding}">
                         <Border.ContextFlyout>
                             <MenuFlyout>
                                 <MenuItem Header="View Details" Tag="{Binding}" Click="ViewDetails_OnTapped" />
