@@ -125,7 +125,7 @@ public class FormattedTimespanConverter : IValueConverter
 				case TimespanFormatType.Abbreviated:
 					return $"{minutes} m";
 				case TimespanFormatType.Short:
-					return $"{minutes} min";
+					return $"{minutes} Min";
 				case TimespanFormatType.Long:
 				default:
 					return minutes != 1 ? $"{minutes} minutes" : $"{minutes} minute";

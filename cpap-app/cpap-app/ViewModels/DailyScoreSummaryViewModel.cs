@@ -104,7 +104,7 @@ public class DailyScoreSummaryViewModel
 		{
 			return new DailyScoreItemViewModel
 			{
-				Label         = "Mask leak (L/min)",
+				Label         = "Mask leak (L/Min)",
 				Data          = "N/A",
 				DailyScore    = 0,
 				MaximumScore  = weight,
@@ -125,7 +125,7 @@ public class DailyScoreSummaryViewModel
 
 		return new DailyScoreItemViewModel
 		{
-			Label         = "Mask leak (L/min)",
+			Label         = "Mask leak (L/Min)",
 			Data          = stat.Percentile95.ToString( "F1" ),
 			DailyScore    = dailyScore,
 			MaximumScore  = weight,

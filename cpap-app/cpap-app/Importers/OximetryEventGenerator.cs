@@ -18,7 +18,7 @@ public class OximetryEventGeneratorConfig
 	public double HypoxemiaMinimumDuration { get; set; } = 10;
 
 	public double DesaturationThreshold       { get; set; } = 3;
-	public double DesaturationWindowLength    { get; set; } = 300;
+	public double DesaturationWindowLength    { get; set; } = 180;
 	public double DesaturationMinimumDuration { get; set; } = 5;
 	public double DesaturationMaximumDuration { get; set; } = 120;
 

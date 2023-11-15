@@ -1663,7 +1663,7 @@ public partial class SignalChart : UserControl
 				continue;
 			}
 			
-			// Keep track of min and max values 
+			// Keep track of Min and Max values 
 			dataMinValue   = Math.Min( dataMinValue,   signal.Samples.Min() );
 			signalMinValue = Math.Min( signalMinValue, signal.MinValue );
 			dataMaxValue   = Math.Max( dataMaxValue,   signal.Samples.Max() );
@@ -1697,7 +1697,7 @@ public partial class SignalChart : UserControl
 				var secondarySignal = session.GetSignalByName( SecondaryConfiguration.SignalName );
 				if( secondarySignal != null )
 				{
-					// Keep track of min and max values 
+					// Keep track of Min and Max values 
 					dataMinValue = Math.Min( dataMinValue, secondarySignal.Samples.Min() );
 					dataMaxValue = Math.Max( dataMaxValue, secondarySignal.Samples.Max() );
 
@@ -1760,7 +1760,7 @@ public partial class SignalChart : UserControl
 			}
 
 			// TODO: This is probably not the best place (or way) to be doing this, but the data is conveniently available...
-			// Ensure that the configuration's min and max values are not NULL, which causes issues with data-bound controls. 
+			// Ensure that the configuration's Min and Max values are not NULL, which causes issues with data-bound controls. 
 			ChartConfiguration.AxisMinValue ??= signalMinValue;
 			ChartConfiguration.AxisMaxValue ??= signalMaxValue;
 

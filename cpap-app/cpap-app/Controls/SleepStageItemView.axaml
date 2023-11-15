@@ -1,0 +1,35 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewModels="clr-namespace:cpap_app.ViewModels"
+             xmlns:converters="clr-namespace:cpap_app.Converters"
+             mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="450"
+             x:Class="cpap_app.Controls.SleepStageItemView"
+             x:DataType="viewModels:SleepStageSummaryItemViewModel">
+    <UserControl.Resources>
+        <converters:FormattedTimespanConverter x:Key="FormattedTimeSpan" />
+    </UserControl.Resources>
+
+    <Grid Margin="0 0 0 10" RowDefinitions="Auto,Auto">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" SharedSizeGroup="SleepStageItemC0" />
+            <ColumnDefinition Width="Auto" SharedSizeGroup="SleepStageItemC1" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" SharedSizeGroup="SleepStageItemC3" />
+        </Grid.ColumnDefinitions>
+        <ProgressBar Name="AnimProgress" Grid.Column="0" Grid.ColumnSpan="4" Grid.Row="1" Minimum="0" Maximum="100" Classes="Counter"
+                     Value="{Binding Percentage, Mode=OneWay}" />
+        <TextBlock Grid.Column="0" Grid.Row="0" Text="{Binding #AnimProgress.Value, StringFormat={}{0:N0}%}"
+                   Theme="{DynamicResource SubtitleTextBlockStyle}"
+                   FontSize="18"
+                   VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0 0 12 0" />
+        <TextBlock Grid.Column="1" Grid.Row="0" Text="{Binding Label}" Theme="{DynamicResource BodyTextBlockStyle}"
+                   VerticalAlignment="Center" HorizontalAlignment="Left" Margin="0 0 8 0" />
+        <TextBlock Grid.Column="3" Grid.Row="0"
+                   Text="{Binding TimeInStage, Mode=OneWay, Converter={StaticResource FormattedTimeSpan}, ConverterParameter=Short.Empty}"
+                   Theme="{DynamicResource SubtitleTextBlockStyle}"
+                   FontSize="18"
+                   VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0 0 4 0" />
+    </Grid>
+</UserControl>
