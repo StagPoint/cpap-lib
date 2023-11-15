@@ -9,13 +9,6 @@
              x:Class="cpap_app.Views.DailySleepStagesView">
     <UserControl.Styles>
         <StyleInclude Source="/Styling/GridStyles.axaml" />
-        <Style Selector="ProgressBar.Counter">
-            <Setter Property="Transitions">
-                <Transitions>
-                    <DoubleTransition Property="Value" Duration="1.0" Easing="QuarticEaseInOut" Delay="0.01" />
-                </Transitions>
-            </Setter>
-        </Style>
     </UserControl.Styles>
     <ScrollViewer Padding="8">
         <StackPanel Orientation="Vertical">
@@ -48,7 +41,7 @@
                     <Rectangle Grid.Column="3" Grid.Row="0" Classes="HeaderSeparator" />
                 </Grid>
             </Border>
-            
+
             <Button Name="AddNew" HorizontalAlignment="Stretch" Margin="1 12" Click="AddNew_OnClick">
                 <StackPanel Orientation="Horizontal" Spacing="12" Margin="-16 0 0 0">
                     <controls1:SymbolIcon Symbol="Add"/>

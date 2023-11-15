@@ -18,8 +18,14 @@
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="Auto" SharedSizeGroup="SleepStageItemC3" />
         </Grid.ColumnDefinitions>
-        <ProgressBar Name="AnimProgress" Grid.Column="0" Grid.ColumnSpan="4" Grid.Row="1" Minimum="0" Maximum="100" Classes="Counter"
-                     Value="{Binding Percentage, Mode=OneWay}" />
+        <ProgressBar Name="AnimProgress" Grid.Column="0" Grid.ColumnSpan="4" Grid.Row="1" Minimum="0" Maximum="100"
+                     Value="{Binding Percentage, Mode=OneWay}">
+            <ProgressBar.Transitions>
+                <Transitions>
+                    <DoubleTransition Property="Value" Duration="0.2" Easing="QuarticEaseInOut" Delay="0.01" />
+                </Transitions>
+            </ProgressBar.Transitions>
+        </ProgressBar>
         <TextBlock Grid.Column="0" Grid.Row="0" Text="{Binding #AnimProgress.Value, StringFormat={}{0:N0}%}"
                    Theme="{DynamicResource SubtitleTextBlockStyle}"
                    FontSize="18"
