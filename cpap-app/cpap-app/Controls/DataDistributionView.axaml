@@ -3,9 +3,9 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:cpap_app.ViewModels"
-             xmlns:views="clr-namespace:cpap_app.Views"
+             xmlns:controls="clr-namespace:cpap_app.Controls"
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="450"
-             x:Class="cpap_app.Views.DataDistributionView"
+             x:Class="cpap_app.Controls.DataDistributionView"
              x:DataType="viewModels:DataDistribution"
              UnitOfMeasure="%">
     <UserControl.Styles>
@@ -23,7 +23,7 @@
                 <TextBox.Text>
                     <MultiBinding StringFormat="{}{0:F0} {1}">
                         <Binding Path="Average" />
-                        <Binding Path="$parent[views:DataDistributionView].UnitOfMeasure" />
+                        <Binding Path="$parent[controls:DataDistributionView].UnitOfMeasure" />
                     </MultiBinding>
                 </TextBox.Text>
             </TextBlock>
@@ -33,7 +33,7 @@
                     <MultiBinding StringFormat="{}{0:F0}{2} - {1:F0}{2}">
                         <Binding Path="MinValue" />
                         <Binding Path="MaxValue" />
-                        <Binding Path="$parent[views:DataDistributionView].UnitOfMeasure"/>
+                        <Binding Path="$parent[controls:DataDistributionView].UnitOfMeasure"/>
                     </MultiBinding>
                 </TextBox.Text>
             </TextBlock>

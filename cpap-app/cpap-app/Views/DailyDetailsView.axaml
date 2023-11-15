@@ -3,8 +3,9 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:cpaplib="clr-namespace:cpaplib;assembly=cpap-lib"
-             xmlns:controls="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+             xmlns:fui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
              xmlns:views="clr-namespace:cpap_app.Views"
+             xmlns:controls="clr-namespace:cpap_app.Controls"
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="600"
              x:Class="cpap_app.Views.DailyDetailsView"
              x:DataType="cpaplib:DailyReport">
@@ -51,7 +52,7 @@
                 >
                 <Expander.Header>
                     <StackPanel Orientation="Horizontal">
-                        <controls:FontIcon Glyph="&#xE7C1;" FontSize="24" FontFamily="{DynamicResource SymbolThemeFontFamily}" FontWeight="Normal" FontStyle="Normal" Margin="0 0 10 0"/>
+                        <fui:FontIcon Glyph="&#xE7C1;" FontSize="24" FontFamily="{DynamicResource SymbolThemeFontFamily}" FontWeight="Normal" FontStyle="Normal" Margin="0 0 10 0"/>
                         <TextBlock Text="Reported Events" FontSize="16" Theme="{DynamicResource BodyStrongTextBlockStyle}"/>
                     </StackPanel>
                 </Expander.Header>
@@ -66,7 +67,7 @@
                 Padding="10">
                 <Expander.Header>
                     <StackPanel Orientation="Horizontal">
-                        <controls:FontIcon Glyph="&#xE8EF;" FontSize="24" FontFamily="{DynamicResource SymbolThemeFontFamily}" FontWeight="Normal" FontStyle="Normal" Margin="0 0 10 0"/>
+                        <fui:FontIcon Glyph="&#xE8EF;" FontSize="24" FontFamily="{DynamicResource SymbolThemeFontFamily}" FontWeight="Normal" FontStyle="Normal" Margin="0 0 10 0"/>
                         <TextBlock Text="Statistics" FontSize="16" Theme="{DynamicResource BodyStrongTextBlockStyle}"/>
                     </StackPanel>
                 </Expander.Header>
@@ -81,7 +82,7 @@
                 Padding="10">
                 <Expander.Header>
                     <StackPanel Orientation="Horizontal">
-                        <controls:FontIcon Glyph="&#xE713;" FontSize="24" FontFamily="{DynamicResource SymbolThemeFontFamily}" FontWeight="Normal" FontStyle="Normal" Margin="0 0 10 0"/>
+                        <fui:FontIcon Glyph="&#xE713;" FontSize="24" FontFamily="{DynamicResource SymbolThemeFontFamily}" FontWeight="Normal" FontStyle="Normal" Margin="0 0 10 0"/>
                         <TextBlock Text="Settings" FontSize="16" Theme="{DynamicResource BodyStrongTextBlockStyle}"/>
                     </StackPanel>
                 </Expander.Header>
@@ -96,16 +97,16 @@
                 Padding="10">
                 <Expander.Header>
                     <StackPanel Orientation="Horizontal">
-                        <controls:FontIcon Glyph="&#xEC92;" FontSize="24" FontFamily="{DynamicResource SymbolThemeFontFamily}" FontWeight="Normal" FontStyle="Normal" Margin="0 0 10 0"/>
+                        <fui:FontIcon Glyph="&#xEC92;" FontSize="24" FontFamily="{DynamicResource SymbolThemeFontFamily}" FontWeight="Normal" FontStyle="Normal" Margin="0 0 10 0"/>
                         <TextBlock Text="Sessions" FontSize="16" Theme="{DynamicResource BodyStrongTextBlockStyle}"/>
                     </StackPanel>
                 </Expander.Header>
-                <views:SessionsListView Name="DailySessionsList" SessionSourceType="CPAP" />
+                <controls:SessionsListView Name="DailySessionsList" SessionSourceType="CPAP" />
             </Expander>
 
             <Button HorizontalAlignment="Stretch" Margin="1 12" Click="ReimportCurrentDate">
                 <StackPanel Orientation="Horizontal" Spacing="12" Margin="-16 0 0 0">
-                    <controls:SymbolIcon Symbol="Refresh" />
+                    <fui:SymbolIcon Symbol="Refresh" />
                     <TextBlock Text="{Binding ReportDate, Mode=OneWay, StringFormat={}Re-Import {0:D}}" />
                 </StackPanel>
             </Button>

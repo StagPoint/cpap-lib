@@ -6,7 +6,7 @@
              xmlns:controls="clr-namespace:cpap_app.Controls"
              mc:Ignorable="d"
              d:DesignWidth="800"
-             x:Class="cpap_app.Views.SignalChart"
+             x:Class="cpap_app.Controls.SignalChart"
              Height="200"
              Focusable="True"
              ChartForeground="{DynamicResource TextFillColorPrimaryBrush}"

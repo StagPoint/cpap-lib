@@ -97,7 +97,7 @@ namespace cpaplib
 	/// </summary>
 	public static class EventTypes
 	{
-		public static readonly EventType[] Apneas =
+		public static readonly EventType[] Apneas = new EventType[]
 		{
 			EventType.ObstructiveApnea,
 			EventType.Hypopnea,

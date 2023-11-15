@@ -5,7 +5,7 @@
              xmlns:viewModels="clr-namespace:cpap_app.ViewModels"
              xmlns:converters="clr-namespace:cpap_app.Converters"
              mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="450"
-             x:Class="cpap_app.Views.EventSummaryView"
+             x:Class="cpap_app.Controls.EventSummaryView"
              x:DataType="viewModels:EventSummaryViewModel"
              MaxWidth="600"
              Name="asDSLSDL">

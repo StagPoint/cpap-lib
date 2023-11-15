@@ -3,7 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:cpaplib="clr-namespace:cpaplib;assembly=cpap-lib"
-             x:Class="cpap_app.Views.SessionsListView"
+             x:Class="cpap_app.Controls.SessionsListView"
              mc:Ignorable="d"
              d:DesignWidth="400"
              d:DesignHeight="450"

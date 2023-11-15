@@ -1,14 +1,13 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
-using Avalonia.Interactivity;
 
 using cpap_app.Events;
 using cpap_app.ViewModels;
 
 using cpaplib;
 
-namespace cpap_app.Views;
+namespace cpap_app.Controls;
 
 public partial class EventSummaryView : UserControl
 {

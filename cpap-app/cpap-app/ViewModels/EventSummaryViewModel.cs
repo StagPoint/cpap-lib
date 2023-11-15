@@ -46,11 +46,18 @@ public class EventSummaryViewModel
 		IndexValue = TotalCount / day.TotalSleepTime.TotalHours;
 	}
 
-	public EventSummaryViewModel( DailyReport day, Session session )
+	public EventSummaryViewModel( DailyReport day, Session session, EventType[]? eventTypeFilter = null )
 	{
 		Day = day;
 
-		var events = day.Events.Where( x => x.SourceType == session.SourceType && DateHelper.RangesOverlap( session.StartTime, session.EndTime, x.StartTime, x.StartTime + x.Duration ) ).ToList();
+		eventTypeFilter ??= EventTypes.RespiratoryDisturbance;
+
+		var events = day.Events.Where( x =>
+           x.SourceType == session.SourceType &&
+           DateHelper.RangesOverlap( session.StartTime, session.EndTime, x.StartTime, x.StartTime + x.Duration ) &&
+           eventTypeFilter.Contains( x.Type )
+		).ToList();
+		
 		var types  = events.Select( x => x.Type ).Distinct();
 
 		// Calculate the total time (in hours) for each SourceType

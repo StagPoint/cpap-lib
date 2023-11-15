@@ -90,7 +90,7 @@ public partial class DailySpO2View : UserControl
 			{
 				new DataDistribution.RangeDefinition( "< 90 %",  89.5 ),
 				new DataDistribution.RangeDefinition( "90% - 94%", 94.5 ),
-				new DataDistribution.RangeDefinition( ">= 95 %", double.MaxValue )
+				new DataDistribution.RangeDefinition( "\u2265 95 %", double.MaxValue )
 			} );
 
 		PulseSummary.DataContext = DataDistribution.GetDataDistribution(
@@ -101,7 +101,7 @@ public partial class DailySpO2View : UserControl
 				new DataDistribution.RangeDefinition( "< 50 bpm",    49.5 ),
 				new DataDistribution.RangeDefinition( "50-99 bpm",   99.5 ),
 				new DataDistribution.RangeDefinition( "100-120 bpm", 120.5 ),
-				new DataDistribution.RangeDefinition( ">= 120 bpm",  double.MaxValue )
+				new DataDistribution.RangeDefinition( "\u2265 120 bpm",  double.MaxValue )
 			}
 		);
 	}

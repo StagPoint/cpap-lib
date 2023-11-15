@@ -8,12 +8,13 @@ using Avalonia.Interactivity;
 
 using cpap_app.Events;
 using cpap_app.ViewModels;
+using cpap_app.Views;
 
 using cpaplib;
 
 using FluentAvalonia.UI.Controls;
 
-namespace cpap_app.Views;
+namespace cpap_app.Controls;
 
 public partial class SessionsListView : UserControl
 {

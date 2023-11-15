@@ -8,6 +8,7 @@ using Avalonia.Interactivity;
 using Avalonia.Threading;
 
 using cpap_app.Configuration;
+using cpap_app.Controls;
 using cpap_app.Events;
 using cpap_app.ViewModels;
 

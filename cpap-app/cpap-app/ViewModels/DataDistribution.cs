@@ -19,6 +19,11 @@ public class DistributionGrouping : IComparable<DistributionGrouping>
 	{
 		return MinValue.CompareTo( other?.MinValue ) * -1;
 	}
+
+	public override string ToString()
+	{
+		return $"{Label} : {MinValue:F2} to {MaxValue:F2}";
+	}
 }
 
 public class DataDistribution

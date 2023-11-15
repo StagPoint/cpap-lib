@@ -1,7 +1,7 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
 
-namespace cpap_app.Views;
+namespace cpap_app.Controls;
 
 public partial class DataDistributionView : UserControl
 {

@@ -42,8 +42,12 @@
         <DependentUpon>DailySessionsList.axaml</DependentUpon>
         <SubType>Code</SubType>
       </Compile>
-      <Compile Update="Controls\OximetrySessionsList.axaml.cs">
-        <DependentUpon>OximetrySessionsList.axaml</DependentUpon>
+      <Compile Update="Controls\DataDistributionView.axaml.cs">
+        <DependentUpon>DataDistributionView.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="Controls\EventSummaryView.axaml.cs">
+        <DependentUpon>EventSummaryView.axaml</DependentUpon>
         <SubType>Code</SubType>
       </Compile>
     </ItemGroup>

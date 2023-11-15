@@ -32,7 +32,7 @@ using Color = System.Drawing.Color;
 using Point = Avalonia.Point;
 using Cursor = Avalonia.Input.Cursor;
 
-namespace cpap_app.Views;
+namespace cpap_app.Controls;
 
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 

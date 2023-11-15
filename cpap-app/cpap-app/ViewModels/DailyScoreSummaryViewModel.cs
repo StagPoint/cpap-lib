@@ -137,7 +137,7 @@ public class DailyScoreSummaryViewModel
 	private static DailyScoreItemViewModel ScoreSessionCount( DailyReport day, DailyReport? previousDay, double minValue, double maxValue, int weight )
 	{
 		var sessionCount = day.Sessions.Count( x => x.SourceType == SourceType.CPAP );
-		var dailyScore   = (int)MathUtil.Remap( minValue, maxValue, weight, 0, sessionCount );
+		var dailyScore   = (int)MathUtil.Remap( minValue, maxValue, 0, weight, sessionCount );
 
 		var isImprovement = previousDay == null;
 
