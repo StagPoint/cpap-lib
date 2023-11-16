@@ -17,7 +17,12 @@
     <ScrollViewer Padding="8">
         <StackPanel Name="Container" Orientation="Vertical" x:DataType="viewModels:SleepStagesViewModel">
             
-            <StackPanel Name="StagesSummary" Orientation="Vertical" Margin="0 0 0 10" Grid.IsSharedSizeScope="True">
+            <StackPanel Name="StagesSummary" IsVisible="{Binding Periods.Count, Mode=OneWay}" Orientation="Vertical" Margin="0 0 0 10" Grid.IsSharedSizeScope="True">
+                <StackPanel.Transitions>
+                    <Transitions>
+                        <DoubleTransition Property="Opacity" Duration="00:00:0.5" Easing="QuarticEaseInOut" Delay="0.01" />
+                    </Transitions>
+                </StackPanel.Transitions>
                 <TextBlock Text="Time spent in each stage of sleep" Theme="{DynamicResource SubtitleTextBlockStyle}" FontWeight="Normal" HorizontalAlignment="Center" Margin="0 0 0 10"/>
                 <controls:SleepStageItemView DataContext="{Binding StageSummaries[0]}" />
                 <controls:SleepStageItemView DataContext="{Binding StageSummaries[1]}" />
@@ -50,10 +55,10 @@
             <ItemsRepeater Name="lstPeriods" VerticalCacheLength="100" ItemsSource="{Binding Periods}">
                 <ItemsRepeater.ItemTemplate>
                     <DataTemplate DataType="{x:Type viewModels:SleepStagePeriodViewModel}">
-                        <Border Classes="SelectionRect" Tag="{Binding}">
+                        <Border Classes="SelectionRect" Tag="{Binding}" DoubleTapped="Item_DoubleTapped">
                             <Border.ContextFlyout>
                                 <MenuFlyout>
-                                    <MenuItem Header="Edit" Tag="{Binding}" />
+                                    <MenuItem Header="Edit" Tag="{Binding}" Click="Edit_OnClick" />
                                     <MenuItem Header="Delete" Tag="{Binding}" Click="Delete_OnClick" />
                                 </MenuFlyout>
                             </Border.ContextFlyout>

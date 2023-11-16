@@ -11,7 +11,9 @@ namespace cpap_app.ViewModels;
 
 public class SleepStagesViewModel
 {
-	public ObservableCollection<SleepStageSummaryItemViewModel> StageSummaries { get; set; } = new();
+	public bool IsEmpty { get => Periods.Count == 0; }
+
+	public ObservableCollection<SleepStageSummaryItemViewModel> StageSummaries { get; set; }
 	public ObservableCollection<SleepStagePeriodViewModel>      Periods        { get; set; } = new();
 
 	public SleepStagesViewModel()
@@ -34,6 +36,15 @@ public class SleepStagesViewModel
 
 		Periods.Clear();
 		Periods.AddRange( list );
+		
+		CalculateSummaryInfo();
+	}
+	
+	public void SavePeriod( SleepStagePeriodViewModel viewModel )
+	{
+        // Forces the collection to raise changed events 
+		int index = Periods.IndexOf( viewModel );
+		Periods[ index ] = viewModel;
 		
 		CalculateSummaryInfo();
 	}
@@ -89,15 +100,15 @@ public enum SleepStage
 	Deep  = 3,
 }
 
-public class SleepStagePeriodViewModel : IComparable<SleepStagePeriodViewModel>
+public class SleepStagePeriodViewModel : IComparable<SleepStagePeriodViewModel>, INotifyPropertyChanged
 {
 	public event EventHandler<bool>? ValidationStatusChanged;
 
-	public SleepStage Stage     { get; set; } = SleepStage.Awake;
-	public DateTime   StartDate { get; set; } = DateTime.Today.AddDays( -1 );
-	public DateTime   EndDate   { get; set; } = DateTime.Today;
-	public DateTime   StartTime { get; set; } = DateTime.Now.AddHours( -9 );
-	public DateTime   EndTime   { get; set; } = DateTime.Now;
+	public SleepStage Stage     { get; set; }
+	public DateTime   StartDate { get; set; }
+	public DateTime   EndDate   { get; set; }
+	public DateTime   StartTime { get; set; }
+	public DateTime   EndTime   { get; set; }
 
 	public TimeSpan Duration { get => EndTime - StartTime; }
 
@@ -116,6 +127,31 @@ public class SleepStagePeriodViewModel : IComparable<SleepStagePeriodViewModel>
 	}
 	
 	#endregion 
+	
+	#region INotifyPropertyChanged interface implementation
+
+	public event PropertyChangedEventHandler? PropertyChanged;
+
+	protected virtual void OnPropertyChanged( [CallerMemberName] string? propertyName = null )
+	{
+		PropertyChanged?.Invoke( this, new PropertyChangedEventArgs( propertyName ) );
+	}
+
+	protected bool SetField<T>( ref T field, T value, [CallerMemberName] string? propertyName = null )
+	{
+		if( EqualityComparer<T>.Default.Equals( field, value ) )
+		{
+			return false;
+		}
+
+		field = value;
+
+		OnPropertyChanged( propertyName );
+
+		return true;
+	}
+
+	#endregion
 }
 
 public class SleepStageSummaryItemViewModel : INotifyPropertyChanged

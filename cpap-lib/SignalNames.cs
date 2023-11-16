@@ -22,6 +22,7 @@ namespace cpaplib
 		public const string SpO2            = "SpO2";
 		public const string Pulse           = "Pulse";
 		public const string Movement        = "Movement";
+		public const string SleepStages     = "Sleep Stages";
 
 		private static Dictionary<string, string> _standardNames = new Dictionary<string, string>()
 		{

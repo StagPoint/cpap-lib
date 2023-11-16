@@ -18,7 +18,7 @@
             <Setter Property="Background" Value="Pink" />
         </Style>
     </UserControl.Styles>
-    <StackPanel Orientation="Vertical" Margin="8" Spacing="12">
+    <StackPanel Orientation="Vertical" Margin="8" Spacing="12" InputElement.LostFocus="InputElement_OnLostFocus">
         <Grid ColumnDefinitions="Auto,12,Auto" RowDefinitions="40,40,40">
             
             <!-- Labels -->
@@ -27,19 +27,19 @@
             <TextBlock Grid.Column="0" Grid.Row="2" Text="End Time" HorizontalAlignment="Right" VerticalAlignment="Center" />
             
             <!-- Inputs -->
-            <ComboBox Grid.Column="2" Grid.Row="0" Name="SleepStage" SelectedIndex="{Binding Stage}" VerticalAlignment="Center" Width="115" >
+            <ComboBox Grid.Column="2" Grid.Row="0" IsTabStop="True" Name="SleepStageList" SelectedIndex="{Binding Stage}" VerticalAlignment="Center" Width="115" KeyDown="SleepStage_OnKeyDown" >
                 <ComboBoxItem Content="Awake" />
                 <ComboBoxItem Content="REM" />
                 <ComboBoxItem Content="Light" />
                 <ComboBoxItem Content="Deep" />
             </ComboBox>
             <StackPanel Grid.Column="2" Grid.Row="1" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center" >
-                <CalendarDatePicker Name="StartDate" Width="150" SelectedDate="{Binding StartDate}" LostFocus="StartDate_OnLostFocus" />
-                <TextBox Name="StartTime" Width="75" Text="{Binding StartTime, Mode=OneWay, StringFormat={}{0:h\:mm tt}}" HorizontalAlignment="Left" HorizontalContentAlignment="Center" LostFocus="StartTime_OnLostFocus" />
+                <CalendarDatePicker Name="StartDate" IsTabStop="True" Width="150" SelectedDate="{Binding StartDate}" />
+                <TextBox Name="StartTime" Width="75" IsTabStop="True" Text="{Binding StartTime, Mode=OneWay, StringFormat={}{0:h\:mm tt}}" HorizontalAlignment="Left" HorizontalContentAlignment="Center" />
             </StackPanel>
             <StackPanel Grid.Column="2" Grid.Row="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center" >
-                <CalendarDatePicker Name="EndDate" Width="150" SelectedDate="{Binding EndDate}" LostFocus="EndDate_OnLostFocus" />
-                <TextBox Name="EndTime" Width="75" Text="{Binding EndTime, Mode=OneWay, StringFormat={}{0:h\:mm tt}}" HorizontalAlignment="Left" HorizontalContentAlignment="Center" LostFocus="EndTime_OnLostFocus" />
+                <CalendarDatePicker Name="EndDate" IsTabStop="True" Width="150" SelectedDate="{Binding EndDate}" />
+                <TextBox Name="EndTime" Width="75" IsTabStop="True" Text="{Binding EndTime, Mode=OneWay, StringFormat={}{0:h\:mm tt}}" HorizontalAlignment="Left" HorizontalContentAlignment="Center" />
             </StackPanel>
         </Grid>
     </StackPanel>

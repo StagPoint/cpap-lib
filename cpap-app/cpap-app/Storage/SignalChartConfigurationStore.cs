@@ -189,6 +189,12 @@ public static class SignalChartConfigurationStore
 					config.AxisMaxValue = 4;
 					config.ScalingMode  = AxisScalingMode.Override;
 					break;
+				
+				case SignalNames.SleepStages:
+					config.AxisMaxValue = 0;
+					config.AxisMaxValue = 5;
+					config.IsVisible    = false;
+					break;
 			}
 
 			records.Add( config );

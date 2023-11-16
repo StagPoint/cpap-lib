@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 
 using Avalonia;
 using Avalonia.Controls;
@@ -53,8 +54,6 @@ public partial class DailySleepStagesView : UserControl
 		var viewModel = new SleepStagePeriodViewModel
 		{
 			Stage     = SleepStage.Awake,
-			EndDate   = day.RecordingEndTime.Date,
-			EndTime   = day.RecordingEndTime,
 		};
 
 		if( _sleepStages.Periods.Count == 0 )
@@ -65,54 +64,69 @@ public partial class DailySleepStagesView : UserControl
 		else
 		{
 			var last = _sleepStages.Periods.Last();
+
+			viewModel.Stage = last.Stage;
 			
 			viewModel.StartDate = last.EndDate.Date;
 			viewModel.StartTime = last.EndTime;
-
-			if( viewModel.EndTime <= viewModel.StartTime )
-			{
-				viewModel.EndTime = viewModel.EndTime.AddHours( 1 );
-			}
 		}
 		
-		var view = new AddSleepStageView()
-		{
-			DataContext = viewModel
-		};
-
-		var dialog = new ContentDialog()
-		{
-			Title             = "Add a Sleep Stage period",
-			PrimaryButtonText = "Add",
-			CloseButtonText   = "Cancel",
-			DefaultButton     = ContentDialogButton.Primary,
-			Content           = view,
-		};
-
-		viewModel.ValidationStatusChanged += ( o, isValid ) => dialog.IsPrimaryButtonEnabled = isValid; 
-
-		var task   = dialog.ShowAsync( TopLevel.GetTopLevel( this ) );
-		var result = await task;
-
-		if( result == ContentDialogResult.Primary )
-		{
-			if( viewModel.ValidationErrors.Count > 0 )
-			{
-				var msgBox = MessageBoxManager.GetMessageBoxStandard(
-					"Data Validation Error",
-					string.Join( "\r\n", viewModel.ValidationErrors ),
-					ButtonEnum.Ok,
-					Icon.Error );
-
-				await msgBox.ShowWindowDialogAsync( this.FindAncestorOfType<Window>() );
-			}
-			else
-			{
-				_sleepStages.AddPeriod( viewModel );
-			}
-		}
+		viewModel.EndTime = viewModel.StartTime.AddHours( 1 );
+		viewModel.EndDate = viewModel.EndTime.Date;
+		
+		await EditSleepPeriod( viewModel, true );
 	}
 	
+	private async Task EditSleepPeriod( SleepStagePeriodViewModel viewModel, bool isNew )
+	{
+		Debug.Assert( _sleepStages != null, nameof( _sleepStages ) + " != null" );
+
+		while( true )
+		{
+			var dialog = new ContentDialog()
+			{
+				Title             = isNew ? "Add a Sleep Stage period" : "Edit Sleep Stage Period",
+				PrimaryButtonText = isNew ? "Add" : "Save",
+				CloseButtonText   = "Cancel",
+				DefaultButton     = ContentDialogButton.Primary,
+				Content = new AddSleepStageView()
+				{
+					DataContext = viewModel
+				},
+			};
+
+			var task   = dialog.ShowAsync( TopLevel.GetTopLevel( this ) );
+			var result = await task;
+
+			if( result != ContentDialogResult.Primary )
+			{
+				break;
+			}
+
+			if( viewModel.ValidationErrors.Count == 0 )
+			{
+				if( isNew )
+				{
+					_sleepStages.AddPeriod( viewModel );
+				}
+				else
+				{
+					_sleepStages.SavePeriod( viewModel );
+				}
+				
+				break;
+			}
+
+			var msgBox = MessageBoxManager.GetMessageBoxStandard(
+				"Data Validation Error",
+				string.Join( "\r\n", viewModel.ValidationErrors ),
+				ButtonEnum.Ok,
+				Icon.Error );
+
+			await msgBox.ShowWindowDialogAsync( this.FindAncestorOfType<Window>() );
+		}
+	}
+
 	private void Delete_OnClick( object? sender, RoutedEventArgs e )
 	{
 		Debug.Assert( _sleepStages != null, nameof( _sleepStages ) + " != null" );
@@ -121,6 +135,21 @@ public partial class DailySleepStagesView : UserControl
 		{
 			_sleepStages.RemovePeriod( item );
 		}
+	}
+	
+	private async void Edit_OnClick( object? sender, RoutedEventArgs e )
+	{
+		Debug.Assert( _sleepStages != null, nameof( _sleepStages ) + " != null" );
+		
+		if( e.Source is Control control && control.Tag is SleepStagePeriodViewModel item )
+		{
+			await EditSleepPeriod( item, false );
+		}
+	}
+	
+	private void Item_DoubleTapped( object? sender, TappedEventArgs e )
+	{
+		Edit_OnClick( sender, e );
 	}
 }
 

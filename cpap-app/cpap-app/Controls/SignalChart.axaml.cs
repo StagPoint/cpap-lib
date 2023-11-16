@@ -13,7 +13,6 @@ using Avalonia.Media;
 using Avalonia.Styling;
 
 using cpap_app.Configuration;
-using cpap_app.Controls;
 using cpap_app.Converters;
 using cpap_app.Events;
 using cpap_app.Styling;

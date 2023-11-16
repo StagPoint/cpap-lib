@@ -22,7 +22,7 @@
                      Value="{Binding Percentage, Mode=OneWay}">
             <ProgressBar.Transitions>
                 <Transitions>
-                    <DoubleTransition Property="Value" Duration="0.2" Easing="QuarticEaseInOut" Delay="0.01" />
+                    <DoubleTransition Property="Value" Duration="0.33" Easing="QuarticEaseInOut" Delay="0.01" />
                 </Transitions>
             </ProgressBar.Transitions>
         </ProgressBar>

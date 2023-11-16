@@ -22,7 +22,8 @@ public partial class AddSleepStageView : UserControl
 		
 		Dispatcher.UIThread.Post( () =>
 		{
-			SleepStage.Focus( NavigationMethod.Tab );
+			SleepStageList.Focus( NavigationMethod.Tab );
+			Validate();
 		}, DispatcherPriority.Background );
 	}
 
@@ -66,30 +67,34 @@ public partial class AddSleepStageView : UserControl
 
 		if( viewModel.EndTime <= viewModel.StartTime )
 		{
+			EndTime.Classes.Add( "ValidationError" );
 			viewModel.ValidationErrors.Add( "End time cannot be before Start time" );
 		}
 
 		viewModel.SetValidationStatus( viewModel.ValidationErrors.Count == 0 );
 	}
 	
-	private void StartTime_OnLostFocus( object? sender, RoutedEventArgs e )
+	private void InputElement_OnLostFocus( object? sender, RoutedEventArgs e )
 	{
 		Validate();
 	}
 	
-	private void EndTime_OnLostFocus( object? sender, RoutedEventArgs e )
+	private void SleepStage_OnKeyDown( object? sender, KeyEventArgs e )
 	{
-		Validate();
-	}
-	
-	private void StartDate_OnLostFocus( object? sender, RoutedEventArgs e )
-	{
-		Validate();
-	}
-	
-	private void EndDate_OnLostFocus( object? sender, RoutedEventArgs e )
-	{
-		Validate();
+		if( e.KeyModifiers != KeyModifiers.None )
+		{
+			return;
+		}
+
+		var chr = e.Key.ToString();
+		SleepStageList.SelectedIndex = e.Key switch
+		{
+			Key.A => (int)SleepStage.Awake,
+			Key.R => (int)SleepStage.Rem,
+			Key.L => (int)SleepStage.Light,
+			Key.D => (int)SleepStage.Deep,
+			_     => SleepStageList.SelectedIndex
+		};
 	}
 }
 
