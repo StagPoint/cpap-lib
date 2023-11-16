@@ -5,15 +5,19 @@
              xmlns:controls="clr-namespace:cpap_app.Controls"
              xmlns:viewModels="clr-namespace:cpap_app.ViewModels"
              xmlns:controls1="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+             xmlns:converters="clr-namespace:cpap_app.Converters"
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="450"
              x:Class="cpap_app.Views.DailySleepStagesView">
     <UserControl.Styles>
         <StyleInclude Source="/Styling/GridStyles.axaml" />
     </UserControl.Styles>
+    <UserControl.Resources>
+        <converters:FormattedTimespanConverter x:Key="FormattedTimeSpan" />
+    </UserControl.Resources>
     <ScrollViewer Padding="8">
-        <StackPanel Orientation="Vertical">
+        <StackPanel Name="Container" Orientation="Vertical" x:DataType="viewModels:SleepStagesViewModel">
             
-            <StackPanel Name="StagesSummary" Orientation="Vertical" Margin="0 0 0 10" Grid.IsSharedSizeScope="True" x:DataType="viewModels:SleepStagesViewModel">
+            <StackPanel Name="StagesSummary" Orientation="Vertical" Margin="0 0 0 10" Grid.IsSharedSizeScope="True">
                 <TextBlock Text="Time spent in each stage of sleep" Theme="{DynamicResource SubtitleTextBlockStyle}" FontWeight="Normal" HorizontalAlignment="Center" Margin="0 0 0 10"/>
                 <controls:SleepStageItemView DataContext="{Binding StageSummaries[0]}" />
                 <controls:SleepStageItemView DataContext="{Binding StageSummaries[1]}" />
@@ -23,7 +27,7 @@
             
             <TextBlock Text="If you wish to track sleep stage data obtained from another device, enter the information below." TextWrapping="Wrap" Margin="0 12"/>
 
-            <!-- Column headers for event list -->
+            <!-- Column headers for list of periods -->
             <Border Classes="ColumnHeader">
                 <Grid RowDefinitions="Auto">
                     <Grid.ColumnDefinitions>
@@ -41,6 +45,43 @@
                     <Rectangle Grid.Column="3" Grid.Row="0" Classes="HeaderSeparator" />
                 </Grid>
             </Border>
+            
+            <!-- Rows for list of periods -->
+            <ItemsRepeater Name="lstPeriods" VerticalCacheLength="100" ItemsSource="{Binding Periods}">
+                <ItemsRepeater.ItemTemplate>
+                    <DataTemplate DataType="{x:Type viewModels:SleepStagePeriodViewModel}">
+                        <Border Classes="SelectionRect" Tag="{Binding}">
+                            <Border.ContextFlyout>
+                                <MenuFlyout>
+                                    <MenuItem Header="Edit" Tag="{Binding}" />
+                                    <MenuItem Header="Delete" Tag="{Binding}" Click="Delete_OnClick" />
+                                </MenuFlyout>
+                            </Border.ContextFlyout>
+
+                            <Grid RowDefinitions="22">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition SharedSizeGroup="SleepStagesC0" />
+                                    <ColumnDefinition SharedSizeGroup="SleepStagesC1" />
+                                    <ColumnDefinition SharedSizeGroup="SleepStagesC2" />
+                                    <ColumnDefinition SharedSizeGroup="SleepStagesC3" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0"
+                                           Text="{Binding Stage, Mode=OneWay}"
+                                           TextWrapping="NoWrap" />
+                                <TextBlock Grid.Column="1"
+                                           Text="{Binding StartTime, Mode=OneWay, StringFormat={}{0:T}}"
+                                           TextWrapping="NoWrap" />
+                                <TextBlock Grid.Column="2"
+                                           Text="{Binding EndTime, Mode=OneWay, StringFormat={}{0:T}}"
+                                           TextWrapping="NoWrap" />
+                                <TextBlock Grid.Column="3" Text="{Binding Duration, Mode=OneWay, StringFormat={}{0:g}}"
+                                           TextWrapping="NoWrap" />
+                            </Grid>
+
+                        </Border>
+                    </DataTemplate>
+                </ItemsRepeater.ItemTemplate>
+            </ItemsRepeater>
 
             <Button Name="AddNew" HorizontalAlignment="Stretch" Margin="1 12" Click="AddNew_OnClick">
                 <StackPanel Orientation="Horizontal" Spacing="12" Margin="-16 0 0 0">

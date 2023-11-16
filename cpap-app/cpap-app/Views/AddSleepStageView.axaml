@@ -5,7 +5,7 @@
              xmlns:viewModels="clr-namespace:cpap_app.ViewModels"
              xmlns:converters="clr-namespace:cpap_app.Converters"
              mc:Ignorable="d" 
-             d:DesignWidth="400" 
+             Width="400" 
              d:DesignHeight="200"
              x:Class="cpap_app.Views.AddSleepStageView"
              x:DataType="viewModels:SleepStagePeriodViewModel">
@@ -27,18 +27,18 @@
             <TextBlock Grid.Column="0" Grid.Row="2" Text="End Time" HorizontalAlignment="Right" VerticalAlignment="Center" />
             
             <!-- Inputs -->
-            <ComboBox Grid.Column="2" Grid.Row="0" SelectedIndex="{Binding Stage}" VerticalAlignment="Center" Width="115" >
+            <ComboBox Grid.Column="2" Grid.Row="0" Name="SleepStage" SelectedIndex="{Binding Stage}" VerticalAlignment="Center" Width="115" >
                 <ComboBoxItem Content="Awake" />
                 <ComboBoxItem Content="REM" />
                 <ComboBoxItem Content="Light" />
                 <ComboBoxItem Content="Deep" />
             </ComboBox>
             <StackPanel Grid.Column="2" Grid.Row="1" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center" >
-                <CalendarDatePicker SelectedDate="{Binding StartDate.Date}" />
+                <CalendarDatePicker Name="StartDate" Width="150" SelectedDate="{Binding StartDate}" LostFocus="StartDate_OnLostFocus" />
                 <TextBox Name="StartTime" Width="75" Text="{Binding StartTime, Mode=OneWay, StringFormat={}{0:h\:mm tt}}" HorizontalAlignment="Left" HorizontalContentAlignment="Center" LostFocus="StartTime_OnLostFocus" />
             </StackPanel>
             <StackPanel Grid.Column="2" Grid.Row="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center" >
-                <CalendarDatePicker SelectedDate="{Binding EndDate.Date}" />
+                <CalendarDatePicker Name="EndDate" Width="150" SelectedDate="{Binding EndDate}" LostFocus="EndDate_OnLostFocus" />
                 <TextBox Name="EndTime" Width="75" Text="{Binding EndTime, Mode=OneWay, StringFormat={}{0:h\:mm tt}}" HorizontalAlignment="Left" HorizontalContentAlignment="Center" LostFocus="EndTime_OnLostFocus" />
             </StackPanel>
         </Grid>

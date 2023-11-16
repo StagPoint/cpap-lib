@@ -1,7 +1,9 @@
-﻿using System.Linq;
+﻿using System.Diagnostics;
+using System.Linq;
 
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.VisualTree;
 
@@ -18,6 +20,8 @@ namespace cpap_app.Views;
 
 public partial class DailySleepStagesView : UserControl
 {
+	private SleepStagesViewModel? _sleepStages;
+	
 	public DailySleepStagesView()
 	{
 		InitializeComponent();
@@ -32,11 +36,15 @@ public partial class DailySleepStagesView : UserControl
 			return;
 		}
 		
-		StagesSummary.DataContext = new SleepStagesViewModel();
+		_sleepStages = new SleepStagesViewModel();
+
+		Container.DataContext = _sleepStages;
 	}
 	
 	private async void AddNew_OnClick( object? sender, RoutedEventArgs e )
 	{
+		Debug.Assert( _sleepStages != null, nameof( _sleepStages ) + " != null" );
+		
 		if( DataContext is not DailyReport day )
 		{
 			return;
@@ -45,11 +53,27 @@ public partial class DailySleepStagesView : UserControl
 		var viewModel = new SleepStagePeriodViewModel
 		{
 			Stage     = SleepStage.Awake,
-			StartDate = day.RecordingStartTime.Date,
 			EndDate   = day.RecordingEndTime.Date,
-			StartTime = day.RecordingStartTime,
 			EndTime   = day.RecordingEndTime,
 		};
+
+		if( _sleepStages.Periods.Count == 0 )
+		{
+			viewModel.StartDate = day.RecordingStartTime.Date;
+			viewModel.StartTime = day.RecordingStartTime;
+		}
+		else
+		{
+			var last = _sleepStages.Periods.Last();
+			
+			viewModel.StartDate = last.EndDate.Date;
+			viewModel.StartTime = last.EndTime;
+
+			if( viewModel.EndTime <= viewModel.StartTime )
+			{
+				viewModel.EndTime = viewModel.EndTime.AddHours( 1 );
+			}
+		}
 		
 		var view = new AddSleepStageView()
 		{
@@ -67,13 +91,7 @@ public partial class DailySleepStagesView : UserControl
 
 		viewModel.ValidationStatusChanged += ( o, isValid ) => dialog.IsPrimaryButtonEnabled = isValid; 
 
-		var task = dialog.ShowAsync( TopLevel.GetTopLevel( this ) );
-
-		// Dispatcher.UIThread.Post( () =>
-		// {
-		// 	dialog.Content.Focus();
-		// }, DispatcherPriority.Loaded );
-
+		var task   = dialog.ShowAsync( TopLevel.GetTopLevel( this ) );
 		var result = await task;
 
 		if( result == ContentDialogResult.Primary )
@@ -88,6 +106,20 @@ public partial class DailySleepStagesView : UserControl
 
 				await msgBox.ShowWindowDialogAsync( this.FindAncestorOfType<Window>() );
 			}
+			else
+			{
+				_sleepStages.AddPeriod( viewModel );
+			}
+		}
+	}
+	
+	private void Delete_OnClick( object? sender, RoutedEventArgs e )
+	{
+		Debug.Assert( _sleepStages != null, nameof( _sleepStages ) + " != null" );
+		
+		if( e.Source is Control control && control.Tag is SleepStagePeriodViewModel item )
+		{
+			_sleepStages.RemovePeriod( item );
 		}
 	}
 }

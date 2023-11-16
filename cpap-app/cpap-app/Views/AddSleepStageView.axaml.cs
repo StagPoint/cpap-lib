@@ -1,7 +1,9 @@
 ﻿using System;
 
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Threading;
 
 using cpap_app.ViewModels;
 
@@ -12,6 +14,16 @@ public partial class AddSleepStageView : UserControl
 	public AddSleepStageView()
 	{
 		InitializeComponent();
+	}
+
+	protected override void OnLoaded( RoutedEventArgs e )
+	{
+		base.OnLoaded( e );
+		
+		Dispatcher.UIThread.Post( () =>
+		{
+			SleepStage.Focus( NavigationMethod.Tab );
+		}, DispatcherPriority.Background );
 	}
 
 	protected override void OnUnloaded( RoutedEventArgs e )
@@ -52,6 +64,11 @@ public partial class AddSleepStageView : UserControl
 			viewModel.ValidationErrors.Add( $"Incorrect format for {nameof( viewModel.EndTime )}" );
 		}
 
+		if( viewModel.EndTime <= viewModel.StartTime )
+		{
+			viewModel.ValidationErrors.Add( "End time cannot be before Start time" );
+		}
+
 		viewModel.SetValidationStatus( viewModel.ValidationErrors.Count == 0 );
 	}
 	
@@ -61,6 +78,16 @@ public partial class AddSleepStageView : UserControl
 	}
 	
 	private void EndTime_OnLostFocus( object? sender, RoutedEventArgs e )
+	{
+		Validate();
+	}
+	
+	private void StartDate_OnLostFocus( object? sender, RoutedEventArgs e )
+	{
+		Validate();
+	}
+	
+	private void EndDate_OnLostFocus( object? sender, RoutedEventArgs e )
 	{
 		Validate();
 	}
