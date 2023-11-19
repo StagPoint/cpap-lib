@@ -17,36 +17,6 @@
     </UserControl.Resources>
     <ScrollViewer Padding="8">
         <StackPanel Name="Container" Orientation="Vertical" x:DataType="viewModels:SleepStagesViewModel">
-            
-            <StackPanel Name="AuthNotConfigured" IsVisible="False" Orientation="Vertical">
-                <TextBlock Text="Not Configured" Theme="{DynamicResource SubtitleTextBlockStyle}" HorizontalAlignment="Center"/>
-                <TextBlock Text="Authorization configuration is missing or incomplete." HorizontalAlignment="Center" />
-                <Border Height="12" />
-                <Grid ColumnDefinitions="Auto,8,*" RowDefinitions="Auto,Auto" Margin="8">
-                    <TextBlock Grid.Column="0" Grid.Row="0" Text="Client ID" HorizontalAlignment="Right" VerticalAlignment="Center" />
-                    <TextBlock Grid.Column="0" Grid.Row="1" Text="Client Secret" HorizontalAlignment="Right" VerticalAlignment="Center" />
-                    
-                    <TextBox Name="ClientID" Grid.Column="2" Grid.Row="0" VerticalAlignment="Center" />
-                    <TextBox Name="ClientSecret" Grid.Column="2" Grid.Row="1" VerticalAlignment="Center" />
-                </Grid>
-                <Button Name="SaveAuthConfiguration" HorizontalAlignment="Stretch" Margin="1 12" Click="SaveAuthConfiguration_OnClick">
-                    <StackPanel Orientation="Horizontal" Spacing="12" Margin="-16 0 0 0">
-                        <controls1:SymbolIcon Symbol="Admin"/>
-                        <TextBlock Text="Save Configuration" />
-                    </StackPanel>
-                </Button>
-            </StackPanel>
-            
-            <StackPanel Name="AuthRequired" IsVisible="False" Orientation="Vertical">
-                <TextBlock Text="Authorization Required" Theme="{DynamicResource SubtitleTextBlockStyle}" HorizontalAlignment="Center"/>
-                <TextBlock Text="In order to use this functionality, you must sign in to your Google account and confirm that you want to allow this application to have access to your Google Fit sleep data." TextWrapping="Wrap" HorizontalAlignment="Center" />
-                <Border Height="12" />
-                <Button Name="AuthorizeAccess" HorizontalAlignment="Stretch" Margin="1 12" Click="AuthorizeAccess_OnClick">
-                    <Image Source="/Assets/btn_google_sign-in.png" />
-                </Button>
-            </StackPanel>
-            
-            <!--
             <StackPanel Name="StagesSummary" IsVisible="{Binding Periods.Count, Mode=OneWay}" Orientation="Vertical" Margin="0 0 0 10" Grid.IsSharedSizeScope="True">
                 <StackPanel.Transitions>
                     <Transitions>
@@ -59,7 +29,6 @@
                 <controls:SleepStageItemView DataContext="{Binding StageSummaries[2]}" />
                 <controls:SleepStageItemView DataContext="{Binding StageSummaries[3]}" />
             </StackPanel>
-            -->
             
             <StackPanel Name="ManualEntry" IsVisible="False">
                 <TextBlock Text="If you wish to track sleep stage data obtained from another device, enter the information below." TextWrapping="Wrap" Margin="0 12"/>

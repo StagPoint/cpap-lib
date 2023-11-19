@@ -10,6 +10,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Platform;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
@@ -29,6 +30,8 @@ using FluentAvalonia.UI.Windowing;
 
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
+
+using OAuth;
 
 namespace cpap_app.Views;
 
@@ -99,8 +102,9 @@ public partial class MainView : UserControl
 		AddHandler( ImportOximetryRequestedEvent, HandleImportRequestOximetry );
 		AddHandler( LoadDateRequestedEvent,       HandleLoadDateRequest );
 
-		btnImportCPAP.Tapped     += HandleImportRequestCPAP;
-		btnImportOximetry.Tapped += HandleImportRequestOximetry;
+		btnImportCPAP.Tapped      += HandleImportRequestCPAP;
+		btnImportOximetry.Tapped  += HandleImportRequestOximetry;
+		btnImportGoogleFit.Tapped += HandleImportRequestGoogleFit;
 		
 		foreach( var importer in OximetryImporterRegistry.RegisteredImporters )
 		{
@@ -208,6 +212,113 @@ public partial class MainView : UserControl
 		}
 	}
 
+	private async void HandleImportRequestGoogleFit( object? sender, TappedEventArgs e )
+	{
+		var clientConfig = AuthorizationConfigStore.GetConfig();
+		if( !clientConfig.IsValid )
+		{
+			var isConfigured = await ConfigureGoogleFitClient( clientConfig );
+			if( !isConfigured )
+			{
+				return;
+			}
+
+			AuthorizationConfigStore.SaveConfig( clientConfig );
+		}
+
+		var accessTokenInfo = AccessTokenStore.GetAccessTokenInfo();
+		if( !accessTokenInfo.IsValid )
+		{
+			accessTokenInfo = await AuthorizeGoogleFitClient();
+			if( accessTokenInfo is not { IsValid: true } )
+			{
+				return;
+			}
+
+			AccessTokenStore.SaveAccessTokenInfo( accessTokenInfo );
+		}
+
+		if( !accessTokenInfo.AccessTokenIsValid )
+		{
+			var newTokenInfo = await AuthorizationClient.RefreshAuthorizationTokenAsync( clientConfig, accessTokenInfo.RefreshToken );
+			if( newTokenInfo.AccessTokenIsValid )
+			{
+				accessTokenInfo = newTokenInfo;
+				AccessTokenStore.SaveAccessTokenInfo( accessTokenInfo );
+			}
+		}
+
+		var importedSessions = GoogleFitImporter.ImportAsync( DateTime.Today.AddDays( -7 ), DateTime.Today.AddDays( 1 ), accessTokenInfo.AccessToken );
+	}
+	
+	private async Task<AccessTokenInfo?> AuthorizeGoogleFitClient()
+	{
+		AccessTokenInfo? accessTokenInfo    = null;
+		string?          authorizationError = null;
+
+		var view = new GoogleFitUserAuthorizationView();
+
+		var dialog = new TaskDialog()
+		{
+			Title    = string.Empty,
+			Buttons  = { TaskDialogButton.CancelButton },
+			XamlRoot = (Visual)VisualRoot!,
+			Content  = view,
+			MaxWidth = 600,
+		};
+
+		view.AuthorizationSuccess += ( sender, info ) =>
+		{
+			accessTokenInfo = info;
+			dialog.Hide();
+		};
+		
+		view.AuthorizationError   += ( sender, error ) =>
+		{
+			authorizationError = error;
+			dialog.Hide();
+		};
+
+		var dialogResult = await dialog.ShowAsync();
+		if( (TaskDialogStandardResult)dialogResult == TaskDialogStandardResult.Cancel )
+		{
+			return null;
+		}
+
+		if( !string.IsNullOrEmpty( authorizationError ) )
+		{
+			var msgBox = MessageBoxManager.GetMessageBoxStandard(
+				$"Error during authorization",
+				authorizationError,
+				ButtonEnum.Ok,
+				Icon.Error
+			);
+			
+			await msgBox.ShowWindowDialogAsync( this.FindAncestorOfType<Window>() );
+		}
+
+		return accessTokenInfo;
+	}
+
+	private async Task<bool> ConfigureGoogleFitClient( AuthorizationConfig clientConfig )
+	{
+		var dialog = new TaskDialog()
+		{
+			Title = $"Google API Client App Configuration",
+			Buttons =
+			{
+				TaskDialogButton.OKButton,
+				TaskDialogButton.CancelButton,
+			},
+			XamlRoot = (Visual)VisualRoot!,
+			Content  = new GoogleFitClientConfigView() { DataContext = clientConfig },
+			MaxWidth = 500,
+		};
+		
+		var dialogResult = await dialog.ShowAsync();
+		return (TaskDialogStandardResult)dialogResult == TaskDialogStandardResult.OK && clientConfig.IsValid;
+	}
+
 	private void HandleImportRequestOximetry( object? sender, TappedEventArgs e )
 	{
 		// TODO: This really needs to be changed so that it's a generic "Import Oximetry CSV File" which selects the importer based on individual files selected
@@ -257,9 +368,7 @@ public partial class MainView : UserControl
 		var appWindow = TopLevel.GetTopLevel( this ) as AppWindow;
 		appWindow?.PlatformFeatures.SetTaskBarProgressBarState( TaskBarProgressBarState.Indeterminate );
 
-		bool dataWasImported       = false;
-		bool alreadyUpToDate       = true;
-		bool operationWasCancelled = false;
+		bool dataWasImported = false;
 
 		td.Opened += async ( _, _ ) =>
 		{
@@ -402,14 +511,14 @@ public partial class MainView : UserControl
 		td.XamlRoot = (Visual)VisualRoot!;
 		await td.ShowAsync();	
 
-		if( !operationWasCancelled && metaSessions.Count == 0 || !dataWasImported )
+		if( metaSessions.Count == 0 || !dataWasImported )
 		{
-			var upToDate     = "All pulse oximetry data was already up to date.";
-			var noMatchFound = "One or more of the files you selected could not be matched to any existing CPAP sessions.";
+			const string upToDate     = "All pulse oximetry data was already up to date.";
+			//const string noMatchFound = "One or more of the files you selected could not be matched to any existing CPAP sessions.";
 			
 			var dialog = MessageBoxManager.GetMessageBoxStandard(
 				$"Import from {importer.FriendlyName}",
-				alreadyUpToDate ? upToDate : noMatchFound,
+				upToDate,
 				ButtonEnum.Ok,
 				Icon.Warning );
 

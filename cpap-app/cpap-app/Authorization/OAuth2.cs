@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -20,7 +21,7 @@ namespace OAuth
 
 		public bool AccessTokenIsValid
 		{
-			get => !string.IsNullOrEmpty( AccessToken ) && DateTime.Now >= AccessTokenExpiration.AddMinutes( 5 );
+			get => !string.IsNullOrEmpty( AccessToken ) && DateTime.Now <= AccessTokenExpiration.AddMinutes( 5 );
 		}
 
 		public bool IsValid
@@ -34,8 +35,8 @@ namespace OAuth
 
 	public class AuthorizationConfig
 	{
-		#region Public properties 
-		
+		#region Public properties
+
 		public string AuthorizationEndpoint { get; } = "https://accounts.google.com/o/oauth2/v2/auth";
 		public string TokenRequestUri       { get; } = "https://www.googleapis.com/oauth2/v4/token";
 		public string RedirectUri           { get; init; }
@@ -48,11 +49,11 @@ namespace OAuth
 			get => !string.IsNullOrEmpty( RedirectUri ) && !string.IsNullOrEmpty( ClientID ) && !string.IsNullOrEmpty( ClientSecret );
 		}
 
-		#endregion 
-		
+		#endregion
+
 		#region Constructor
 
-		public AuthorizationConfig() 
+		public AuthorizationConfig()
 			: this( string.Empty, string.Empty, 3264 )
 		{
 		}
@@ -61,28 +62,28 @@ namespace OAuth
 		{
 			RedirectUri = $"http://{IPAddress.Loopback}:{port ?? GetRandomUnusedPort()}/";
 
-			ClientID     = clientID; 
-			ClientSecret = clientSecret; 
+			ClientID     = clientID;
+			ClientSecret = clientSecret;
 		}
-		
-		#endregion 
-		
-		#region Private functions 
-		
+
+		#endregion
+
+		#region Private functions
+
 		public static int GetRandomUnusedPort()
 		{
 			// ref http://stackoverflow.com/a/3978040
-			
+
 			var listener = new TcpListener( IPAddress.Loopback, 0 );
 			listener.Start();
-			
+
 			var port = ((IPEndPoint)listener.LocalEndpoint).Port;
 			listener.Stop();
-			
+
 			return port;
 		}
 
-		#endregion 
+		#endregion
 	}
 
 	public class AuthorizationClient
@@ -97,7 +98,7 @@ namespace OAuth
 			{
 				throw new Exception( "Malformed authorization information returned from server" );
 			}
-			
+
 			return new AccessTokenInfo
 			{
 				AccessToken           = response.AccessToken,
@@ -122,11 +123,11 @@ namespace OAuth
 				RefreshToken          = refreshToken
 			};
 		}
-		
+
 		#endregion
-		
-		#region Private functions 
-		
+
+		#region Private functions
+
 		private static async Task<AccessTokenResponse> RefreshAuthorizationToken( AuthorizationConfig config, string refreshToken )
 		{
 			string tokenRequestUri  = config.TokenRequestUri;
@@ -156,7 +157,7 @@ namespace OAuth
 
 				using StreamReader reader       = new StreamReader( tokenResponseStream );
 				string             responseText = await reader.ReadToEndAsync();
-				
+
 				return JsonConvert.DeserializeObject<AccessTokenResponse>( responseText ) ?? throw new InvalidOperationException( "Failed to deserialize the response from the server" );
 			}
 			catch( WebException err )
@@ -169,15 +170,15 @@ namespace OAuth
 						throw new NullReferenceException( "Web request did not return a response" );
 					}
 
-					using StreamReader reader = new StreamReader( responseStream );
-					string responseText = await reader.ReadToEndAsync();
+					using StreamReader reader       = new StreamReader( responseStream );
+					string             responseText = await reader.ReadToEndAsync();
 					throw new WebException( err.Message + "\r\n" + responseText );
 				}
 
 				throw;
 			}
 		}
-		
+
 		private static async Task<AccessTokenResponse> AuthorizeAndReturnAccessToken( AuthorizationConfig config )
 		{
 			// Creates a redirect URI using an available port on the loopback address.
@@ -186,7 +187,7 @@ namespace OAuth
 			// Creates an HttpListener to listen for requests on that redirect URI.
 			using var http = new HttpListener();
 			http.Prefixes.Add( redirectUri );
-			
+
 			http.Start();
 
 			var encodedRedirect = Uri.EscapeDataString( redirectUri );
@@ -195,8 +196,8 @@ namespace OAuth
 			// Creates the OAuth 2.0 authorization request.
 			string authorizationRequest = $"{config.AuthorizationEndpoint}?prompt=consent&response_type=code&access_type=offline&scope={encodedScope}&redirect_uri={encodedRedirect}&client_id={config.ClientID}";
 
-			// Opens request in the browser.
-			Process.Start( authorizationRequest );
+			// Opens request in the user's default browser.
+			OpenUrl( authorizationRequest );
 
 			// Waits for the OAuth authorization response.
 			var context = await http.GetContextAsync();
@@ -276,24 +277,53 @@ namespace OAuth
 						throw new NullReferenceException( $"Request to {tokenRequestUri} did not return a response" );
 					}
 
-					using StreamReader reader = new StreamReader( responseStream );
-					string responseText = await reader.ReadToEndAsync();
+					using StreamReader reader       = new StreamReader( responseStream );
+					string             responseText = await reader.ReadToEndAsync();
 					throw new WebException( err.Message + "\r\n" + responseText );
 				}
 
 				throw;
 			}
 		}
-		
-		#endregion 
-		
-		#region Nested types 
-		
+
+		private static void OpenUrl( string url )
+		{
+			try
+			{
+				Process.Start( new ProcessStartInfo { FileName = url, UseShellExecute = true } );
+			}
+			catch
+			{
+				// https://github.com/dotnet/runtime/issues/17938
+				if( RuntimeInformation.IsOSPlatform( OSPlatform.Windows ) )
+				{
+					url = url.Replace( "&", "^&" );
+					Process.Start( new ProcessStartInfo( url ) { UseShellExecute = true } );
+				}
+				else if( RuntimeInformation.IsOSPlatform( OSPlatform.Linux ) )
+				{
+					Process.Start( "xdg-open", url );
+				}
+				else if( RuntimeInformation.IsOSPlatform( OSPlatform.OSX ) )
+				{
+					Process.Start( "open", url );
+				}
+				else
+				{
+					throw;
+				}
+			}
+		}
+
+		#endregion
+
+		#region Nested types
+
 		internal class AccessTokenResponse
 		{
 			[JsonProperty( "access_token" )]
 			public string? AccessToken { get; set; }
-		
+
 			[JsonProperty( "refresh_token" )]
 			public string? RefreshToken { get; set; }
 
@@ -307,6 +337,6 @@ namespace OAuth
 			public string? TokenType { get; set; }
 		}
 
-		#endregion 
+		#endregion
 	}
 }

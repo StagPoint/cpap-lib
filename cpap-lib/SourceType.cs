@@ -6,6 +6,7 @@
 		PulseOximetry,
 		SmartWatch,
 		SmartPhone,
+		HealthAPI,
 		ECG,
 		Manual,
 		Other,

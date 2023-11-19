@@ -1,0 +1,24 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="450"
+             x:Class="cpap_app.Views.GoogleFitUserAuthorizationView">
+    <StackPanel Name="AuthRequired" Orientation="Vertical" Margin="8" Spacing="12">
+        <TextBlock Text="Google Fit Authorization Required" Theme="{DynamicResource SubtitleTextBlockStyle}"
+                   HorizontalAlignment="Center" Margin="12" />
+        <TextBlock TextWrapping="Wrap">
+            Google Fit is an open platform that lets you control your fitness data from multiple apps and devices.
+            Connecting to Google Fit allows you to import your sleep stage data for easy comparison alongside your CPAP and Pulse Oximetry data for a more complete picture of the effectiveness of your therapy.
+        </TextBlock>
+        <TextBlock TextWrapping="Wrap">
+            In order to use this functionality, you must sign in to your Google account and confirm that you want to permit this application to have access to your Google Fit sleep data.
+        </TextBlock>
+        <TextBlock TextWrapping="Wrap">
+            You can disconnect from Google Fit at any time by going to Settings, or by revoking this app's permissions in your Google account's security settings.
+        </TextBlock>
+        <Button Name="AuthorizeAccess" HorizontalAlignment="Stretch" Margin="12" Width="300" Padding="0" Click="AuthorizeAccess_OnClick">
+            <Image Source="/Assets/btn_google_sign-in.png" />
+        </Button>
+    </StackPanel>
+</UserControl>

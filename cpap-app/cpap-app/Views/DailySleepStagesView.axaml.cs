@@ -25,35 +25,11 @@ namespace cpap_app.Views;
 
 public partial class DailySleepStagesView : UserControl
 {
-	public bool IsAuthorizationConfigured
-	{
-		get { return _authConfig is { IsValid: true }; }
-	}
-	
 	private SleepStagesViewModel? _sleepStages;
-	
-	private AuthorizationConfig? _authConfig;
-	private AccessTokenInfo?     _accessTokenInfo;
 	
 	public DailySleepStagesView()
 	{
 		InitializeComponent();
-	}
-
-	protected override void OnLoaded( RoutedEventArgs e )
-	{
-		base.OnLoaded( e );
-
-		var config = AuthorizationConfigStore.GetConfig();
-		if( !config.IsValid )
-		{
-			AuthNotConfigured.IsVisible = true;
-		}
-		else
-		{
-			_accessTokenInfo       = AccessTokenStore.GetAccessTokenInfo();
-			AuthRequired.IsVisible = !_accessTokenInfo.IsValid;
-		}
 	}
 
 	protected override void OnPropertyChanged( AvaloniaPropertyChangedEventArgs change )
@@ -178,30 +154,6 @@ public partial class DailySleepStagesView : UserControl
 	private void Item_DoubleTapped( object? sender, TappedEventArgs e )
 	{
 		Edit_OnClick( sender, e );
-	}
-	
-	private void SaveAuthConfiguration_OnClick( object? sender, RoutedEventArgs e )
-	{
-		if( string.IsNullOrEmpty( ClientID.Text ) || string.IsNullOrEmpty( ClientSecret.Text ) )
-		{
-			return;
-		}
-		
-		_authConfig = new AuthorizationConfig
-		{
-			ClientID     = ClientID.Text,
-			ClientSecret = ClientSecret.Text
-		};
-		
-		AuthorizationConfigStore.SaveConfig( _authConfig );
-
-		AuthNotConfigured.IsVisible = !_authConfig.IsValid;
-		AuthRequired.IsVisible      = true;
-	}
-	
-	private void AuthorizeAccess_OnClick( object? sender, RoutedEventArgs e )
-	{
-		//throw new System.NotImplementedException();
 	}
 }
 
