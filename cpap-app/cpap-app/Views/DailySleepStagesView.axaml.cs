@@ -131,7 +131,7 @@ public partial class DailySleepStagesView : UserControl
 	{
 		Debug.Assert( _sleepStages != null, nameof( _sleepStages ) + " != null" );
 		
-		if( e.Source is Control control && control.Tag is SleepStagePeriodViewModel item )
+		if( e.Source is Control { Tag: SleepStagePeriodViewModel item } )
 		{
 			_sleepStages.RemovePeriod( item );
 		}
@@ -141,7 +141,7 @@ public partial class DailySleepStagesView : UserControl
 	{
 		Debug.Assert( _sleepStages != null, nameof( _sleepStages ) + " != null" );
 		
-		if( e.Source is Control control && control.Tag is SleepStagePeriodViewModel item )
+		if( e.Source is Control { Tag: SleepStagePeriodViewModel item } )
 		{
 			await EditSleepPeriod( item, false );
 		}

@@ -86,7 +86,6 @@ public partial class AddSleepStageView : UserControl
 			return;
 		}
 
-		var chr = e.Key.ToString();
 		SleepStageList.SelectedIndex = e.Key switch
 		{
 			Key.A => (int)SleepStage.Awake,
@@ -95,6 +94,26 @@ public partial class AddSleepStageView : UserControl
 			Key.D => (int)SleepStage.Deep,
 			_     => SleepStageList.SelectedIndex
 		};
+	}
+	
+	private void StartDate_OnKeyDown( object? sender, KeyEventArgs e )
+	{
+		// Avalonia's CalendarDatePicker is broken and doesn't allow shift-tab navigation, so this is a very stupid workaround
+		if( e is { Key: Key.Tab, KeyModifiers: KeyModifiers.Shift } )
+		{
+			SleepStageList.Focus( NavigationMethod.Tab );
+			e.Handled = true;
+		}
+	}
+	
+	private void EndDate_OnKeyDown( object? sender, KeyEventArgs e )
+	{
+		// Avalonia's CalendarDatePicker is broken and doesn't allow shift-tab navigation, so this is a very stupid workaround
+		if( e is { Key: Key.Tab, KeyModifiers: KeyModifiers.Shift } )
+		{
+			StartTime.Focus( NavigationMethod.Tab );
+			e.Handled = true;
+		}
 	}
 }
 

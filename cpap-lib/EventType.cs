@@ -90,6 +90,11 @@ namespace cpaplib
 		/// Pulse rate exceeded the threshold difference from baseline
 		/// </summary>
 		PulseRateChange,
+		/// <summary>
+		/// Raised by the importer when the pulse oximetry data contains invalid entries.
+		/// Pulse Oximeters from Viatom/Wellue/Lookee, Emay, etc. have flags to indicate when data is invalid.
+		/// </summary>
+		PulseOximetryFault,
 	}
 
 	/// <summary>
@@ -129,6 +134,7 @@ namespace cpaplib
 		{
 			EventType.Desaturation,
 			EventType.Hypoxemia,
+			EventType.PulseOximetryFault,
 		};
 
 		public static readonly EventType[] Pulse =

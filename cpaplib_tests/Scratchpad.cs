@@ -19,6 +19,19 @@ public class Scratchpad
 	}
 
 	[TestMethod]
+	public void DateTimeFromGoogleAPI()
+	{
+		var startTime = DateTime.UnixEpoch.ToLocalTime().AddMilliseconds( 1700028990000 );
+		var endTime   = DateTime.UnixEpoch.ToLocalTime().AddMilliseconds( 1700055270000 );
+
+		var compareEndTime = new DateTime( 1970, 1, 1 ).ToLocalTime().AddMilliseconds( 1700055270000 );
+
+		Assert.AreEqual( endTime, compareEndTime );
+
+		Debug.WriteLine( $"Start: {startTime},    End: {endTime},    Duration: {endTime - startTime}" );
+	}
+
+	[TestMethod]
 	public void ReadViatomBinaryFile()
 	{
 		const int HEADER_SIZE = 40;

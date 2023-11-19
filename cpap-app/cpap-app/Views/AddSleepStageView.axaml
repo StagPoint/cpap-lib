@@ -27,19 +27,19 @@
             <TextBlock Grid.Column="0" Grid.Row="2" Text="End Time" HorizontalAlignment="Right" VerticalAlignment="Center" />
             
             <!-- Inputs -->
-            <ComboBox Grid.Column="2" Grid.Row="0" IsTabStop="True" Name="SleepStageList" SelectedIndex="{Binding Stage}" VerticalAlignment="Center" Width="115" KeyDown="SleepStage_OnKeyDown" >
+            <ComboBox Grid.Column="2" Grid.Row="0" Name="SleepStageList" SelectedIndex="{Binding Stage}" VerticalAlignment="Center" Width="115" KeyDown="SleepStage_OnKeyDown" >
                 <ComboBoxItem Content="Awake" />
                 <ComboBoxItem Content="REM" />
                 <ComboBoxItem Content="Light" />
                 <ComboBoxItem Content="Deep" />
             </ComboBox>
             <StackPanel Grid.Column="2" Grid.Row="1" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center" >
-                <CalendarDatePicker Name="StartDate" IsTabStop="True" Width="150" SelectedDate="{Binding StartDate}" />
-                <TextBox Name="StartTime" Width="75" IsTabStop="True" Text="{Binding StartTime, Mode=OneWay, StringFormat={}{0:h\:mm tt}}" HorizontalAlignment="Left" HorizontalContentAlignment="Center" />
+                <CalendarDatePicker Name="StartDate" Width="150" SelectedDate="{Binding StartDate}" KeyDown="StartDate_OnKeyDown" />
+                <TextBox Name="StartTime" Width="75" Text="{Binding StartTime, Mode=OneWay, StringFormat={}{0:h\:mm tt}}" HorizontalAlignment="Left" HorizontalContentAlignment="Center" />
             </StackPanel>
             <StackPanel Grid.Column="2" Grid.Row="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center" >
-                <CalendarDatePicker Name="EndDate" IsTabStop="True" Width="150" SelectedDate="{Binding EndDate}" />
-                <TextBox Name="EndTime" Width="75" IsTabStop="True" Text="{Binding EndTime, Mode=OneWay, StringFormat={}{0:h\:mm tt}}" HorizontalAlignment="Left" HorizontalContentAlignment="Center" />
+                <CalendarDatePicker Name="EndDate" Width="150" SelectedDate="{Binding EndDate}" KeyDown="EndDate_OnKeyDown" />
+                <TextBox Name="EndTime" Width="75" Text="{Binding EndTime, Mode=OneWay, StringFormat={}{0:h\:mm tt}}" HorizontalAlignment="Left" HorizontalContentAlignment="Center" />
             </StackPanel>
         </Grid>
     </StackPanel>

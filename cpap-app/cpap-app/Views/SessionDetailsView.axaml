@@ -48,7 +48,7 @@
             <TabItem Header="Statistics">
                 <views:DailyStatisticsSummaryView DataContext="{Binding Statistics}" Margin="0 10 0 0"/>
             </TabItem>
-            <TabItem Header="Events">
+            <TabItem Header="Events" IsVisible="{Binding Events.TotalCount}">
                 <controls:EventSummaryView HorizontalAlignment="Left" MaxWidth="450" DataContext="{Binding Events}" Margin="0 10 0 0" />
             </TabItem>
             <TabItem Header="Oxygen" IsVisible="{Binding HasOximetryData}">

@@ -287,7 +287,7 @@ public partial class MainView : UserControl
 					{
 						await using var file = File.OpenRead( fileItem.Path.LocalPath );
 
-						var importOptions        = new PulseOximetryImportOptions() { CalibrationAdjust = -1, TimeAdjust = 0 };
+						var importOptions        = new PulseOximetryImportOptions() { CalibrationAdjust = -1, TimeAdjust = -60 };
 						var eventGeneratorConfig = new OximetryEventGeneratorConfig();
 
 						var data = importer.Load( fileItem.Name, file, importOptions, eventGeneratorConfig );

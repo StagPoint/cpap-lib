@@ -87,6 +87,9 @@ public class EmayImporterCSV : IOximetryImporter
 			SourceType = SourceType.PulseOximetry
 		};
 
+		List<ReportedEvent> faultEvents     = new();
+		ReportedEvent?      invalidDataFlag = null;
+
 		bool isStartRecord = true;
 		byte lastGoodOxy   = 0;
 		byte lastGoodHR    = 0;
@@ -128,6 +131,23 @@ public class EmayImporterCSV : IOximetryImporter
 				// EMAY pulse oximeters may leave the SpO2 and PR fields blank to indicate an invalid reading
 				// TODO: How to handle invalid records in imported files. Split the file, duplicate last good reading, etc?
 				oxygen.Samples.Add( lastGoodOxy );
+				
+				if( invalidDataFlag == null )
+				{
+					invalidDataFlag = new ReportedEvent
+					{
+						Type       = EventType.PulseOximetryFault,
+						SourceType = SourceType.PulseOximetry,
+						StartTime  = dateTimeValue,
+						Duration   = TimeSpan.FromSeconds( 1.0 / oxygen.FrequencyInHz ),
+					};
+
+					faultEvents.Add( invalidDataFlag );
+				}
+				else
+				{
+					invalidDataFlag.Duration += TimeSpan.FromSeconds( 1.0 / oxygen.FrequencyInHz );
+				}
 			}
 
 			if( byte.TryParse( lineData[ 3 ], out var hr ) )
@@ -156,6 +176,14 @@ public class EmayImporterCSV : IOximetryImporter
 		if( options.GenerateEvents )
 		{
 			result.Events = OximetryEventGenerator.GenerateEvents( eventConfig ?? new OximetryEventGeneratorConfig(), oxygen, pulse );
+		}
+
+		if( faultEvents.Count > 1 )
+		{
+			// Viatom CSV files always end with two lines of invalid data. Ignore those.
+			faultEvents.RemoveAt( faultEvents.Count - 1 );
+				
+			result.Events.AddRange( faultEvents );
 		}
 
 		return result;

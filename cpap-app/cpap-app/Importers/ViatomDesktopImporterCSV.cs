@@ -99,6 +99,9 @@ public class ViatomDesktopImporterCSV : IOximetryImporter
 			SourceType = SourceType.PulseOximetry,
 		};
 
+		List<ReportedEvent> faultEvents     = new();
+		ReportedEvent?      invalidDataFlag = null;
+
 		var baseFilename = filename = Path.GetFileName( filename );
 		int nameEndIndex = baseFilename.IndexOf( '-' );
 		if( nameEndIndex != -1 )
@@ -162,6 +165,23 @@ public class ViatomDesktopImporterCSV : IOximetryImporter
 				// OxyLink pulse oximeters may use "--" to indicate an invalid reading.
 				// The O2 Insight application will use the "out of range" value of 255 to indicate an invalid reading.
 				oxygen.Samples.Add( lastGoodOxy );
+				
+				if( invalidDataFlag == null )
+				{
+					invalidDataFlag = new ReportedEvent
+					{
+						Type       = EventType.PulseOximetryFault,
+						SourceType = SourceType.PulseOximetry,
+						StartTime  = currentDateTime,
+						Duration   = TimeSpan.FromSeconds( 1.0 / oxygen.FrequencyInHz ),
+					};
+
+					faultEvents.Add( invalidDataFlag );
+				}
+				else
+				{
+					invalidDataFlag.Duration += TimeSpan.FromSeconds( 1.0 / oxygen.FrequencyInHz );
+				}
 			}
 
 			if( byte.TryParse( lineData[ 1 ], out var hr ) && hr <= 200 )
@@ -207,6 +227,14 @@ public class ViatomDesktopImporterCSV : IOximetryImporter
 		if( options.GenerateEvents )
 		{
 			result.Events = OximetryEventGenerator.GenerateEvents( eventConfig ?? new OximetryEventGeneratorConfig(), oxygen, pulse );
+		}
+		
+		if( faultEvents.Count > 1 )
+		{
+			// Viatom CSV files always end with two lines of invalid data. Ignore those.
+			faultEvents.RemoveAt( faultEvents.Count - 1 );
+				
+			result.Events.AddRange( faultEvents );
 		}
 
 		return result;

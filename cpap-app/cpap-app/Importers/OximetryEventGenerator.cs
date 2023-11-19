@@ -15,10 +15,10 @@ public class OximetryEventGeneratorConfig
 	public double EventScanDelay { get; set; } = 300;
 
 	public double HypoxemiaThreshold       { get; set; } = 88;
-	public double HypoxemiaMinimumDuration { get; set; } = 10;
+	public double HypoxemiaMinimumDuration { get; set; } = 8;
 
 	public double DesaturationThreshold       { get; set; } = 3;
-	public double DesaturationWindowLength    { get; set; } = 180;
+	public double DesaturationWindowLength    { get; set; } = 600;
 	public double DesaturationMinimumDuration { get; set; } = 5;
 	public double DesaturationMaximumDuration { get; set; } = 120;
 
@@ -232,23 +232,22 @@ public static class OximetryEventGenerator
 		}
 
 		double eventStart    = -1;
-		double eventDuration = 0.0;
 
-		var    sourceData  = signal.Samples;
-		double baseline    = sourceData[ 0 ];
-		double baselineSum = 0.0;
+		var sourceData = signal.Samples;
+		var calc       = new MovingAverageCalculator( windowSize );
 
-		// Calculate a baseline average. A desaturation is a drop of 3% or more below the baseline. 
-		for( int i = 0; i < windowSize; i++ )
+		for( int i = 0; i < sourceData.Count; i++ )
 		{
-			baselineSum += sourceData[ i ];
-		}
-		baseline /= windowSize;
+			var sample = sourceData[ i ];
+			calc.AddObservation( sample );
 
-		for( int i = windowSize + 1; i < sourceData.Count; i++ )
-		{
-			var sample    = sourceData[ i ];
+			if( !calc.HasFullPeriod )
+			{
+				continue;
+			}
+			
 			var time      = (i * timeInterval);
+			var baseline  = calc.Average;
 			var threshold = baseline - config.DesaturationThreshold;
 
 			if( time < config.EventScanDelay )
@@ -256,6 +255,7 @@ public static class OximetryEventGenerator
 				continue;
 			}
 
+			var eventDuration = 0.0;
 			switch( state )
 			{
 				case 0:
@@ -302,13 +302,6 @@ public static class OximetryEventGenerator
 						state = 0;
 					}
 					break;
-			}
-			
-			// Update the sliding window average used as a baseline 
-			{
-				baselineSum -= sourceData[ i - windowSize ];
-				baselineSum += sample;
-				baseline    =  baselineSum / windowSize;
 			}
 		}
 	}

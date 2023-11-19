@@ -89,6 +89,7 @@ public class EventMarkerConfigurationStore
 				case EventType.Hypoxemia:
 				case EventType.Tachycardia:
 				case EventType.Bradycardia:
+				case EventType.PulseOximetryFault:
 					eventMarkerType     = EventMarkerType.Span;
 					eventMarkerPosition = EventMarkerPosition.AtBeginning;
 					break;

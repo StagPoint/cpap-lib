@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 
 using StagPoint.EDF.Net;
+// ReSharper disable MergeIntoLogicalPattern
 
 namespace cpaplib
 {
@@ -46,7 +47,24 @@ namespace cpaplib
 
 		public static bool TimesOverlap( ReportedEvent a, ReportedEvent b )
 		{
-			return DateHelper.RangesOverlap( a.StartTime, a.StartTime + a.Duration, b.StartTime, b.StartTime + b.Duration );
+			var startA = a.StartTime;
+			var startB = b.StartTime;
+			var endA   = a.StartTime + a.Duration;
+			var endB   = b.StartTime + b.Duration;
+
+			// Events like RERA and Hypopnea have an implicit (not recorded) 10 second duration that precedes the recorded event time
+			if( a.Type == EventType.RERA || a.Type == EventType.Hypopnea )
+			{
+				startA = startA.AddSeconds( -10 );
+			}
+
+			// Events like RERA and Hypopnea have an implicit (not recorded) 10 second duration that precedes the recorded event time
+			if( b.Type == EventType.RERA || b.Type == EventType.Hypopnea )
+			{
+				startB = startB.AddSeconds( -10 );
+			}
+			
+			return DateHelper.RangesOverlap( startA, endA, startB, endB );
 		}
 
 		public TimeRange GetTimeBounds()
