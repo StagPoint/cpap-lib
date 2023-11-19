@@ -17,6 +17,19 @@ namespace OAuth
 		public string   AccessToken           { get; set; } = string.Empty;
 		public DateTime AccessTokenExpiration { get; set; } = DateTime.MinValue;
 		public string   RefreshToken          { get; set; } = string.Empty;
+
+		public bool AccessTokenIsValid
+		{
+			get => !string.IsNullOrEmpty( AccessToken ) && DateTime.Now >= AccessTokenExpiration.AddMinutes( 5 );
+		}
+
+		public bool IsValid
+		{
+			get
+			{
+				return AccessTokenIsValid || !string.IsNullOrEmpty( RefreshToken );
+			}
+		}
 	}
 
 	public class AuthorizationConfig
@@ -29,17 +42,27 @@ namespace OAuth
 
 		public string ClientID     { get; init; }
 		public string ClientSecret { get; init; }
-		
+
+		public bool IsValid
+		{
+			get => !string.IsNullOrEmpty( RedirectUri ) && !string.IsNullOrEmpty( ClientID ) && !string.IsNullOrEmpty( ClientSecret );
+		}
+
 		#endregion 
 		
-		#region Constructor 
+		#region Constructor
+
+		public AuthorizationConfig() 
+			: this( string.Empty, string.Empty, 3264 )
+		{
+		}
 
 		public AuthorizationConfig( string clientID, string clientSecret, int? port )
 		{
 			RedirectUri = $"http://{IPAddress.Loopback}:{port ?? GetRandomUnusedPort()}/";
 
-			ClientID     = clientID; // "697896616044-sq5k8aoolj2i4e2kspieg5btv0dm77fb.apps.googleusercontent.com";
-			ClientSecret = clientSecret; // "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";
+			ClientID     = clientID; 
+			ClientSecret = clientSecret; 
 		}
 		
 		#endregion 

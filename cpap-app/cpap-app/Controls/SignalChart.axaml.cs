@@ -112,6 +112,7 @@ public partial class SignalChart : UserControl
 		get => _chartConfiguration;
 		set => SetAndRaise( ChartConfigurationProperty, ref _chartConfiguration, value );
 	}
+	
 	public SignalChartConfiguration?      SecondaryConfiguration { get; set; }
 	public List<EventMarkerConfiguration> MarkerConfiguration    { get; set; }
 
