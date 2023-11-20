@@ -10,7 +10,6 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
-using Avalonia.Platform;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
@@ -247,8 +246,150 @@ public partial class MainView : UserControl
 				AccessTokenStore.SaveAccessTokenInfo( accessTokenInfo );
 			}
 		}
+		
+		var appWindow = TopLevel.GetTopLevel( this ) as AppWindow;
+		appWindow?.PlatformFeatures.SetTaskBarProgressBarState( TaskBarProgressBarState.Indeterminate );
 
-		var importedSessions = GoogleFitImporter.ImportAsync( DateTime.Today.AddDays( -7 ), DateTime.Today.AddDays( 1 ), accessTokenInfo.AccessToken );
+		var progressDialog = new TaskDialog
+		{
+			XamlRoot        = appWindow,
+			Title           = $"Sync with Google Fit",
+			MinWidth        = 500,
+			ShowProgressBar = true,
+			IconSource      = new SymbolIconSource { Symbol = Symbol.Upload },
+			SubHeader       = "Importing sleep information from Google Fit",
+			Content         = "Please wait while your data is imported. This may take a few seconds.",
+			Buttons =
+			{
+				TaskDialogButton.CancelButton
+			}
+		};
+
+		var dataWasImported = false;
+
+		progressDialog.Closing += ( dialog, args ) =>
+		{
+			appWindow?.PlatformFeatures.SetTaskBarProgressBarState( TaskBarProgressBarState.None );
+		};
+
+		progressDialog.Opened += async ( _, _ ) =>
+		{
+			// Show an animated indeterminate progress bar
+			progressDialog.SetProgressBarState( 0, TaskDialogProgressState.Indeterminate );
+
+			var metaSessions = await GoogleFitImporter.ImportAsync( DateTime.Today.AddDays( -1 ), DateTime.Today.AddDays( 1 ), accessTokenInfo.AccessToken, progressNotify );
+			if( metaSessions == null || metaSessions.Count == 0 )
+			{
+				progressDialog.Hide();
+				return;
+			}
+			
+			progressNotify( $"Merging sessions and events..." );
+
+			metaSessions.Sort();
+
+			var minDate = metaSessions.Min( x => x.StartTime.Date.AddDays( -1 ) );
+			var maxDate = metaSessions.Max( x => x.EndTime.Date.AddDays( 1 ) );
+
+			for( var loop = minDate; loop <= maxDate; loop = loop.AddDays( 1 ) )
+			{
+				// Copy the current date, because otherwise captures might reference the wrong value
+				var date = loop;
+
+				progressNotify( $"Merging sessions and events for \n{date:D}" );
+
+				using var db  = StorageService.Connect();
+				
+				var day = db.LoadDailyReport( ActiveUserProfile.UserProfileID, date );
+				if( day == null )
+				{
+					continue;
+				}
+
+				// Obtain a list of import data that could potentially be merged with the current day
+				var overlappingImports = metaSessions.Where( x => x.CanMergeWith( day ) ).ToList();
+
+				if( overlappingImports.Count == 0 )
+				{
+					continue;
+				}
+
+				bool dayIsModified = false;
+				
+				foreach( var data in overlappingImports )
+				{
+					foreach( var item in data.Items )
+					{
+						foreach( var session in item.Sessions )
+						{
+							// If the day doesn't already contain a matching session, add it
+							if( !day.Sessions.Any( x => Session.TimesOverlap( x, session ) && x.SourceType == session.SourceType ) )
+							{
+								// Add the Session to the Day's Session list. 
+								day.AddSession( session );
+
+								// Add only the events that happened during this Session. Note that In practice this 
+								// should be all of them, since at the time I wrote this all importers only generated
+								// a single Session per file, and that is not expected to change, but if it ever does 
+								// this code should be robust in handling that change. 
+								day.Events.AddRange( item.Events.Where( x => x.StartTime >= session.StartTime && x.StartTime <= session.EndTime ) );
+
+								dayIsModified = true;
+							}
+						}
+					}
+				}
+
+				if( dayIsModified )
+				{
+					db.SaveDailyReport( ActiveUserProfile.UserProfileID, day );
+
+					dataWasImported = true;
+				}
+			}
+
+			progressDialog.Hide();
+		};
+
+		await progressDialog.ShowAsync();
+		
+		appWindow?.PlatformFeatures.SetTaskBarProgressBarState( TaskBarProgressBarState.None );
+
+		if( !dataWasImported )
+		{
+			const string upToDate = "All Google Fit data was already up to date.";
+			
+			var dialog = MessageBoxManager.GetMessageBoxStandard(
+				$"Import from Google Fit",
+				upToDate,
+				ButtonEnum.Ok,
+				Icon.Warning );
+
+			await dialog.ShowWindowDialogAsync( this.FindAncestorOfType<Window>() );
+		}
+		else
+		{
+			var profileID = ActiveUserProfile.UserProfileID;
+
+			switch( NavFrame.Content )
+			{
+				case DailyReportView { DataContext: DailyReport dailyReport } dailyReportView:
+					// TODO: Because DailyReportView has its own flow for loading a DailyReport, this leaves open the possibility of bypassing things like event subscription, etc.
+					dailyReportView.ActiveUserProfile = ActiveUserProfile;
+					dailyReportView.DataContext       = LoadDailyReport( profileID, dailyReport.ReportDate.Date );
+					break;
+				case HomeView homeView:
+					homeView.DataContext = LoadDailyReport( profileID, null );
+					break;
+			}
+		}
+
+		return;
+
+		void progressNotify( string message )
+		{
+			progressDialog.Content = message;
+		}
 	}
 	
 	private async Task<AccessTokenInfo?> AuthorizeGoogleFitClient()
@@ -353,7 +494,7 @@ public partial class MainView : UserControl
 
 		var td = new TaskDialog
 		{
-			XamlRoot        = this.FindAncestorOfType<Window>(),
+			XamlRoot        = (Visual)VisualRoot!,
 			Title           = $"Import from {importer.FriendlyName}",
 			ShowProgressBar = true,
 			IconSource      = new SymbolIconSource { Symbol = Symbol.Upload },
@@ -508,7 +649,6 @@ public partial class MainView : UserControl
 			} );
 		};
 
-		td.XamlRoot = (Visual)VisualRoot!;
 		await td.ShowAsync();	
 
 		if( metaSessions.Count == 0 || !dataWasImported )

@@ -191,9 +191,11 @@ public static class SignalChartConfigurationStore
 					break;
 				
 				case SignalNames.SleepStages:
+					config.Title        = "Sleep Stage";
 					config.AxisMaxValue = 0;
 					config.AxisMaxValue = 5;
 					config.IsVisible    = false;
+					config.ShowStepped  = true;
 					break;
 			}
 

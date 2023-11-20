@@ -21,11 +21,14 @@ using cpap_app.ViewModels;
 
 using cpaplib;
 
+using Google.Fitness.Data;
+
 using ScottPlot;
 using ScottPlot.Avalonia;
 using ScottPlot.Plottable;
 
 using Annotation = cpaplib.Annotation;
+using Application = Avalonia.Application;
 using Brushes = Avalonia.Media.Brushes;
 using Color = System.Drawing.Color;
 using Point = Avalonia.Point;
@@ -1439,6 +1442,10 @@ public partial class SignalChart : UserControl
 				{
 					valueText = value >= 1 ? $"1.0 \u2236 {value:F1}" : $"{value:F1} \u2236 1.0";
 				}
+				else if( ChartConfiguration.SignalName == SignalNames.SleepStages )
+				{
+					valueText = ((SleepStage)(int)value).ToString();
+				}
 
 				CurrentValue.Text = $"{time:T}        {ChartConfiguration.Title}: {valueText}";
 
@@ -1684,6 +1691,11 @@ public partial class SignalChart : UserControl
 				firstSessionAdded ? ChartConfiguration.Title : null
 			);
 
+			if( ChartConfiguration.InvertAxisY )
+			{
+				graph.ScaleY = -1;
+			}
+
 			_signalPlots.Add( graph );
 
 			if( ChartConfiguration.ShowStepped )
@@ -1708,6 +1720,11 @@ public partial class SignalChart : UserControl
 						secondarySignal.FrequencyInHz, 
 						SecondaryConfiguration.PlotColor, 
 						firstSessionAdded ? SecondaryConfiguration.Title : null );
+
+					if( ChartConfiguration.InvertAxisY )
+					{
+						secondaryGraph.ScaleY = -1;
+					}
 
 					_signalPlots.Add( secondaryGraph );
 					
@@ -1764,6 +1781,11 @@ public partial class SignalChart : UserControl
 			ChartConfiguration.AxisMinValue ??= signalMinValue;
 			ChartConfiguration.AxisMaxValue ??= signalMaxValue;
 
+			if( ChartConfiguration.InvertAxisY )
+			{
+				(minValue, maxValue) = (-maxValue, -minValue);
+			}
+
 			var extents = Math.Max( 1.0, maxValue - minValue );
 			var padding = ChartConfiguration.ScalingMode == AxisScalingMode.AutoFit ? extents * 0.1 : 0;
 
@@ -1773,6 +1795,15 @@ public partial class SignalChart : UserControl
 
 			double tickSpacing = extents / 4;
 			chart.Plot.YAxis.ManualTickSpacing( tickSpacing );
+
+			// TODO: This special-case code should not exist here. 
+			if( ChartConfiguration.SignalName == SignalNames.SleepStages )
+			{
+				double[] positions = { 0, -1, -2, -3, -4, -5 };
+				string[] labels    = { string.Empty, "Awake", "REM", "Light", "Deep", string.Empty };
+				
+				chart.Plot.YAxis.ManualTickPositions( positions, labels );
+			}
 		}
 	}
 
@@ -1952,6 +1983,7 @@ public partial class SignalChart : UserControl
 		plot.XAxis.SetZoomInLimit( MINIMUM_TIME_WINDOW );
 		plot.XAxis.Layout( padding: 0 );
 		plot.XAxis.MajorGrid( false );
+		plot.XAxis.PixelSnap( true );
 		plot.XAxis.AxisTicks.MajorTickLength = 15;
 		plot.XAxis.AxisTicks.MinorTickLength = 5;
 		plot.XAxis2.Layout( 8, 1, 1 );
@@ -1960,6 +1992,7 @@ public partial class SignalChart : UserControl
 		plot.YAxis.TickLabelFormat( x => $"{x:0.##}" );
 		plot.YAxis.Layout( 0, maximumLabelWidth, maximumLabelWidth );
 		plot.YAxis2.Layout( 0, 5, 5 );
+		plot.YAxis.PixelSnap( true );
 
 		if( ChartConfiguration is { AxisMinValue: not null, AxisMaxValue: not null } )
 		{

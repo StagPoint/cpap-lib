@@ -10,7 +10,6 @@ using cpap_app.Helpers;
 
 using cpaplib;
 
-using OAuth;
 using Google.Fitness.Data;
 using Newtonsoft.Json;
 
@@ -20,21 +19,21 @@ public class GoogleFitImporter
 {
 	#region Private fields
 
-	private static readonly Dictionary<SleepStageValue, int> _sleepStageMap = new Dictionary<SleepStageValue, int>()
+	private static readonly Dictionary<GoogleFitSleepStage, int> _sleepStageMap = new Dictionary<GoogleFitSleepStage, int>()
 	{
-		{ SleepStageValue.Awake,	1 },
-		{ SleepStageValue.REM,		2 },
-		{ SleepStageValue.Asleep,	3 },
-		{ SleepStageValue.OutOfBed, 3 },
-		{ SleepStageValue.Light,	3 },
-		{ SleepStageValue.Deep,		4 },
+		{ GoogleFitSleepStage.Awake,	1 },
+		{ GoogleFitSleepStage.REM,		2 },
+		{ GoogleFitSleepStage.Asleep,	3 },
+		{ GoogleFitSleepStage.OutOfBed, 3 },
+		{ GoogleFitSleepStage.Light,	3 },
+		{ GoogleFitSleepStage.Deep,		4 },
 	};
 
 	#endregion 
 	
 	#region Public functions
 
-	public static async Task<List<MetaSession>?> ImportAsync( DateTime startDate, DateTime endDate, string accessToken )
+	public static async Task<List<MetaSession>?> ImportAsync( DateTime startDate, DateTime endDate, string accessToken, Action<string> progressNotify )
 	{
 		if( string.IsNullOrEmpty( accessToken ) )
 		{
@@ -47,34 +46,50 @@ public class GoogleFitImporter
 			return null;
 		}
 
-		var sessions = await ImportSessions( accessToken, fitSessions );
+		var sessions = await ImportSessions( accessToken, fitSessions, progressNotify );
 		if( sessions.Count == 0 )
 		{
 			return null;
 		}
 
-		return null;
+		List<MetaSession> metaSessions       = new();
+		MetaSession       currentMetaSession = null;
+
+		foreach( var session in sessions )
+		{
+			if( currentMetaSession == null || !currentMetaSession.TryAdd( session ) )
+			{
+				currentMetaSession = new MetaSession();
+				currentMetaSession.Add( session );
+
+				metaSessions.Add( currentMetaSession );
+			}
+		}
+
+		return metaSessions;
 	}
 
 	#endregion 
 	
 	#region Private functions 
 	
-	private static async Task<List<Session>> ImportSessions( string accessToken, List<ActivitySession> fitSessions )
+	private static async Task<List<Session>> ImportSessions( string accessToken, List<ActivitySession> fitSessions, Action<string> progressNotify )
 	{
 		List<Session> sessions = new();
 
 		foreach( var fitSession in fitSessions )
 		{
+			var startTime = DateHelper.FromMillisecondsSinceEpoch( fitSession.StartTimeMillis );
+			var endTime   = DateHelper.FromMillisecondsSinceEpoch( fitSession.EndTimeMillis );
+			
+			progressNotify( $"Retrieving session starting on {startTime:d} at {startTime:h:mm:ss tt}" );
+
 			var bucket = await GetSleepSessionDetailsAsync( accessToken, fitSession.StartTimeMillis, fitSession.EndTimeMillis );
 			if( bucket == null || bucket.Datasets.Count == 0 )
 			{
 				continue;
 			}
-
-			var startTime = DateHelper.FromMillisecondsSinceEpoch( fitSession.StartTimeMillis );
-			var endTime   = DateHelper.FromMillisecondsSinceEpoch( fitSession.EndTimeMillis );
-
+			
 			var session = ImportSessionFromDataset( bucket.Datasets[ 0 ].Points, startTime, endTime );
 			sessions.Add( session );
 		}
@@ -87,10 +102,10 @@ public class GoogleFitImporter
 		var signal = new Signal
 		{
 			Name              = SignalNames.SleepStages,
-			FrequencyInHz     = 0.5,
+			FrequencyInHz     = 1.0 / 30,
 			MinValue          = 0,
 			MaxValue          = 5,
-			UnitOfMeasurement = null,
+			UnitOfMeasurement = string.Empty,
 			StartTime         = startTime,
 			EndTime           = endTime
 		};
@@ -106,7 +121,7 @@ public class GoogleFitImporter
 
 		int numberOfSamples = (int)Math.Ceiling( (endTime - startTime).TotalSeconds ) / 30;
 		int pointIndex      = 0;
-		var timeStep        = TimeSpan.FromSeconds( 60 * signal.FrequencyInHz );
+		var timeStep        = TimeSpan.FromSeconds( 30 );
 		var currentTime     = startTime;
 		var samples         = signal.Samples;
 
@@ -116,7 +131,7 @@ public class GoogleFitImporter
 			Debug.Assert( point.Value.Count > 0 );
 			Debug.Assert( point.Value[ 0 ].IntVal != null );
 			
-			var value = (SleepStageValue)point.Value[ 0 ].IntVal!;
+			var value = (GoogleFitSleepStage)point.Value[ 0 ].IntVal!;
 			if( !_sleepStageMap.TryGetValue( value, out int outputValue ) )
 			{
 				outputValue = 1;

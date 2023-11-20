@@ -5,16 +5,20 @@ using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
+using cpaplib;
+
 using DynamicData;
+
+using Google.Fitness.Data;
 
 namespace cpap_app.ViewModels;
 
 public class SleepStagesViewModel
 {
-	public bool IsEmpty { get => Periods.Count == 0; }
+	public bool IsEmpty { get => Sessions.Count == 0; }
 
 	public ObservableCollection<SleepStageSummaryItemViewModel> StageSummaries { get; set; }
-	public ObservableCollection<SleepStagePeriodViewModel>      Periods        { get; set; } = new();
+	public ObservableCollection<Session>                        Sessions       { get; set; } = new();
 
 	public SleepStagesViewModel()
 	{
@@ -26,34 +30,49 @@ public class SleepStagesViewModel
 			new SleepStageSummaryItemViewModel() { Label = "Deep", Percentage  = Random.Shared.NextInt64( 99 ), TimeInStage = TimeSpan.FromMinutes( 32 ) },
 		};
 	}
-	
-	public void AddPeriod( SleepStagePeriodViewModel period )
-	{
-		// Can't sort an ObservableCollection, so gotta extract the contents, sort them, and re-add them. 
-		var list = Periods.ToList();
-		list.Add( period );
-		list.Sort();
 
-		Periods.Clear();
-		Periods.AddRange( list );
+	public SleepStagesViewModel( DailyReport day ) 
+		: this()
+	{
+		var sessions = day.Sessions.Where( x => x.SourceType == SourceType.HealthAPI );
+		foreach( var session in sessions )
+		{
+			if( session.GetSignalByName( SignalNames.SleepStages ) != null )
+			{
+				Sessions.Add( session );
+			}
+		}
 		
 		CalculateSummaryInfo();
 	}
 	
-	public void SavePeriod( SleepStagePeriodViewModel viewModel )
-	{
-        // Forces the collection to raise changed events 
-		int index = Periods.IndexOf( viewModel );
-		Periods[ index ] = viewModel;
-		
-		CalculateSummaryInfo();
-	}
-	
-	public void RemovePeriod( SleepStagePeriodViewModel item )
-	{
-		Periods.Remove( item );
-		CalculateSummaryInfo();
-	}
+	// public void AddPeriod( SleepStagePeriodViewModel period )
+	// {
+	// 	// Can't sort an ObservableCollection, so gotta extract the contents, sort them, and re-add them. 
+	// 	var list = Periods.ToList();
+	// 	list.Add( period );
+	// 	list.Sort();
+ //
+	// 	Periods.Clear();
+	// 	Periods.AddRange( list );
+	// 	
+	// 	CalculateSummaryInfo();
+	// }
+	//
+	// public void SavePeriod( SleepStagePeriodViewModel viewModel )
+	// {
+ //        // Forces the collection to raise changed events 
+	// 	int index = Periods.IndexOf( viewModel );
+	// 	Periods[ index ] = viewModel;
+	// 	
+	// 	CalculateSummaryInfo();
+	// }
+	//
+	// public void RemovePeriod( SleepStagePeriodViewModel item )
+	// {
+	// 	Periods.Remove( item );
+	// 	CalculateSummaryInfo();
+	// }
 	
 	private void CalculateSummaryInfo()
 	{
@@ -61,13 +80,21 @@ public class SleepStagesViewModel
 
 		double totalTime = 0;
 		
-		foreach( var period in Periods )
+		foreach( var session in Sessions )
 		{
-			totalTime += period.Duration.TotalMinutes;
+			totalTime += session.Duration.TotalMinutes;
+
+			var signal   = session.GetSignalByName( SignalNames.SleepStages );
+			var interval = 1.0 / (60 * signal.FrequencyInHz);
 			
-			if( !timeInStage.TryAdd( period.Stage, period.Duration.TotalMinutes ) )
+			foreach( var value in signal.Samples )
 			{
-				timeInStage[ period.Stage ] += period.Duration.TotalMinutes;
+				var stage = (SleepStage)value;
+				
+				if( !timeInStage.TryAdd( stage, interval ) )
+				{
+					timeInStage[ stage ] += interval;
+				}
 			}
 		}
 
@@ -94,10 +121,11 @@ public class SleepStagesViewModel
 
 public enum SleepStage
 {
-	Awake = 0,
-	Rem   = 1,
-	Light = 2,
-	Deep  = 3,
+	INVALID = 0,
+	Awake   = 1,
+	Rem     = 2,
+	Light   = 3,
+	Deep    = 4,
 }
 
 public class SleepStagePeriodViewModel : IComparable<SleepStagePeriodViewModel>, INotifyPropertyChanged

@@ -15,6 +15,22 @@ public class ImportedData : IComparable<ImportedData>
 	public List<Session>       Sessions { get; set; } = new List<Session>();
 	public List<ReportedEvent> Events   { get; set; } = new List<ReportedEvent>();
 
+	public void AddSession( Session session )
+	{
+		if( Sessions.Count == 0 )
+		{
+			StartTime = session.StartTime;
+			EndTime   = session.EndTime;
+		}
+		else
+		{
+			StartTime = DateHelper.Min( StartTime, session.StartTime );
+			EndTime   = DateHelper.Max( EndTime, session.EndTime );
+		}
+
+		Sessions.Add( session );
+	}
+
 	public int CompareTo( ImportedData? other )
 	{
 		return StartTime.CompareTo( other?.StartTime );
@@ -32,6 +48,34 @@ public class MetaSession : IComparable<MetaSession>
 	public DateTime EndTime   { get; set; }
 
 	public List<ImportedData> Items { get; set; } = new List<ImportedData>();
+
+	/// <summary>
+	/// Used when the import process produces Session instances only. 
+	/// </summary>
+	public void Add( Session session )
+	{
+		var data = new ImportedData();
+		data.AddSession( session );
+
+		Add( data );
+	}
+
+	/// <summary>
+	/// Used when the import process produces Session instances only. 
+	/// </summary>
+	public bool TryAdd( Session session )
+	{
+		var data = new ImportedData();
+		data.AddSession( session );
+
+		if( CanMerge( data ) )
+		{
+			Add( data );
+			return true;
+		}
+
+		return false;
+	}
 
 	public void Add( ImportedData import )
 	{
@@ -66,6 +110,11 @@ public class MetaSession : IComparable<MetaSession>
 	
 	public bool CanMerge( ImportedData import )
 	{
+		if( Items.Count == 0 )
+		{
+			return true;
+		}
+		
 		if( DateHelper.RangesOverlap( StartTime, EndTime, import.StartTime, import.EndTime ) )
 		{
 			return true;

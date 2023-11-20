@@ -17,7 +17,7 @@
     </UserControl.Resources>
     <ScrollViewer Padding="8">
         <StackPanel Name="Container" Orientation="Vertical" x:DataType="viewModels:SleepStagesViewModel">
-            <StackPanel Name="StagesSummary" IsVisible="{Binding Periods.Count, Mode=OneWay}" Orientation="Vertical" Margin="0 0 0 10" Grid.IsSharedSizeScope="True">
+            <StackPanel Name="StagesSummary" IsVisible="{Binding !IsEmpty, Mode=OneWay}" Orientation="Vertical" Margin="0 0 0 10" Grid.IsSharedSizeScope="True">
                 <StackPanel.Transitions>
                     <Transitions>
                         <DoubleTransition Property="Opacity" Duration="00:00:0.5" Easing="QuarticEaseInOut" Delay="0.01" />
@@ -53,6 +53,7 @@
                 </Border>
                 
                 <!-- Rows for list of periods -->
+                <!--
                 <ItemsRepeater Name="lstPeriods" VerticalCacheLength="100" ItemsSource="{Binding Periods}">
                     <ItemsRepeater.ItemTemplate>
                         <DataTemplate DataType="{x:Type viewModels:SleepStagePeriodViewModel}">
@@ -95,6 +96,7 @@
                         <TextBlock Text="Add Sleep Stage Period" />
                     </StackPanel>
                 </Button>
+            -->
             </StackPanel>
         </StackPanel>
     </ScrollViewer>

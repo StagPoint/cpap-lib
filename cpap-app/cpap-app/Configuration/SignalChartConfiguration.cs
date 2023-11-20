@@ -75,6 +75,11 @@ public class SignalChartConfiguration : IComparable<SignalChartConfiguration>
 	public AxisScalingMode ScalingMode { get; set; } = AxisScalingMode.Defaults;
 
 	/// <summary>
+	/// If set to TRUE, the Y axis will be inverted
+	/// </summary>
+	public bool InvertAxisY { get; set; } = false;
+
+	/// <summary>
 	/// If set, controls the minimum value that will be displayed on the Y axis in a Signal's chart
 	/// </summary>
 	public double? AxisMinValue { get; set; }

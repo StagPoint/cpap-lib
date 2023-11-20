@@ -4,7 +4,7 @@ using Newtonsoft.Json;
 
 namespace Google.Fitness.Data;
 
-public enum SleepStageValue
+public enum GoogleFitSleepStage
 {
 	INVALID  = 0,
 	Awake    = 1,
