@@ -1,11 +1,25 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 
+using Avalonia.Controls;
+
 namespace cpap_app.Helpers;
 
 public static class DateHelper
 {
-	public static readonly DateTime UnixEpoch = new DateTime( 1970, 1, 1 );
+	public static readonly DateTime UnixEpoch = new DateTime( 1970, 1, 1 ).ToLocalTime();
+
+	/// <summary>
+	/// Used to "fix" DateTime values retrieved through Sqlite.Net, which are incorrectly
+	/// instantiated and don't contain the correct DateTimeKind value.
+	/// </summary>
+	/// <param name="value"></param>
+	/// <returns></returns>
+	[MethodImpl( MethodImplOptions.AggressiveInlining )]
+	public static DateTime AsLocalTime( this DateTime value )
+	{
+		return DateTime.SpecifyKind( value, DateTimeKind.Local );
+	}
 
 	[MethodImpl( MethodImplOptions.AggressiveInlining )]
 	public static DateTime Min( DateTime a, DateTime b )
@@ -34,7 +48,7 @@ public static class DateHelper
 	[MethodImpl( MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization )]
 	public static DateTime FromMillisecondsSinceEpoch( long milliseconds )
 	{
-		return DateTime.UnixEpoch.ToLocalTime().AddMilliseconds( milliseconds );
+		return UnixEpoch.AddMilliseconds( milliseconds );
 	}
 
 	[MethodImpl( MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization )]
@@ -46,7 +60,7 @@ public static class DateHelper
 	[MethodImpl( MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization )]
 	public static DateTime FromNanosecondsSinceEpoch( long milliseconds )
 	{
-		return DateTime.UnixEpoch.ToLocalTime().AddMilliseconds( milliseconds * 1E-6 );
+		return UnixEpoch.AddMilliseconds( milliseconds * 1E-6 );
 	}
 
 	[MethodImpl( MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization )]

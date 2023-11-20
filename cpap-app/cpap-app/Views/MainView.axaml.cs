@@ -16,6 +16,7 @@ using Avalonia.VisualTree;
 
 using cpap_app.Animation;
 using cpap_app.Events;
+using cpap_app.Helpers;
 using cpap_app.Importers;
 using cpap_app.ViewModels;
 
@@ -277,7 +278,9 @@ public partial class MainView : UserControl
 			// Show an animated indeterminate progress bar
 			progressDialog.SetProgressBarState( 0, TaskDialogProgressState.Indeterminate );
 
-			var metaSessions = await GoogleFitImporter.ImportAsync( DateTime.Today.AddDays( -30 ), DateTime.Today.AddDays( 1 ), accessTokenInfo.AccessToken, progressNotify );
+			var importStartDate = GetImportStartDate( ActiveUserProfile.UserProfileID, SourceType.HealthAPI );
+			
+			var metaSessions = await GoogleFitImporter.ImportAsync( importStartDate, DateTime.Today.AddDays( 1 ), accessTokenInfo.AccessToken, progressNotify );
 			if( metaSessions == null || metaSessions.Count == 0 )
 			{
 				progressDialog.Hide();
@@ -288,65 +291,79 @@ public partial class MainView : UserControl
 
 			metaSessions.Sort();
 
-			var minDate = metaSessions.Min( x => x.StartTime.Date.AddDays( -1 ) );
-			var maxDate = metaSessions.Max( x => x.EndTime.Date.AddDays( 1 ) );
-
-			for( var loop = minDate; loop <= maxDate; loop = loop.AddDays( 1 ) )
+			await Task.Run( async () =>
 			{
-				// Copy the current date, because otherwise captures might reference the wrong value
-				var date = loop;
 
-				progressNotify( $"Merging sessions and events for \n{date:D}" );
+				var minDate = metaSessions.Min( x => x.StartTime.Date.AddDays( -1 ) );
+				var maxDate = metaSessions.Max( x => x.EndTime.Date.AddDays( 1 ) );
 
-				using var db  = StorageService.Connect();
-				
-				var day = db.LoadDailyReport( ActiveUserProfile.UserProfileID, date );
-				if( day == null )
+				for( var loop = minDate; loop <= maxDate; loop = loop.AddDays( 1 ) )
 				{
-					continue;
-				}
+					// Copy the current date, because otherwise captures might reference the wrong value
+					var date = loop;
 
-				// Obtain a list of import data that could potentially be merged with the current day
-				var overlappingImports = metaSessions.Where( x => x.CanMergeWith( day ) ).ToList();
-
-				if( overlappingImports.Count == 0 )
-				{
-					continue;
-				}
-
-				bool dayIsModified = false;
-				
-				foreach( var data in overlappingImports )
-				{
-					foreach( var item in data.Items )
+					Dispatcher.UIThread.Post( () =>
 					{
-						foreach( var session in item.Sessions )
+						progressNotify( $"Processing data for \n{date:D}" );
+					} );
+
+					using var db = StorageService.Connect();
+
+					var day = db.LoadDailyReport( ActiveUserProfile.UserProfileID, date );
+					if( day == null )
+					{
+						continue;
+					}
+
+					// Obtain a list of import data that could potentially be merged with the current day
+					var overlappingImports = metaSessions.Where( x => x.CanMergeWith( day ) ).ToList();
+
+					if( overlappingImports.Count == 0 )
+					{
+						continue;
+					}
+
+					bool dayIsModified = false;
+
+					foreach( var data in overlappingImports )
+					{
+						foreach( var item in data.Items )
 						{
-							// If the day doesn't already contain a matching session, add it
-							if( !day.Sessions.Any( x => Session.TimesOverlap( x, session ) && x.SourceType == session.SourceType ) )
+							foreach( var session in item.Sessions )
 							{
-								// Add the Session to the Day's Session list. 
-								day.AddSession( session );
+								// If the day doesn't already contain a matching session, add it
+								if( !day.Sessions.Any( x => Session.TimesOverlap( x, session ) && x.SourceType == session.SourceType ) )
+								{
+									// Add the Session to the Day's Session list. 
+									day.AddSession( session );
 
-								// Add only the events that happened during this Session. Note that In practice this 
-								// should be all of them, since at the time I wrote this all importers only generated
-								// a single Session per file, and that is not expected to change, but if it ever does 
-								// this code should be robust in handling that change. 
-								day.Events.AddRange( item.Events.Where( x => x.StartTime >= session.StartTime && x.StartTime <= session.EndTime ) );
+									// Add only the events that happened during this Session. Note that In practice this 
+									// should be all of them, since at the time I wrote this all importers only generated
+									// a single Session per file, and that is not expected to change, but if it ever does 
+									// this code should be robust in handling that change. 
+									day.Events.AddRange( item.Events.Where( x => x.StartTime >= session.StartTime && x.StartTime <= session.EndTime ) );
 
-								dayIsModified = true;
+									dayIsModified = true;
+								}
 							}
 						}
 					}
-				}
 
-				if( dayIsModified )
+					if( dayIsModified )
+					{
+						db.SaveDailyReport( ActiveUserProfile.UserProfileID, day );
+
+						dataWasImported = true;
+					}
+				}
+				
+				Dispatcher.UIThread.Post( () =>
 				{
-					db.SaveDailyReport( ActiveUserProfile.UserProfileID, day );
-
-					dataWasImported = true;
-				}
-			}
+					progressNotify( "Finishing up..." );
+				} );
+				
+				await Task.Delay( 500 );
+			} );
 
 			progressDialog.Hide();
 		};
@@ -391,7 +408,19 @@ public partial class MainView : UserControl
 			progressDialog.Content = message;
 		}
 	}
-	
+
+	private static DateTime GetImportStartDate( int userID, SourceType sourceType )
+	{
+		using var store = StorageService.Connect();
+
+		const string SQL = "SELECT day.ReportDate FROM day JOIN session ON session.dayID == day.ID AND session.SourceType = ? WHERE day.UserProfileID = ? ORDER BY ReportDate DESC LIMIT 1";
+
+		var mostRecentImport = store.Connection.ExecuteScalar<DateTime>( SQL, sourceType, userID ).AsLocalTime();
+		mostRecentImport = DateHelper.Max( mostRecentImport, DateTime.Today.AddDays( -30 ) );
+
+		return mostRecentImport;
+	}
+
 	private async Task<AccessTokenInfo?> AuthorizeGoogleFitClient()
 	{
 		AccessTokenInfo? accessTokenInfo    = null;

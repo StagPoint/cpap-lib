@@ -153,6 +153,9 @@ public class GoogleFitImporter
 
 	private static async Task<List<ActivitySession>?> ListSessionsAsync( string accessToken, DateTime startTime, DateTime endTime, int activityType = 72 )
 	{
+		Debug.Assert( startTime.Kind != DateTimeKind.Unspecified, $"{nameof( startTime )} is missing the {nameof(DateTime.Kind)} value" );
+		Debug.Assert( endTime.Kind != DateTimeKind.Unspecified, $"{nameof( endTime )} is missing the {nameof(DateTime.Kind)} value" );
+		
 		string requestUri = $"https://www.googleapis.com/fitness/v1/users/me/sessions?activityType={activityType}&startTime={startTime:O}&endTime={endTime:O}";
 
 		HttpWebRequest request = (HttpWebRequest)WebRequest.Create( requestUri );
@@ -161,14 +164,22 @@ public class GoogleFitImporter
 		request.ContentType = "application/x-www-form-urlencoded";
 		request.Accept      = "Accept=text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
 
-		WebResponse response = await request.GetResponseAsync();
-		using( StreamReader responseReader = new StreamReader( response.GetResponseStream() ?? throw new InvalidOperationException() ) )
+		try
 		{
-			var json = await responseReader.ReadToEndAsync();
-			
-			var sessions = JsonConvert.DeserializeObject<ListSessionsResponse>( json );
+			WebResponse response = await request.GetResponseAsync();
+			using( StreamReader responseReader = new StreamReader( response.GetResponseStream() ?? throw new InvalidOperationException() ) )
+			{
+				var json = await responseReader.ReadToEndAsync();
 
-			return sessions?.Session;
+				var sessions = JsonConvert.DeserializeObject<ListSessionsResponse>( json );
+
+				return sessions?.Session;
+			}
+		}
+		catch( Exception err )
+		{
+			Debug.WriteLine( err.ToString() );
+			throw;
 		}
 	}
 	

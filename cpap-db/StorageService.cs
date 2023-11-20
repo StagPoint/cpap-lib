@@ -637,7 +637,7 @@ namespace cpap_db
 
 			if( clrType == typeof( DateTime ) )
 			{
-				return new DateTime( SQLite3.ColumnInt64( stmt, index ) );
+				return new DateTime( SQLite3.ColumnInt64( stmt, index ), DateTimeKind.Local );
 			}
 
 			if( clrType == typeof( DateTimeOffset ) )

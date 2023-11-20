@@ -21,7 +21,7 @@ namespace OAuth
 
 		public bool AccessTokenIsValid
 		{
-			get => !string.IsNullOrEmpty( AccessToken ) && DateTime.Now <= AccessTokenExpiration.AddMinutes( 5 );
+			get => !string.IsNullOrEmpty( AccessToken ) && DateTime.Now <= AccessTokenExpiration.AddMinutes( -15 );
 		}
 
 		public bool IsValid
