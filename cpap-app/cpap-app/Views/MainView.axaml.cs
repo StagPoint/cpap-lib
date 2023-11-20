@@ -335,7 +335,7 @@ public partial class MainView : UserControl
 								if( !day.Sessions.Any( x => Session.TimesOverlap( x, session ) && x.SourceType == session.SourceType ) )
 								{
 									// Add the Session to the Day's Session list. 
-									day.AddSession( session );
+									addSessionToDay( day, session );
 
 									// Add only the events that happened during this Session. Note that In practice this 
 									// should be all of them, since at the time I wrote this all importers only generated
@@ -402,6 +402,41 @@ public partial class MainView : UserControl
 		}
 
 		return;
+
+		void addSessionToDay( DailyReport day, Session session )
+		{
+			// Search for a CPAP session that overlaps with but starts before the sleep session.
+			// If one is found, we'll extend the sleep session to start at the same time. The 
+			// reasoning is that FitBit (and presumably other devices) often don't start recording
+			// the session until it detects sleep, but it's also useful to know how much time was
+			// spent awake at the start of a CPAP session.
+			
+			var signal = session.GetSignalByName( SignalNames.SleepStages );
+			if( signal != null )
+			{
+				foreach( var cpapSession in day.Sessions.Where( x => x.SourceType == SourceType.CPAP ) )
+				{
+					if( cpapSession.StartTime < signal.StartTime && cpapSession.EndTime > signal.StartTime )
+					{
+						var timeDifference  = session.StartTime - cpapSession.StartTime;
+						var sampleInterval  = 1.0 / signal.FrequencyInHz;
+						int numberOfSamples = (int)Math.Floor( timeDifference.TotalSeconds / sampleInterval );
+
+						for( int i = 0; i < numberOfSamples; i++ )
+						{
+							signal.Samples.Insert( 0, (int)SleepStage.Awake );
+						}
+
+						signal.StartTime  -= TimeSpan.FromSeconds( sampleInterval * numberOfSamples );
+						session.StartTime =  DateHelper.Min( session.StartTime, signal.StartTime );
+
+						break;
+					}
+				}
+			}
+
+			day.AddSession( session );
+		}
 
 		void progressNotify( string message )
 		{

@@ -15,13 +15,14 @@ namespace cpap_app.ViewModels;
 
 public class SleepStagesViewModel
 {
-	public DailyReport Day     { get; set; }
+	public DailyReport Day { get; init; }
 	
 	public bool        IsEmpty { get => Sessions.Count == 0; }
 	
-	public TimeSpan TotalTime  { get; set; }
-	public TimeSpan TimeAsleep { get; set; }
-	public TimeSpan TimeAwake  { get; set; }
+	public TimeSpan TotalTime       { get; private set; }
+	public TimeSpan TimeAsleep      { get; private set; }
+	public TimeSpan TimeAwake       { get; private set; }
+	public double   SleepEfficiency { get; private set; }
 
 	public ObservableCollection<SleepStageSummaryItemViewModel> StageSummaries { get; set; }
 	public ObservableCollection<Session>                        Sessions       { get; set; } = new();
@@ -94,9 +95,10 @@ public class SleepStagesViewModel
 		UpdateSummary( StageSummaries[ 2 ], SleepStage.Light );
 		UpdateSummary( StageSummaries[ 3 ], SleepStage.Deep );
 
-		TotalTime  = TimeSpan.FromMinutes( (int)Math.Ceiling( totalTime ) );
-		TimeAsleep = TimeSpan.FromMinutes( (int)Math.Ceiling( timeAsleep ) );
-		TimeAwake  = TimeSpan.FromMinutes( (int)Math.Ceiling( timeAwake ) );
+		TotalTime       = TimeSpan.FromMinutes( (int)Math.Ceiling( totalTime ) );
+		TimeAsleep      = TimeSpan.FromMinutes( (int)Math.Ceiling( timeAsleep ) );
+		TimeAwake       = TimeSpan.FromMinutes( (int)Math.Ceiling( timeAwake ) );
+		SleepEfficiency = TimeAsleep / TotalTime;
 
 		void UpdateSummary( SleepStageSummaryItemViewModel summary, SleepStage stage )
 		{

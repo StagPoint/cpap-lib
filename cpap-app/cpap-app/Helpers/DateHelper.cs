@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 
-using Avalonia.Controls;
-
 namespace cpap_app.Helpers;
 
 public static class DateHelper
 {
-	public static readonly DateTime UnixEpoch = new DateTime( 1970, 1, 1 ).ToLocalTime();
+	private static readonly DateTime UnixEpoch = new DateTime( 1970, 1, 1 ).ToLocalTime();
 
 	/// <summary>
 	/// Used to "fix" DateTime values retrieved through Sqlite.Net, which are incorrectly
@@ -48,7 +46,8 @@ public static class DateHelper
 	[MethodImpl( MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization )]
 	public static DateTime FromMillisecondsSinceEpoch( long milliseconds )
 	{
-		return UnixEpoch.AddMilliseconds( milliseconds );
+		var result = UnixEpoch.AddMilliseconds( milliseconds );
+		return TimeZoneInfo.Local.IsDaylightSavingTime( result ) ? result.AddHours( 1 ) : result;
 	}
 
 	[MethodImpl( MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization )]
@@ -60,7 +59,8 @@ public static class DateHelper
 	[MethodImpl( MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization )]
 	public static DateTime FromNanosecondsSinceEpoch( long milliseconds )
 	{
-		return UnixEpoch.AddMilliseconds( milliseconds * 1E-6 );
+		var result = UnixEpoch.AddMilliseconds( milliseconds * 1E-6 );
+		return TimeZoneInfo.Local.IsDaylightSavingTime( result ) ? result.AddHours( 1 ) : result;
 	}
 
 	[MethodImpl( MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization )]

@@ -55,7 +55,7 @@
                         <controls:SleepStageItemView DataContext="{Binding StageSummaries[1]}" />
                         <controls:SleepStageItemView DataContext="{Binding StageSummaries[2]}" />
                         <controls:SleepStageItemView DataContext="{Binding StageSummaries[3]}" />
-                        <Grid ColumnDefinitions="Auto,12,Auto" RowDefinitions="Auto,Auto" Margin="0 0 0 12" HorizontalAlignment="Right">
+                        <Grid ColumnDefinitions="Auto,12,Auto" RowDefinitions="Auto,Auto,Auto" Margin="0 0 0 12" HorizontalAlignment="Right">
                             <TextBlock Grid.Column="0" Grid.Row="0" Text="Total Time" HorizontalAlignment="Right" />
                             <TextBlock Grid.Column="2" Grid.Row="0" FontWeight="Bold"
                                        Text="{Binding TotalTime, Mode=OneWay, Converter={StaticResource FormattedTimeSpan}, ConverterParameter=Short.Empty}" />
@@ -63,6 +63,10 @@
                             <TextBlock Grid.Column="0" Grid.Row="1" Text="Asleep" HorizontalAlignment="Right" />
                             <TextBlock Grid.Column="2" Grid.Row="1" FontWeight="Bold"
                                        Text="{Binding TimeAsleep, Mode=OneWay, Converter={StaticResource FormattedTimeSpan}, ConverterParameter=Short.Empty}" />
+
+                            <TextBlock Grid.Column="0" Grid.Row="2" Text="Sleep Efficiency" HorizontalAlignment="Right" />
+                            <TextBlock Grid.Column="2" Grid.Row="2" FontWeight="Bold"
+                                       Text="{Binding SleepEfficiency, StringFormat={}{0:P0}}" />
                         </Grid>
                     </StackPanel>
                 </Expander>
