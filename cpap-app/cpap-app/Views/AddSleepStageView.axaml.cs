@@ -89,7 +89,7 @@ public partial class AddSleepStageView : UserControl
 		SleepStageList.SelectedIndex = e.Key switch
 		{
 			Key.A => (int)SleepStage.Awake,
-			Key.R => (int)SleepStage.Rem,
+			Key.R => (int)SleepStage.REM,
 			Key.L => (int)SleepStage.Light,
 			Key.D => (int)SleepStage.Deep,
 			_     => SleepStageList.SelectedIndex

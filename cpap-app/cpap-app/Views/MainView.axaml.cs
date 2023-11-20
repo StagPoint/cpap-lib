@@ -277,7 +277,7 @@ public partial class MainView : UserControl
 			// Show an animated indeterminate progress bar
 			progressDialog.SetProgressBarState( 0, TaskDialogProgressState.Indeterminate );
 
-			var metaSessions = await GoogleFitImporter.ImportAsync( DateTime.Today.AddDays( -1 ), DateTime.Today.AddDays( 1 ), accessTokenInfo.AccessToken, progressNotify );
+			var metaSessions = await GoogleFitImporter.ImportAsync( DateTime.Today.AddDays( -30 ), DateTime.Today.AddDays( 1 ), accessTokenInfo.AccessToken, progressNotify );
 			if( metaSessions == null || metaSessions.Count == 0 )
 			{
 				progressDialog.Hide();

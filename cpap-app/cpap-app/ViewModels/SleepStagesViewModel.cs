@@ -15,12 +15,18 @@ namespace cpap_app.ViewModels;
 
 public class SleepStagesViewModel
 {
-	public bool IsEmpty { get => Sessions.Count == 0; }
+	public DailyReport Day     { get; set; }
+	
+	public bool        IsEmpty { get => Sessions.Count == 0; }
+	
+	public TimeSpan TotalTime  { get; set; }
+	public TimeSpan TimeAsleep { get; set; }
+	public TimeSpan TimeAwake  { get; set; }
 
 	public ObservableCollection<SleepStageSummaryItemViewModel> StageSummaries { get; set; }
 	public ObservableCollection<Session>                        Sessions       { get; set; } = new();
 
-	public SleepStagesViewModel()
+	private SleepStagesViewModel()
 	{
 		StageSummaries = new ObservableCollection<SleepStageSummaryItemViewModel>
 		{
@@ -34,6 +40,8 @@ public class SleepStagesViewModel
 	public SleepStagesViewModel( DailyReport day ) 
 		: this()
 	{
+		Day = day;
+		
 		var sessions = day.Sessions.Where( x => x.SourceType == SourceType.HealthAPI );
 		foreach( var session in sessions )
 		{
@@ -46,39 +54,13 @@ public class SleepStagesViewModel
 		CalculateSummaryInfo();
 	}
 	
-	// public void AddPeriod( SleepStagePeriodViewModel period )
-	// {
-	// 	// Can't sort an ObservableCollection, so gotta extract the contents, sort them, and re-add them. 
-	// 	var list = Periods.ToList();
-	// 	list.Add( period );
-	// 	list.Sort();
- //
-	// 	Periods.Clear();
-	// 	Periods.AddRange( list );
-	// 	
-	// 	CalculateSummaryInfo();
-	// }
-	//
-	// public void SavePeriod( SleepStagePeriodViewModel viewModel )
-	// {
- //        // Forces the collection to raise changed events 
-	// 	int index = Periods.IndexOf( viewModel );
-	// 	Periods[ index ] = viewModel;
-	// 	
-	// 	CalculateSummaryInfo();
-	// }
-	//
-	// public void RemovePeriod( SleepStagePeriodViewModel item )
-	// {
-	// 	Periods.Remove( item );
-	// 	CalculateSummaryInfo();
-	// }
-	
 	private void CalculateSummaryInfo()
 	{
 		Dictionary<SleepStage, double> timeInStage = new Dictionary<SleepStage, double>();
 
-		double totalTime = 0;
+		double totalTime  = 0;
+		double timeAwake  = 0;
+		double timeAsleep = 0;
 		
 		foreach( var session in Sessions )
 		{
@@ -91,6 +73,15 @@ public class SleepStagesViewModel
 			{
 				var stage = (SleepStage)value;
 				
+				if( stage > SleepStage.Awake )
+				{
+					timeAsleep += interval;
+				}
+				else if( stage > SleepStage.INVALID )
+				{
+					timeAwake += interval;
+				}
+				
 				if( !timeInStage.TryAdd( stage, interval ) )
 				{
 					timeInStage[ stage ] += interval;
@@ -99,9 +90,13 @@ public class SleepStagesViewModel
 		}
 
 		UpdateSummary( StageSummaries[ 0 ], SleepStage.Awake );
-		UpdateSummary( StageSummaries[ 1 ], SleepStage.Rem );
+		UpdateSummary( StageSummaries[ 1 ], SleepStage.REM );
 		UpdateSummary( StageSummaries[ 2 ], SleepStage.Light );
 		UpdateSummary( StageSummaries[ 3 ], SleepStage.Deep );
+
+		TotalTime  = TimeSpan.FromMinutes( (int)Math.Ceiling( totalTime ) );
+		TimeAsleep = TimeSpan.FromMinutes( (int)Math.Ceiling( timeAsleep ) );
+		TimeAwake  = TimeSpan.FromMinutes( (int)Math.Ceiling( timeAwake ) );
 
 		void UpdateSummary( SleepStageSummaryItemViewModel summary, SleepStage stage )
 		{
@@ -123,7 +118,7 @@ public enum SleepStage
 {
 	INVALID = 0,
 	Awake   = 1,
-	Rem     = 2,
+	REM     = 2,
 	Light   = 3,
 	Deep    = 4,
 }

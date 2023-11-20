@@ -21,8 +21,6 @@ using cpap_app.ViewModels;
 
 using cpaplib;
 
-using Google.Fitness.Data;
-
 using ScottPlot;
 using ScottPlot.Avalonia;
 using ScottPlot.Plottable;
@@ -1948,7 +1946,7 @@ public partial class SignalChart : UserControl
 		btnSettings.IsEnabled  = false;
 
 		Chart.Plot.XAxis.ManualTickSpacing( 3600 );
-		Chart.Plot.YAxis.ManualTickSpacing( 5 );
+		Chart.Plot.YAxis.ManualTickPositions( Array.Empty<double>(), Array.Empty<string>() );
 
 		Chart.RenderRequest();
 	}
@@ -1983,7 +1981,7 @@ public partial class SignalChart : UserControl
 		plot.XAxis.SetZoomInLimit( MINIMUM_TIME_WINDOW );
 		plot.XAxis.Layout( padding: 0 );
 		plot.XAxis.MajorGrid( false );
-		plot.XAxis.PixelSnap( true );
+		//plot.XAxis.PixelSnap( true );
 		plot.XAxis.AxisTicks.MajorTickLength = 15;
 		plot.XAxis.AxisTicks.MinorTickLength = 5;
 		plot.XAxis2.Layout( 8, 1, 1 );

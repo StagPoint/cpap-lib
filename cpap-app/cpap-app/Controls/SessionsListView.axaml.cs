@@ -3,6 +3,7 @@ using System.Linq;
 
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 
@@ -88,6 +89,11 @@ public partial class SessionsListView : UserControl
 			throw new InvalidOperationException( $"{nameof( DataContext )} does not contain a {nameof( DailyReport )} reference" );
 		}
 		
+		if( SessionSourceType != SourceType.CPAP && SessionSourceType != SourceType.PulseOximetry )
+		{
+			return;
+		}
+			
 		if( e.Source is Control { Tag: Session session } )
 		{
 			// Focus the Session in the user interface
@@ -123,6 +129,11 @@ public partial class SessionsListView : UserControl
 	
 	private void Delete_OnTapped( object? sender, RoutedEventArgs e )
 	{
+		if( SessionSourceType != SourceType.CPAP && SessionSourceType != SourceType.PulseOximetry )
+		{
+			return;
+		}
+			
 		//throw new NotImplementedException();
 	}
 	
@@ -146,6 +157,22 @@ public partial class SessionsListView : UserControl
 		};
 
 		RaiseEvent( signalEventArgs );
+	}
+	
+	private void ContextMenu_OnOpening( object? sender, EventArgs e )
+	{
+		if( sender is not MenuFlyout menu )
+		{
+			return;
+		}
+		
+		if( SessionSourceType != SourceType.CPAP && SessionSourceType != SourceType.PulseOximetry )
+		{
+			menu.Hide();
+			return;
+		}
+			
+		throw new NotImplementedException();
 	}
 }
 
