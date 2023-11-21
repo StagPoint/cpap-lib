@@ -9,9 +9,9 @@ public static class MathUtil
 	public static double InverseLerp( double a, double b, double v )
 	{
 		// ReSharper disable once CompareOfFloatsByEqualityOperator
-		// Avoid returning Infinity when the numbers exactly match. Note that exact match is required
-		// for the calculation to return Infinity, so an exact equality comparison between doubles is 
-		// valid for this situation.
+		// Avoid returning Infinity or DivideByZero when the numbers exactly match. Note that exact
+		// match is required for the calculation to return Infinity, so an exact equality comparison
+		// between doubles is valid and appropriate for this situation.
 		if( a == b )
 		{
 			return 0;

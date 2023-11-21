@@ -44,7 +44,7 @@
                         </StackPanel>
                     </Expander.Header>
                     <StackPanel Name="StagesSummary" Orientation="Vertical"
-                                Margin="0 0 0 10" Grid.IsSharedSizeScope="True">
+                                Grid.IsSharedSizeScope="True">
                         <StackPanel.Transitions>
                             <Transitions>
                                 <DoubleTransition Property="Opacity" Duration="00:00:0.5" Easing="QuarticEaseInOut"
@@ -55,7 +55,7 @@
                         <controls:SleepStageItemView DataContext="{Binding StageSummaries[1]}" />
                         <controls:SleepStageItemView DataContext="{Binding StageSummaries[2]}" />
                         <controls:SleepStageItemView DataContext="{Binding StageSummaries[3]}" />
-                        <Grid ColumnDefinitions="Auto,12,Auto" RowDefinitions="Auto,Auto,Auto" Margin="0 0 0 12" HorizontalAlignment="Right">
+                        <Grid ColumnDefinitions="Auto,12,Auto" RowDefinitions="Auto,Auto,Auto" HorizontalAlignment="Right">
                             <TextBlock Grid.Column="0" Grid.Row="0" Text="Total Time" HorizontalAlignment="Right" />
                             <TextBlock Grid.Column="2" Grid.Row="0" FontWeight="Bold"
                                        Text="{Binding TotalTime, Mode=OneWay, Converter={StaticResource FormattedTimeSpan}, ConverterParameter=Short.Empty}" />
@@ -68,6 +68,27 @@
                             <TextBlock Grid.Column="2" Grid.Row="2" FontWeight="Bold"
                                        Text="{Binding SleepEfficiency, StringFormat={}{0:P0}}" />
                         </Grid>
+                    </StackPanel>
+                </Expander>
+
+                <Expander
+                    ExpandDirection="Down"
+                    IsExpanded="True"
+                    VerticalAlignment="Top"
+                    Margin="0 10 0 0"
+                    Padding="10">
+                    <Expander.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <fui:FontIcon Glyph="&#xEC92;" FontSize="24"
+                                          FontFamily="{DynamicResource SymbolThemeFontFamily}"
+                                          FontWeight="Normal" FontStyle="Normal" Margin="0 0 10 0" />
+                            <TextBlock Text="Events During REM Sleep" FontSize="16"
+                                       Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                        </StackPanel>
+                    </Expander.Header>
+                    <StackPanel Orientation="Vertical">
+                        <TextBlock Name="NoRemEventsFound" Text="No events during REM sleep*" HorizontalAlignment="Center"/>
+                        <controls:EventSummaryView Name="RemEvents" Margin="0 10 0 0" />
                     </StackPanel>
                 </Expander>
 

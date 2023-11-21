@@ -87,6 +87,32 @@ public class EventSummaryViewModel
 		IndexValue = TotalCount / session.Duration.TotalHours;
 	}
 
+	public EventSummaryViewModel( DailyReport day, IReadOnlyList<ReportedEvent> events )
+	{
+		Day = day;
+		
+		// Calculate the total time (in hours) for each SourceType
+		var totalSleepTime = new Dictionary<SourceType, double>();
+		foreach( var session in day.Sessions )
+		{
+			totalSleepTime.TryAdd( session.SourceType, 0 );
+			totalSleepTime[ session.SourceType ] += session.Duration.TotalHours;
+		}
+
+		var filter = events.Select( x => x.Type ).Distinct();
+		
+		foreach( var type in filter )
+		{
+			var summary = new EventTypeSummary( type, totalSleepTime, events );
+
+			Items.Add( summary );
+		}
+
+		TotalCount = events.Count;
+		TotalTime  = TimeSpan.FromSeconds( events.Sum( x => x.Duration.TotalSeconds ) );
+		IndexValue = TotalCount > 0 ? TotalCount / totalSleepTime[ events[ 0 ].SourceType ] : 0;
+	}
+
 	public EventSummaryViewModel( DailyReport day, params EventType[] filter )
 	{
 		Day = day;
@@ -111,6 +137,11 @@ public class EventSummaryViewModel
 		TotalCount = events.Count;
 		TotalTime  = TimeSpan.FromSeconds( events.Sum( x => x.Duration.TotalSeconds ) );
 		IndexValue = TotalCount > 0 ? TotalCount / totalSleepTime[ events[ 0 ].SourceType ] : 0;
+	}
+
+	public void AddGroupSummary( string name, EventType[] groupFilter, List<ReportedEvent> events )
+	{
+		Indexes.Add( new EventGroupSummary( name, groupFilter, Day.TotalSleepTime, events ) );
 	}
 
 	public void AddGroupSummary( string name, EventType[] groupFilter )

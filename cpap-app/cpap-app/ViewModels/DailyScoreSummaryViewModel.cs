@@ -76,7 +76,9 @@ public class DailyScoreSummaryViewModel
 			};
 		}
 
-		var dailyScore = (int)MathUtil.Remap( minValue, maxValue, 0, weight, (int)stat.Average );
+		var averageOxygen = (int)Math.Ceiling( stat.Average );
+
+		var dailyScore = (int)MathUtil.Remap( minValue, maxValue, 0, weight, averageOxygen );
 
 		var isImprovement = previousDay == null;
 
@@ -89,7 +91,7 @@ public class DailyScoreSummaryViewModel
 		return new DailyScoreItemViewModel
 		{
 			Label         = "Oxygen saturation (%)",
-			Data          = $"{(int)stat.Average}",
+			Data          = $"{averageOxygen}",
 			DailyScore    = dailyScore,
 			MaximumScore  = weight,
 			IsHidden      = false,
