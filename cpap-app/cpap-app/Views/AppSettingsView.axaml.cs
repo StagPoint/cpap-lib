@@ -17,6 +17,8 @@ using FluentAvalonia.UI.Controls;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
 
+using OAuth;
+
 namespace cpap_app.Views;
 
 public partial class AppSettingsView : UserControl
@@ -31,7 +33,15 @@ public partial class AppSettingsView : UserControl
 
 		LoadDependenciesList();
 	}
-	
+
+	protected override void OnLoaded( RoutedEventArgs e )
+	{
+		base.OnLoaded( e );
+
+		var accessToken = AccessTokenStore.GetAccessTokenInfo();
+		GoogleFitSignOut.IsEnabled = accessToken.IsValid;
+	}
+
 	private void LoadDependenciesList()
 	{
 		var dependencyList = new List<DependencyInfoItem>();
@@ -79,6 +89,13 @@ public partial class AppSettingsView : UserControl
 
 			await msgBox.ShowWindowDialogAsync( this.FindAncestorOfType<Window>() );
 		}
+	}
+	
+	private void GoogleFitSignOut_OnClick( object? sender, RoutedEventArgs e )
+	{
+		// Saving an invalid access token will prevent access to Google API until the user signs in again
+		AccessTokenStore.SaveAccessTokenInfo( new AccessTokenInfo() );
+		GoogleFitSignOut.IsEnabled = false;
 	}
 }
 

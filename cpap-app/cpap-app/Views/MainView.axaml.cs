@@ -408,30 +408,33 @@ public partial class MainView : UserControl
 			// Search for a CPAP session that overlaps with but starts before the sleep session.
 			// If one is found, we'll extend the sleep session to start at the same time. The 
 			// reasoning is that FitBit (and presumably other devices) often don't start recording
-			// the session until it detects sleep, but it's also useful to know how much time was
-			// spent awake at the start of a CPAP session.
+			// the session until it detects sleep, but if another session started a few minutes
+			// earlier then the user is obviously not asleep at that point, and it's also useful
+			// to know how much time was spent awake at the start of each session.
 			
 			var signal = session.GetSignalByName( SignalNames.SleepStages );
 			if( signal != null )
 			{
-				foreach( var cpapSession in day.Sessions.Where( x => x.SourceType == SourceType.CPAP ) )
+				var matchedSession = day.Sessions
+				                        .Where( x =>
+					                                x.SourceType is SourceType.CPAP or SourceType.PulseOximetry &&
+					                                x.StartTime < signal.StartTime &&
+					                                x.EndTime > signal.StartTime )
+				                        .MinBy( x => x.StartTime );
+				
+				if( matchedSession != null )
 				{
-					if( cpapSession.StartTime < signal.StartTime && cpapSession.EndTime > signal.StartTime )
+					var timeDifference  = session.StartTime - matchedSession.StartTime;
+					var sampleInterval  = 1.0 / signal.FrequencyInHz;
+					int numberOfSamples = (int)Math.Floor( timeDifference.TotalSeconds / sampleInterval );
+
+					for( int i = 0; i < numberOfSamples; i++ )
 					{
-						var timeDifference  = session.StartTime - cpapSession.StartTime;
-						var sampleInterval  = 1.0 / signal.FrequencyInHz;
-						int numberOfSamples = (int)Math.Floor( timeDifference.TotalSeconds / sampleInterval );
-
-						for( int i = 0; i < numberOfSamples; i++ )
-						{
-							signal.Samples.Insert( 0, (int)SleepStage.Awake );
-						}
-
-						signal.StartTime  -= TimeSpan.FromSeconds( sampleInterval * numberOfSamples );
-						session.StartTime =  DateHelper.Min( session.StartTime, signal.StartTime );
-
-						break;
+						signal.Samples.Insert( 0, (int)SleepStage.Awake );
 					}
+
+					signal.StartTime  -= TimeSpan.FromSeconds( sampleInterval * numberOfSamples );
+					session.StartTime =  DateHelper.Min( session.StartTime, signal.StartTime );
 				}
 			}
 

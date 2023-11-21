@@ -26,16 +26,16 @@
                 </Transitions>
             </ProgressBar.Transitions>
         </ProgressBar>
-        <TextBlock Grid.Column="0" Grid.Row="0" Text="{Binding #AnimProgress.Value, StringFormat={}{0:N0}%}"
-                   Theme="{DynamicResource SubtitleTextBlockStyle}"
-                   FontSize="18"
+        <TextBlock Grid.Column="0" Grid.Row="0" 
+                   Text="{Binding #AnimProgress.Value, StringFormat={}{0:N0}%}"
+                   FontWeight="Bold"
                    VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0 0 12 0" />
-        <TextBlock Grid.Column="1" Grid.Row="0" Text="{Binding Label}" Theme="{DynamicResource BodyTextBlockStyle}"
+        <TextBlock Grid.Column="1" Grid.Row="0" 
+                   Text="{Binding Label}" Theme="{DynamicResource BodyTextBlockStyle}"
                    VerticalAlignment="Center" HorizontalAlignment="Left" Margin="0 0 8 0" />
         <TextBlock Grid.Column="3" Grid.Row="0"
                    Text="{Binding TimeInStage, Mode=OneWay, Converter={StaticResource FormattedTimeSpan}, ConverterParameter=Short.Empty}"
-                   Theme="{DynamicResource SubtitleTextBlockStyle}"
-                   FontSize="18"
+                   FontWeight="Bold"
                    VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0 0 4 0" />
     </Grid>
 </UserControl>

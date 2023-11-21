@@ -103,6 +103,10 @@ namespace cpaplib
     		result.Median        = percentileWindow.Peek();
 		    result.Average       = (double)(sum / totalCount);
 		    result.MeanDeviation = (double)(deviationSum / deviationTotal) * 100.0;
+		    
+		    // There are a few situations where "Minimum value above zero" is actually kind of absurd, like the Flow Limitation
+		    // signal, which has a very narrow range of values and on a good day the median value is actually zero.
+		    result.Minimum = Math.Min( result.Minimum, result.Median );
 
 		    if( double.IsNaN( result.Average ) || double.IsInfinity( result.Average ) )
 		    {

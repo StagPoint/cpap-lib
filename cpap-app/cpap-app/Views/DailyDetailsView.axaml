@@ -16,12 +16,12 @@
         <StackPanel Name="ViewContents">
             <StackPanel DataContext="{Binding MachineInfo}" Margin="4 8 0 0">
                 <TextBlock Theme="{DynamicResource BodyStrongTextBlockStyle}">
-                    <Run>Model: </Run>
+                    <Run>Device: </Run>
                     <Run Text="{Binding ProductName, Mode=OneWay}" />
                 </TextBlock>
                 <TextBlock Theme="{DynamicResource BodyStrongTextBlockStyle}">
-                    <Run>Serial: </Run>
-                    <Run Text="{Binding SerialNumber, Mode=OneWay}" />
+                    <Run>Model: </Run>
+                    <Run Text="{Binding ModelNumber, Mode=OneWay}" />
                 </TextBlock>
             </StackPanel>
             <Grid Margin="4 10" ColumnDefinitions="Auto,20,Auto,*" RowDefinitions="Auto,Auto,Auto,Auto">
