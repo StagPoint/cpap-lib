@@ -1,7 +1,10 @@
-﻿using Avalonia;
+﻿using System.Diagnostics;
+
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 
+using cpap_app.Events;
 using cpap_app.ViewModels;
 
 using cpaplib;
@@ -36,7 +39,15 @@ public partial class DailySleepStagesView : UserControl
 	
 	private void DeleteData_OnClick( object? sender, RoutedEventArgs e )
 	{
-		throw new System.NotImplementedException();
+		Debug.Assert( _sleepStages != null, nameof( _sleepStages ) + " != null" );
+		
+		RaiseEvent( new SessionDataEventArgs
+		{
+			RoutedEvent = SessionDataEvents.SessionDeletionRequestedEvent,
+			Source      = this,
+			Date        = _sleepStages.Day.ReportDate.Date,
+			SourceType  = SourceType.HealthAPI
+		} );
 	}
 }
 

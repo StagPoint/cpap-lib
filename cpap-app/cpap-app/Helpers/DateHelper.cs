@@ -5,7 +5,7 @@ namespace cpap_app.Helpers;
 
 public static class DateHelper
 {
-	private static readonly DateTime UnixEpoch = new DateTime( 1970, 1, 1 ).ToLocalTime();
+	public static readonly DateTime UnixEpoch = DateTime.SpecifyKind( new DateTime( 1970, 1, 1 ), DateTimeKind.Utc ).ToLocalTime();
 
 	/// <summary>
 	/// Used to "fix" DateTime values retrieved through Sqlite.Net, which are incorrectly
@@ -47,7 +47,17 @@ public static class DateHelper
 	public static DateTime FromMillisecondsSinceEpoch( long milliseconds )
 	{
 		var result = UnixEpoch.AddMilliseconds( milliseconds );
-		return TimeZoneInfo.Local.IsDaylightSavingTime( result ) ? result.AddHours( 1 ) : result;
+		
+		var resultIsDST = TimeZoneInfo.Local.IsDaylightSavingTime( result );
+		var nowIsDst    = TimeZoneInfo.Local.IsDaylightSavingTime( DateTime.Today );
+		
+		// Compensate for ToLocalTime() being incorrect for some historical dates
+		return resultIsDST switch
+		{
+			true when !nowIsDst => result.AddHours( 1 ),
+			false when nowIsDst => result.AddHours( -1 ),
+			_                   => result
+		};
 	}
 
 	[MethodImpl( MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization )]
@@ -60,7 +70,17 @@ public static class DateHelper
 	public static DateTime FromNanosecondsSinceEpoch( long milliseconds )
 	{
 		var result = UnixEpoch.AddMilliseconds( milliseconds * 1E-6 );
-		return TimeZoneInfo.Local.IsDaylightSavingTime( result ) ? result.AddHours( 1 ) : result;
+
+		var resultIsDST = TimeZoneInfo.Local.IsDaylightSavingTime( result );
+		var nowIsDst    = TimeZoneInfo.Local.IsDaylightSavingTime( DateTime.Today );
+		
+		// Compensate for ToLocalTime() being incorrect for some historical dates
+		return resultIsDST switch
+		{
+			true when !nowIsDst => result.AddHours( 1 ),
+			false when nowIsDst => result.AddHours( -1 ),
+			_                   => result
+		};
 	}
 
 	[MethodImpl( MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization )]

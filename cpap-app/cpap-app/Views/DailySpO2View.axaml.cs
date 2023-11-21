@@ -14,19 +14,6 @@ namespace cpap_app.Views;
 
 public partial class DailySpO2View : UserControl
 {
-	#region Events 
-	
-	public static readonly RoutedEvent<DateTimeRoutedEventArgs> DeletionRequestedEvent = 
-		RoutedEvent.Register<DailySpO2View, DateTimeRoutedEventArgs>( nameof( DeletionRequested ), RoutingStrategies.Bubble );
-
-	public event EventHandler<DateTimeRoutedEventArgs> DeletionRequested
-	{
-		add => AddHandler( DeletionRequestedEvent, value );
-		remove => RemoveHandler( DeletionRequestedEvent, value );
-	}
-		
-	#endregion 
-	
 	#region Constructor 
 	
 	public DailySpO2View()
@@ -116,12 +103,13 @@ public partial class DailySpO2View : UserControl
 		{
 			throw new Exception( $"Cannot request deletion of data for {DataContext}" );
 		}
-		
-		RaiseEvent( new DateTimeRoutedEventArgs
+
+		RaiseEvent( new SessionDataEventArgs
 		{
-			RoutedEvent = DeletionRequestedEvent,
+			RoutedEvent = SessionDataEvents.SessionDeletionRequestedEvent,
 			Source      = this,
-			DateTime    = day.ReportDate.Date
+			Date        = day.ReportDate.Date,
+			SourceType  = SourceType.PulseOximetry
 		} );
 	}
 

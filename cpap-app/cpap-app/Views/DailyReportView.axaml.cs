@@ -16,6 +16,7 @@ using Avalonia.VisualTree;
 using cpap_app.Animation;
 using cpap_app.Controls;
 using cpap_app.Events;
+using cpap_app.Helpers;
 using cpap_app.ViewModels;
 
 using cpap_db;
@@ -49,7 +50,7 @@ public partial class DailyReportView : UserControl
 	{
 		InitializeComponent();
 		
-		AddHandler( DailySpO2View.DeletionRequestedEvent, DailySpO2View_OnDeletionRequested );
+		AddHandler( SessionDataEvents.SessionDeletionRequestedEvent, SessionData_OnDeletionRequested );
 
 		TabFrame.IsNavigationStackEnabled = false;
 		TabFrame.CacheSize                = 0;
@@ -394,7 +395,7 @@ public partial class DailyReportView : UserControl
 		Charts.ShowEventType( eventArgs.Type );
 	}
 	
-	private async void DailySpO2View_OnDeletionRequested( object? sender, DateTimeRoutedEventArgs e )
+	private async void SessionData_OnDeletionRequested( object? sender, SessionDataEventArgs e )
 	{
 		if( ActiveUserProfile == null )
 		{
@@ -403,7 +404,7 @@ public partial class DailyReportView : UserControl
 
 		var dialog = MessageBoxManager.GetMessageBoxStandard(
 			"Delete Pulse Oximetry Data",
-			$"Are you sure you wish to delete pulse oximetry data for {e.DateTime:D}?",
+			$"Are you sure you wish to delete {NiceNames.Format(e.SourceType.ToString())} data for {e.Date:D}?",
 			ButtonEnum.YesNo,
 			Icon.Warning
 		);
@@ -418,9 +419,9 @@ public partial class DailyReportView : UserControl
 		var profileID = ActiveUserProfile.UserProfileID;
 
 		using var connection = StorageService.Connect();
-		connection.DeletePulseOximetryData( profileID, e.DateTime );
+		connection.DeleteSessionsOfType( profileID, e.Date, e.SourceType );
 
-		DataContext = WrapDailyReport( connection.LoadDailyReport( profileID, e.DateTime ) );
+		DataContext = WrapDailyReport( connection.LoadDailyReport( profileID, e.Date ) );
 	}
 
 	#endregion 

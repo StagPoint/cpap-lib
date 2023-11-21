@@ -33,6 +33,13 @@ namespace OAuth
 		}
 	}
 
+	/// <summary>
+	/// To obtain the ClientID and ClientSecret field values, you must have a project on the Google API
+	/// site with the Fitness API enabled.
+	///		Go to https://developers.google.com/fit/rest/v1/get-started for information on getting started.
+	///		Enable Fitness API access here: https://console.cloud.google.com/flows/enableapi?apiid=fitness
+	///		Google API Console: https://console.developers.google.com/
+	/// </summary>
 	public class AuthorizationConfig
 	{
 		#region Public properties

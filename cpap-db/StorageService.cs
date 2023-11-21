@@ -329,6 +329,29 @@ namespace cpap_db
 			
 			SaveDailyReport( profileID, day );
 		}
+
+		public void DeleteSessionsOfType( int profileID, DateTime date, SourceType type )
+		{
+			var day = LoadDailyReport( profileID, date );
+
+			var signalNames = new List<string>();
+
+			foreach( var session in day.Sessions.Where( x => x.SourceType == type ) )
+			{
+				foreach( var signal in session.Signals )
+				{
+					signalNames.Add( signal.Name );
+				}
+			}
+
+			day.Events.RemoveAll( x => x.SourceType == type );
+			day.Sessions.RemoveAll( x => x.SourceType == type );
+			day.Statistics.RemoveAll( x => signalNames.Contains( x.SignalName ) );
+			
+			day.RefreshTimeRange();
+			
+			SaveDailyReport( profileID, day );
+		}
 		
 		#endregion
 		

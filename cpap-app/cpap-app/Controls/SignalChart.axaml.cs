@@ -1945,8 +1945,8 @@ public partial class SignalChart : UserControl
 		this.IsEnabled         = false;
 		btnSettings.IsEnabled  = false;
 
-		Chart.Plot.XAxis.ManualTickSpacing( 3600 );
-		Chart.Plot.YAxis.ManualTickPositions( Array.Empty<double>(), Array.Empty<string>() );
+		Chart.Plot.XAxis.AutomaticTickPositions();
+		Chart.Plot.YAxis.AutomaticTickPositions();
 
 		Chart.RenderRequest();
 	}

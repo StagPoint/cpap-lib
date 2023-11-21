@@ -7,10 +7,6 @@ using System.Runtime.CompilerServices;
 
 using cpaplib;
 
-using DynamicData;
-
-using Google.Fitness.Data;
-
 namespace cpap_app.ViewModels;
 
 public class SleepStagesViewModel
@@ -31,10 +27,10 @@ public class SleepStagesViewModel
 	{
 		StageSummaries = new ObservableCollection<SleepStageSummaryItemViewModel>
 		{
-			new SleepStageSummaryItemViewModel() { Label = "Awake", Percentage = Random.Shared.NextInt64( 99 ), TimeInStage = TimeSpan.FromMinutes( 53 ) },
-			new SleepStageSummaryItemViewModel() { Label = "Rem", Percentage   = Random.Shared.NextInt64( 99 ), TimeInStage = TimeSpan.FromMinutes( 59 ) },
-			new SleepStageSummaryItemViewModel() { Label = "Light", Percentage = Random.Shared.NextInt64( 99 ), TimeInStage = new TimeSpan( 3, 50, 0 ) },
-			new SleepStageSummaryItemViewModel() { Label = "Deep", Percentage  = Random.Shared.NextInt64( 99 ), TimeInStage = TimeSpan.FromMinutes( 32 ) },
+			new SleepStageSummaryItemViewModel() { Label = "Awake" },
+			new SleepStageSummaryItemViewModel() { Label = "Rem" },
+			new SleepStageSummaryItemViewModel() { Label = "Light" },
+			new SleepStageSummaryItemViewModel() { Label = "Deep" },
 		};
 	}
 
@@ -109,7 +105,7 @@ public class SleepStagesViewModel
 			}
 			else
 			{
-				summary.TimeInStage = TimeSpan.FromMinutes( time );
+				summary.TimeInStage = TimeSpan.FromMinutes( (int)time );
 				summary.Percentage  = (int)(time / totalTime * 100);
 			}
 		}
