@@ -3,7 +3,6 @@ using System.Linq;
 
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 
@@ -171,8 +170,6 @@ public partial class SessionsListView : UserControl
 			menu.Hide();
 			return;
 		}
-			
-		throw new NotImplementedException();
 	}
 }
 

@@ -38,22 +38,26 @@ public partial class DailySleepStagesView : UserControl
 		{
 			_sleepStages = new SleepStagesViewModel( day );
 
-			var events           = GetRemEvents( day );
-			var remEventsSummary = new EventSummaryViewModel( day, events );
-			if( remEventsSummary.TotalCount > 0 )
-			{
-				remEventsSummary.AddGroupSummary( "Respiratory Disturbance (RDI)", EventTypes.RespiratoryDisturbance, events );
-			}
-			
-			RemEvents.DataContext = remEventsSummary;
-
-			NoRemEventsFound.IsVisible = (remEventsSummary.TotalCount == 0);
+            InitializeEventsSummary( day, GetSleepEvents( day, true ),  RemEvents,    NoRemEventsFound );
+            InitializeEventsSummary( day, GetSleepEvents( day, false ), NonRemEvents, NoNonRemEventsFound );
 		}
 
 		OuterContainer.DataContext = _sleepStages;
 	}
+	
+	private static void InitializeEventsSummary( DailyReport day, List<ReportedEvent> events, Control summaryControl, Control noEventsControl )
+	{
+		var remEventsSummary = new EventSummaryViewModel( day, events );
+		if( remEventsSummary.TotalCount > 0 )
+		{
+			remEventsSummary.AddGroupSummary( "Respiratory Disturbance (RDI)", EventTypes.RespiratoryDisturbance, events );
+		}
 
-	private List<ReportedEvent> GetRemEvents( DailyReport day )
+		summaryControl.DataContext = remEventsSummary;
+		noEventsControl.IsVisible  = (remEventsSummary.TotalCount == 0);
+	}
+
+	private static List<ReportedEvent> GetSleepEvents( DailyReport day, bool remOnly )
 	{
 		var results = new List<ReportedEvent>();
 		var signals = new List<Signal>();
@@ -71,20 +75,29 @@ public partial class DailySleepStagesView : UserControl
 
 		foreach( var ev in day.Events )
 		{
-			if( EventTypes.RespiratoryDisturbance.Contains( ev.Type ) )
+			if( !EventTypes.RespiratoryDisturbance.Contains( ev.Type ) )
 			{
-				foreach( var signal in signals )
+				continue;
+			}
+			
+			foreach( var signal in signals )
+			{
+				if( signal.StartTime <= ev.StartTime && signal.EndTime >= ev.StartTime )
 				{
-					if( signal.StartTime <= ev.StartTime && signal.EndTime >= ev.StartTime )
+					var value = (SleepStage)Math.Round( signal.GetValueAtTime( ev.StartTime, false ) );
+					if( value <= SleepStage.Awake )
 					{
-						var value = (SleepStage)Math.Round( signal.GetValueAtTime( ev.StartTime, false ) );
-						if( value == SleepStage.REM )
-						{
-							results.Add( ev );
-						}
-
-						break;
+						continue;
 					}
+
+					if( remOnly != (value == SleepStage.REM) )
+					{
+						continue;
+					}
+
+					results.Add( ev );
+
+					break;
 				}
 			}
 		}

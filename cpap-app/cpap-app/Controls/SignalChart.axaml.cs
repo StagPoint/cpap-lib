@@ -217,6 +217,8 @@ public partial class SignalChart : UserControl
 
 	protected override void OnKeyDown( KeyEventArgs args )
 	{
+		Debug.Assert( ChartConfiguration != null, nameof( ChartConfiguration ) + " != null" );
+
 		switch( args.Key )
 		{
 			case Key.Left or Key.Right:
@@ -269,21 +271,25 @@ public partial class SignalChart : UserControl
 			}
 			case Key.A:
 			{
-				switch( _interactionMode )
+				if( args.KeyModifiers == KeyModifiers.None )
 				{
-					case GraphInteractionMode.Selecting:
-						AddAnnotationForCurrentSelection();
-						break;
-					case GraphInteractionMode.None when _selectionStartTime > 0:
-						_selectionEndTime = _selectionStartTime;
-						AddAnnotationForCurrentSelection();
-						break;
+					// ReSharper disable once SwitchStatementMissingSomeEnumCasesNoDefault
+					switch( _interactionMode )
+					{
+						case GraphInteractionMode.Selecting:
+							AddAnnotationForCurrentSelection();
+							break;
+						case GraphInteractionMode.None when _selectionStartTime > 0:
+							_selectionEndTime = _selectionStartTime;
+							AddAnnotationForCurrentSelection();
+							break;
+					}
 				}
 				break;
 			}
 		}
 	}
-
+	
 	protected override void OnPropertyChanged( AvaloniaPropertyChangedEventArgs change )
 	{
 		base.OnPropertyChanged( change );
@@ -786,7 +792,7 @@ public partial class SignalChart : UserControl
 
 		List<SignalMenuItem> standardItems = new List<SignalMenuItem>
 		{
-			new SignalMenuItem( "Sliding Average (60sec)",    VisualizeSlidingAverage ),
+			new SignalMenuItem( "Sliding Average",            VisualizeSlidingAverage ),
 			new SignalMenuItem( "Standard Deviation (60sec)", VisualizeStandardDeviation ),
 			new SignalMenuItem( "Average (Entire series)",    VisualizeAverage ),
 			new SignalMenuItem( "Median (Entire series)",     VisualizeMedian ),
@@ -795,8 +801,7 @@ public partial class SignalChart : UserControl
 
 		if( ChartConfiguration.SignalName == SignalNames.FlowRate )
 		{
-			btnSettings.Visualizations.Add( new SignalMenuItem( "RMS Flow (short)",  VisualiseFlowShort ) );
-			btnSettings.Visualizations.Add( new SignalMenuItem( "RMS Flow (long)",   VisualizeFlowLong ) );
+			btnSettings.Visualizations.Add( new SignalMenuItem( "Root Mean Squares", VisualizeRMS ) );
 			btnSettings.Visualizations.Add( new SignalMenuItem( "Show Baseline",     VisualizeBaseline ) );
 			btnSettings.Visualizations.Add( new SignalMenuItem( "Mark Respirations", VisualizeRespirations ) );
 			btnSettings.Visualizations.Add( new SignalMenuItem( "Noise Filter",      VisualizeNoiseFilter ) );
@@ -810,16 +815,23 @@ public partial class SignalChart : UserControl
 		btnSettings.Visualizations.Add( new SignalMenuItem( "Clear Visualizations", ClearVisualizations ) );
 	}
 	
-	private void VisualizeFlowLong()
+	private async void VisualizeRMS()
 	{
-		VisualizeRMS( 120, Color.DeepPink, "RMS (long)" );
+		var windowLengthInSeconds = await InputDialog.InputInteger(
+			TopLevel.GetTopLevel( this )!,
+			"Visualize Root Mean Squares",
+			"Enter the length of the window, in seconds",
+			60,
+			10,
+			60 * 60 * 60
+		);
 
-		Chart.RenderRequest();
-	}
-	
-	private void VisualiseFlowShort()
-	{
-		VisualizeRMS( 2, Color.Magenta, "RMS (short)" );
+		if( windowLengthInSeconds == null )
+		{
+			return;
+		}
+		
+		VisualizeRMS( windowLengthInSeconds.Value, Color.DeepPink, $"RMS ({windowLengthInSeconds})" );
 
 		Chart.RenderRequest();
 	}
@@ -1017,8 +1029,22 @@ public partial class SignalChart : UserControl
 		}
 	}
 
-	private void VisualizeSlidingAverage()
+	private async void VisualizeSlidingAverage()
 	{
+		var windowLengthInSeconds = await InputDialog.InputInteger(
+			TopLevel.GetTopLevel( this )!,
+			"Visualize Sliding Average",
+			"Enter the length of the window, in seconds",
+			60,
+			10,
+			60 * 60 * 60
+		);
+
+		if( windowLengthInSeconds == null )
+		{
+			return;
+		}
+		
 		Debug.Assert( _day != null, nameof( _day ) + " != null" );
 		var  color = DataColors.GetDataColor( _visualizations.Count + 8 ).ToDrawingColor();
 		color = Color.Red;
@@ -1026,8 +1052,8 @@ public partial class SignalChart : UserControl
 		bool first = true;
 		foreach( var signal in _signals )
 		{
-			var windowSize = (int)(60 * signal.FrequencyInHz);
-			var calc       = new MovingAverageCalculator( windowSize );
+			var numWindowSamples = (int)(windowLengthInSeconds * signal.FrequencyInHz);
+			var calc             = new MovingAverageCalculator( numWindowSamples );
 
 			var samples = new double[ signal.Samples.Count ];
 
@@ -1039,7 +1065,7 @@ public partial class SignalChart : UserControl
 				samples[ i ] = calc.Average;
 			}
 
-			var graph = Chart.Plot.AddSignal( samples, signal.FrequencyInHz, color, first ? "Avg" : null );
+			var graph = Chart.Plot.AddSignal( samples, signal.FrequencyInHz, color, first ? $"Avg ({windowLengthInSeconds:F0})" : null );
 			graph.OffsetX    = (signal.StartTime - _day.RecordingStartTime).TotalSeconds;
 			//graph.LineStyle  = LineStyle.Dash;
 			graph.MarkerSize = 0;
@@ -1052,8 +1078,22 @@ public partial class SignalChart : UserControl
 		Chart.RenderRequest();
 	}
 	
-	private void VisualizeStandardDeviation()
+	private async void VisualizeStandardDeviation()
 	{
+		var windowLengthInSeconds = await InputDialog.InputInteger(
+			TopLevel.GetTopLevel( this )!,
+			"Visualize Standard Deviation",
+			"Enter the length of the window, in seconds",
+			60,
+			10,
+			60 * 60 * 60
+		);
+
+		if( windowLengthInSeconds == null )
+		{
+			return;
+		}
+		
 		Debug.Assert( _day != null, nameof( _day ) + " != null" );
 		var color = DataColors.GetDataColor( _visualizations.Count + 8 ).ToDrawingColor();
 
@@ -1062,8 +1102,8 @@ public partial class SignalChart : UserControl
 		bool first = true;
 		foreach( var signal in _signals )
 		{
-			var windowSize = (int)(60 * signal.FrequencyInHz);
-			var calc       = new MovingAverageCalculator( windowSize );
+			var numWindowSamples = (int)(windowLengthInSeconds * signal.FrequencyInHz);
+			var calc             = new MovingAverageCalculator( numWindowSamples );
 
 			var samples = new double[ signal.Samples.Count ];
 
@@ -1077,7 +1117,7 @@ public partial class SignalChart : UserControl
 				Debug.Assert( !double.IsNaN( samples[ i ] ) && !double.IsInfinity( samples[ i ] ), "Unexpected invalid value in data" );
 			}
 
-			var graph = Chart.Plot.AddSignal( samples, signal.FrequencyInHz, color, first ? "StdDev" : null );
+			var graph = Chart.Plot.AddSignal( samples, signal.FrequencyInHz, color, first ? $"StdDev ({windowLengthInSeconds})" : null );
 			graph.LineStyle  = LineStyle.Solid;
 			graph.OffsetX    = (signal.StartTime - _day.RecordingStartTime).TotalSeconds;
 			graph.MarkerSize = 0;

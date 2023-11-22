@@ -402,9 +402,11 @@ public partial class DailyReportView : UserControl
 			throw new NullReferenceException( $"There is no {nameof( ActiveUserProfile )} value assigned." );
 		}
 
+		var dataCategory = NiceNames.Format( e.SourceType.ToString() );
+
 		var dialog = MessageBoxManager.GetMessageBoxStandard(
-			"Delete Pulse Oximetry Data",
-			$"Are you sure you wish to delete {NiceNames.Format(e.SourceType.ToString())} data for {e.Date:D}?",
+			$"Delete {dataCategory} Data",
+			$"Are you sure you wish to delete {dataCategory} data for {e.Date:D}?",
 			ButtonEnum.YesNo,
 			Icon.Warning
 		);

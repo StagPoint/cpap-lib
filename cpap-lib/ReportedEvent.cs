@@ -157,7 +157,7 @@ namespace cpaplib
 
 		public int CompareTo( ReportedEvent other )
 		{
-			return this.Type == other.Type ? this.StartTime.CompareTo( other.StartTime ) : this.Type.CompareTo( other.Type );
+			return StartTime.CompareTo( other.StartTime );
 		}
 		
 		public int CompareTo( object obj )

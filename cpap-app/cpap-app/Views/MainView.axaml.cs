@@ -689,6 +689,7 @@ public partial class MainView : UserControl
 										// a single Session per file, and that is not expected to change, but if it ever does 
 										// this code should be robust in handling that change. 
 										day.Events.AddRange( item.Events.Where( x => x.StartTime >= session.StartTime && x.StartTime <= session.EndTime ) );
+										day.Events.Sort();
 
 										dayIsModified = true;
 									}

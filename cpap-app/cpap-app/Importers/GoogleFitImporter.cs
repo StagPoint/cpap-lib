@@ -91,6 +91,7 @@ public class GoogleFitImporter
 			}
 			
 			var session = ImportSessionFromDataset( bucket.Datasets[ 0 ].Points, startTime, endTime );
+			session.Source = fitSession.Application.Name ?? fitSession.Application.PackageName ?? "Google Fit API";
 			sessions.Add( session );
 		}
 

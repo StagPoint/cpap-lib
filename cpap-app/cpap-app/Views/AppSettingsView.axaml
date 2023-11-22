@@ -96,6 +96,26 @@
                                                    Click="LaunchRepoLinkItemClick"/>
                     <controls:SettingsExpanderItem>
                         <StackPanel Spacing="20">
+                            <Expander
+                                ExpandDirection="Down"
+                                IsExpanded="True"
+                                VerticalAlignment="Top"
+                                Margin="0 10 0 0"
+                                Padding="10">
+                                <Expander.Header>
+                                    <StackPanel Orientation="Horizontal">
+                                        <controls:SymbolIcon Symbol="ReportHacked" FontSize="24" Margin="0 0 10 0" />
+                                        <TextBlock Text="DISCLAIMER - Please read this" FontSize="16"
+                                                   Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                                    </StackPanel>
+                                </Expander.Header>
+                                <TextBlock TextWrapping="Wrap">
+                                    This application was created to display information from your CPAP machine and other non-medical devices in a way that is intended to motivate you to take an active interest in your own treatment. 
+                                    It does not, and cannot, make any warranties that the information it presents is fully accurate or medically relevant. 
+                                    Any questions or concerns about the information presented by this application should be directed to your care team or a qualified medical expert.
+                                    No claims are made about the accuracy of this application or the information it presents, or its suitability for any purpose.
+                                </TextBlock>
+                            </Expander>
                             <Border BorderThickness="1" BorderBrush="{DynamicResource SurfaceStrokeColorDefaultBrush}"
                                     Background="{DynamicResource SolidBackgroundFillColorBaseBrush}" Padding="8">
                                 <StackPanel Spacing="12" Grid.IsSharedSizeScope="True">

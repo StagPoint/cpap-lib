@@ -293,10 +293,7 @@ public static class OximetryEventGenerator
 								Duration  = TimeSpan.FromSeconds( eventDuration )
 							};
 
-							if( !events.Any( x => x.Type == EventType.Hypoxemia && ReportedEvent.TimesOverlap( x, annotation ) ) )
-							{
-								events.Add( annotation );
-							}
+							events.Add( annotation );
 						}
 
 						state = 0;
