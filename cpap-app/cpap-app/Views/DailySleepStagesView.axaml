@@ -130,6 +130,26 @@
                     <controls:SessionsListView DataContext="{Binding Day}" SessionSourceType="HealthAPI" />
                 </Expander>
 
+                <Expander
+                    ExpandDirection="Down"
+                    IsExpanded="True"
+                    VerticalAlignment="Top"
+                    Margin="0 10 0 0"
+                    Padding="10">
+                    <Expander.Header>
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <fui:FontIcon Glyph="&#xE7BA;" FontSize="24"
+                                          FontFamily="{DynamicResource SymbolThemeFontFamily}"
+                                          FontWeight="Normal" FontStyle="Normal" />
+                            <TextBlock Text="Take Note" FontSize="16"
+                                       Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                        </StackPanel>
+                    </Expander.Header>
+                    <TextBlock TextWrapping="Wrap">
+                        Sleep stage data from non-medical devices is not fully accurate, and represents only a "best guess" approximation.
+                    </TextBlock>
+                </Expander>
+
                 <Button HorizontalAlignment="Stretch" Margin="1 12" Click="DeleteData_OnClick">
                     <StackPanel Orientation="Horizontal" Spacing="12" Margin="-16 0 0 0">
                         <fui:SymbolIcon Symbol="Delete" />

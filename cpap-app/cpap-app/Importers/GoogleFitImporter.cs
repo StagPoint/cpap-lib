@@ -126,6 +126,7 @@ public class GoogleFitImporter
 		var currentTime     = startTime;
 		var samples         = signal.Samples;
 
+		/*
 		for( int i = 0; i < numberOfSamples; i++ )
 		{
 			var point  = Points[ pointIndex ];
@@ -148,6 +149,28 @@ public class GoogleFitImporter
 				pointIndex += 1;
 			}
 		}
+		*/
+
+		foreach( var point in Points )
+		{
+			Debug.Assert( point.Value.Count > 0 );
+			Debug.Assert( point.Value[ 0 ].IntVal != null );
+			
+			var value = (GoogleFitSleepStage)point.Value[ 0 ].IntVal!;
+			if( !_sleepStageMap.TryGetValue( value, out int outputValue ) )
+			{
+				outputValue = 1;
+			}
+
+			var sampleCount = (int)(TimeSpan.FromMilliseconds( (point.EndTimeNanos - point.StartTimeNanos) * 1E-6 ).TotalSeconds / 30);
+			for( int j = 0; j < sampleCount; j++ )
+			{
+				samples.Add( outputValue );
+				currentTime += timeStep;
+			}
+		}
+
+		session.EndTime = signal.EndTime = currentTime;
 
 		return session;
 	}

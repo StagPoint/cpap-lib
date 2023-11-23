@@ -67,9 +67,9 @@ public static class DateHelper
 	}
 
 	[MethodImpl( MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization )]
-	public static DateTime FromNanosecondsSinceEpoch( long milliseconds )
+	public static DateTime FromNanosecondsSinceEpoch( long nanoseconds )
 	{
-		var result = UnixEpoch.AddMilliseconds( milliseconds * 1E-6 );
+		var result = UnixEpoch.AddMilliseconds( nanoseconds * 1E-6 );
 
 		var resultIsDST = TimeZoneInfo.Local.IsDaylightSavingTime( result );
 		var nowIsDst    = TimeZoneInfo.Local.IsDaylightSavingTime( DateTime.Today );

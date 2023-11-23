@@ -218,7 +218,8 @@ public partial class SignalChart : UserControl, ISignalGraph
 				Chart.Plot.SetAxisLimits( startTime, endTime );
 			
 				HideTimeMarker();
-				Chart.RenderRequest();
+				RenderGraph( false );
+				OnAxesChanged( this, EventArgs.Empty ); 
 			
 				args.Handled = true;
 				break;
@@ -233,7 +234,9 @@ public partial class SignalChart : UserControl, ISignalGraph
 				args.Handled = true;
 
 				HideTimeMarker();
-				Chart.RenderRequest();
+				RenderGraph( false );
+				OnAxesChanged( this, EventArgs.Empty ); 
+
 				break;
 			}
 			case Key.Escape:
@@ -352,22 +355,22 @@ public partial class SignalChart : UserControl, ISignalGraph
 		{
 			case nameof( SignalChartConfiguration.PlotColor ):
 				RefreshPlotColor();
-				Chart.RenderRequest();
+				RenderGraph( true );
 				break;
 			case nameof( SignalChartConfiguration.DisplayedEvents ):
 				RefreshEventMarkers();
-				Chart.RenderRequest();
+				RenderGraph( true );
 				break;
 			case nameof( SignalChartConfiguration.FillBelow ):
 				RefreshPlotFill();
-				Chart.RenderRequest();
+				RenderGraph( true );
 				break;
 			case nameof( SignalChartConfiguration.ScalingMode ):
 			case nameof( SignalChartConfiguration.AxisMinValue ):
 			case nameof( SignalChartConfiguration.AxisMaxValue ) :
 				// TODO: Refresh the chart's scaling mode
 				RefreshChartAxisLimits();
-				Chart.RenderRequest();
+				RenderGraph( true );
 				break;
 		}
 
@@ -487,8 +490,7 @@ public partial class SignalChart : UserControl, ISignalGraph
 				break;
 			case GraphInteractionMode.Panning:
 				// The chart was rendered in low quality while panning, so re-render in high quality now that we're done 
-				//Chart.Configuration.Quality = ScottPlot.Control.QualityMode.LowWhileDragging;
-				//Chart.RenderRequest();
+				//RenderGraph( true );
 				break;
 		}
 
@@ -585,7 +587,7 @@ public partial class SignalChart : UserControl, ISignalGraph
 			args.Handled = true;
 
 			HideTimeMarker();
-			Chart.RenderRequest();
+			OnAxesChanged( this, EventArgs.Empty );
 		}
 	}
 
@@ -627,7 +629,7 @@ public partial class SignalChart : UserControl, ISignalGraph
 				
 				eventArgs.Handled = true;
 			
-				Chart.RenderRequest();
+				RenderGraph( false );
 			
 				return;
 			}
@@ -651,7 +653,7 @@ public partial class SignalChart : UserControl, ISignalGraph
 				}
 				
 				Chart.Plot.SetAxisLimits( start, end );
-				Chart.RenderRequest( RenderType.LowQualityThenHighQualityDelayed );
+				OnAxesChanged( this, EventArgs.Empty );
 
 				eventArgs.Handled = true;
 
@@ -675,8 +677,12 @@ public partial class SignalChart : UserControl, ISignalGraph
 
 	public void RenderGraph( bool highQuality )
 	{
+		Chart.Configuration.AxesChangedEventEnabled = false;
 		Chart.Configuration.Quality = highQuality ? QualityMode.High : QualityMode.Low;
+		
 		Chart.RenderRequest();
+		
+		Chart.Configuration.AxesChangedEventEnabled = true;
 	}
 
 	/// <summary>
@@ -696,7 +702,9 @@ public partial class SignalChart : UserControl, ISignalGraph
 	{
 		Chart.Configuration.AxesChangedEventEnabled = false;
 		Chart.Plot.SetAxisLimits( _pointerDownAxisLimits );
-		Chart.RenderRequest();
+
+		RenderGraph( true );
+
 		Chart.Configuration.AxesChangedEventEnabled = true;
 	}
 
@@ -741,7 +749,7 @@ public partial class SignalChart : UserControl, ISignalGraph
 		_selectionSpan.IsVisible = false;
 		EventTooltip.IsVisible   = false;
 
-		Chart.RenderRequest();
+		RenderGraph( true );
 	}
 	
 	private void AddAnnotationForCurrentSelection()
@@ -814,7 +822,7 @@ public partial class SignalChart : UserControl, ISignalGraph
 		
 		VisualizeRMS( windowLengthInSeconds.Value, Color.DeepPink, $"RMS ({windowLengthInSeconds})" );
 
-		Chart.RenderRequest();
+		RenderGraph( true );
 	}
 	
 	private void VisualizeRMS( int windowLength, Color color, string label )
@@ -900,8 +908,8 @@ public partial class SignalChart : UserControl, ISignalGraph
 
 			first = false;
 		}
-		
-		Chart.RenderRequest();
+
+		RenderGraph( true );
 	}
 
 	private void VisualizeRespirations()
@@ -937,7 +945,7 @@ public partial class SignalChart : UserControl, ISignalGraph
 			}
 		}
 		
-		Chart.RenderRequest();
+		RenderGraph( true );
 	}
 
 	private void ClearVisualizations()
@@ -949,7 +957,7 @@ public partial class SignalChart : UserControl, ISignalGraph
 		
 		_visualizations.Clear();
 		
-		Chart.RenderRequest();
+		RenderGraph( true );
 	}
 
 	private void VisualizePercentile95()
@@ -963,7 +971,7 @@ public partial class SignalChart : UserControl, ISignalGraph
 			var color = DataColors.GetDataColor( _visualizations.Count + 8 ).ToDrawingColor();
 
 			_visualizations.Add( Chart.Plot.AddHorizontalLine( stats.Percentile95, color, 1f, LineStyle.Solid, "95%" ) );
-			Chart.RenderRequest();
+			RenderGraph( true );
 		}
 	}
 
@@ -977,7 +985,7 @@ public partial class SignalChart : UserControl, ISignalGraph
 		
 		_visualizations.Add( line );
 		
-		Chart.RenderRequest();
+		RenderGraph( true );
 	}
 
 	private void VisualizeMedian()
@@ -991,7 +999,7 @@ public partial class SignalChart : UserControl, ISignalGraph
 			var color = DataColors.GetDataColor( _visualizations.Count + 8 ).ToDrawingColor();
 
 			_visualizations.Add( Chart.Plot.AddHorizontalLine( stats.Median, color, 1f, LineStyle.Solid, "Median" ) );
-			Chart.RenderRequest();
+			RenderGraph( true );
 		}
 	}
 
@@ -1006,7 +1014,7 @@ public partial class SignalChart : UserControl, ISignalGraph
 			var color = DataColors.GetDataColor( _visualizations.Count + 8 ).ToDrawingColor();
 
 			_visualizations.Add( Chart.Plot.AddHorizontalLine( stats.Average, color, 1f, LineStyle.Solid, "Avg" ) );
-			Chart.RenderRequest();
+			RenderGraph( true );
 		}
 	}
 
@@ -1056,7 +1064,7 @@ public partial class SignalChart : UserControl, ISignalGraph
 			first = false;
 		}
 		
-		Chart.RenderRequest();
+		RenderGraph( true );
 	}
 	
 	private async void VisualizeStandardDeviation()
@@ -1122,7 +1130,7 @@ public partial class SignalChart : UserControl, ISignalGraph
 			first = false;
 		}
 		
-		Chart.RenderRequest();
+		RenderGraph( true );
 	}
 
 	private void RefreshChartAxisLimits()
@@ -1212,7 +1220,7 @@ public partial class SignalChart : UserControl, ISignalGraph
 
 		if( renderImmediately )
 		{
-			Chart.RenderRequest();
+			RenderGraph( true );
 		}
 	}
 	
@@ -1229,7 +1237,7 @@ public partial class SignalChart : UserControl, ISignalGraph
 
 		if( renderImmediately )
 		{
-			Chart.RenderRequest();
+			RenderGraph( true );
 		}
 	}
 
@@ -1249,7 +1257,7 @@ public partial class SignalChart : UserControl, ISignalGraph
 
 			if( renderImmediately )
 			{
-				Chart.RenderRequest();
+				RenderGraph( true );
 			}
 		}
 	}
@@ -1274,7 +1282,7 @@ public partial class SignalChart : UserControl, ISignalGraph
 		if( pixelDifference <= 2 )
 		{
 			_selectionSpan.IsVisible = false;
-			Chart.RenderRequest();
+			RenderGraph( true );
 
 			return;
 		}
@@ -1289,8 +1297,6 @@ public partial class SignalChart : UserControl, ISignalGraph
 		
 		ZoomTo( _selectionStartTime, _selectionEndTime );
 		OnAxesChanged( this, EventArgs.Empty );
-
-		Chart.RenderRequest();
 	}
 
 	private void HideTimeMarker()
@@ -1349,7 +1355,7 @@ public partial class SignalChart : UserControl, ISignalGraph
 			}
 		}
 		
-		Chart.RenderRequest();
+		RenderGraph( true );
 	}
 	
 	private void HideEventHoverMarkers()
@@ -1360,7 +1366,7 @@ public partial class SignalChart : UserControl, ISignalGraph
 			_hoverMarkerLine.IsVisible = false;
 			_hoverEvent                = null;
 			
-			Chart.RenderRequest();
+			RenderGraph( true );
 		}
 	}
 
@@ -1400,7 +1406,6 @@ public partial class SignalChart : UserControl, ISignalGraph
 
 			//Chart.Configuration.Quality = ScottPlot.Control.QualityMode.Low;
 			Chart.Plot.SetAxisLimits( modifiedAxisLimits );
-			Chart.RenderRequest();
 		}
 		Chart.Configuration.AxesChangedEventEnabled = wasAxisChangedEventEnabled;
 	}
@@ -1653,7 +1658,7 @@ public partial class SignalChart : UserControl, ISignalGraph
 		}
 		finally
 		{
-			Chart.RenderRequest();
+			RenderGraph( false );
 			Chart.Configuration.AxesChangedEventEnabled = true;
 		}
 	}
@@ -1969,7 +1974,7 @@ public partial class SignalChart : UserControl, ISignalGraph
 		Chart.Plot.XAxis.AutomaticTickPositions();
 		Chart.Plot.YAxis.AutomaticTickPositions();
 
-		Chart.RenderRequest();
+		RenderGraph( true );
 	}
 
 	private void InitializeChartProperties( AvaPlot chart )
@@ -2028,7 +2033,7 @@ public partial class SignalChart : UserControl, ISignalGraph
 
 		chart.Configuration.LockVerticalAxis = true;
 		
-		chart.RenderRequest();
+		RenderGraph( false );
 	}
 	
 	private string TickFormatter( double time )

@@ -411,10 +411,15 @@ public partial class MainView : UserControl
 			// the session until it detects sleep, but if another session started a few minutes
 			// earlier then the user is obviously not asleep at that point, and it's also useful
 			// to know how much time was spent awake at the start of each session.
+			//
+			// Similarly, a Sleep Stages session ends when the user is awake so we'll extend the
+			// signal to match the latest overlapping Session end time.
 			
 			var signal = session.GetSignalByName( SignalNames.SleepStages );
 			if( signal != null )
 			{
+				var sampleInterval = 1.0 / signal.FrequencyInHz;
+
 				var matchedSession = day.Sessions
 				                        .Where( x =>
 					                                x.SourceType is SourceType.CPAP or SourceType.PulseOximetry &&
@@ -425,16 +430,36 @@ public partial class MainView : UserControl
 				if( matchedSession != null )
 				{
 					var timeDifference  = session.StartTime - matchedSession.StartTime;
-					var sampleInterval  = 1.0 / signal.FrequencyInHz;
 					int numberOfSamples = (int)Math.Floor( timeDifference.TotalSeconds / sampleInterval );
-
+				
 					for( int i = 0; i < numberOfSamples; i++ )
 					{
 						signal.Samples.Insert( 0, (int)SleepStage.Awake );
 					}
-
+				
 					signal.StartTime  -= TimeSpan.FromSeconds( sampleInterval * numberOfSamples );
 					session.StartTime =  DateHelper.Min( session.StartTime, signal.StartTime );
+				}
+				
+				matchedSession = day.Sessions
+				                        .Where( x =>
+					                                x.SourceType is SourceType.CPAP or SourceType.PulseOximetry &&
+					                                x.StartTime <= signal.EndTime &&
+					                                x.EndTime > signal.EndTime )
+				                        .MaxBy( x => x.EndTime );
+				
+				if( matchedSession != null )
+				{
+					var timeDifference  = matchedSession.EndTime - session.EndTime;
+					int numberOfSamples = (int)Math.Ceiling( timeDifference.TotalSeconds / sampleInterval );
+
+					for( int i = 0; i < numberOfSamples; i++ )
+					{
+						signal.Samples.Add( (int)SleepStage.Awake );
+					}
+
+					signal.EndTime += TimeSpan.FromSeconds( numberOfSamples * sampleInterval );
+					session.EndTime =  DateHelper.Max( session.EndTime, signal.EndTime );
 				}
 			}
 

@@ -20,9 +20,11 @@ public partial class SignalChartContainer : UserControl
 {
 	private List<ISignalGraph> _charts = new();
 
-	private DispatcherTimer? _dragTimer          = null;
+	private DispatcherTimer? _dragTimer     = null;
 	private SignalChart?     _dragTarget    = null;
 	private int              _dragDirection = 0;
+
+	private DispatcherTimer? _renderTimer = null;
 
 	#region Constructor 
 	
@@ -80,6 +82,11 @@ public partial class SignalChartContainer : UserControl
 		if( _dragTimer is { IsEnabled: true } )
 		{
 			_dragTimer.Stop();
+		}
+
+		if( _renderTimer is { IsEnabled: true } )
+		{
+			_renderTimer.Stop();
 		}
 	}
 	
@@ -195,6 +202,10 @@ public partial class SignalChartContainer : UserControl
 		{
 			control.SetDisplayedRange( e.StartTime, e.EndTime );
 		}
+
+		RenderAll( false );
+		
+		ResetRenderTimer();
 	}
 
 	private void ChartOnTimeMarkerChanged( object? sender, DateTimeRoutedEventArgs e )
@@ -219,6 +230,10 @@ public partial class SignalChartContainer : UserControl
 		{
 			control.SetDisplayedRange( startTime, endTime );
 		}
+
+		RenderAll( false );
+		
+		ResetRenderTimer();
 	}
 	
 	#endregion
@@ -278,7 +293,31 @@ public partial class SignalChartContainer : UserControl
 	
 	#endregion
 	
-	#region Private functions 
+	#region Private functions
+
+	private void RenderAll( bool highQuality = false )
+	{
+		foreach( var control in _charts )
+		{
+			control.RenderGraph( highQuality );
+		}
+	}
+
+	private void ResetRenderTimer()
+	{
+		_renderTimer ??= new DispatcherTimer( TimeSpan.FromSeconds( 0.25 ), DispatcherPriority.Default, ( _, _ ) =>
+		{
+			_renderTimer!.Stop();
+			
+			foreach( var control in _charts )
+			{
+				control.RenderGraph( true );
+			}
+		} );
+
+		_renderTimer.Stop();
+		_renderTimer.Start();
+	}
 	
 	private void UpdateConfigurations( List<SignalChartConfiguration> configurations )
 	{
