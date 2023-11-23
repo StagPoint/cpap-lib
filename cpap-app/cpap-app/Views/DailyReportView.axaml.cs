@@ -303,6 +303,7 @@ public partial class DailyReportView : UserControl
 		var result = await task;
 		if( (TaskDialogStandardResult)result == TaskDialogStandardResult.OK )
 		{
+			annotationVM.Notes = annotationVM.Notes.Trim();
 			viewModel.UpdateAnnotation( annotationVM );
 		}
 	}

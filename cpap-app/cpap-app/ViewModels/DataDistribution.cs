@@ -96,7 +96,7 @@ public class DataDistribution
 			result.MaxValue = Math.Max( result.MaxValue, floored );
 		}
 
-		result.Average = sum / count;
+		result.Average = Math.Round( sum / count );
 
 		count = 0;
 		foreach( var reading in samples )

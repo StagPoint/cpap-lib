@@ -23,6 +23,7 @@ using cpaplib;
 
 using ScottPlot;
 using ScottPlot.Avalonia;
+using ScottPlot.Control;
 using ScottPlot.Plottable;
 
 using Annotation = cpaplib.Annotation;
@@ -36,35 +37,9 @@ namespace cpap_app.Controls;
 
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
-public partial class SignalChart : UserControl
+public partial class SignalChart : UserControl, ISignalGraph
 {
 	#region Events 
-	
-	public static readonly RoutedEvent<DateTimeRangeRoutedEventArgs> DisplayedRangeChangedEvent = RoutedEvent.Register<SignalChart, DateTimeRangeRoutedEventArgs>( nameof( DisplayedRangeChanged ), RoutingStrategies.Bubble );
-
-	public static void AddDisplayedRangeChangedHandler( IInputElement element, EventHandler<DateTimeRangeRoutedEventArgs> handler )
-	{
-		element.AddHandler( DisplayedRangeChangedEvent, handler );
-	}
-
-	public event EventHandler<DateTimeRangeRoutedEventArgs> DisplayedRangeChanged
-	{
-		add => AddHandler( DisplayedRangeChangedEvent, value );
-		remove => RemoveHandler( DisplayedRangeChangedEvent, value );
-	}
-
-	public static readonly RoutedEvent<DateTimeRoutedEventArgs> TimeMarkerChangedEvent = RoutedEvent.Register<SignalChart, DateTimeRoutedEventArgs>( nameof( TimeMarkerChanged ), RoutingStrategies.Bubble );
-
-	public static void AddTimeMarkerChangedHandler( IInputElement element, EventHandler<DateTimeRoutedEventArgs> handler )
-	{
-		element.AddHandler( TimeMarkerChangedEvent, handler );
-	}
-
-	public event EventHandler<DateTimeRoutedEventArgs> TimeMarkerChanged
-	{
-		add => AddHandler( TimeMarkerChangedEvent, value );
-		remove => RemoveHandler( TimeMarkerChangedEvent, value );
-	}
 	
 	public static readonly RoutedEvent<ChartConfigurationChangedEventArgs> ChartConfigurationChangedEvent = RoutedEvent.Register<SignalChart, ChartConfigurationChangedEventArgs>( nameof( ChartConfigurationChanged ), RoutingStrategies.Bubble );
 
@@ -455,7 +430,7 @@ public partial class SignalChart : UserControl
 
 		var eventArgs = new DateTimeRangeRoutedEventArgs
 		{
-			RoutedEvent = DisplayedRangeChangedEvent,
+			RoutedEvent = GraphEvents.DisplayedRangeChangedEvent,
 			Source      = this,
 			StartTime   = _day.RecordingStartTime.AddSeconds( currentAxisLimits.XMin ),
 			EndTime     = _day.RecordingStartTime.AddSeconds( currentAxisLimits.XMax )
@@ -698,6 +673,12 @@ public partial class SignalChart : UserControl
 	
 	#region Public functions
 
+	public void RenderGraph( bool highQuality )
+	{
+		Chart.Configuration.Quality = highQuality ? QualityMode.High : QualityMode.Low;
+		Chart.RenderRequest();
+	}
+
 	/// <summary>
 	/// Intended to be called when moving the control from one parent to another. 
 	/// SaveState() and RestoreState() are intended to be called as a pair during the procedure.  
@@ -786,7 +767,7 @@ public partial class SignalChart : UserControl
 		CancelSelectionMode();
 	}
 
-	private void InitializeVisualizationsMenu()
+	protected virtual void InitializeVisualizationsMenu()
 	{
 		Debug.Assert( ChartConfiguration != null, nameof( ChartConfiguration ) + " != null" );
 
@@ -822,7 +803,7 @@ public partial class SignalChart : UserControl
 			"Visualize Root Mean Squares",
 			"Enter the length of the window, in seconds",
 			60,
-			10,
+			2,
 			60 * 60 * 60
 		);
 
@@ -1387,7 +1368,7 @@ public partial class SignalChart : UserControl
 	{
 		RaiseEvent( new DateTimeRoutedEventArgs()
 		{
-			RoutedEvent = TimeMarkerChangedEvent,
+			RoutedEvent = GraphEvents.TimeMarkerChangedEvent,
 			Source      = this,
 			DateTime        = time
 		} );
@@ -1424,7 +1405,7 @@ public partial class SignalChart : UserControl
 		Chart.Configuration.AxesChangedEventEnabled = wasAxisChangedEventEnabled;
 	}
 	
-	internal void UpdateTimeMarker( DateTime time )
+	public void UpdateTimeMarker( DateTime time )
 	{
 		if( !_hasDataAvailable || _day == null )
 		{

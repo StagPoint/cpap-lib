@@ -12,7 +12,12 @@
     </UserControl.Styles>
     <StackPanel Orientation="Vertical" Grid.IsSharedSizeScope="True">
         
-        <TextBlock IsVisible="{Binding !Annotations.Count}" Text="Create an annotation by selecting the relevant area of a graph and pressing the 'A' key." TextWrapping="Wrap" Theme="{DynamicResource BodyTextBlockStyle}" Foreground="{DynamicResource TextFillColorDisabledBrush}" Margin="0 0 0 10"/>
+        <TextBlock IsVisible="{Binding !Annotations.Count}" TextWrapping="Wrap" Theme="{DynamicResource BodyTextBlockStyle}" Margin="0 0 0 10">
+            <Run>Create an annotation by selecting the relevant area of a graph and pressing the 'A' key while the mouse button is still pressed.</Run>
+            <LineBreak/>
+            <LineBreak/>
+            <Run>Right-click on an annotation in the list to show a list of available actions.</Run>
+        </TextBlock>
 
         <!-- Column headers for annotations list -->
         <Border Classes="ColumnHeader" IsVisible="{Binding Annotations.Count}">

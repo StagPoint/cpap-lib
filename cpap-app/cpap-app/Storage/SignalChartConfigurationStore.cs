@@ -98,6 +98,7 @@ public static class SignalChartConfigurationStore
 				case SignalNames.LeakRate:
 					config.ShowStepped  = true;
 					config.BaselineHigh = 24;
+					config.BaselineLow  = 8;
 					config.AxisMinValue = 0;
 					config.AxisMaxValue = 40;
 					config.ScalingMode  = AxisScalingMode.Override;

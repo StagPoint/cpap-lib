@@ -76,7 +76,7 @@ public class DailyScoreSummaryViewModel
 			};
 		}
 
-		var averageOxygen = (int)Math.Ceiling( stat.Average );
+		var averageOxygen = (int)Math.Round( stat.Average );
 
 		var dailyScore = (int)MathUtil.Remap( minValue, maxValue, 0, weight, averageOxygen );
 

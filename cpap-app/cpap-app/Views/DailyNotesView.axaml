@@ -40,11 +40,13 @@
                     </StackPanel>
                 </Expander.Header>
                 <StackPanel Orientation="Vertical">
-                    <TextBox Name="Notes" Text="{Binding Notes}" Watermark="Use this text entry field to write any notes that you'd like to have saved with this day. Notes will save automatically as you type." TextWrapping="Wrap" AcceptsReturn="True" AcceptsTab="True" VerticalAlignment="Stretch" MinHeight="250" TextChanged="Notes_OnTextChanged">
+                    <TextBox Name="Notes" Text="{Binding Notes}" TextWrapping="Wrap" AcceptsReturn="True" AcceptsTab="True" VerticalAlignment="Stretch" MinHeight="250" TextChanged="Notes_OnTextChanged" Padding="8, 4, 4, 12">
+                        <TextBox.Watermark>Use this text entry field to write any notes that you'd like to have saved with this day. Notes will save automatically as you type.</TextBox.Watermark>
                     </TextBox>
                 </StackPanel>
             </Expander>
             
+            <!--
             <Expander
                 ExpandDirection="Down"
                 IsExpanded="True"
@@ -87,13 +89,14 @@
                             <TextBlock Text="{Binding #SubjectiveRating.Value, Mode=OneWay, StringFormat={}{0:F0}/10}" VerticalAlignment="Center" />
                         </StackPanel>
                         
-                        <MaskedTextBox Grid.Column="2" Grid.Row="1" Mask="900 lbs" Width="150" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                        <MaskedTextBox Grid.Column="2" Grid.Row="2" Mask="900/00" Width="150" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                        <MaskedTextBox Grid.Column="2" Grid.Row="3" Mask="900 mg/dl" Width="150" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-                        <MaskedTextBox Grid.Column="2" Grid.Row="4" Mask="00 bpm" Width="150" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <MaskedTextBox Grid.Column="2" Grid.Row="1" Mask="000 lbs" Width="150" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <MaskedTextBox Grid.Column="2" Grid.Row="2" Mask="000/00" Width="150" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <MaskedTextBox Grid.Column="2" Grid.Row="3" Mask="000 mg/dl" Width="150" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <MaskedTextBox Grid.Column="2" Grid.Row="4" Mask="000 bpm" Width="150" VerticalAlignment="Center" HorizontalAlignment="Left"/>
                     </Grid>
                 </StackPanel>
             </Expander>
+            -->
 
         </StackPanel>
     </ScrollViewer>

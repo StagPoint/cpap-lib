@@ -1,12 +1,5 @@
 ﻿namespace cpap_app.Importers;
 
-public class PulseOximetryDevice
-{
-	public int ID { get; set; }
-
-	public string Name { get; set; } = string.Empty;
-}
-
 public class PulseOximetryImportOptions
 {
 	public int DeviceID { get; set; }

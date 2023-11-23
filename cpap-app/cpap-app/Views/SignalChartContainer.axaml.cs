@@ -18,7 +18,7 @@ namespace cpap_app.Views;
 
 public partial class SignalChartContainer : UserControl
 {
-	private List<SignalChart> _charts = new();
+	private List<ISignalGraph> _charts = new();
 
 	private DispatcherTimer? _dragTimer          = null;
 	private SignalChart?     _dragTarget    = null;
@@ -32,6 +32,11 @@ public partial class SignalChartContainer : UserControl
 
 		List<SignalChartConfiguration> signalConfigs = SignalChartConfigurationStore.GetSignalConfigurations();
 		List<EventMarkerConfiguration> eventConfigs  = EventMarkerConfigurationStore.GetEventMarkerConfigurations();
+
+		AddHandler( SignalChart.ChartConfigurationChangedEvent, OnChartConfigurationChanged );
+		AddHandler( SignalChart.ChartDraggedEvent,              Chart_Dragged );
+		AddHandler( GraphEvents.TimeMarkerChangedEvent,         ChartOnTimeMarkerChanged );
+		AddHandler( GraphEvents.DisplayedRangeChangedEvent,     ChartDisplayedRangeChanged );
 
 		foreach( var config in signalConfigs )
 		{
@@ -62,9 +67,6 @@ public partial class SignalChartContainer : UserControl
 				UnPinnedCharts.Children.Add( chart );
 			}
 		}
-		
-		AddHandler( SignalChart.ChartConfigurationChangedEvent, OnChartConfigurationChanged );
-		AddHandler( SignalChart.ChartDraggedEvent,              Chart_Dragged );
 	}
 	
 	#endregion
@@ -231,7 +233,7 @@ public partial class SignalChartContainer : UserControl
 		{
 			if( chart.ChartConfiguration!.SignalName == signalName || chart.ChartConfiguration!.Title == signalName )
 			{
-				chart.Focus();
+				((Control)chart).Focus();
 				return;
 			}
 		}
@@ -246,9 +248,10 @@ public partial class SignalChartContainer : UserControl
 		{
 			if( chart.ChartConfiguration!.DisplayedEvents.Contains( eventType ) )
 			{
-				if( chart.IsEffectivelyVisible )
+				var chartControl = (Control)chart;
+				if( chartControl.IsEffectivelyVisible )
 				{
-					chart.Focus();
+					chartControl.Focus();
 					return;
 				}
 			}
@@ -259,12 +262,14 @@ public partial class SignalChartContainer : UserControl
 		{
 			if( chart.ChartConfiguration!.DisplayedEvents.Contains( eventType ) )
 			{
+				var chartControl = (Control)chart;
+				
 				if( !chart.ChartConfiguration.IsPinned )
 				{
-					chart.BringIntoView();
+					chartControl.BringIntoView();
 				}
 
-				chart.Focus();
+				chartControl.Focus();
 
 				return;
 			}

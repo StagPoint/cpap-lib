@@ -604,7 +604,8 @@ public partial class MainView : UserControl
 					{
 						await using var file = File.OpenRead( fileItem.Path.LocalPath );
 
-						var importOptions        = new PulseOximetryImportOptions() { CalibrationAdjust = -1, TimeAdjust = -60 };
+						// TODO: The import options should be retrieved from the database. Perhaps on a per-device basis? 
+						var importOptions        = new PulseOximetryImportOptions() { TimeAdjust = -60 };
 						var eventGeneratorConfig = new OximetryEventGeneratorConfig();
 
 						var data = importer.Load( fileItem.Name, file, importOptions, eventGeneratorConfig );
@@ -615,9 +616,18 @@ public partial class MainView : UserControl
 					}
 					catch( IOException e )
 					{
-						// TODO: Need to display a message to the user when a file cannot be opened
-						Console.WriteLine( e );
-						throw;
+						await Dispatcher.UIThread.InvokeAsync( async () =>
+						{
+							var msgBox = MessageBoxManager.GetMessageBoxStandard(
+								"Import Error",
+								$"There was an error importing file {fileItem.Name}: \n{e.Message}",
+								ButtonEnum.Ok,
+								Icon.Error );
+
+							await msgBox.ShowWindowDialogAsync( this.FindAncestorOfType<Window>() );
+						} );
+
+						return;
 					}
 				}
 				

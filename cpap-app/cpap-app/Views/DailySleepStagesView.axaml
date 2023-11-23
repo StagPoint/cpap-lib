@@ -86,7 +86,7 @@
                         </StackPanel>
                     </Expander.Header>
                     <StackPanel Orientation="Vertical">
-                        <TextBlock Name="NoRemEventsFound" Text="No events during REM sleep*" HorizontalAlignment="Center"/>
+                        <TextBlock Name="NoRemEventsFound" Text="N/A" Theme="{DynamicResource SubtitleTextBlockStyle}" FontSize="16" HorizontalAlignment="Center"/>
                         <controls:EventSummaryView Name="RemEvents"/>
                     </StackPanel>
                 </Expander>
@@ -107,7 +107,7 @@
                         </StackPanel>
                     </Expander.Header>
                     <StackPanel Orientation="Vertical">
-                        <TextBlock Name="NoNonRemEventsFound" Text="No events during Non-REM sleep*" HorizontalAlignment="Center"/>
+                        <TextBlock Name="NoNonRemEventsFound" Text="N/A" Theme="{DynamicResource SubtitleTextBlockStyle}" FontSize="16" HorizontalAlignment="Center"/>
                         <controls:EventSummaryView Name="NonRemEvents"/>
                     </StackPanel>
                 </Expander>

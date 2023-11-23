@@ -22,8 +22,11 @@ public class EventSummaryViewModel
 	public EventSummaryViewModel( DailyReport day )
 	{
 		Day = day;
+
+		// We want different sorting order than the default, so copy the list and sort it here
+		var events = new List<ReportedEvent>( day.Events );
+		events.Sort( (lhs, rhs ) => lhs.Type != rhs.Type ? lhs.Type.CompareTo( rhs.Type ) : lhs.StartTime.CompareTo( rhs.StartTime ) );
 		
-		var events = day.Events;
 		var types  = events.Select( x => x.Type ).Distinct();
 
 		// Calculate the total time (in hours) for each SourceType

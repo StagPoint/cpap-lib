@@ -20,8 +20,6 @@ public partial class AnnotationListView : UserControl
 	public AnnotationListView()
 	{
 		InitializeComponent();
-		
-		AddHandler( TappedEvent, Item_OnTapped );
 	}
 
 	protected override void OnPropertyChanged( AvaloniaPropertyChangedEventArgs change )
@@ -34,11 +32,6 @@ public partial class AnnotationListView : UserControl
 		}
 	}
 	
-	private void Item_OnTapped( object? sender, TappedEventArgs e )
-	{
-		Debug.WriteLine( sender  );
-	}
-
 	private void Delete_OnTapped( object? sender, RoutedEventArgs routedEventArgs )
 	{
 		Debug.Assert( _day != null, nameof( _day ) + " != null" );
