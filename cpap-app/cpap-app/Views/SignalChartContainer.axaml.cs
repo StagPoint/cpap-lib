@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
@@ -73,7 +74,17 @@ public partial class SignalChartContainer : UserControl
 	
 	#endregion
 	
-	#region Base class overrides 
+	#region Base class overrides
+
+	protected override void OnPropertyChanged( AvaloniaPropertyChangedEventArgs change )
+	{
+		base.OnPropertyChanged( change );
+
+		if( change.Property.Name == nameof( DataContext ) )
+		{
+			ResetRenderTimer();
+		}
+	}
 
 	protected override void OnUnloaded( RoutedEventArgs e )
 	{
