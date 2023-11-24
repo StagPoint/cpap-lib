@@ -12,9 +12,9 @@ namespace cpap_app.ViewModels;
 public class SleepStagesViewModel
 {
 	public DailyReport Day { get; init; }
-	
-	public bool        IsEmpty { get => Sessions.Count == 0; }
-	
+
+	public bool IsEmpty { get => Sessions.Count == 0; }
+
 	public TimeSpan TotalTime       { get; private set; }
 	public TimeSpan TimeAsleep      { get; private set; }
 	public TimeSpan TimeAwake       { get; private set; }
@@ -23,8 +23,10 @@ public class SleepStagesViewModel
 	public ObservableCollection<SleepStageSummaryItemViewModel> StageSummaries { get; set; }
 	public ObservableCollection<Session>                        Sessions       { get; set; } = new();
 
-	private SleepStagesViewModel()
+	public SleepStagesViewModel( DailyReport day ) 
 	{
+		Day = day;
+		
 		StageSummaries = new ObservableCollection<SleepStageSummaryItemViewModel>
 		{
 			new SleepStageSummaryItemViewModel() { Label = "Awake" },
@@ -32,13 +34,7 @@ public class SleepStagesViewModel
 			new SleepStageSummaryItemViewModel() { Label = "Light" },
 			new SleepStageSummaryItemViewModel() { Label = "Deep" },
 		};
-	}
 
-	public SleepStagesViewModel( DailyReport day ) 
-		: this()
-	{
-		Day = day;
-		
 		var sessions = day.Sessions.Where( x => x.SourceType == SourceType.HealthAPI );
 		foreach( var session in sessions )
 		{

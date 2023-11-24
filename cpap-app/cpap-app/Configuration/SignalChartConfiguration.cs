@@ -115,17 +115,7 @@ public class SignalChartConfiguration : IComparable<SignalChartConfiguration>
 
 	public int CompareTo( SignalChartConfiguration? other )
 	{
-		if( other == null )
-		{
-			return 0;
-		}
-
-		if( IsVisible != other.IsVisible )
-		{
-			return IsVisible ? -1 : 1;
-		}
-
-		return IsPinned == other.IsPinned ? DisplayOrder.CompareTo( other.DisplayOrder ) : (IsPinned ? -1 : 1);
+		return other == null ? 0 : DisplayOrder.CompareTo( other.DisplayOrder );
 	}
 
 	#endregion

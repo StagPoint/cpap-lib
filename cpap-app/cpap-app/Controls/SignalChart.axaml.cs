@@ -37,7 +37,7 @@ namespace cpap_app.Controls;
 
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
-public partial class SignalChart : UserControl, ISignalGraph
+public partial class SignalChart : UserControl
 {
 	#region Events 
 	
@@ -781,11 +781,11 @@ public partial class SignalChart : UserControl, ISignalGraph
 
 		List<SignalMenuItem> standardItems = new List<SignalMenuItem>
 		{
-			new SignalMenuItem( "Sliding Average",            VisualizeSlidingAverage ),
-			new SignalMenuItem( "Standard Deviation (60sec)", VisualizeStandardDeviation ),
-			new SignalMenuItem( "Average (Entire series)",    VisualizeAverage ),
-			new SignalMenuItem( "Median (Entire series)",     VisualizeMedian ),
-			new SignalMenuItem( "95th Percentile",            VisualizePercentile95 ),
+			new SignalMenuItem( "Sliding Average",              VisualizeSlidingAverage ),
+			new SignalMenuItem( "Standard Deviation (Sliding)", VisualizeStandardDeviation ),
+			new SignalMenuItem( "Average (Entire series)",      VisualizeAverage ),
+			new SignalMenuItem( "Median (Entire series)",       VisualizeMedian ),
+			new SignalMenuItem( "95th Percentile",              VisualizePercentile95 ),
 		};
 
 		if( ChartConfiguration.SignalName == SignalNames.FlowRate )

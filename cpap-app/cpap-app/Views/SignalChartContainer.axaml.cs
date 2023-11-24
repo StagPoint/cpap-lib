@@ -18,7 +18,7 @@ namespace cpap_app.Views;
 
 public partial class SignalChartContainer : UserControl
 {
-	private List<ISignalGraph> _charts = new();
+	private List<SignalChart> _charts = new();
 
 	private DispatcherTimer? _dragTimer     = null;
 	private SignalChart?     _dragTarget    = null;
@@ -180,22 +180,23 @@ public partial class SignalChartContainer : UserControl
 
 		if( config.IsPinned )
 		{
-			config.DisplayOrder = 255;
-			
 			UnPinnedCharts.Children.Remove( chart );
-			PinnedCharts.Children.Add( chart );
+            InsertInto( PinnedCharts.Children, chart );
 		}
 		else
 		{
-			config.DisplayOrder = -1;
-			
 			PinnedCharts.Children.Remove( chart );
-			UnPinnedCharts.Children.Insert( 0, chart );
+            InsertInto( UnPinnedCharts.Children, chart );
 		}
 		
 		chart.RestoreState();
+		
+		Dispatcher.UIThread.Post( () =>
+		{
+			chart.Focus();
+		});
 	}
-
+	
 	private void ChartDisplayedRangeChanged( object? sender, DateTimeRangeRoutedEventArgs e )
 	{
 		foreach( var control in _charts.Where( control => control != e.Source ) )
@@ -248,7 +249,7 @@ public partial class SignalChartContainer : UserControl
 		{
 			if( chart.ChartConfiguration!.SignalName == signalName || chart.ChartConfiguration!.Title == signalName )
 			{
-				((Control)chart).Focus();
+				chart.Focus();
 				return;
 			}
 		}
@@ -294,6 +295,27 @@ public partial class SignalChartContainer : UserControl
 	#endregion
 	
 	#region Private functions
+
+	private static void InsertInto( Avalonia.Controls.Controls collection, SignalChart chart )
+	{
+		int displayOrder = chart.ChartConfiguration!.DisplayOrder;
+
+		for( int i = 0; i < collection.Count; i++ )
+		{
+			var loop = collection[ i ];
+			
+			if( loop is SignalChart other )
+			{
+				if( other.ChartConfiguration!.DisplayOrder > displayOrder )
+				{
+					collection.Insert( i, chart );
+					return;
+				}
+			}
+		}
+
+		collection.Add( chart );
+	}
 
 	private void RenderAll( bool highQuality = false )
 	{

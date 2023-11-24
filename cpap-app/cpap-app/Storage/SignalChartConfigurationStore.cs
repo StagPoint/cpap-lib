@@ -213,20 +213,20 @@ public static class SignalChartConfigurationStore
 		configurations.RemoveAll( x => x.SignalName == config.SignalName );
 		configurations.Add( config );
 		
-		// Re-sort the list so that we can update the DisplayOrder field 
+		// Re-sort the list so that we can update the DisplayOrder field and fix up any gaps 
 		configurations.Sort();
 
 		using var store = StorageService.Connect();
 		try
 		{
 			store.Connection.BeginTransaction();
-			
-			int pinnedOrder   = 0;
-			int unpinnedOrder = 0;
+
+			int displayOrder = 0;
 
 			foreach( var loop in configurations )
 			{
-				loop.DisplayOrder = loop.IsVisible ? (loop.IsPinned ? pinnedOrder++ : unpinnedOrder++) : int.MaxValue;
+				// Patch up any gaps in the DisplayOrder values
+				loop.DisplayOrder = displayOrder++;
 				
 				store.Update( loop, loop.ID );
 			}
@@ -261,13 +261,13 @@ public static class SignalChartConfigurationStore
 		try
 		{
 			store.Connection.BeginTransaction();
-			
-			int pinnedOrder   = 0;
-			int unpinnedOrder = 0;
 
+			int displayOrder = 0;
+			
 			foreach( var loop in configurations )
 			{
-				loop.DisplayOrder = loop.IsVisible ? (loop.IsPinned ? pinnedOrder++ : unpinnedOrder++) : int.MaxValue;
+				// Patch up any gaps in the DisplayOrder values
+				loop.DisplayOrder = displayOrder++;
 				
 				store.Update( loop, loop.ID );
 			}

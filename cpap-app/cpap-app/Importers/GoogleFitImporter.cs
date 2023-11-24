@@ -53,7 +53,7 @@ public class GoogleFitImporter
 		}
 
 		List<MetaSession> metaSessions       = new();
-		MetaSession       currentMetaSession = null;
+		MetaSession?      currentMetaSession = null;
 
 		foreach( var session in sessions )
 		{
@@ -121,35 +121,9 @@ public class GoogleFitImporter
 		};
 
 		int numberOfSamples = (int)Math.Ceiling( (endTime - startTime).TotalSeconds ) / 30;
-		int pointIndex      = 0;
 		var timeStep        = TimeSpan.FromSeconds( 30 );
 		var currentTime     = startTime;
 		var samples         = signal.Samples;
-
-		/*
-		for( int i = 0; i < numberOfSamples; i++ )
-		{
-			var point  = Points[ pointIndex ];
-			Debug.Assert( point.Value.Count > 0 );
-			Debug.Assert( point.Value[ 0 ].IntVal != null );
-			
-			var value = (GoogleFitSleepStage)point.Value[ 0 ].IntVal!;
-			if( !_sleepStageMap.TryGetValue( value, out int outputValue ) )
-			{
-				outputValue = 1;
-			}
-
-			samples.Add( outputValue );
-
-			currentTime += timeStep;
-			var pointEndTime = DateHelper.FromNanosecondsSinceEpoch( point.EndTimeNanos );
-
-			if( currentTime >= pointEndTime )
-			{
-				pointIndex += 1;
-			}
-		}
-		*/
 
 		foreach( var point in Points )
 		{

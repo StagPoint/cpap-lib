@@ -19,7 +19,7 @@ public class OximetryEventGeneratorConfig
 
 	public double DesaturationThreshold       { get; set; } = 3;
 	public double DesaturationWindowLength    { get; set; } = 600;
-	public double DesaturationMinimumDuration { get; set; } = 5;
+	public double DesaturationMinimumDuration { get; set; } = 1;
 	public double DesaturationMaximumDuration { get; set; } = 120;
 
 	public double TachycardiaThreshold     { get; set; } = 100;

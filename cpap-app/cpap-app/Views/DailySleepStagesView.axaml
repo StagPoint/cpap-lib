@@ -78,7 +78,7 @@
                     Padding="10">
                     <Expander.Header>
                         <StackPanel Orientation="Horizontal">
-                            <fui:FontIcon Glyph="&#xEC92;" FontSize="24"
+                            <fui:FontIcon Glyph="&#xE7C1;" FontSize="24"
                                           FontFamily="{DynamicResource SymbolThemeFontFamily}"
                                           FontWeight="Normal" FontStyle="Normal" Margin="0 0 10 0" />
                             <TextBlock Text="Events During REM Sleep" FontSize="16"
@@ -99,7 +99,7 @@
                     Padding="10">
                     <Expander.Header>
                         <StackPanel Orientation="Horizontal">
-                            <fui:FontIcon Glyph="&#xEC92;" FontSize="24"
+                            <fui:FontIcon Glyph="&#xE7C1;" FontSize="24"
                                           FontFamily="{DynamicResource SymbolThemeFontFamily}"
                                           FontWeight="Normal" FontStyle="Normal" Margin="0 0 10 0" />
                             <TextBlock Text="Events During Non-REM Sleep" FontSize="16"
@@ -141,7 +141,7 @@
                             <fui:FontIcon Glyph="&#xE7BA;" FontSize="24"
                                           FontFamily="{DynamicResource SymbolThemeFontFamily}"
                                           FontWeight="Normal" FontStyle="Normal" />
-                            <TextBlock Text="Take Note" FontSize="16"
+                            <TextBlock Text="Please Note" FontSize="16"
                                        Theme="{DynamicResource BodyStrongTextBlockStyle}" />
                         </StackPanel>
                     </Expander.Header>

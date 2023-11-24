@@ -23,7 +23,7 @@ public sealed class AggregateBucket
 
 	/// <summary>There will be one dataset per AggregateBy in the request.</summary>
 	[JsonProperty( "dataset" )]
-	public List<Dataset> Datasets { get; set; }
+	public required List<Dataset> Datasets { get; set; }
 
 	/// <summary>The end time for the aggregated data, in milliseconds since epoch, inclusive.</summary>
 	[JsonProperty( "endTimeMillis", Required = Required.Always )]
@@ -31,7 +31,7 @@ public sealed class AggregateBucket
 
 	/// <summary>Available for Bucket.Type.SESSION</summary>
 	[JsonProperty( "session" )]
-	public ActivitySession Session { get; set; }
+	public ActivitySession? Session { get; set; }
 
 	/// <summary>The start time for the aggregated data, in milliseconds since epoch, inclusive.</summary>
 	[JsonProperty( "startTimeMillis", Required = Required.Always )]
@@ -39,21 +39,21 @@ public sealed class AggregateBucket
 
 	/// <summary>The type of a bucket signifies how the data aggregation is performed in the bucket.</summary>
 	[JsonProperty( "type" )]
-	public string Type { get; set; }
+	public string Type { get; set; } = string.Empty;
 }
 
 public sealed class AggregateResponse
 {
 	/// <summary>A list of buckets containing the aggregated data.</summary>
 	[JsonProperty( "bucket" )]
-	public List<AggregateBucket> Buckets { get; set; }
+	public required List<AggregateBucket> Buckets { get; set; }
 }
 
 public sealed class Application
 {
 	/// <summary>An optional URI that can be used to link back to the application.</summary>
 	[JsonProperty( "detailsUrl" )]
-	public string DetailsUrl { get; set; }
+	public string DetailsUrl { get; set; } = string.Empty;
 
 	/// <summary>
 	/// The name of this application. This is required for REST clients, but we do not enforce uniqueness of this
@@ -61,7 +61,7 @@ public sealed class Application
 	/// created an Application or Data Source.
 	/// </summary>
 	[JsonProperty( "name" )]
-	public string Name { get; set; }
+	public string Name { get; set; } = string.Empty;
 
 	/// <summary>
 	/// Package name for this application. This is used as a unique identifier when created by Android applications,
@@ -69,14 +69,14 @@ public sealed class Application
 	/// into the Data Source data stream IDs, instead of the packageName.
 	/// </summary>
 	[JsonProperty( "packageName" )]
-	public string PackageName { get; set; }
+	public string PackageName { get; set; } = string.Empty;
 
 	/// <summary>
 	/// Version of the application. You should update this field whenever the application changes in a way that
 	/// affects the computation of the data.
 	/// </summary>
 	[JsonProperty( "version" )]
-	public string Version { get; set; }
+	public string Version { get; set; } = string.Empty;
 }
 
 /// <summary>
@@ -91,7 +91,7 @@ public sealed class DataPoint
 {
 	/// <summary>The data type defining the format of the values in this data point.</summary>
 	[JsonProperty( "dataTypeName" )]
-	public string DataTypeName { get; set; }
+	public string DataTypeName { get; set; } = string.Empty;
 
 	/// <summary>
 	/// The start time of the interval represented by this data point, in nanoseconds since epoch.
@@ -117,7 +117,7 @@ public sealed class DataPoint
 	/// is not guaranteed to remain consistent.
 	/// </summary>
 	[JsonProperty( "originDataSourceId" )]
-	public string OriginDataSourceId { get; set; }
+	public string? OriginDataSourceId { get; set; }
 
 	/// <summary>The raw timestamp from the original SensorEvent.</summary>
 	[JsonProperty( "rawTimestampNanos" )]
@@ -130,7 +130,7 @@ public sealed class DataPoint
 	/// within data source's type field.
 	/// </summary>
 	[JsonProperty( "value", Required = Required.Always )]
-	public List<Value> Value { get; set; }
+	public required List<Value> Value { get; set; }
 }
 
 /// <summary>
@@ -142,7 +142,7 @@ public sealed class Dataset
 {
 	/// <summary>The data stream ID of the data source that created the points in this dataset.</summary>
 	[JsonProperty( "dataSourceId" )]
-	public string DataSourceId { get; set; }
+	public string DataSourceId { get; set; } = string.Empty;
 
 	/// <summary>
 	/// The largest end time of all data points in this possibly partial representation of the dataset. Time is in
@@ -164,7 +164,7 @@ public sealed class Dataset
 	/// of data points within this dataset.
 	/// </summary>
 	[JsonProperty( "nextPageToken" )]
-	public string NextPageToken { get; set; }
+	public string? NextPageToken { get; set; }
 
 	/// <summary>
 	/// A partial list of data points contained in the dataset, ordered by endTimeNanos. This list is considered
@@ -172,7 +172,7 @@ public sealed class Dataset
 	/// too large to include in a single response.
 	/// </summary>
 	[JsonProperty( "point" )]
-	public List<DataPoint> Points { get; set; }
+	public required List<DataPoint> Points { get; set; }
 }
 
 /// <summary>
@@ -188,15 +188,15 @@ public sealed class Device
 {
 	/// <summary>Manufacturer of the product/hardware.</summary>
 	[JsonProperty( "manufacturer" )]
-	public string Manufacturer { get; set; }
+	public string? Manufacturer { get; set; }
 
 	/// <summary>End-user visible model name for the device.</summary>
 	[JsonProperty( "model" )]
-	public string Model { get; set; }
+	public string? Model { get; set; }
 
 	/// <summary>A constant representing the type of the device.</summary>
 	[JsonProperty( "type" )]
-	public string Type { get; set; }
+	public string? Type { get; set; }
 
 	/// <summary>
 	/// The serial number or other unique ID for the hardware. This field is obfuscated when read by any REST or
@@ -205,11 +205,11 @@ public sealed class Device
 	/// obfuscated(id1) == obfuscated(id2).
 	/// </summary>
 	[JsonProperty( "uid" )]
-	public string Uid { get; set; }
+	public string? Uid { get; set; }
 
 	/// <summary>Version string for the device hardware/software.</summary>
 	[JsonProperty( "version" )]
-	public string Version { get; set; }
+	public string? Version { get; set; }
 }
 
 public sealed class ListSessionsResponse
@@ -219,18 +219,18 @@ public sealed class ListSessionsResponse
 	/// sessions which were deleted since the last sync.
 	/// </summary>
 	[JsonProperty( "deletedSession" )]
-	public List<ActivitySession> DeletedSession { get; set; }
+	public List<ActivitySession>? DeletedSession { get; set; }
 
 	/// <summary>
 	/// The sync token which is used to sync further changes. This will only be provided if both startTime and
 	/// endTime are omitted from the request.
 	/// </summary>
 	[JsonProperty( "nextPageToken" )]
-	public string NextPageToken { get; set; }
+	public string? NextPageToken { get; set; }
 
 	/// <summary>Sessions with an end time that is between startTime and endTime of the request.</summary>
 	[JsonProperty( "session", Required = Required.Always )]
-	public List<ActivitySession> Session { get; set; }
+	public required List<ActivitySession> Session { get; set; }
 }
 
 /// <summary>Sessions contain metadata, such as a user-friendly name and time interval information.</summary>
@@ -250,17 +250,17 @@ public sealed class ActivitySession
 
 	/// <summary>The application that created the session.</summary>
 	[JsonProperty( "application" )]
-	public Application Application { get; set; }
+	public required Application Application { get; set; }
 
 	/// <summary>A description for this session.</summary>
 	[JsonProperty( "description" )]
-	public string Description { get; set; }
+	public string Description { get; set; } = string.Empty;
 
 	/// <summary>
 	/// A client-generated identifier that is unique across all sessions owned by this particular user.
 	/// </summary>
 	[JsonProperty( "id" )]
-	public string Id { get; set; }
+	public string Id { get; set; } = string.Empty;
 
 	/// <summary>A timestamp that indicates when the session was last modified.</summary>
 	[JsonProperty( "modifiedTimeMillis" )]
@@ -268,7 +268,7 @@ public sealed class ActivitySession
 
 	/// <summary>A human readable name of the session.</summary>
 	[JsonProperty( "name" )]
-	public string Name { get; set; }
+	public string Name { get; set; } = string.Empty;
 
 	/// <summary>A start time, in milliseconds since epoch, inclusive.</summary>
 	[JsonProperty( "startTimeMillis", Required = Required.Always )]
@@ -298,5 +298,5 @@ public sealed class Value
 	/// possible. Data streams with large string values and high data frequency may be down sampled.
 	/// </summary>
 	[JsonProperty( "stringVal" )]
-	public string StringVal { get; set; }
+	public string? StringVal { get; set; }
 }
