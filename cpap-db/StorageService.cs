@@ -72,7 +72,6 @@ namespace cpap_db
 			annotationMapping.ForeignKey = new ForeignKeyColumn( dayMapping );
 			
 			var sessionMapping = CreateMapping<Session>( TableNames.Session );
-			sessionMapping.PrimaryKey = new PrimaryKeyColumn( "id", typeof( int ), true );
 			sessionMapping.ForeignKey = new ForeignKeyColumn( dayMapping );
 
 			var blobColumnMapping = new ColumnMapping( "samples", "Samples", typeof( Signal ) )

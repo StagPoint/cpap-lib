@@ -5,6 +5,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.VisualTree;
 
 using cpap_app.Events;
 using cpap_app.ViewModels;
@@ -13,6 +14,9 @@ using cpap_app.Views;
 using cpaplib;
 
 using FluentAvalonia.UI.Controls;
+
+using MsBox.Avalonia;
+using MsBox.Avalonia.Enums;
 
 namespace cpap_app.Controls;
 
@@ -126,14 +130,30 @@ public partial class SessionsListView : UserControl
 		}
 	}
 	
-	private void Delete_OnTapped( object? sender, RoutedEventArgs e )
+	private async void Delete_OnTapped( object? sender, RoutedEventArgs e )
 	{
-		if( SessionSourceType != SourceType.CPAP && SessionSourceType != SourceType.PulseOximetry )
+		if( e.Source is not MenuItem { Tag: Session session } )
 		{
-			return;
+			throw new InvalidOperationException( "Invalid source for DELETE command" );
 		}
-			
-		//throw new NotImplementedException();
+
+		if( DataContext is not DailyReportViewModel viewModel )
+		{
+			throw new InvalidOperationException( "Data context does not allow deletion" );
+		}
+		
+		var msgBox = MessageBoxManager.GetMessageBoxStandard(
+			"Delete Session?",
+			"Are you sure you wish to delete this Session?\nIt may not be possible to re-import this Session later.",
+			ButtonEnum.YesNo,
+			Icon.Question );
+
+		var dialogResult = await msgBox.ShowWindowDialogAsync( this.FindAncestorOfType<Window>() );
+
+		if( dialogResult == ButtonResult.Yes )
+		{
+			viewModel.DeleteSession( session );
+		}
 	}
 	
 	private void SelectSession( Session session )

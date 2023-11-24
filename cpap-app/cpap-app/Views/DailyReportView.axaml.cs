@@ -257,13 +257,26 @@ public partial class DailyReportView : UserControl
 	
 	private DailyReportViewModel WrapDailyReport( DailyReport day )
 	{
-		var viewModel = new DailyReportViewModel( day );
-		viewModel.CreateNewAnnotation = CreateNewAnnotation;
-		viewModel.EditAnnotation      = EditAnnotation;
+		var viewModel = new DailyReportViewModel( ActiveUserProfile, day )
+		{
+			CreateNewAnnotation = CreateNewAnnotation,
+			EditAnnotation      = EditAnnotation,
+		};
+		
+		viewModel.ReloadRequired += OnReloadRequired;
 
 		return viewModel;
 	}
 	
+	private void OnReloadRequired( object? sender, EventArgs e )
+	{
+		if( sender is DailyReport )
+		{
+			DataContext = null;
+			DataContext = sender;
+		}
+	}
+
 	private async void EditAnnotation( Annotation annotation )
 	{
 		var viewModel = DataContext as DailyReportViewModel;

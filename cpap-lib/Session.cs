@@ -5,6 +5,11 @@ namespace cpaplib
 {
 	public class Session : IComparable<Session>
 	{
+		/// <summary>
+		/// The unique identifier for this instance
+		/// </summary>
+		public int ID { get; set; } = -1;
+		
 		public DateTime StartTime { get; set; }
 		public DateTime EndTime   { get; set; }
 		public TimeSpan Duration  { get => EndTime - StartTime; }

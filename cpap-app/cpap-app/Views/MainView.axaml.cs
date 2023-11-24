@@ -787,8 +787,18 @@ public partial class MainView : UserControl
 
 	private void HandleLoadDateRequest( object? sender, DateTimeRoutedEventArgs e )
 	{
-		var day = LoadDailyReport( ActiveUserProfile.UserProfileID, e.DateTime );
-		DataContext = new DailyReportViewModel( day );
+		var day       = LoadDailyReport( ActiveUserProfile.UserProfileID, e.DateTime );
+		var viewModel = new DailyReportViewModel( ActiveUserProfile, day );
+
+		viewModel.ReloadRequired += ( sender, args ) =>
+		{
+			if( sender is DailyReportViewModel vm )
+			{
+				DataContext = vm;
+			}
+		};
+
+		DataContext = viewModel;
 
 		NavView.SelectedItem = navDailyReport;
 	}

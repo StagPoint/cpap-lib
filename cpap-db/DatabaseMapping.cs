@@ -625,6 +625,11 @@ public class DatabaseMapping<T> : DatabaseMapping
 					{
 						var val = StorageService.ReadColumn( connection, stmt, index, columnType, PrimaryKey.Type );
 						primaryKeys.Add( (P)val );
+
+						if( PrimaryKey.PropertyAccessor != null )
+						{
+							PrimaryKey.PropertyAccessor.SetValue( obj, val );
+						}
 					}
 				}
 

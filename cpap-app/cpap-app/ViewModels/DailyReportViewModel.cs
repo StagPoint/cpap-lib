@@ -4,10 +4,13 @@ using System.Linq;
 using System.Reflection;
 
 using cpap_app.Events;
+using cpap_app.Helpers;
 
 using cpap_db;
 
 using cpaplib;
+
+using Microsoft.CodeAnalysis.CSharp;
 
 namespace cpap_app.ViewModels;
 
@@ -18,10 +21,14 @@ public class DailyReportViewModel : DailyReport, INotifyPropertyChanged
 	public event PropertyChangedEventHandler? PropertyChanged;
 
 	public event EventHandler<AnnotationListEventArgs>? AnnotationsChanged;
+
+	public event EventHandler? ReloadRequired;
 	
 	#endregion 
 	
 	#region Public properties
+	
+	public UserProfile UserProfile { get; set; }
 
 	public Action<string, DateTime, DateTime> CreateNewAnnotation { get; set; } = CreateNewAnnotation_DEFAULT;
 
@@ -31,8 +38,10 @@ public class DailyReportViewModel : DailyReport, INotifyPropertyChanged
 	
 	#region Constructor 
 	
-	public DailyReportViewModel( DailyReport source )
+	public DailyReportViewModel( UserProfile user, DailyReport source )
 	{
+		UserProfile = user ?? throw new ArgumentNullException( nameof( user ) );
+		
 		// Copy all of the source's property values to this instance
 		var properties = typeof( DailyReport ).GetTypeInfo().GetProperties( BindingFlags.Instance | BindingFlags.Public );
 		foreach( var prop in properties )
@@ -115,6 +124,19 @@ public class DailyReportViewModel : DailyReport, INotifyPropertyChanged
 		} );
 	}
 	
+	public void DeleteSession( Session session )
+	{
+		if( !RemoveSession( session ) )
+		{
+			return;
+		}
+
+		using var db = StorageService.Connect();
+		db.SaveDailyReport( UserProfile.UserProfileID, this );
+
+		ReloadRequired?.Invoke( this, EventArgs.Empty );
+	}
+	
 	public void SaveNotes( string notesText )
 	{
 		this.Notes = notesText;
@@ -137,5 +159,5 @@ public class DailyReportViewModel : DailyReport, INotifyPropertyChanged
 		throw new NullReferenceException( $"Caller attempted to invoke {nameof( CreateNewAnnotation )}, but no delegate has been assigned" );
 	}
 
-	#endregion 
+	#endregion
 }
