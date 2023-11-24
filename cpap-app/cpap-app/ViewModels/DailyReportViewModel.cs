@@ -4,13 +4,10 @@ using System.Linq;
 using System.Reflection;
 
 using cpap_app.Events;
-using cpap_app.Helpers;
 
 using cpap_db;
 
 using cpaplib;
-
-using Microsoft.CodeAnalysis.CSharp;
 
 namespace cpap_app.ViewModels;
 
@@ -41,18 +38,9 @@ public class DailyReportViewModel : DailyReport, INotifyPropertyChanged
 	public DailyReportViewModel( UserProfile user, DailyReport source )
 	{
 		UserProfile = user ?? throw new ArgumentNullException( nameof( user ) );
-		
-		// Copy all of the source's property values to this instance
-		var properties = typeof( DailyReport ).GetTypeInfo().GetProperties( BindingFlags.Instance | BindingFlags.Public );
-		foreach( var prop in properties )
-		{
-			if( prop is { CanRead: true, CanWrite: true } )
-			{
-				prop.SetValue( this, prop.GetValue( source ) );
-			}
-		}
+		Copy( source );
 	}
-	
+
 	#endregion
 	
 	#region Public functions 
@@ -145,6 +133,16 @@ public class DailyReportViewModel : DailyReport, INotifyPropertyChanged
 		db.Update( (DailyReport)this );
 	}
 	
+	public void Reload()
+	{
+		using var db = StorageService.Connect();
+
+		var newDay = db.LoadDailyReport( UserProfile.UserProfileID, ReportDate );
+		Copy( newDay );
+		
+		ReloadRequired?.Invoke( this, EventArgs.Empty );
+	}
+
 	#endregion
 	
 	#region Private functions
@@ -157,6 +155,19 @@ public class DailyReportViewModel : DailyReport, INotifyPropertyChanged
 	private static void CreateNewAnnotation_DEFAULT( string arg1, DateTime arg2, DateTime arg3 )
 	{
 		throw new NullReferenceException( $"Caller attempted to invoke {nameof( CreateNewAnnotation )}, but no delegate has been assigned" );
+	}
+
+	private void Copy( DailyReport source )
+	{
+		// Copy all of the source's property values to this instance
+		var properties = typeof( DailyReport ).GetTypeInfo().GetProperties( BindingFlags.Instance | BindingFlags.Public );
+		foreach( var prop in properties )
+		{
+			if( prop is { CanRead: true, CanWrite: true } )
+			{
+				prop.SetValue( this, prop.GetValue( source ) );
+			}
+		}
 	}
 
 	#endregion

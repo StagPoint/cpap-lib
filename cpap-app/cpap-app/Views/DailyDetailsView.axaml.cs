@@ -1,8 +1,10 @@
-﻿using Avalonia;
-using Avalonia.Controls;
+﻿using Avalonia.Controls;
 using Avalonia.Interactivity;
-using Avalonia.Threading;
 using Avalonia.VisualTree;
+
+using cpap_app.ViewModels;
+
+using cpap_db;
 
 using cpaplib;
 
@@ -22,19 +24,36 @@ public partial class DailyDetailsView : UserControl
 	{
 		// TODO: Implement "Re-import this date" functionality
 
-		if( DataContext is not DailyReport day )
+		if( DataContext is not DailyReportViewModel day )
 		{
 			return;
 		}
 
 		var dialog = MessageBoxManager.GetMessageBoxStandard(
 			$"Re-Import Data for {day.ReportDate.Date:D}",
-			$"Are you sure you wish to delete all data for {day.ReportDate.Date:D} and re-import it?\n\nTHIS FUNCTIONALITY HAS NOT YET BEEN IMPLEMENTED!",
-			ButtonEnum.Ok,
+			$"Are you sure you wish to delete all data for {day.ReportDate.Date:D} and re-import it?\n\nIf re-import does not succeed, this data could be lost forever.\n\nProceed with extreme caution.",
+			ButtonEnum.YesNo,
 			Icon.Warning
 		);
 		
-		await dialog.ShowWindowDialogAsync( this.FindAncestorOfType<Window>() );
+		var dialogresult = await dialog.ShowWindowDialogAsync( this.FindAncestorOfType<Window>() );
+		if( dialogresult != ButtonResult.Yes )
+		{
+			return;
+		}
+
+		using var db = StorageService.Connect();
+		db.Delete( (DailyReport)day, day.ID );
+
+		var args = new MainView.ImportRequestEventArgs( MainView.ImportCpapRequestedEvent )
+		{
+			Source           = this,
+			StartDate        = day.RecordingStartTime.Date,
+			EndDate          = day.RecordingEndTime.Date,
+			OnImportComplete = () => { day.Reload(); }
+		};
+
+		RaiseEvent( args );
 	}
 }
 

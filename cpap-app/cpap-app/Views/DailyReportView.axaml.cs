@@ -257,6 +257,8 @@ public partial class DailyReportView : UserControl
 	
 	private DailyReportViewModel WrapDailyReport( DailyReport day )
 	{
+		Debug.Assert( ActiveUserProfile != null, nameof( ActiveUserProfile ) + " != null" );
+		
 		var viewModel = new DailyReportViewModel( ActiveUserProfile, day )
 		{
 			CreateNewAnnotation = CreateNewAnnotation,

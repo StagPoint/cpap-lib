@@ -39,19 +39,32 @@ public partial class MainView : UserControl
 {
 	#region Public events
 
-	public static readonly RoutedEvent<RoutedEventArgs> ImportCpapRequestedEvent =
-		RoutedEvent.Register<MainView, RoutedEventArgs>( nameof( ImportCpapRequested ), RoutingStrategies.Bubble );
+	public class ImportRequestEventArgs : RoutedEventArgs
+	{
+		public DateTime? StartDate { get; set; }
+		public DateTime? EndDate   { get; set; }
+		
+		public Action? OnImportComplete { get; set; }
 
-	public event EventHandler<RoutedEventArgs> ImportCpapRequested
+		public ImportRequestEventArgs( RoutedEvent? routedEvent )
+			: base( routedEvent )
+		{
+		}
+	}
+
+	public static readonly RoutedEvent<ImportRequestEventArgs> ImportCpapRequestedEvent =
+		RoutedEvent.Register<MainView, ImportRequestEventArgs>( nameof( ImportCpapRequested ), RoutingStrategies.Bubble );
+
+	public event EventHandler<ImportRequestEventArgs> ImportCpapRequested
 	{
 		add => AddHandler( ImportCpapRequestedEvent, value );
 		remove => RemoveHandler( ImportCpapRequestedEvent, value );
 	}
 
-	public static readonly RoutedEvent<RoutedEventArgs> ImportOximetryRequestedEvent =
-		RoutedEvent.Register<MainView, RoutedEventArgs>( nameof( ImportOximetryRequested ), RoutingStrategies.Bubble );
+	public static readonly RoutedEvent<ImportRequestEventArgs> ImportOximetryRequestedEvent =
+		RoutedEvent.Register<MainView, ImportRequestEventArgs>( nameof( ImportOximetryRequested ), RoutingStrategies.Bubble );
 
-	public event EventHandler<RoutedEventArgs> ImportOximetryRequested
+	public event EventHandler<ImportRequestEventArgs> ImportOximetryRequested
 	{
 		add => AddHandler( ImportOximetryRequestedEvent, value );
 		remove => RemoveHandler( ImportOximetryRequestedEvent, value );
@@ -552,6 +565,11 @@ public partial class MainView : UserControl
 		return (TaskDialogStandardResult)dialogResult == TaskDialogStandardResult.OK && clientConfig.IsValid;
 	}
 
+	private void HandleImportRequestCPAP( object? sender, TappedEventArgs e )
+	{
+		HandleImportRequestCPAP( sender, new ImportRequestEventArgs( ImportCpapRequestedEvent ) );
+	}
+
 	private void HandleImportRequestOximetry( object? sender, TappedEventArgs e )
 	{
 		// TODO: This really needs to be changed so that it's a generic "Import Oximetry CSV File" which selects the importer based on individual files selected
@@ -803,13 +821,13 @@ public partial class MainView : UserControl
 		NavView.SelectedItem = navDailyReport;
 	}
 
-	private void HandleImportRequestOximetry( object? sender, RoutedEventArgs e )
+	private void HandleImportRequestOximetry( object? sender, ImportRequestEventArgs e )
 	{
 		// TODO: This really needs to be changed so that it's a generic "Import Oximetry CSV File" which selects the importer based on individual files selected
 		HandleImportRequestOximetry( OximetryImporterRegistry.RegisteredImporters[ 0 ] );
 	}
 	
-	private async void HandleImportRequestCPAP( object? sender, RoutedEventArgs e )
+	private async void HandleImportRequestCPAP( object? sender, ImportRequestEventArgs e )
 	{
 		string importPath = string.Empty;
 
@@ -912,7 +930,7 @@ public partial class MainView : UserControl
 		
 			await Task.Run( async () =>
 			{
-				var mostRecentDay = ImportFrom( importPath );
+				var mostRecentDay = ImportFrom( importPath, e.StartDate, e.EndDate );
 		
 				// Sounds cheesy, but showing a progress bar for even a second serves to show 
 				// the user that the work was performed. It's otherwise often too fast for them 
@@ -949,7 +967,9 @@ public partial class MainView : UserControl
 		};
 
 		td.XamlRoot = (Visual)VisualRoot!;
-		await td.ShowAsync();	
+		await td.ShowAsync();
+
+		e.OnImportComplete?.Invoke();
 	}
 
 	#endregion 
@@ -1004,7 +1024,7 @@ public partial class MainView : UserControl
 		}, DispatcherPriority.Background );
 	}
 
-	private DateTime? ImportFrom( string folder )
+	private DateTime? ImportFrom( string folder, DateTime? startDate, DateTime? endDate )
 	{
 		using var storage = StorageService.Connect();
 		storage.Connection.BeginTransaction();
@@ -1015,10 +1035,11 @@ public partial class MainView : UserControl
 
 			var profileID = ActiveUserProfile.UserProfileID;
 
-			var mostRecentDay = storage.GetMostRecentStoredDate( profileID ).AddHours( 12 );
+			var firstDay = startDate ?? storage.GetMostRecentStoredDate( profileID ).AddHours( 12 );
+			var lastDay  = endDate ?? DateTime.Today.AddDays( 1 );
 
 			var loader = new ResMedDataLoader();
-			var days   = loader.LoadFromFolder( folder, mostRecentDay );
+			var days   = loader.LoadFromFolder( folder, firstDay, lastDay );
 
 			if( days == null || days.Count == 0 )
 			{

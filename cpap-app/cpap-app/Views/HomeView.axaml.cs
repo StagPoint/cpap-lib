@@ -32,11 +32,11 @@ public partial class HomeView : UserControl
 
 	private void BtnImportCPAP_OnClick( object? sender, RoutedEventArgs e )
 	{
-		RaiseEvent( new RoutedEventArgs( MainView.ImportCpapRequestedEvent ) );
+		RaiseEvent( new MainView.ImportRequestEventArgs( MainView.ImportCpapRequestedEvent ) );
 	}
 
 	private void BtnImportOximetry_Click( object? sender, RoutedEventArgs e )
 	{
-		RaiseEvent( new RoutedEventArgs( MainView.ImportOximetryRequestedEvent ) );
+		RaiseEvent( new MainView.ImportRequestEventArgs( MainView.ImportOximetryRequestedEvent ) );
 	}
 }
