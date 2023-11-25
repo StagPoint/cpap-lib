@@ -127,7 +127,7 @@
                                        Theme="{DynamicResource BodyStrongTextBlockStyle}" />
                         </StackPanel>
                     </Expander.Header>
-                    <controls:SessionsListView DataContext="{Binding Day}" SessionSourceType="HealthAPI" />
+                    <controls:SessionsListView Name="SleepSessions" SessionSourceType="HealthAPI" />
                 </Expander>
 
                 <Expander

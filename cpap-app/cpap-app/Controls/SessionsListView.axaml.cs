@@ -185,10 +185,20 @@ public partial class SessionsListView : UserControl
 			return;
 		}
 		
+		// Hide the "View Details" menu option for Sleep Stages or other data that doesn't fit the "View Details" model
 		if( SessionSourceType != SourceType.CPAP && SessionSourceType != SourceType.PulseOximetry )
 		{
-			menu.Hide();
-			return;
+			foreach( var item in menu.Items )
+			{
+				if( item is MenuItem { Header: string header } child )
+				{
+					if( header.StartsWith( "View", StringComparison.OrdinalIgnoreCase ) )
+					{
+						child.IsVisible = false;
+						break;
+					}
+				}
+			}
 		}
 	}
 }

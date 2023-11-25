@@ -122,7 +122,7 @@ public class DailyReportViewModel : DailyReport, INotifyPropertyChanged
 		using var db = StorageService.Connect();
 		db.SaveDailyReport( UserProfile.UserProfileID, this );
 
-		ReloadRequired?.Invoke( this, EventArgs.Empty );
+		Reload();
 	}
 	
 	public void SaveNotes( string notesText )

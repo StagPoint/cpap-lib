@@ -2,14 +2,12 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Xml.XPath;
 
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 
 using cpap_app.Events;
-using cpap_app.Helpers;
 using cpap_app.ViewModels;
 
 using cpaplib;
@@ -40,6 +38,10 @@ public partial class DailySleepStagesView : UserControl
 
             InitializeEventsSummary( day, GetSleepEvents( day, true ),  RemEvents,    NoRemEventsFound );
             InitializeEventsSummary( day, GetSleepEvents( day, false ), NonRemEvents, NoNonRemEventsFound );
+            
+            // Workaround for Session data not updating on screen when simply setting DataContext to a new value on container control
+            SleepSessions.DataContext = null; 
+            SleepSessions.DataContext = day; 
 		}
 
 		OuterContainer.DataContext = _sleepStages;

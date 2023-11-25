@@ -2,7 +2,6 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:cpaplib="clr-namespace:cpaplib;assembly=cpap-lib"
              xmlns:viewModels="clr-namespace:cpap_app.ViewModels"
              xmlns:converters="clr-namespace:cpap_app.Converters"
              xmlns:controls="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
@@ -79,7 +78,7 @@
                                 <ColumnDefinition Width="Auto" SharedSizeGroup="DailyStatsC6" />
                                 <ColumnDefinition Width="Auto" SharedSizeGroup="DailyStatsC7" />
                             </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="{Binding SignalName}" />
+                            <TextBlock Grid.Column="0" Text="{Binding Label}" />
                             <TextBlock Grid.Column="1" Text="{Binding Minimum, Mode=OneWay, StringFormat={}{0:f2}}" />
                             <TextBlock Grid.Column="2" Text="{Binding Average, Mode=OneWay, StringFormat={}{0:f2}}" />
                             <TextBlock Grid.Column="3" Text="{Binding Median, Mode=OneWay, StringFormat={}{0:f2}}" />

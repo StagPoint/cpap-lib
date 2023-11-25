@@ -808,7 +808,7 @@ public partial class MainView : UserControl
 		var day       = LoadDailyReport( ActiveUserProfile.UserProfileID, e.DateTime );
 		var viewModel = new DailyReportViewModel( ActiveUserProfile, day );
 
-		viewModel.ReloadRequired += ( sender, args ) =>
+		viewModel.ReloadRequired += ( _, args ) =>
 		{
 			if( sender is DailyReportViewModel vm )
 			{

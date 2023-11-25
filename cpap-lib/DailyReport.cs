@@ -155,11 +155,13 @@ namespace cpaplib
 
 			foreach( var signal in session.Signals )
 			{
-				UpdateSignalStatistics( signal.Name );
+				if( Statistics.Any( x => x.SignalName == signal.Name ) )
+				{
+					UpdateSignalStatistics( signal.Name );
+				}
 			}
 
-			RecordingStartTime = Sessions.Min( x => x.StartTime );
-			RecordingEndTime   = Sessions.Max( x => x.EndTime );
+			RefreshTimeRange();
 
 			return true;
 		}

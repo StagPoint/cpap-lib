@@ -30,8 +30,14 @@ namespace cpaplib
 	    }
     
     	public SignalStatistics CalculateStats()
-    	{
-    		var totalCount             = _signals.Sum( x => x.Samples.Count );
+	    {
+		    var totalCount = _signals.Sum( x => x.Samples.Count );
+
+		    if( totalCount == 0 )
+		    {
+			    return null;
+		    }
+		    
 		    var percentile95WindowSize = (int)( totalCount * (1.0 - 0.95) );
 		    var percentileWindow       = new BinaryHeap( totalCount / 2 );
 

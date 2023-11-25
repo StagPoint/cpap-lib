@@ -73,7 +73,7 @@ public class DailyStatisticsColumnVisibility : ReactiveObject
 public class DailyStatisticsViewModel
 {
 	public DailyStatisticsColumnVisibility VisibleColumns { get; set; }
-	public List<SignalStatistics>          Statistics     { get; set; }
+	public List<SignalStatisticViewModel>  Statistics     { get; set; }
 
 	static DailyStatisticsViewModel()
 	{
@@ -122,7 +122,7 @@ public class DailyStatisticsViewModel
 		// Retrieve the Signal Chart Configurations so that we can re-use the DisplayOrder values the user has configured 
 		var configurations = SignalChartConfigurationStore.GetSignalConfigurations();
 		
-		Statistics = new List<SignalStatistics>();
+		Statistics = new List<SignalStatisticViewModel>();
 		
 		foreach( var configuration in configurations )
 		{
@@ -140,7 +140,7 @@ public class DailyStatisticsViewModel
 			}
 			
 			// Add the statistic to the result set
-			Statistics.Add( stat );
+			Statistics.Add( new SignalStatisticViewModel( stat ) );
 
 			// If the signal is configured to have a pair (such as with Pressure and EPAP), attempt to add the paired signal immediately after
 			// the current signal. The paired signal (called SecondarySignal in the chart configuration) will likely be sorted near the 
@@ -159,7 +159,7 @@ public class DailyStatisticsViewModel
 					continue;
 				}
 
-				Statistics.Add( secondaryStat );
+				Statistics.Add( new SignalStatisticViewModel( secondaryStat ) );
 			}
 		}
 		
@@ -168,7 +168,7 @@ public class DailyStatisticsViewModel
 		{
 			if( !Statistics.Any( x => x.SignalName == stat.SignalName ) )
 			{
-				Statistics.Add( stat );
+				Statistics.Add( new SignalStatisticViewModel( stat ) );
 			}
 		}
 		
@@ -178,7 +178,7 @@ public class DailyStatisticsViewModel
 			var config = configurations.FirstOrDefault( x => x.SignalName.Equals( stat.SignalName, StringComparison.OrdinalIgnoreCase ) );
 			if( config != null )
 			{
-				stat.SignalName = config.Title;
+				stat.Label = config.Title;
 			}
 		}
 	}
