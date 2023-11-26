@@ -21,10 +21,10 @@ public class DailyScoreSummaryViewModel
 		Date = day.ReportDate.Date;
 		
 		Items.Add( ScoreUsageHours( day, previousDay, 0, 7, 60 ) );
+		Items.Add( ScoreUninterruptedTherapyTime( day, previousDay, 0.5, 1, 10 ) );
 		Items.Add( ScoreRespiratoryEvents( day, previousDay, 20, 0, 10 ) );
-		Items.Add( ScoreOxygenSaturation( day, previousDay, 90, 98, 10 ) );
 		Items.Add( ScoreMaskSeal( day, previousDay, 24, 8, 10 ) );
-		Items.Add( ScoreSessionCount( day, previousDay, 10, 0, 10 ) );
+		Items.Add( ScoreOxygenSaturation( day, previousDay, 90, 98, 10 ) );
 
 		for( int i = 0; i < Items.Count; i++ )
 		{
@@ -136,28 +136,48 @@ public class DailyScoreSummaryViewModel
 		};
 	}
 
-	private static DailyScoreItemViewModel ScoreSessionCount( DailyReport day, DailyReport? previousDay, double minValue, double maxValue, int weight )
+	private static DailyScoreItemViewModel ScoreUninterruptedTherapyTime( DailyReport day, DailyReport? previousDay, double minValue, double maxValue, int weight )
 	{
-		var sessionCount = day.Sessions.Count( x => x.SourceType == SourceType.CPAP );
-		var dailyScore   = (int)MathUtil.Remap( minValue, maxValue, 0, weight, sessionCount );
+		var sleepEfficiency = CalculateSleepEfficiency( day );
+		var dailyScore      = (int)MathUtil.Remap( minValue, maxValue, 0, weight, sleepEfficiency );
 
 		var isImprovement = previousDay == null;
 
 		if( previousDay != null )
 		{
-			var prevSessionCount = previousDay.Sessions.Count( x => x.SourceType == SourceType.CPAP );
-			isImprovement = sessionCount <= prevSessionCount;
+			isImprovement = sleepEfficiency >= CalculateSleepEfficiency( previousDay );
 		}
 
 		return new DailyScoreItemViewModel
 		{
-			Label         = "Session count",
-			Data          = $"{sessionCount}",
+			Label         = "Uninterrupted therapy %",
+			Data          = $"{sleepEfficiency:P0}",
 			DailyScore    = dailyScore,
 			MaximumScore  = weight,
 			IsHidden      = false,
 			IsImprovement = isImprovement,
 		};
+	}
+
+	private static double CalculateSleepEfficiency( DailyReport day )
+	{
+		var sessions = day.Sessions.Where( x => x.SourceType == SourceType.CPAP ).ToList();
+		sessions.Sort();
+
+		if( sessions.Count <= 1 )
+		{
+			return sessions.Count;
+		}
+
+		var totalTime   = (sessions[ ^1 ].EndTime - sessions[ 0 ].StartTime).TotalMinutes;
+		var maskOffTime = 0.0;
+
+		for( int i = 1; i < sessions.Count; i++ )
+		{
+			maskOffTime += (sessions[ i ].StartTime - sessions[ i - 1 ].EndTime).TotalMinutes;
+		}
+
+		return 1.0 - maskOffTime / totalTime;
 	}
 	
 	private static DailyScoreItemViewModel ScoreUsageHours( DailyReport day, DailyReport? previousDay, double minValue, double maxValue, int weight )

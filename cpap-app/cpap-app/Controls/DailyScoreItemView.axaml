@@ -28,7 +28,7 @@
         <TextBlock IsVisible="{Binding !IsImprovement}" Grid.Column="0" Grid.Row="0" Text="▼" FontSize="16" Foreground="Red"
                         VerticalAlignment="Bottom" Margin="0 0 8 0" />
         <TextBlock Grid.Column="1" Grid.Row="0" Text="{Binding Data}" Theme="{DynamicResource SubtitleTextBlockStyle}"
-                   VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0 0 8 0" />
+                   VerticalAlignment="Center" HorizontalAlignment="Left" Margin="0 0 8 0" />
         <TextBlock Grid.Column="2" Grid.Row="0" Text="{Binding Label}" Theme="{DynamicResource BodyTextBlockStyle}"
                    VerticalAlignment="Center" HorizontalAlignment="Left" Margin="0 0 8 0" />
         <TextBlock Grid.Column="3" Grid.Row="0" Text="{Binding #AnimProgress.Value, StringFormat={}{0:N0}}"
