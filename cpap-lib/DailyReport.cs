@@ -113,9 +113,18 @@ namespace cpaplib
 		/// </summary>
 		public void RefreshTimeRange()
 		{
-			RecordingStartTime = Sessions.Min( x => x.StartTime );
-			RecordingEndTime   = Sessions.Max( x => x.EndTime );
-			TotalSleepTime     = CalculateTotalSleepTime();
+			if( Sessions.Count > 0 )
+			{
+				RecordingStartTime = Sessions.Min( x => x.StartTime );
+				RecordingEndTime   = Sessions.Max( x => x.EndTime );
+				TotalSleepTime     = CalculateTotalSleepTime();
+			}
+			else
+			{
+				RecordingStartTime = ReportDate.Date.AddHours( 12 );
+				RecordingEndTime   = RecordingStartTime;
+				TotalSleepTime     = TimeSpan.Zero;
+			}
 		}
 
 		/// <summary>

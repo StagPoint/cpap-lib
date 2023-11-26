@@ -74,7 +74,7 @@ namespace cpaplib
 			// 
 			// For now (due to downstream code not handling the issue properly) these dates are not even
 			// imported. This needs to get fixed. 
-			days.RemoveAll( x => x.Sessions.Count == 0 );
+			// days.RemoveAll( x => x.Sessions.Count == 0 );
 
 			// Make sure that each Session has its Source set (sessions may be created by other processes, such as
 			// pulse oximeter import, etc.)
