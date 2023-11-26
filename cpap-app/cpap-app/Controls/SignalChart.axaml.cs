@@ -287,7 +287,7 @@ public partial class SignalChart : UserControl
 				switch( change.NewValue )
 				{
 					case DailyReport _ when ChartConfiguration == null || string.IsNullOrEmpty( ChartConfiguration.SignalName ):
-						throw new NullReferenceException( "No Signal name was provided" );
+						throw new NullReferenceException( "Missing or incorrect configuration" );
 					case DailyReport day when !_chartInitialized:
 						_day = day;
 						break;

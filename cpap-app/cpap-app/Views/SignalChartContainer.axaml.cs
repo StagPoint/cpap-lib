@@ -344,8 +344,7 @@ public partial class SignalChartContainer : UserControl
 					}
 					else
 					{
-						var chart = LoadChartFromConfig( signalConfigs, changedConfig, eventConfigs );
-						chart.DataContext = DataContext;
+						LoadChartFromConfig( signalConfigs, changedConfig, eventConfigs );
 					}
 
 					menu.Hide();
@@ -393,7 +392,7 @@ public partial class SignalChartContainer : UserControl
 		}
 	}
 	
-	private SignalChart LoadChartFromConfig( List<SignalChartConfiguration> signalConfigs, SignalChartConfiguration config, List<EventMarkerConfiguration> eventConfigs )
+	private void LoadChartFromConfig( List<SignalChartConfiguration> signalConfigs, SignalChartConfiguration config, List<EventMarkerConfiguration> eventConfigs )
 	{
 		var chart = new SignalChart()
 		{
@@ -414,8 +413,6 @@ public partial class SignalChartContainer : UserControl
 		_charts.Sort( ChartOrderComparison);
 
 		InsertInto( config.IsPinned ? PinnedCharts.Children : UnPinnedCharts.Children, chart );
-
-		return chart;
 	}
 	
 	private int ChartOrderComparison( SignalChart x, SignalChart y )

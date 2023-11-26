@@ -43,7 +43,7 @@ namespace cpaplib
 			var indexFilename = Path.Combine( folderPath, "STR.edf" );
 			var days          = LoadIndexAndSettings( indexFilename, minDate ?? DateTime.MinValue, maxDate ?? DateTime.MaxValue );
 			
-#if ALLOW_ASYNC
+#if IMPORT_ASYNC
 			var tasks = new Task[ days.Count ];
 
 			for( int i = 0; i < days.Count; i++ )
@@ -66,18 +66,8 @@ namespace cpaplib
 			}
 #endif
 			
-			// TODO: How to better handle dates where the SD Card wasn't inserted?
-			// The only reason I've seen so far for the session directory to not exist for a given day is when
-			// the user has forgotten to put the SD Card back into the machine. On such days, you will still 
-			// have summary information available (such as settings, AHI, mask times, etc), but no graph data
-			// will be found. 
-			// 
-			// For now (due to downstream code not handling the issue properly) these dates are not even
-			// imported. This needs to get fixed. 
-			// days.RemoveAll( x => x.Sessions.Count == 0 );
-
-			// Make sure that each Session has its Source set (sessions may be created by other processes, such as
-			// pulse oximeter import, etc.)
+			// Make sure that each Session has its Source set. Sessions may be created by other processes, such as
+			// pulse oximeter import, etc., and this will help to differentiate them. 
 			foreach( var day in days )
 			{
 				foreach( var session in day.Sessions )

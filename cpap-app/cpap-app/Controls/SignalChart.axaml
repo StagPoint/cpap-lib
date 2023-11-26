@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:ScottPlot="clr-namespace:ScottPlot.Avalonia;assembly=ScottPlot.Avalonia"
              xmlns:controls="clr-namespace:cpap_app.Controls"
+             xmlns:cpaplib="clr-namespace:cpaplib;assembly=cpap-lib"
              mc:Ignorable="d"
              d:DesignWidth="800"
              x:Class="cpap_app.Controls.SignalChart"
@@ -13,7 +14,9 @@
              ChartBackground="{DynamicResource ControlOnImageFillColorDefaultBrush}"
              ChartBorderColor="{DynamicResource ControlStrokeColorSecondaryBrush}"
              ChartGridLineColor="{DynamicResource TextFillColorSecondaryBrush}"
-             Background="{DynamicResource LayerFillColorDefaultBrush}">
+             Background="{DynamicResource LayerFillColorDefaultBrush}"
+             x:DataType="cpaplib:DailyReport"
+             DataContext="{Binding $parent[Control].DataContext}">
     <UserControl.Styles>
         <Style Selector="Border.FocusAdorner">
             <Setter Property="BorderBrush" Value="{DynamicResource AccentFillColorDefaultBrush}" /> 

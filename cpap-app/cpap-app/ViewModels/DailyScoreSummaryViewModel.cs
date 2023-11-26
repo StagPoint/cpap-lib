@@ -150,7 +150,7 @@ public class DailyScoreSummaryViewModel
 
 		return new DailyScoreItemViewModel
 		{
-			Label         = "Time without interruption",
+			Label         = "Uninterrupted therapy %",
 			Data          = $"{sleepEfficiency:P0}",
 			DailyScore    = dailyScore,
 			MaximumScore  = weight,
