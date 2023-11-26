@@ -21,8 +21,10 @@ public partial class DailySleepStagesView : UserControl
 	public DailySleepStagesView()
 	{
 		InitializeComponent();
+		
+		SleepSessions.SelectedSignalName = SignalNames.SleepStages;
 	}
-
+	
 	protected override void OnPropertyChanged( AvaloniaPropertyChangedEventArgs change )
 	{
 		base.OnPropertyChanged( change );

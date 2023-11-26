@@ -114,7 +114,7 @@
                                        Theme="{DynamicResource BodyStrongTextBlockStyle}" />
                         </StackPanel>
                     </Expander.Header>
-                    <controls:SessionsListView SessionSourceType="PulseOximetry" />
+                    <controls:SessionsListView Name="OximetrySessions" SessionSourceType="PulseOximetry" />
                 </Expander>
                 
                 <Expander

@@ -935,17 +935,16 @@ After:
 
 			var day = new DailyReport
 			{
-				MachineInfo = _machineInfo,
-				ReportDate  = new DateTime( 1970, 1, 1 ).AddDays( data[ "Date" ] ).AddHours( 12 ),
-				Settings = ResMedDataLoader.ReadMachineSettings( data ),
-				MaskEvents = (int)(data[ "MaskEvents" ] / 2),
+				MachineInfo    = _machineInfo,
+				ReportDate     = new DateTime( 1970, 1, 1 ).AddDays( data[ "Date" ] ).AddHours( 12 ),
+				Settings       = ReadMachineSettings( data ),
+				MaskEvents     = (int)(data[ "MaskEvents" ] / 2),
 				TotalSleepTime = TimeSpan.FromMinutes( data[ "Duration" ] ),
-				//OnDuration = TimeSpan.FromMinutes( data[ "OnDuration" ] );
-				PatientHours = getValue( "PatientHours" ),
+				PatientHours   = getValue( "PatientHours" ),
 				Fault =
 				{
-					Device = getValue( "Fault.Device" ),
-					Alarm = getValue( "Fault.Alarm" ),
+					Device     = getValue( "Fault.Device" ),
+					Alarm      = getValue( "Fault.Alarm" ),
 					Humidifier = getValue( "Fault.Humidifier" ),
 					HeatedTube = getValue( "Fault.HeatedTube" ),
 				},

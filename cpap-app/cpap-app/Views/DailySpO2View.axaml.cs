@@ -19,6 +19,8 @@ public partial class DailySpO2View : UserControl
 	public DailySpO2View()
 	{
 		InitializeComponent();
+
+		OximetrySessions.SelectedSignalName = SignalNames.SpO2;
 	}
 	
 	#endregion

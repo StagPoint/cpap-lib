@@ -35,7 +35,6 @@ namespace cpaplib
 				}
 			}
 		}
-		
 
 		public EssentialsMode Essentials { get; set; }
 		public bool AntibacterialFilter { get; set; }

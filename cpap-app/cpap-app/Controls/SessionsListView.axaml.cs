@@ -42,6 +42,14 @@ public partial class SessionsListView : UserControl
 	
 	#region Public properties 
 	
+	public static readonly StyledProperty<string> SelectedSignalNameProperty = AvaloniaProperty.Register<SessionsListView, string>( nameof( SelectedSignalName ) );
+
+	public string SelectedSignalName
+	{
+		get => GetValue( SelectedSignalNameProperty );
+		set => SetValue( SelectedSignalNameProperty, value );
+	}
+
 	public static readonly StyledProperty<SourceType> SessionSourceTypeProperty = AvaloniaProperty.Register<SessionsListView, SourceType>( nameof( SessionSourceType ) );
 
 	public SourceType SessionSourceType
@@ -172,7 +180,7 @@ public partial class SessionsListView : UserControl
 		{
 			RoutedEvent = SignalSelection.SignalSelectedEvent,
 			Source      = this,
-			SignalName  = SignalNames.FlowRate,
+			SignalName  = !string.IsNullOrEmpty( SelectedSignalName ) ? SelectedSignalName : SignalNames.FlowRate,
 		};
 
 		RaiseEvent( signalEventArgs );
