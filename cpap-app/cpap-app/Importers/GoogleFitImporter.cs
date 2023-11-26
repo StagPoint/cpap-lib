@@ -91,7 +91,7 @@ public class GoogleFitImporter
 			}
 			
 			var session = ImportSessionFromDataset( bucket.Datasets[ 0 ].Points, startTime, endTime );
-			session.Source = fitSession.Application.Name ?? fitSession.Application.PackageName ?? "Google Fit API";
+			session.Source = fitSession.Application.Name;
 			sessions.Add( session );
 		}
 
@@ -136,7 +136,7 @@ public class GoogleFitImporter
 				outputValue = 1;
 			}
 
-			var sampleCount = (int)(TimeSpan.FromMilliseconds( (point.EndTimeNanos - point.StartTimeNanos) * 1E-6 ).TotalSeconds / 30);
+			var sampleCount = (int)Math.Max( 1, TimeSpan.FromMilliseconds( (point.EndTimeNanos - point.StartTimeNanos) * 1E-6 ).TotalSeconds / 30 );
 			for( int j = 0; j < sampleCount; j++ )
 			{
 				samples.Add( outputValue );

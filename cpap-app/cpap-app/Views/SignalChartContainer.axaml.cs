@@ -33,43 +33,13 @@ public partial class SignalChartContainer : UserControl
 	{
 		InitializeComponent();
 
-		List<SignalChartConfiguration> signalConfigs = SignalChartConfigurationStore.GetSignalConfigurations();
-		List<EventMarkerConfiguration> eventConfigs  = EventMarkerConfigurationStore.GetEventMarkerConfigurations();
-
 		AddHandler( SignalChart.ChartConfigurationChangedEvent, OnChartConfigurationChanged );
 		AddHandler( SignalChart.ChartDraggedEvent,              Chart_Dragged );
 		AddHandler( GraphEvents.TimeMarkerChangedEvent,         ChartOnTimeMarkerChanged );
 		AddHandler( GraphEvents.DisplayedRangeChangedEvent,     ChartDisplayedRangeChanged );
 
-		foreach( var config in signalConfigs )
-		{
-			if( !config.IsVisible )
-			{
-				continue;
-			}
-
-			var chart = new SignalChart() { ChartConfiguration = config, MarkerConfiguration = eventConfigs };
-
-			if( !string.IsNullOrEmpty( config.SecondarySignalName ) )
-			{
-				var secondaryConfig = signalConfigs.FirstOrDefault( x => x.SignalName.Equals( config.SecondarySignalName, StringComparison.OrdinalIgnoreCase ) );
-				if( secondaryConfig != null )
-				{
-					chart.SecondaryConfiguration = secondaryConfig;
-				}
-			}
-
-			_charts.Add( chart );
-
-			if( config.IsPinned )
-			{
-				PinnedCharts.Children.Add( chart );
-			}
-			else
-			{
-				UnPinnedCharts.Children.Add( chart );
-			}
-		}
+		LoadSignalGraphs();
+		LoadSignalVisibilityMenu();
 	}
 	
 	#endregion
@@ -104,6 +74,10 @@ public partial class SignalChartContainer : UserControl
 	#endregion 
 
 	#region Event handlers
+
+	private void ChartVisibilityMenu_OnOpening( object? sender, EventArgs e )
+	{
+	}
 
 	private void Chart_Dragged( object? sender, SignalChart.ChartDragEventArgs e )
 	{
@@ -165,7 +139,11 @@ public partial class SignalChartContainer : UserControl
 			}
 		}
 
-		Dispatcher.UIThread.Post( chart.BringIntoView, DispatcherPriority.Default );
+		Dispatcher.UIThread.Post( () =>
+		{
+			chart.BringIntoView();
+			LoadSignalVisibilityMenu();
+		} );
 	}
 
 	private void OnChartConfigurationChanged( object? sender, ChartConfigurationChangedEventArgs e )
@@ -307,6 +285,147 @@ public partial class SignalChartContainer : UserControl
 	
 	#region Private functions
 
+	private void LoadSignalVisibilityMenu()
+	{
+		if( VisibleGraphMenuButton.Flyout is not MenuFlyout menu )
+		{
+			throw new InvalidOperationException();
+		}
+		
+		menu.Items.Clear();
+		
+		List<SignalChartConfiguration> signalConfigs = SignalChartConfigurationStore.GetSignalConfigurations();
+		List<EventMarkerConfiguration> eventConfigs  = EventMarkerConfigurationStore.GetEventMarkerConfigurations();
+
+		int totalConfigs   = 0;
+		int visibleConfigs = 0;
+
+		foreach( var config in signalConfigs )
+		{
+			// TODO: Figure out how to deal with signals that should never be displayed without special-case code
+			if( config.SignalName is SignalNames.MaskPressureLow or SignalNames.EPAP )
+			{
+				continue;
+			}
+
+			totalConfigs   += 1;
+			visibleConfigs += config.IsVisible ? 1 : 0;
+			
+			var itemViewModel = new CheckmarkMenuItemViewModel()
+			{
+				Label     = config.Title,
+				Tag       = config,
+				IsChecked = config.IsVisible,
+			};
+
+			itemViewModel.PropertyChanged += ( sender, args ) =>
+			{
+				if( sender is CheckmarkMenuItemViewModel { Tag: SignalChartConfiguration changedConfig } ivm )
+				{
+					changedConfig.IsVisible = ivm.IsChecked;
+					signalConfigs           = SignalChartConfigurationStore.Update( changedConfig );
+
+					if( !ivm.IsChecked )
+					{
+						foreach( var chart in _charts )
+						{
+							if( chart.ChartConfiguration!.SignalName == changedConfig.SignalName )
+							{
+								if( changedConfig.IsPinned )
+									PinnedCharts.Children.Remove( chart );
+								else
+									UnPinnedCharts.Children.Remove( chart );
+
+								_charts.Remove( chart );
+
+								break;
+							}
+						}
+					}
+					else
+					{
+						var chart = LoadChartFromConfig( signalConfigs, changedConfig, eventConfigs );
+						chart.DataContext = DataContext;
+					}
+
+					menu.Hide();
+
+					if( DataContext is DailyReportViewModel viewModel )
+					{
+						viewModel.Reload();
+					}
+
+					LoadSignalVisibilityMenu();
+				}
+			};
+
+			var menuItem = new CheckMarkMenuItem() { DataContext = itemViewModel };
+
+			menu.Items.Add( menuItem );
+		}
+
+		VisibleGraphMenuButton.Content = $"\ud83d\udcc8 {visibleConfigs} of {totalConfigs} Graphs";
+	}
+
+	private void LoadSignalGraphs()
+	{
+		_charts.Clear();
+		UnPinnedCharts.Children.Clear();
+		PinnedCharts.Children.Clear();
+		
+		List<SignalChartConfiguration> signalConfigs = SignalChartConfigurationStore.GetSignalConfigurations();
+		List<EventMarkerConfiguration> eventConfigs  = EventMarkerConfigurationStore.GetEventMarkerConfigurations();
+
+		foreach( var config in signalConfigs )
+		{
+			if( !config.IsVisible )
+			{
+				continue;
+			}
+			
+			// TODO: Figure out how to deal with signals that should never be displayed without special-case code
+			if( config.SignalName is SignalNames.MaskPressureLow or SignalNames.EPAP )
+			{
+				continue;
+			}
+
+			LoadChartFromConfig( signalConfigs, config, eventConfigs );
+		}
+	}
+	
+	private SignalChart LoadChartFromConfig( List<SignalChartConfiguration> signalConfigs, SignalChartConfiguration config, List<EventMarkerConfiguration> eventConfigs )
+	{
+		var chart = new SignalChart()
+		{
+			ChartConfiguration = config, 
+			MarkerConfiguration = eventConfigs, 
+		};
+
+		if( !string.IsNullOrEmpty( config.SecondarySignalName ) )
+		{
+			var secondaryConfig = signalConfigs.FirstOrDefault( x => x.SignalName.Equals( config.SecondarySignalName, StringComparison.OrdinalIgnoreCase ) );
+			if( secondaryConfig != null )
+			{
+				chart.SecondaryConfiguration = secondaryConfig;
+			}
+		}
+
+		_charts.Add( chart );
+		_charts.Sort( ChartOrderComparison);
+
+		InsertInto( config.IsPinned ? PinnedCharts.Children : UnPinnedCharts.Children, chart );
+
+		return chart;
+	}
+	
+	private int ChartOrderComparison( SignalChart x, SignalChart y )
+	{
+		Debug.Assert( x.ChartConfiguration != null );
+		Debug.Assert( y.ChartConfiguration != null );
+
+		return x.ChartConfiguration.DisplayOrder.CompareTo( y.ChartConfiguration.DisplayOrder );
+	}
+
 	private static void InsertInto( Avalonia.Controls.Controls collection, SignalChart chart )
 	{
 		int displayOrder = chart.ChartConfiguration!.DisplayOrder;
@@ -362,6 +481,6 @@ public partial class SignalChartContainer : UserControl
 		}
 	}
 
-	#endregion 
+	#endregion
 }
 

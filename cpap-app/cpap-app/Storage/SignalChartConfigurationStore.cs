@@ -14,12 +14,18 @@ namespace cpap_app.ViewModels;
 
 public static class SignalChartConfigurationStore
 {
+	private static bool _isSignalStoreInitialized = false;
+	
 	public static List<SignalChartConfiguration> GetSignalConfigurations()
 	{
 		using var store = StorageService.Connect();
 		
 		// TODO: Move SignalChartConfiguration initialization to application startup
-		Initialize( store );
+		if( !_isSignalStoreInitialized )
+		{
+			_isSignalStoreInitialized = true;
+			Initialize( store );
+		}
 
 		var configurations = store.SelectAll<SignalChartConfiguration>().ToList();
 		configurations.Sort();
@@ -70,6 +76,10 @@ public static class SignalChartConfigurationStore
 
 			switch( signalName )
 			{
+				case SignalNames.MaskPressureLow:
+					// Do not create a configuration for this Signal
+					continue;
+				
 				case SignalNames.FlowRate:
 					config.BaselineHigh    = 0;
 					config.DisplayedEvents = new List<EventType>( EventTypes.RespiratoryDisturbance );
@@ -83,13 +93,6 @@ public static class SignalChartConfigurationStore
 					break;
 				
 				case SignalNames.MaskPressure:
-					config.AxisMinValue = 0;
-					config.AxisMaxValue = 20;
-					config.ScalingMode  = AxisScalingMode.Override;
-					break;
-				
-				case SignalNames.MaskPressureLow:
-					config.Title        = SignalNames.MaskPressure;
 					config.AxisMinValue = 0;
 					config.AxisMaxValue = 20;
 					config.ScalingMode  = AxisScalingMode.Override;

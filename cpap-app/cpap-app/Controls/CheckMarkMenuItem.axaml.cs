@@ -1,7 +1,5 @@
-﻿using Avalonia;
-using Avalonia.Controls;
+﻿using Avalonia.Controls;
 using Avalonia.Input;
-using Avalonia.Markup.Xaml;
 
 using cpap_app.ViewModels;
 
@@ -19,6 +17,7 @@ public partial class CheckMarkMenuItem : UserControl
 		if( DataContext is CheckmarkMenuItemViewModel vm )
 		{
 			vm.IsChecked = !vm.IsChecked;
+			e.Handled    = true;
 		}
 	}
 }

@@ -11,6 +11,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Styling;
+using Avalonia.Threading;
 
 using cpap_app.Configuration;
 using cpap_app.Converters;
@@ -186,8 +187,11 @@ public partial class SignalChart : UserControl
 	
 		EventTooltip.IsVisible   = false;
 		TimeMarkerLine.IsVisible = false;
-	
-		InitializeChartProperties( Chart );
+
+		if( !_chartInitialized )
+		{
+			InitializeChartProperties( Chart );
+		}
 	}
 
 	protected override void OnKeyDown( KeyEventArgs args )
@@ -226,7 +230,7 @@ public partial class SignalChart : UserControl
 			}
 			case Key.Up or Key.Down:
 			{
-				double increment = ((args.KeyModifiers & KeyModifiers.Shift) != 0) ? 0.25 : 0.1;
+				double increment = ((args.KeyModifiers & KeyModifiers.Shift) != 0) ? 0.35 : 0.2;
 				double amount    = (args.Key == Key.Up ? 1.0 : -1.0) * increment + 1.0;
 			
 				Chart.Plot.AxisZoom( amount, 1.0 );
@@ -444,8 +448,6 @@ public partial class SignalChart : UserControl
 
 	private void OnPointerEntered( object? sender, PointerEventArgs e )
 	{
-		//this.Focus();
-		
 		if( _day == null || !IsEnabled )
 		{
 			return;
@@ -455,7 +457,14 @@ public partial class SignalChart : UserControl
 		{
 			var currentPoint = e.GetPosition( Chart );
 			var timeOffset   = Chart.Plot.XAxis.Dims.GetUnit( (float)currentPoint.X );
-			var time         = _day.RecordingStartTime.AddSeconds( timeOffset );
+
+			// Race condition: The chart may not be fully set up yet
+			if( double.IsNaN( timeOffset ) )
+			{
+				return;
+			}
+
+			var time = _day.RecordingStartTime.AddSeconds( timeOffset );
 
 			UpdateTimeMarker( time );
 			RaiseTimeMarkerChanged( time );
@@ -581,7 +590,7 @@ public partial class SignalChart : UserControl
 		{
 			(double x, double y) = Chart.GetMouseCoordinates();
 
-			var amount = args.Delta.Y * 0.15 + 1.0;
+			var amount = args.Delta.Y * 0.25 + 1.0;
 			Chart.Plot.AxisZoom( amount, 1.0, x, y );
 
 			args.Handled = true;
@@ -601,6 +610,13 @@ public partial class SignalChart : UserControl
 		var mouseRelativePosition = eventArgs.GetCurrentPoint( Chart ).Position;
 
 		(double timeOffset, _) = Chart.Plot.GetCoordinate( (float)mouseRelativePosition.X, (float)mouseRelativePosition.Y );
+
+		// Race condition: Ignore this event when the chart is not yet fully set up
+		if( double.IsNaN( timeOffset ) )
+		{
+			return;
+		}
+		
 		var time = _day.RecordingStartTime.AddSeconds( timeOffset );
 
 		switch( _interactionMode )
@@ -1977,7 +1993,7 @@ public partial class SignalChart : UserControl
 		RenderGraph( true );
 	}
 
-	private void InitializeChartProperties( AvaPlot chart )
+	internal void InitializeChartProperties( AvaPlot chart )
 	{
 		_chartInitialized = true;
 		_chartStyle       = new CustomChartStyle( ChartForeground, ChartBackground, ChartBorderColor, ChartGridLineColor );
@@ -2032,6 +2048,14 @@ public partial class SignalChart : UserControl
 		legend.FontColor    = _chartStyle.TitleFontColor;
 
 		chart.Configuration.LockVerticalAxis = true;
+
+		if( _day != null )
+		{
+			Dispatcher.UIThread.Post( () =>
+			{
+				LoadData( _day );
+			} );
+		}
 		
 		RenderGraph( false );
 	}

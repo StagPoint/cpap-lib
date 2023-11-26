@@ -146,7 +146,7 @@
                         </StackPanel>
                     </Expander.Header>
                     <TextBlock TextWrapping="Wrap">
-                        Sleep stage data from non-medical devices is not fully accurate, and represents only a "best guess" approximation.
+                        Sleep stage data from non-medical devices is not accurate, and represents only a "best guess" approximation.
                     </TextBlock>
                 </Expander>
 
