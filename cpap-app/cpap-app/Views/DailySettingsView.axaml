@@ -3,90 +3,41 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:cpaplib="clr-namespace:cpaplib;assembly=cpap-lib"
-             xmlns:converters="clr-namespace:cpap_app.Converters"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             xmlns:viewModels="clr-namespace:cpap_app.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="450"
              x:Class="cpap_app.Views.DailySettingsView"
-             x:DataType="cpaplib:DailyReport">
-    <Design.DataContext>    
-        <cpaplib:DailyReport/>
-    </Design.DataContext>   
-    <UserControl.Resources>
-        <converters:BoolToGridLengthConverter x:Key="BoolToGridRowHeightConverter" />
-        <converters:PropertyValueToGridRowVisibilityConverter x:Key="PropertyValueToGridRowVisibilityConverter" />
-        <converters:NiceNameConverter x:Key="NiceNameConverter" />
-    </UserControl.Resources>
-    <Grid Name="grdMachineSettings" DataContext="{Binding Settings}">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="{Binding Mode, Converter={StaticResource PropertyValueToGridRowVisibilityConverter}, ConverterParameter=CPAP}" />
-            <RowDefinition Height="{Binding Mode, Converter={StaticResource PropertyValueToGridRowVisibilityConverter}, ConverterParameter=APAP}" />
-            <RowDefinition Height="{Binding Mode, Converter={StaticResource PropertyValueToGridRowVisibilityConverter}, ConverterParameter=APAP}" />
-            <RowDefinition Height="{Binding Mode, Converter={StaticResource PropertyValueToGridRowVisibilityConverter}, ConverterParameter=APAP}" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="{Binding RampMode, Converter={StaticResource PropertyValueToGridRowVisibilityConverter}, ConverterParameter=On}" />
-            <RowDefinition Height="{Binding RampMode, Converter={StaticResource PropertyValueToGridRowVisibilityConverter}, ConverterParameter=On}" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition
-                Height="{Binding EPR.EprEnabled, Converter={StaticResource BoolToGridRowHeightConverter}}" />
-            <RowDefinition
-                Height="{Binding EPR.EprEnabled, Converter={StaticResource BoolToGridRowHeightConverter}}" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto" />
-            <ColumnDefinition Width="20" />
-            <ColumnDefinition Width="Auto" />
-            <ColumnDefinition Width="*" />
-        </Grid.ColumnDefinitions>
-        <TextBlock Grid.Column="0" Grid.Row="0" Text="Mode" />
-        <TextBlock Grid.Column="2" Grid.Row="0" Text="{Binding Mode, Mode=OneWay}" />
-        <TextBlock Grid.Column="0" Grid.Row="1" Text="Pressure" />
-        <TextBlock Grid.Column="2" Grid.Row="1"
-                   Text="{Binding CPAP.Pressure, Mode=OneWay, StringFormat={}{0:N2} cmH2O}" />
-        <TextBlock Grid.Column="0" Grid.Row="2" Text="Min Pressure" />
-        <TextBlock Grid.Column="2" Grid.Row="2"
-                   Text="{Binding AutoSet.MinPressure, Mode=OneWay, StringFormat={}{0:N2} cmH2O}" />
-        <TextBlock Grid.Column="0" Grid.Row="3" Text="Max Pressure" />
-        <TextBlock Grid.Column="2" Grid.Row="3"
-                   Text="{Binding AutoSet.MaxPressure, Mode=OneWay, StringFormat={}{0:N2} cmH2O}" />
-        <TextBlock Grid.Column="0" Grid.Row="4" Text="Response Type" />
-        <TextBlock Grid.Column="2" Grid.Row="4" Text="{Binding AutoSet.ResponseType, Mode=OneWay}" />
-        <TextBlock Grid.Column="0" Grid.Row="5" Text="Ramp Mode" />
-        <TextBlock Grid.Column="2" Grid.Row="5" Text="{Binding RampMode, Mode=OneWay}" />
-        <TextBlock Grid.Column="0" Grid.Row="6" Text="Ramp Time" />
-        <TextBlock Grid.Column="2" Grid.Row="6"
-                   Text="{Binding RampTime, Mode=OneWay, StringFormat={}{0} Minutes}" />
-        <TextBlock Grid.Column="0" Grid.Row="7" Text="Ramp Pressure" />
-        <TextBlock Grid.Column="2" Grid.Row="7"
-                   Text="{Binding RampStartingPressure, Mode=OneWay, StringFormat={}{0:N2} cmH2O}" />
-        <TextBlock Grid.Column="0" Grid.Row="8" Text="EPR Enabled" />
-        <TextBlock Grid.Column="2" Grid.Row="8" Text="{Binding EPR.EprEnabled, Mode=OneWay}" />
-        <TextBlock Grid.Column="0" Grid.Row="9" Text="EPR Mode" />
-        <TextBlock Grid.Column="2" Grid.Row="9"
-                   Text="{Binding EPR.Mode, Mode=OneWay, Converter={StaticResource NiceNameConverter}}" />
-        <TextBlock Grid.Column="0" Grid.Row="10" Text="EPR Level" />
-        <TextBlock Grid.Column="2" Grid.Row="10" Text="{Binding EPR.Level, Mode=OneWay}" />
-        <TextBlock Grid.Column="0" Grid.Row="11" Text="Smart Start" />
-        <TextBlock Grid.Column="2" Grid.Row="11" Text="{Binding SmartStart, Mode=OneWay}" />
-        <TextBlock Grid.Column="0" Grid.Row="12" Text="Climate Control" />
-        <TextBlock Grid.Column="2" Grid.Row="12" Text="{Binding ClimateControl, Mode=OneWay}" />
-        <TextBlock Grid.Column="0" Grid.Row="13" Text="Humidifier Status" />
-        <TextBlock Grid.Column="2" Grid.Row="13" Text="{Binding HumidifierStatus, Mode=OneWay}" />
-        <TextBlock Grid.Column="0" Grid.Row="14" Text="Humidity Level" />
-        <TextBlock Grid.Column="2" Grid.Row="14" Text="{Binding HumidityLevel, Mode=OneWay}" />
-        <TextBlock Grid.Column="0" Grid.Row="15" Text="Temperature Enabled" />
-        <TextBlock Grid.Column="2" Grid.Row="15" Text="{Binding TemperatureEnabled, Mode=OneWay}" />
-        <TextBlock Grid.Column="0" Grid.Row="16" Text="Temperature" />
-        <TextBlock Grid.Column="2" Grid.Row="16"
-                   Text="{Binding Temperature, Mode=OneWay, StringFormat={}{0:N1} °F}" />
-        <TextBlock Grid.Column="0" Grid.Row="17" Text="Mask Type" />
-        <TextBlock Grid.Column="2" Grid.Row="17"
-                   Text="{Binding Mask, Mode=OneWay, Converter={StaticResource NiceNameConverter}}" />
+             x:DataType="viewModels:MachineSettingsViewModel">
+    <Design.DataContext>
+        <cpaplib:DailyReport />
+    </Design.DataContext>
+    <UserControl.Styles>
+        <StyleInclude Source="/Styling/GridStyles.axaml" />
+    </UserControl.Styles>
+
+    <Grid IsSharedSizeScope="True">
+        <ItemsControl Name="Repeater" ItemsSource="{Binding Settings}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Border Classes="SelectionRect" Tag="{Binding}">
+                        <Grid Classes="TableData">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" SharedSizeGroup="MachineSettingsC0" />
+                                <ColumnDefinition Width="12" />
+                                <ColumnDefinition Width="Auto" SharedSizeGroup="MachineSettingsC2" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="{Binding Name}" />
+                            <TextBlock Grid.Column="2">
+                                <TextBox.Text>
+                                    <MultiBinding StringFormat="{}{0} {1}">
+                                        <Binding Path="Value" />
+                                        <Binding Path="Units" />
+                                    </MultiBinding>
+                                </TextBox.Text>
+                            </TextBlock>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
     </Grid>
 </UserControl>
