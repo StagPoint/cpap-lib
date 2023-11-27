@@ -119,8 +119,12 @@ public partial class MainView : UserControl
 		btnImportGoogleFit.Click += HandleImportRequestGoogleFit;
 		
 		ActiveUserProfile = UserProfileStore.GetLastUserProfile();
-		LoadProfileMenu();
 		
+		navProfile.Tapped += ( sender, args ) =>
+		{
+			navProfile.ContextFlyout!.ShowAt( navProfile );
+		};
+
 		NavView.PaneDisplayMode = NavigationViewPaneDisplayMode.Left;
 	}
 
@@ -140,6 +144,7 @@ public partial class MainView : UserControl
 				UserProfileStore.Update( profile );
 			}
 			
+			LoadProfileMenu();
 			LoadTabPage( new HomeView() );
 		}
 	}
@@ -151,14 +156,6 @@ public partial class MainView : UserControl
 	private void NavImportFrom_OnTapped( object? sender, TappedEventArgs e )
 	{
 		navImportFrom.ContextFlyout!.ShowAt( navImportFrom );
-	}
-
-	private void UserProfileMenuItemTapped( object? sender, RoutedEventArgs e )
-	{
-		if( sender is Control { Tag: UserProfile profile } )
-		{
-			ActiveUserProfile = profile;
-		}
 	}
 
 	private void NavView_OnSelectionChanged( object? sender, NavigationViewSelectionChangedEventArgs e )
@@ -270,7 +267,8 @@ public partial class MainView : UserControl
 			}
 		};
 
-		var dataWasImported = false;
+		var      dataWasImported         = false;
+		DateTime mostRecentAvailableDate = DateTime.Today;
 
 		progressDialog.Closing += ( dialog, args ) =>
 		{
@@ -283,6 +281,7 @@ public partial class MainView : UserControl
 			progressDialog.SetProgressBarState( 0, TaskDialogProgressState.Indeterminate );
 
 			var importStartDate = GetImportStartDate( ActiveUserProfile.UserProfileID, SourceType.HealthAPI );
+			mostRecentAvailableDate = importStartDate;
 			
 			var metaSessions = await GoogleFitImporter.ImportAsync( importStartDate, DateTime.Today.AddDays( 1 ), accessTokenInfo.AccessToken, progressNotify );
 			if( metaSessions == null || metaSessions.Count == 0 )
@@ -290,6 +289,8 @@ public partial class MainView : UserControl
 				progressDialog.Hide();
 				return;
 			}
+
+			mostRecentAvailableDate = metaSessions.LastOrDefault()!.EndTime.Date;
 			
 			progressNotify( $"Merging sessions and events..." );
 
@@ -378,7 +379,7 @@ public partial class MainView : UserControl
 
 		if( !dataWasImported )
 		{
-			const string upToDate = "All Google Fit data was already up to date.";
+			string upToDate = $"All Google Fit data was already up to date.\nMost recent date available: {mostRecentAvailableDate:D}";
 			
 			var dialog = MessageBoxManager.GetMessageBoxStandard(
 				$"Import from Google Fit",
@@ -985,24 +986,24 @@ public partial class MainView : UserControl
 			throw new InvalidOperationException();
 		}
 
-		navProfile.Tapped += ( sender, args ) =>
-		{
-			menu.ShowAt( navProfile );
-		};
+		menu.Items.Clear();
 
+		// Always show the logged in user profile first 
+		addProfileMenuItem( ActiveUserProfile );
+		
 		var profiles = UserProfileStore.SelectAll();
-		foreach( var profile in profiles )
-		{
-			var menuItem = new MenuItem()
-			{
-				Header = profile.UserName,
-				Icon   = new SymbolIcon() { Symbol = Symbol.Contact },
-				Tag    = profile,
-			};
 
-			menuItem.Click += UserProfileMenuItemTapped; 
-			
-			menu.Items.Add( menuItem );
+		if( profiles.Count > 1 )
+		{
+			menu.Items.Add( new Separator() );
+
+			foreach( var profile in profiles )
+			{
+				if( profile.UserProfileID != ActiveUserProfile.UserProfileID )
+				{
+					addProfileMenuItem( profile );
+				}
+			}
 		}
 
 		menu.Items.Add( new Separator() );
@@ -1015,16 +1016,58 @@ public partial class MainView : UserControl
 
 		newProfileMenuItem.Click += async ( sender, args ) =>
 		{
-			var msgBox = MessageBoxManager.GetMessageBoxStandard(
-				"Create a new User Profile",
-				"This functionality has not yet been implemented",
-				ButtonEnum.Ok,
-				Icon.Error );
+			var newProfile = new UserProfile();
+			
+			var contentView = new EditUserProfileView()
+			{
+				DataContext = newProfile
+			};
 
-			await msgBox.ShowWindowDialogAsync( this.FindAncestorOfType<Window>() );
+			var dialog = new TaskDialog()
+			{
+				Title = $"New User Profile",
+				Buttons =
+				{
+					new TaskDialogButton( "Save", TaskDialogStandardResult.Yes ),
+					TaskDialogButton.CancelButton,
+				},
+				XamlRoot = (Visual)VisualRoot!,
+				Content  = contentView,
+				MaxWidth = 800,
+			};
+		
+			var dialogResult = await dialog.ShowAsync();
+
+			if( (TaskDialogStandardResult)dialogResult == TaskDialogStandardResult.Yes && !string.IsNullOrEmpty( newProfile.UserName.Trim() ) )
+			{
+				if( UserProfileStore.Insert( newProfile ) )
+				{
+					ActiveUserProfile = newProfile;
+				}
+			}
 		};
 
 		menu.Items.Add( newProfileMenuItem );
+		
+		return;
+
+		void addProfileMenuItem( UserProfile profile )
+		{
+			var menuItem = new MenuItem()
+			{
+				Header = profile.UserName,
+				Icon   = new SymbolIcon() { Symbol = Symbol.Contact },
+				Tag    = profile,
+			};
+
+			menuItem.Click += ( sender, args ) =>
+			{
+				ActiveUserProfile = profile;
+				menu.Hide();
+			};
+
+			menu.Items.Add( menuItem );
+		}
 	}
 
 	private static DailyReport LoadDailyReport( int profileId, DateTime? date )

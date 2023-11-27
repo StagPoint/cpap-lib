@@ -14,9 +14,13 @@ namespace cpap_app.Views;
 
 public partial class HomeView : UserControl
 {
+	public UserProfile ActiveUserProfile { get; set; }
+	
 	public HomeView()
 	{
 		InitializeComponent();
+		
+		ActiveUserProfile = UserProfileStore.GetLastUserProfile();
 	}
 
 	protected override void OnPropertyChanged( AvaloniaPropertyChangedEventArgs change )

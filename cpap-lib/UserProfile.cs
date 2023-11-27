@@ -6,12 +6,13 @@ namespace cpaplib
 	{
 		public int      UserProfileID { get; set; }
 		public DateTime LastLogin     { get; set; } = DateTime.Now;
+		public string   MachineID     { get; set; } = string.Empty;
 
-		public string     UserName            { get; set; } = "DEFAULT USERNAME";
+		public string     UserName            { get; set; } = string.Empty;
 		public string     FirstName           { get; set; } = string.Empty;
 		public string     LastName            { get; set; } = string.Empty;
 		public DateTime   DateOfBirth         { get; set; } = DateTime.Today.AddYears( -21 );
-		public GenderType Gender              { get; set; } = GenderType.Unspecified;
+		public GenderType Gender              { get; set; } = GenderType.Male;
 		public int        HeightInCentimeters { get; set; } = 178;
 		public double     WeightInKilograms   { get; set; } = 80;
 
