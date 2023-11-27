@@ -114,9 +114,9 @@ public partial class MainView : UserControl
 		AddHandler( ImportOximetryRequestedEvent, HandleImportRequestOximetry );
 		AddHandler( LoadDateRequestedEvent,       HandleLoadDateRequest );
 
-		btnImportCPAP.Tapped      += HandleImportRequestCPAP;
-		btnImportOximetry.Tapped  += HandleImportRequestOximetry;
-		btnImportGoogleFit.Tapped += HandleImportRequestGoogleFit;
+		btnImportCPAP.Click      += HandleImportRequestCPAP;
+		btnImportOximetry.Click  += HandleImportRequestOximetry;
+		btnImportGoogleFit.Click += HandleImportRequestGoogleFit;
 		
 		ActiveUserProfile = UserProfileStore.GetLastUserProfile();
 
@@ -148,6 +148,11 @@ public partial class MainView : UserControl
 	#endregion 
 	
 	#region Event handlers
+
+	private void NavImportFrom_OnTapped( object? sender, TappedEventArgs e )
+	{
+		navImportFrom.ContextFlyout!.ShowAt( navImportFrom );
+	}
 
 	private void UserProfileMenuItemTapped( object? sender, TappedEventArgs e )
 	{
@@ -212,7 +217,7 @@ public partial class MainView : UserControl
 		}
 	}
 
-	private async void HandleImportRequestGoogleFit( object? sender, TappedEventArgs e )
+	private async void HandleImportRequestGoogleFit( object? sender, RoutedEventArgs e )
 	{
 		var clientConfig = AuthorizationConfigStore.GetConfig();
 		if( !clientConfig.IsValid )
@@ -552,12 +557,12 @@ public partial class MainView : UserControl
 		return (TaskDialogStandardResult)dialogResult == TaskDialogStandardResult.OK && clientConfig.IsValid;
 	}
 
-	private void HandleImportRequestCPAP( object? sender, TappedEventArgs e )
+	private void HandleImportRequestCPAP( object? sender, RoutedEventArgs e )
 	{
 		HandleImportRequestCPAP( sender, new ImportRequestEventArgs( ImportCpapRequestedEvent ) );
 	}
 
-	private void HandleImportRequestOximetry( object? sender, TappedEventArgs e )
+	private void HandleImportRequestOximetry( object? sender, RoutedEventArgs e )
 	{
 		HandleImportRequestOximetry();
 	}

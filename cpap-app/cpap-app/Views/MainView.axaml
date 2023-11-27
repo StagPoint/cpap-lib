@@ -38,27 +38,29 @@
                         <ui:FontIconSource Glyph="&#xE9D9;" FontFamily="Segoe MDL2 Assets" />
                     </ui:NavigationViewItem.IconSource>
                 </ui:NavigationViewItem>
-                <ui:NavigationViewItem Content="Import From...">
+                <ui:NavigationViewItem Name="navImportFrom" Content="Import From..." Tapped="NavImportFrom_OnTapped">
                     <ui:NavigationViewItem.IconSource>
                         <ui:SymbolIconSource Symbol="Upload" />
                     </ui:NavigationViewItem.IconSource>
-                    <ui:NavigationViewItem.MenuItems>
-                        <ui:NavigationViewItem Name="btnImportCPAP" Content="CPAP SD Card">
-                            <ui:NavigationViewItem.IconSource>
-                                <ui:FontIconSource Glyph="&#xE7F1;" FontFamily="Segoe MDL2 Assets" />
-                            </ui:NavigationViewItem.IconSource>
-                        </ui:NavigationViewItem>
-                        <ui:NavigationViewItem Name="btnImportOximetry" Content="Pulse Oximeter">
-                            <ui:NavigationViewItem.IconSource>
-                                <ui:FontIconSource Glyph="&#xE8EA;" FontFamily="Segoe MDL2 Assets" />
-                            </ui:NavigationViewItem.IconSource>
-                        </ui:NavigationViewItem>
-                        <ui:NavigationViewItem Name="btnImportGoogleFit" Content="Google Fit">
-                            <ui:NavigationViewItem.IconSource>
-                                <ui:ImageIconSource Source="/Assets/google_fit_icon.png" />
-                            </ui:NavigationViewItem.IconSource>
-                        </ui:NavigationViewItem>
-                    </ui:NavigationViewItem.MenuItems>
+                    <ui:NavigationViewItem.ContextFlyout>
+                        <MenuFlyout>
+                            <MenuItem Name="btnImportCPAP" Header="CPAP SD Card">
+                                <MenuItem.Icon>
+                                    <ui:FontIcon Glyph="&#xE7F1;" FontFamily="{DynamicResource SymbolThemeFontFamily}" />
+                                </MenuItem.Icon>
+                            </MenuItem>
+                            <MenuItem Name="btnImportOximetry" Header="Pulse Oximetry File">
+                                <MenuItem.Icon>
+                                    <ui:FontIcon Glyph="&#xE8EA;" FontFamily="{DynamicResource SymbolThemeFontFamily}" />
+                                </MenuItem.Icon>
+                            </MenuItem>
+                            <MenuItem Name="btnImportGoogleFit" Header="Google Fit">
+                                <MenuItem.Icon>
+                                    <ui:ImageIcon Source="/Assets/google_fit_icon.png" />
+                                </MenuItem.Icon>
+                            </MenuItem>
+                        </MenuFlyout>
+                    </ui:NavigationViewItem.ContextFlyout>
                 </ui:NavigationViewItem>
                 <ui:NavigationViewItem Name="navHistory" Content="History" Tag="{x:Type views:HistoryView}">
                     <ui:NavigationViewItem.IconSource>
