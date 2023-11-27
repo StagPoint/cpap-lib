@@ -49,8 +49,12 @@ namespace cpaplib
 				
 			var results = new List<BreathRecord>();
 
-			var filtered    = ButterworthFilter.Filter( flowSignal.Samples.ToArray(), flowSignal.FrequencyInHz, filterCutoff );
-			var slidingMean = new MovingAverageCalculator( baselineWindowSize );
+			var filtered = ButterworthFilter.Filter( flowSignal.Samples.ToArray(), flowSignal.FrequencyInHz, filterCutoff );
+			
+			// There's a good argument to be made for using a variable baseline instead of just assuming a zero baseline,
+			// but for now this has been disabled in order to generate results that are as close as possible to other 
+			// reference implementations that use a static baseline. 
+			//var slidingMean = new MovingAverageCalculator( baselineWindowSize );
 
 			// Always start on an inspiration. This happens by default on ResMed machines as far as I can tell, but better to be certain.  
 			int startIndex = 0;

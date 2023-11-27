@@ -486,8 +486,9 @@ After:
 
 		private static void GenerateFlowReductionEvents( DailyReport day )
 		{
-			const double FLOW_REDUCTION_THRESHOLD = 0.5;
-			const int    WINDOW_LENGTH            = 120;
+			const double MINIMUM_EVENT_DURATION   = 8.0; // Only flag flow reductions that last this number of seconds or more
+			const double FLOW_REDUCTION_THRESHOLD = 0.5; // Flag flow reductions of 50% or more
+			const int    WINDOW_LENGTH            = 120; // Two minutes, per 2007 AASM Manual
 
 			foreach( var session in day.Sessions )
 			{
@@ -497,7 +498,7 @@ After:
 					return;
 				}
 
-				var absFlow      = signal.Samples.Select( x => x = Math.Abs( x ) ).ToArray();
+				var absFlow      = signal.Samples.Select( Math.Abs ).ToArray();
 				var filteredFlow = ButterworthFilter.Filter( absFlow, signal.FrequencyInHz, 1 );
 				var calc         = new MovingAverageCalculator( (int)(WINDOW_LENGTH * signal.FrequencyInHz) );
 
@@ -535,7 +536,7 @@ After:
 							{
 								var duration = (i - startIndex) * interval;
 
-								if( duration >= 8.0 )
+								if( duration >= MINIMUM_EVENT_DURATION )
 								{
 									// Note that all machine-generated events "start" at the end of the event.
 									// TODO: It might be better to rename ReportedEvent.StartTime to ReportedEvent.MarkerTime

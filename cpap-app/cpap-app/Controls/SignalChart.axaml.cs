@@ -826,7 +826,7 @@ public partial class SignalChart : UserControl
 			TopLevel.GetTopLevel( this )!,
 			"Visualize Root Mean Squares",
 			"Enter the length of the window, in seconds",
-			60,
+			120,
 			2,
 			60 * 60 * 60
 		);
