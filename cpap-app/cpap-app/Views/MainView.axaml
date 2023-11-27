@@ -78,11 +78,10 @@
                     </ui:NavigationViewItem.IconSource>
                 </ui:NavigationViewItem>
                 <ui:NavigationViewItem Name="navProfile" Content="Profile" IconSource="Contact">
-                    <ui:NavigationViewItem.DataTemplates>
-                        <DataTemplate DataType="{x:Type cpaplib:UserProfile}">
-                            <ui:NavigationViewItem IconSource="Contact2" Tag="{Binding}" Content="{Binding UserName}" Tapped="UserProfileMenuItemTapped" />
-                        </DataTemplate>
-                    </ui:NavigationViewItem.DataTemplates>
+                    <ui:NavigationViewItem.ContextFlyout>
+                        <MenuFlyout>
+                        </MenuFlyout>
+                    </ui:NavigationViewItem.ContextFlyout>
                 </ui:NavigationViewItem>
             </ui:NavigationView.MenuItems>
 

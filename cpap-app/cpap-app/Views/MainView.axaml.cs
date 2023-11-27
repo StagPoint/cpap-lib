@@ -119,8 +119,7 @@ public partial class MainView : UserControl
 		btnImportGoogleFit.Click += HandleImportRequestGoogleFit;
 		
 		ActiveUserProfile = UserProfileStore.GetLastUserProfile();
-
-		navProfile.MenuItemsSource = UserProfileStore.SelectAll();
+		LoadProfileMenu();
 		
 		NavView.PaneDisplayMode = NavigationViewPaneDisplayMode.Left;
 	}
@@ -154,7 +153,7 @@ public partial class MainView : UserControl
 		navImportFrom.ContextFlyout!.ShowAt( navImportFrom );
 	}
 
-	private void UserProfileMenuItemTapped( object? sender, TappedEventArgs e )
+	private void UserProfileMenuItemTapped( object? sender, RoutedEventArgs e )
 	{
 		if( sender is Control { Tag: UserProfile profile } )
 		{
@@ -978,6 +977,55 @@ public partial class MainView : UserControl
 	#endregion 
 	
 	#region Private functions
+
+	private void LoadProfileMenu()
+	{
+		if( navProfile.ContextFlyout is not MenuFlyout menu )
+		{
+			throw new InvalidOperationException();
+		}
+
+		navProfile.Tapped += ( sender, args ) =>
+		{
+			menu.ShowAt( navProfile );
+		};
+
+		var profiles = UserProfileStore.SelectAll();
+		foreach( var profile in profiles )
+		{
+			var menuItem = new MenuItem()
+			{
+				Header = profile.UserName,
+				Icon   = new SymbolIcon() { Symbol = Symbol.Contact },
+				Tag    = profile,
+			};
+
+			menuItem.Click += UserProfileMenuItemTapped; 
+			
+			menu.Items.Add( menuItem );
+		}
+
+		menu.Items.Add( new Separator() );
+
+		var newProfileMenuItem = new MenuItem()
+		{
+			Header = "New Profile",
+			Icon = new SymbolIcon() { Symbol = Symbol.AddFriend },
+		};
+
+		newProfileMenuItem.Click += async ( sender, args ) =>
+		{
+			var msgBox = MessageBoxManager.GetMessageBoxStandard(
+				"Create a new User Profile",
+				"This functionality has not yet been implemented",
+				ButtonEnum.Ok,
+				Icon.Error );
+
+			await msgBox.ShowWindowDialogAsync( this.FindAncestorOfType<Window>() );
+		};
+
+		menu.Items.Add( newProfileMenuItem );
+	}
 
 	private static DailyReport LoadDailyReport( int profileId, DateTime? date )
 	{
