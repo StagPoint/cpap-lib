@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 using Avalonia.Platform.Storage;
 
@@ -18,10 +19,10 @@ public class ViatomImporterCSV : IOximetryImporter
 	// Sample filename: "O2Ring 0009_1696377606000.csv"
 	// Sample filename: "WearO2 1545_1697360836000.csv"
 	// Header: "Time,Oxygen Level,Pulse Rate,Motion"
-	
-	#region Public properties 
-	
-	public string FriendlyName  { get => "Viatom Mobile CSV"; }
+
+	#region Public properties
+
+	public string FriendlyName { get => "Viatom Mobile CSV"; }
 
 	public string Source { get => "Viatom Pulse Oximeter"; }
 
@@ -37,17 +38,17 @@ public class ViatomImporterCSV : IOximetryImporter
 		}
 	};
 
-	public string FilenameMatchPattern { get => @"\w+\s*\d{4}_\d{13}\.csv"; }
-	
-	#endregion 
-	
-	#region Private fields 
+	public Regex FilenameMatchPattern { get => new Regex( @"\w+\s*\d{4}_\d{13}\.csv", RegexOptions.IgnoreCase ); }
+
+	#endregion
+
+	#region Private fields
 
 	private static string[] _expectedHeaders = { "Time", "Oxygen Level", "Pulse Rate", "Motion" };
-	
-	#endregion 
-	
-	#region Public functions 
+
+	#endregion
+
+	#region Public functions
 
 	public ImportedData? Load( string filename, Stream stream, PulseOximetryImportOptions options, OximetryEventGeneratorConfig? eventConfig = null )
 	{
@@ -73,7 +74,7 @@ public class ViatomImporterCSV : IOximetryImporter
 			MaxValue          = 100,
 			UnitOfMeasurement = "%",
 		};
-		
+
 		Signal pulse = new Signal
 		{
 			Name              = SignalNames.Pulse,
@@ -82,7 +83,7 @@ public class ViatomImporterCSV : IOximetryImporter
 			MaxValue          = 120,
 			UnitOfMeasurement = "bpm",
 		};
-		
+
 		Signal movement = new Signal
 		{
 			Name              = SignalNames.Movement,
@@ -123,7 +124,7 @@ public class ViatomImporterCSV : IOximetryImporter
 			var line = reader.ReadLine();
 
 			lastDateTime = currentDateTime;
-			
+
 			if( string.IsNullOrEmpty( line ) )
 			{
 				return null;
@@ -137,11 +138,11 @@ public class ViatomImporterCSV : IOximetryImporter
 			}
 
 			currentDateTime = currentDateTime.AddSeconds( options.TimeAdjust );
-			
+
 			if( isStartRecord )
 			{
 				session.StartTime = currentDateTime;
-				isStartRecord    = false;
+				isStartRecord     = false;
 			}
 
 			session.EndTime = currentDateTime;
@@ -226,22 +227,22 @@ public class ViatomImporterCSV : IOximetryImporter
 		{
 			// Viatom CSV files always end with two lines of invalid data. Ignore those.
 			faultEvents.RemoveAt( faultEvents.Count - 1 );
-				
+
 			result.Events.AddRange( faultEvents );
 		}
 
 		return result;
 	}
-	
+
 	#endregion
-	
-	#region Private functions 
-	
+
+	#region Private functions
+
 	private static bool parseDate( string lineData, out DateTime currentDateTime )
 	{
 		// Apparently Viatom/Wellue will occasionally just randomly change their file format for no apparent reason, 
 		// and one of those recent changes involves the timestamp format. Sheesh. 
-		
+
 		// Example format "22:48:36 26/10/2023"
 		if( DateTime.TryParseExact( lineData, "HH:mm:ss dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out currentDateTime ) )
 		{
@@ -257,5 +258,5 @@ public class ViatomImporterCSV : IOximetryImporter
 		return false;
 	}
 
-	#endregion 
+	#endregion
 }

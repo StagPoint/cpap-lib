@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 using Avalonia.Platform.Storage;
 
@@ -15,10 +16,10 @@ public class EmayImporterCSV : IOximetryImporter
 	// NOTES:
 	// Sample filename: "EMAY SpO2-20230713-045916.csv"
 	// Header: "Date,Time,SpO2(%),PR(bpm)"
-	
-	#region Public properties 
-	
-	public string FriendlyName  { get => "EMAY Pulse Oximeter"; }
+
+	#region Public properties
+
+	public string FriendlyName { get => "EMAY Pulse Oximeter"; }
 
 	public string Source { get => "EMAY"; }
 
@@ -34,21 +35,21 @@ public class EmayImporterCSV : IOximetryImporter
 		}
 	};
 
-	public string FilenameMatchPattern { get => @"EMAY SpO2-\d{8}-\d{6}\.csv"; }
-	
-	#endregion 
-	
-	#region Private fields 
+	public Regex FilenameMatchPattern { get => new Regex( @"EMAY SpO2-\d{8}-\d{6}\.csv", RegexOptions.IgnoreCase ); }
+
+	#endregion
+
+	#region Private fields
 
 	private static string[] _expectedHeaders = { "Date", "Time", "SpO2(%)", "PR(bpm)" };
-	
-	#endregion 
-	
-	#region Public functions 
+
+	#endregion
+
+	#region Public functions
 
 	public ImportedData? Load( string filename, Stream stream, PulseOximetryImportOptions options, OximetryEventGeneratorConfig? eventConfig = null )
 	{
-		using var reader    = new StreamReader( stream, Encoding.Default, leaveOpen: true );
+		using var reader = new StreamReader( stream, Encoding.Default, leaveOpen: true );
 
 		var firstLine = reader.ReadLine();
 		if( string.IsNullOrEmpty( firstLine ) )
@@ -70,7 +71,7 @@ public class EmayImporterCSV : IOximetryImporter
 			MaxValue          = 100,
 			UnitOfMeasurement = "%",
 		};
-		
+
 		Signal pulse = new Signal
 		{
 			Name              = SignalNames.Pulse,
@@ -104,15 +105,15 @@ public class EmayImporterCSV : IOximetryImporter
 			}
 
 			var lineData = line.Split( ',' );
-				
+
 			var dateTimeText = $"{lineData[ 0 ]} {lineData[ 1 ]}";
 			if( !DateTime.TryParse( dateTimeText, out DateTime dateTimeValue ) )
 			{
 				return null;
 			}
-			
+
 			dateTimeValue = dateTimeValue.AddSeconds( options.TimeAdjust );
-				
+
 			if( isStartRecord )
 			{
 				session.StartTime = dateTimeValue;
@@ -131,7 +132,7 @@ public class EmayImporterCSV : IOximetryImporter
 				// EMAY pulse oximeters may leave the SpO2 and PR fields blank to indicate an invalid reading
 				// TODO: How to handle invalid records in imported files. Split the file, duplicate last good reading, etc?
 				oxygen.Samples.Add( lastGoodOxy );
-				
+
 				if( invalidDataFlag == null )
 				{
 					invalidDataFlag = new ReportedEvent
@@ -162,7 +163,7 @@ public class EmayImporterCSV : IOximetryImporter
 				pulse.Samples.Add( lastGoodHR );
 			}
 		}
-			
+
 		oxygen.StartTime = pulse.StartTime = session.StartTime;
 		oxygen.EndTime   = pulse.EndTime   = session.EndTime;
 
@@ -182,12 +183,12 @@ public class EmayImporterCSV : IOximetryImporter
 		{
 			// Viatom CSV files always end with two lines of invalid data. Ignore those.
 			faultEvents.RemoveAt( faultEvents.Count - 1 );
-				
+
 			result.Events.AddRange( faultEvents );
 		}
 
 		return result;
 	}
-	
-	#endregion 
+
+	#endregion
 }

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 using Avalonia;
@@ -119,15 +118,6 @@ public partial class MainView : UserControl
 		btnImportOximetry.Tapped  += HandleImportRequestOximetry;
 		btnImportGoogleFit.Tapped += HandleImportRequestGoogleFit;
 		
-		foreach( var importer in OximetryImporterRegistry.RegisteredImporters )
-		{
-			btnImportOximetry.MenuItems.Add( new NavigationViewItem()
-			{
-				Content = importer.FriendlyName,
-				Tag = importer, 
-			} );
-		}
-		
 		ActiveUserProfile = UserProfileStore.GetLastUserProfile();
 
 		navProfile.MenuItemsSource = UserProfileStore.SelectAll();
@@ -218,9 +208,6 @@ public partial class MainView : UserControl
 
 					return;
 				}
-				case IOximetryImporter importer:
-					HandleImportRequestOximetry( importer );
-					break;
 			}
 		}
 	}
@@ -572,11 +559,10 @@ public partial class MainView : UserControl
 
 	private void HandleImportRequestOximetry( object? sender, TappedEventArgs e )
 	{
-		// TODO: This really needs to be changed so that it's a generic "Import Oximetry CSV File" which selects the importer based on individual files selected
-		HandleImportRequestOximetry( OximetryImporterRegistry.RegisteredImporters[ 0 ] );
+		HandleImportRequestOximetry();
 	}
 	
-	private async void HandleImportRequestOximetry( IOximetryImporter importer )
+	private async void HandleImportRequestOximetry()
 	{
 		var sp = TopLevel.GetTopLevel( this )?.StorageProvider;
 		if( sp == null )
@@ -584,12 +570,22 @@ public partial class MainView : UserControl
 			throw new Exception( $"Failed to get a reference to a {nameof( IStorageProvider )} instance." );
 		}
 
+		var genericFileTypeFilter = new FilePickerFileType( "Pulse Oximeter CSV File" )
+		{
+			Patterns                    = new[] { "*.csv" },
+			AppleUniformTypeIdentifiers = new[] { "public.plain-text" },
+			MimeTypes                   = new[] { "text/plain" }
+		};
+
+		var fileTypeFilters = OximetryImporterRegistry.GetFileTypeFilters();
+		fileTypeFilters.Add( genericFileTypeFilter );
+
 		var filePicker = await sp.OpenFilePickerAsync( new FilePickerOpenOptions()
 		{
-			Title                  = $"Import from {importer.FriendlyName}",
+			Title                  = $"Import from Pulse Oximetry File",
 			SuggestedStartLocation = null,
 			AllowMultiple          = true,
-			FileTypeFilter         = importer.FileTypeFilters
+			FileTypeFilter         = fileTypeFilters,
 		} );
 
 		if( filePicker.Count == 0 )
@@ -597,7 +593,6 @@ public partial class MainView : UserControl
 			return;
 		}
 
-		var                matcher      = new Regex( importer.FilenameMatchPattern, RegexOptions.IgnoreCase );
 		List<MetaSession>  metaSessions = new List<MetaSession>();
 		List<ImportedData> importedData = new List<ImportedData>();
 		MetaSession?       metaSession  = null;
@@ -605,7 +600,7 @@ public partial class MainView : UserControl
 		var td = new TaskDialog
 		{
 			XamlRoot        = (Visual)VisualRoot!,
-			Title           = $"Import from {importer.FriendlyName}",
+			Title           = $"Import from Pulse Oximetry File",
 			ShowProgressBar = true,
 			IconSource      = new SymbolIconSource { Symbol = Symbol.Upload },
 			SubHeader       = "Performing Import",
@@ -631,10 +626,10 @@ public partial class MainView : UserControl
 				for( int i = 0; i < filePicker.Count; i++ )
 				{
 					var fileItem = filePicker[ i ];
-					if( !matcher.IsMatch( fileItem.Name ) )
+					var importers = OximetryImporterRegistry.FindCompatibleImporters( fileItem.Name );
+					if( importers.Count == 0 )
 					{
 						// TODO: Need to log import failures and show them to the user
-						//Debug.WriteLine( $"File '{fileItem.Name}' does not match the file naming convention for '{importer.FriendlyName}'" );
 						continue;
 					}
 
@@ -651,10 +646,14 @@ public partial class MainView : UserControl
 						var importOptions        = new PulseOximetryImportOptions() { TimeAdjust = -60 };
 						var eventGeneratorConfig = new OximetryEventGeneratorConfig();
 
-						var data = importer.Load( fileItem.Name, file, importOptions, eventGeneratorConfig );
-						if( data is { Sessions.Count: > 0 } )
+						foreach( var importer in importers )
 						{
-							importedData.Add( data );
+							var data = importer.Load( fileItem.Name, file, importOptions, eventGeneratorConfig );
+							if( data is { Sessions.Count: > 0 } )
+							{
+								importedData.Add( data );
+								break;
+							}
 						}
 					}
 					catch( IOException e )
@@ -778,7 +777,7 @@ public partial class MainView : UserControl
 			//const string noMatchFound = "One or more of the files you selected could not be matched to any existing CPAP sessions.";
 			
 			var dialog = MessageBoxManager.GetMessageBoxStandard(
-				$"Import from {importer.FriendlyName}",
+				$"Import from Pulse Oximetry File",
 				upToDate,
 				ButtonEnum.Ok,
 				Icon.Warning );
@@ -823,8 +822,7 @@ public partial class MainView : UserControl
 
 	private void HandleImportRequestOximetry( object? sender, ImportRequestEventArgs e )
 	{
-		// TODO: This really needs to be changed so that it's a generic "Import Oximetry CSV File" which selects the importer based on individual files selected
-		HandleImportRequestOximetry( OximetryImporterRegistry.RegisteredImporters[ 0 ] );
+		HandleImportRequestOximetry();
 	}
 	
 	private async void HandleImportRequestCPAP( object? sender, ImportRequestEventArgs e )

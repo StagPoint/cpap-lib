@@ -1,4 +1,6 @@
-﻿namespace cpap_app.Importers;
+﻿using Avalonia.Platform.Storage;
+
+namespace cpap_app.Importers;
 
 using System.Collections.Generic;
 
@@ -13,5 +15,32 @@ public static class OximetryImporterRegistry
 		RegisteredImporters.Add( new EmayImporterCSV() );
 		//RegisteredLoaders.Add( new EdfLoader() );
 		//RegisteredLoaders.Add( new ViatomBinaryImporter() );
+	}
+	
+	public static List<FilePickerFileType> GetFileTypeFilters()
+	{
+		var filters = new List<FilePickerFileType>();
+
+		foreach( var importer in RegisteredImporters )
+		{
+			filters.AddRange( importer.FileTypeFilters );
+		}
+
+		return filters;
+	}
+	
+	public static List<IOximetryImporter> FindCompatibleImporters( string filename )
+	{
+		var result = new List<IOximetryImporter>();
+		
+		foreach( var importer in RegisteredImporters )
+		{
+			if( importer.FilenameMatchPattern.IsMatch( filename ) )
+			{
+				result.Add( importer );
+			}
+		}
+
+		return result;
 	}
 }

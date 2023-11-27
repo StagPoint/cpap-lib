@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.RegularExpressions;
 
 using Avalonia.Platform.Storage;
 
@@ -12,7 +13,7 @@ public interface IOximetryImporter
 	public string                   Source               { get; }
 	public string                   FileExtension        { get; }
 	public List<FilePickerFileType> FileTypeFilters      { get; }
-	public string                   FilenameMatchPattern { get; }
+	public Regex                    FilenameMatchPattern { get; }
 
 	public ImportedData? Load( string filename, Stream stream, PulseOximetryImportOptions options, OximetryEventGeneratorConfig? eventConfig = null );
 }

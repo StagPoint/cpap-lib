@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 using Avalonia.Platform.Storage;
 
@@ -16,10 +17,10 @@ public class ViatomDesktopImporterCSV : IOximetryImporter
 	// NOTES:
 	// Sample filename: "Oxylink-20231004051903_OXIRecord"
 	// Header: "Time,SpO2(%),Pulse Rate(bpm),Motion,SpO2 Reminder,PR Reminder,"
-	
-	#region Public properties 
-	
-	public string FriendlyName  { get => "Viatom Desktop CSV"; }
+
+	#region Public properties
+
+	public string FriendlyName { get => "Viatom Desktop CSV"; }
 
 	public string Source { get => "Viatom Pulse Oximeter"; }
 
@@ -35,19 +36,19 @@ public class ViatomDesktopImporterCSV : IOximetryImporter
 		}
 	};
 
-	public string FilenameMatchPattern { get => @"\w+-\d{14}_OXIRecord\.csv"; }
-	
-	#endregion 
-	
-	#region Private fields 
+	public Regex FilenameMatchPattern { get => new Regex( @"\w+-\d{14}_OXIRecord\.csv", RegexOptions.IgnoreCase ); }
+
+	#endregion
+
+	#region Private fields
 
 	private static string[] _expectedHeaders = { "Time", "SpO2(%)", "Pulse Rate(bpm)", "Motion", "SpO2 Reminder", "PR Reminder" };
-	
-	#endregion 
-	
-	#region Public functions 
 
-	public ImportedData? Load( string filename, Stream stream, PulseOximetryImportOptions options, OximetryEventGeneratorConfig? eventConfig = null  )
+	#endregion
+
+	#region Public functions
+
+	public ImportedData? Load( string filename, Stream stream, PulseOximetryImportOptions options, OximetryEventGeneratorConfig? eventConfig = null )
 	{
 		using var reader = new StreamReader( stream, Encoding.Default, leaveOpen: true );
 
@@ -59,7 +60,7 @@ public class ViatomDesktopImporterCSV : IOximetryImporter
 
 		// NOTE: The O2 Insight app adds an additional erroneous comma to every line
 		var headers = firstLine.TrimEnd( ',' ).Split( ',' );
-		
+
 		if( !_expectedHeaders.SequenceEqual( headers ) )
 		{
 			return null;
@@ -73,7 +74,7 @@ public class ViatomDesktopImporterCSV : IOximetryImporter
 			MaxValue          = 100,
 			UnitOfMeasurement = "%",
 		};
-		
+
 		Signal pulse = new Signal
 		{
 			Name              = SignalNames.Pulse,
@@ -82,7 +83,7 @@ public class ViatomDesktopImporterCSV : IOximetryImporter
 			MaxValue          = 120,
 			UnitOfMeasurement = "bpm",
 		};
-		
+
 		Signal movement = new Signal
 		{
 			Name              = SignalNames.Movement,
@@ -115,12 +116,12 @@ public class ViatomDesktopImporterCSV : IOximetryImporter
 		int  lastGoodMovement = 0;
 
 		DateTime currentDateTime = DateTime.MinValue;
-		DateTime lastDateTime  = DateTime.MinValue;
+		DateTime lastDateTime    = DateTime.MinValue;
 
 		while( !reader.EndOfStream )
 		{
 			lastDateTime = currentDateTime;
-			
+
 			var line = reader.ReadLine();
 
 			if( string.IsNullOrEmpty( line ) )
@@ -130,7 +131,7 @@ public class ViatomDesktopImporterCSV : IOximetryImporter
 
 			// NOTE: The O2 Insight app adds an additional erroneous comma to every line
 			line = line.TrimEnd( ',' );
-			
+
 			// The O2 Insight app stores the date/time as a quoted column
 			var quoteIndex = line.LastIndexOf( '"' );
 			var datePart   = line.Substring( 1, quoteIndex - 1 );
@@ -139,18 +140,18 @@ public class ViatomDesktopImporterCSV : IOximetryImporter
 			{
 				return null;
 			}
-			
+
 			currentDateTime = currentDateTime.AddSeconds( options.TimeAdjust );
 
 			// Remove the quoted date column and leave the rest of the data (added 2 to skip the quote and the comma)
 			line = line.Substring( quoteIndex + 2 );
 
 			var lineData = line.Split( ',' );
-			
+
 			if( isStartRecord )
 			{
 				session.StartTime = currentDateTime;
-				isStartRecord    = false;
+				isStartRecord     = false;
 			}
 
 			session.EndTime = currentDateTime;
@@ -165,7 +166,7 @@ public class ViatomDesktopImporterCSV : IOximetryImporter
 				// OxyLink pulse oximeters may use "--" to indicate an invalid reading.
 				// The O2 Insight application will use the "out of range" value of 255 to indicate an invalid reading.
 				oxygen.Samples.Add( lastGoodOxy );
-				
+
 				if( invalidDataFlag == null )
 				{
 					invalidDataFlag = new ReportedEvent
@@ -228,27 +229,27 @@ public class ViatomDesktopImporterCSV : IOximetryImporter
 		{
 			result.Events = OximetryEventGenerator.GenerateEvents( eventConfig ?? new OximetryEventGeneratorConfig(), oxygen, pulse );
 		}
-		
+
 		if( faultEvents.Count > 1 )
 		{
 			// Viatom CSV files always end with two lines of invalid data. Ignore those.
 			faultEvents.RemoveAt( faultEvents.Count - 1 );
-				
+
 			result.Events.AddRange( faultEvents );
 		}
 
 		return result;
 	}
-	
-	#endregion 
-	
-	#region Private functions 
-	
+
+	#endregion
+
+	#region Private functions
+
 	private static bool parseDate( string lineData, out DateTime currentDateTime )
 	{
 		// Apparently Viatom/Wellue will occasionally just randomly change their file format for no apparent reason, 
 		// and one of those recent changes involves the timestamp format. Sheesh. 
-		
+
 		// Example format "10:00:45 PM Oct 25 2023"
 		if( DateTime.TryParse( lineData, out currentDateTime ) )
 		{
@@ -264,5 +265,5 @@ public class ViatomDesktopImporterCSV : IOximetryImporter
 		return false;
 	}
 
-	#endregion 
+	#endregion
 }
