@@ -3,33 +3,39 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:controls="clr-namespace:cpap_app.Controls"
+             xmlns:fui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="800"
              x:Class="cpap_app.Views.SignalChartContainer"
              Background="Transparent">
     <DockPanel LastChildFill="True">
-        <StackPanel Name="PinnedCharts" DockPanel.Dock="Top" Background="{DynamicResource SolidBackgroundFillColorSecondaryBrush}">
+        <StackPanel Name="PinnedCharts" DockPanel.Dock="Top"
+                    Background="{DynamicResource SolidBackgroundFillColorSecondaryBrush}">
             <!-- Pinned charts will be added here by the code-behind -->
         </StackPanel>
         <Grid DockPanel.Dock="Bottom" Background="{DynamicResource SolidBackgroundFillColorSecondaryBrush}">
-            <Button Name="VisibleGraphMenuButton" HorizontalAlignment="Right" BorderThickness="2" CornerRadius="0" Padding="8 2" Margin="8 4">
-                <Button.Styles>
-                    <Style Selector="controls|CheckMarkMenuItem">
-                        <!-- NOTE: Without the negative margins, the menu items have too much space between them and
+           <Grid ColumnDefinitions="*,Auto">
+                <fui:RangeSlider Grid.Column="0" Name="VisibleRange" Width="600" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="12 0" Minimum="0" Maximum="1" StepFrequency="0.01" ToolTipStringFormat="P0" />
+                <Button Grid.Column="1" Name="VisibleGraphMenuButton" HorizontalAlignment="Right" BorderThickness="2" CornerRadius="0"
+                        Padding="8 2" Margin="8 4">
+                    <Button.Styles>
+                        <Style Selector="controls|CheckMarkMenuItem">
+                            <!-- NOTE: Without the negative margins, the menu items have too much space between them and
                              clicking the empty space dismisses the menu -->
-                        <Setter Property="Margin" Value="-4 -10 -24 -10" />
-                    </Style>
-                </Button.Styles>
-                <Button.Flyout>
-                    <MenuFlyout Opening="ChartVisibilityMenu_OnOpening">
-                        <!-- Child menu items will be inserted here by the code-behind -->
-                    </MenuFlyout>
-                </Button.Flyout>
-                <Button.Content>
-                    <TextBlock Name="VisibleGraphCount">📈 12 of 14 Graphs</TextBlock>
-                </Button.Content>
-            </Button>
+                            <Setter Property="Margin" Value="-4 -10 -24 -10" />
+                        </Style>
+                    </Button.Styles>
+                    <Button.Flyout>
+                        <MenuFlyout Opening="ChartVisibilityMenu_OnOpening">
+                            <!-- Child menu items will be inserted here by the code-behind -->
+                        </MenuFlyout>
+                    </Button.Flyout>
+                    <Button.Content>
+                        <TextBlock Name="VisibleGraphCount">📈 12 of 14 Graphs</TextBlock>
+                    </Button.Content>
+                </Button>
+           </Grid>
         </Grid>
-        <Separator DockPanel.Dock="Bottom" Background="{DynamicResource FocusStrokeColorOuterBrush}"/>
+        <Separator DockPanel.Dock="Bottom" Background="{DynamicResource FocusStrokeColorOuterBrush}" />
         <ScrollViewer
             Name="ScrollContainer"
             DockPanel.Dock="Top"

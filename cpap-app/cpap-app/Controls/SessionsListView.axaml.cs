@@ -149,10 +149,12 @@ public partial class SessionsListView : UserControl
 		{
 			throw new InvalidOperationException( "Data context does not allow deletion" );
 		}
+
+		var sessionInfo = $"Source: {session.Source}\nStart: {session.StartTime:g}\nEnd: {session.EndTime:g}\nDuration: {session.Duration:g}";
 		
 		var msgBox = MessageBoxManager.GetMessageBoxStandard(
 			"Delete Session?",
-			"Are you sure you wish to delete this Session?\nIt may not be possible to re-import this Session later.",
+			$"Are you sure you wish to delete this Session?\n\n{sessionInfo}\n\nIt may not be possible to re-import this Session later.",
 			ButtonEnum.YesNo,
 			Icon.Question );
 

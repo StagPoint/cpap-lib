@@ -89,9 +89,19 @@ public class GoogleFitImporter
 			{
 				continue;
 			}
+
+			var sessionSource = fitSession.Application.Name;
+			if( string.IsNullOrEmpty( sessionSource ) )
+			{
+				sessionSource = fitSession.Application.PackageName;
+				if( string.IsNullOrEmpty( sessionSource ) )
+				{
+					sessionSource = "Google Fit API";
+				}
+			}
 			
 			var session = ImportSessionFromDataset( bucket.Datasets[ 0 ].Points, startTime, endTime );
-			session.Source = fitSession.Application.Name;
+			session.Source = sessionSource;
 			sessions.Add( session );
 		}
 
@@ -120,7 +130,6 @@ public class GoogleFitImporter
 			Signals    = { signal },
 		};
 
-		int numberOfSamples = (int)Math.Ceiling( (endTime - startTime).TotalSeconds ) / 30;
 		var timeStep        = TimeSpan.FromSeconds( 30 );
 		var currentTime     = startTime;
 		var samples         = signal.Samples;
@@ -164,15 +173,13 @@ public class GoogleFitImporter
 
 		try
 		{
-			WebResponse response = await request.GetResponseAsync();
-			using( StreamReader responseReader = new StreamReader( response.GetResponseStream() ?? throw new InvalidOperationException() ) )
-			{
-				var json = await responseReader.ReadToEndAsync();
+			var       response       = await request.GetResponseAsync();
+			using var responseReader = new StreamReader( response.GetResponseStream() ?? throw new InvalidOperationException() );
+			var       json           = await responseReader.ReadToEndAsync();
 
-				var sessions = JsonConvert.DeserializeObject<ListSessionsResponse>( json );
+			var sessions = JsonConvert.DeserializeObject<ListSessionsResponse>( json );
 
-				return sessions?.Session;
-			}
+			return sessions?.Session;
 		}
 		catch( Exception err )
 		{

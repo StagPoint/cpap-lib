@@ -53,6 +53,11 @@ public partial class SignalChartContainer : UserControl
 		if( change.Property.Name == nameof( DataContext ) )
 		{
 			ResetRenderTimer();
+
+			if( change.NewValue is DailyReport day )
+			{
+				UpdateVisibleRange( day.RecordingStartTime, day.RecordingEndTime );
+			}
 		}
 	}
 
@@ -194,7 +199,8 @@ public partial class SignalChartContainer : UserControl
 		}
 
 		RenderAll( false );
-		
+		UpdateVisibleRange( e.StartTime, e.EndTime );
+
 		ResetRenderTimer();
 	}
 
@@ -222,6 +228,7 @@ public partial class SignalChartContainer : UserControl
 		}
 
 		RenderAll( false );
+		UpdateVisibleRange( startTime, endTime );
 		
 		ResetRenderTimer();
 	}
@@ -284,6 +291,17 @@ public partial class SignalChartContainer : UserControl
 	#endregion
 	
 	#region Private functions
+
+	private void UpdateVisibleRange( DateTime startTime, DateTime endTime )
+	{
+		if( DataContext is DailyReport day )
+		{
+			VisibleRange.Minimum    = 0;
+			VisibleRange.Maximum    = (day.RecordingEndTime - day.RecordingStartTime).TotalSeconds;
+			VisibleRange.RangeStart = (startTime - day.RecordingStartTime).TotalSeconds;
+			VisibleRange.RangeEnd   = (endTime - day.RecordingStartTime).TotalSeconds;
+		}
+	}
 
 	private void LoadSignalVisibilityMenu()
 	{

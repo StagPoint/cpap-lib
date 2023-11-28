@@ -6,11 +6,11 @@
              xmlns:views="clr-namespace:cpap_app.Views"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="900"
              x:Class="cpap_app.Views.HomeView">
-    <StackPanel Width="800" Orientation="Vertical" VerticalAlignment="Top" Spacing="20">
+    <StackPanel Orientation="Vertical" VerticalAlignment="Top" Spacing="20" HorizontalAlignment="Center">
         <Image Source="/Assets/cpap-sd-card-256.png"
                DockPanel.Dock="Left"
                Height="96"
-               Margin="20"
+               Margin="0 20 0 0"
                RenderOptions.BitmapInterpolationMode="HighQuality"/>
         <TextBlock Text="Welcome to the CPAP Data Viewer" HorizontalAlignment="Center" Theme="{DynamicResource TitleLargeTextBlockStyle}" />
         <TextBlock TextWrapping="Wrap" Width="600" HorizontalAlignment="Center" FontSize="16">
@@ -18,10 +18,12 @@
             "Import" button below and selecting the CPAP data folder or drive which contains the STR.edf file, or select a destination 
             from the navigation menu to the left.
         </TextBlock>
-        <TextBlock HorizontalAlignment="Center">
-            <Run>Currently signed in as:</Run>
-            <Run Text="{Binding $parent[views:HomeView].ActiveUserProfile.UserName}" FontWeight="Bold" />
-        </TextBlock>
+        <Border Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}" BorderBrush="{DynamicResource ControlElevationBorderBrush}" BorderThickness="1" Padding="4">
+            <TextBlock HorizontalAlignment="Center" FontSize="16">
+                <Run>Currently signed in as:</Run>
+                <Run Text="{Binding $parent[views:HomeView].ActiveUserProfile.UserName}" FontWeight="Bold" />
+            </TextBlock>
+        </Border>
         <StackPanel Orientation="Horizontal" Spacing="32" HorizontalAlignment="Center" Margin="0 10">
             <Button Name="btnImportCPAP" HorizontalAlignment="Center" ClickMode="Press" Classes="accent" Padding="20 10" Click="BtnImportCPAP_OnClick">
                 <StackPanel Orientation="Horizontal">
