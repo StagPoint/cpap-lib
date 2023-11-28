@@ -1,0 +1,73 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:cpaplib="clr-namespace:cpaplib;assembly=cpap-lib"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="cpap_app.Views.UserProfileList"
+             Padding="2">
+    <UserControl.Styles>
+        <StyleInclude Source="/Styling/GridStyles.axaml" />
+    </UserControl.Styles>
+    <StackPanel Orientation="Vertical" Grid.IsSharedSizeScope="True">
+
+        <!-- Column headers -->
+        <Border Classes="ColumnHeader">
+            <Grid RowDefinitions="Auto">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition SharedSizeGroup="UserProfileListC0" />
+                    <ColumnDefinition SharedSizeGroup="UserProfileListC1" />
+                    <ColumnDefinition SharedSizeGroup="UserProfileListC2" />
+                    <ColumnDefinition SharedSizeGroup="UserProfileListC3" />
+                    <ColumnDefinition SharedSizeGroup="UserProfileListC4" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Grid.Row="0" Text="User Name" />
+                <TextBlock Grid.Column="1" Grid.Row="0" Text="Ventilator" />
+                <TextBlock Grid.Column="2" Grid.Row="0" Text="Serial" />
+                <TextBlock Grid.Column="3" Grid.Row="0" Text="Last Login" />
+                <TextBlock Grid.Column="4" Grid.Row="0" Text="Last Import" />
+                <Rectangle Grid.Column="1" Grid.Row="0" Classes="HeaderSeparator" />
+                <Rectangle Grid.Column="2" Grid.Row="0" Classes="HeaderSeparator" />
+                <Rectangle Grid.Column="3" Grid.Row="0" Classes="HeaderSeparator" />
+                <Rectangle Grid.Column="4" Grid.Row="0" Classes="HeaderSeparator" />
+            </Grid>
+        </Border>
+
+        <!-- Data Rows -->
+        <ItemsRepeater Name="UserProfileListView" Margin="0 2 0 0" VerticalCacheLength="100">
+            <ItemsRepeater.Styles>
+                <Style Selector="TextBlock">
+                    <Setter Property="IsHitTestVisible" Value="False" />
+                </Style>
+            </ItemsRepeater.Styles>
+            <ItemsRepeater.ItemTemplate>
+                <DataTemplate DataType="{x:Type cpaplib:UserProfile}">
+                    <Border Classes="SelectionRect" DoubleTapped="MenuItem_OnDoubleTapped" Tag="{Binding}">
+                        <Border.ContextFlyout>
+                            <MenuFlyout>
+                                <MenuItem Header="Make Active" Tag="{Binding}" Click="MakeActive_OnTapped" />
+                                <MenuItem Header="View Details" Tag="{Binding}" Click="ViewDetails_OnTapped" />
+                                <MenuItem Header="Delete" Tag="{Binding}" Click="Delete_OnTapped" />
+                            </MenuFlyout>
+                        </Border.ContextFlyout>
+                        <Grid RowDefinitions="Auto" Classes="TableData">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition SharedSizeGroup="UserProfileListC0" />
+                                <ColumnDefinition SharedSizeGroup="UserProfileListC1" />
+                                <ColumnDefinition SharedSizeGroup="UserProfileListC2" />
+                                <ColumnDefinition SharedSizeGroup="UserProfileListC3" />
+                                <ColumnDefinition SharedSizeGroup="UserProfileListC4" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="{Binding UserName, Mode=OneWay}" />
+                            <TextBlock Grid.Column="1" Text="{Binding VentilatorModel, Mode=OneWay}" />
+                            <TextBlock Grid.Column="2" Text="{Binding MachineID, Mode=OneWay}" />
+                            <TextBlock Grid.Column="3" Text="{Binding LastLogin, StringFormat={}{0:g}}" />
+                            <TextBlock Grid.Column="4" Text="{Binding LastImport, StringFormat={}{0:g}}" />
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </ItemsRepeater.ItemTemplate>
+        </ItemsRepeater>
+
+    </StackPanel>
+</UserControl>

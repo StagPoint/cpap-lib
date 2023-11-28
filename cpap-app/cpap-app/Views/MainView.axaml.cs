@@ -110,9 +110,10 @@ public partial class MainView : UserControl
 
 		NavView.SelectedItem = navHome;
 
-		AddHandler( ImportCpapRequestedEvent,     HandleImportRequestCPAP );
-		AddHandler( ImportOximetryRequestedEvent, HandleImportRequestOximetry );
-		AddHandler( LoadDateRequestedEvent,       HandleLoadDateRequest );
+		AddHandler( ImportCpapRequestedEvent,                  HandleImportRequestCPAP );
+		AddHandler( ImportOximetryRequestedEvent,              HandleImportRequestOximetry );
+		AddHandler( LoadDateRequestedEvent,                    HandleLoadDateRequest );
+		AddHandler( UserProfileEvents.UserProfileChangedEvent, HandleUserProfileChanged );
 
 		btnImportCPAP.Click      += HandleImportRequestCPAP;
 		btnImportOximetry.Click  += HandleImportRequestOximetry;
@@ -146,12 +147,34 @@ public partial class MainView : UserControl
 			
 			LoadProfileMenu();
 			LoadTabPage( new HomeView() );
+			navHome.IsSelected = true;
 		}
 	}
 
 	#endregion 
 	
 	#region Event handlers
+
+	private void HandleUserProfileChanged( object? sender, UserProfileEventArgs e )
+	{
+		if( e.Profile.UserProfileID == ActiveUserProfile.UserProfileID )
+		{
+			if( e.Action == UserProfileAction.Deleted )
+			{
+				ActiveUserProfile = UserProfileStore.GetLastUserProfile();
+			}
+			else
+			{
+				ActiveUserProfile = e.Profile;
+			}
+		}
+		else if( e.Action == UserProfileAction.Activated )
+		{
+			ActiveUserProfile = e.Profile;
+		}
+		
+		LoadProfileMenu();
+	}
 
 	private void NavImportFrom_OnTapped( object? sender, TappedEventArgs e )
 	{
@@ -484,7 +507,7 @@ public partial class MainView : UserControl
 		const string SQL = "SELECT day.ReportDate FROM day JOIN session ON session.dayID == day.ID AND session.SourceType = ? WHERE day.UserProfileID = ? ORDER BY ReportDate DESC LIMIT 1";
 
 		var mostRecentImport = store.Connection.ExecuteScalar<DateTime>( SQL, sourceType, userID ).AsLocalTime();
-		mostRecentImport = DateHelper.Max( mostRecentImport, DateTime.Today.AddDays( -30 ) );
+		mostRecentImport = DateHelper.Max( mostRecentImport, DateTime.Today.AddDays( -90 ) );
 
 		return mostRecentImport;
 	}
@@ -951,11 +974,17 @@ public partial class MainView : UserControl
 
 					if( mostRecentDay != null )
 					{
-						var profileID = ActiveUserProfile.UserProfileID;
-
-						//NavView.SelectedItem = navDailyReport;
+						var profile = ActiveUserProfile;
+						
 						// TODO: Because DailyReportView has its own flow for loading a DailyReport, this leaves open the possibility of bypassing things like event subscription, etc.
-						DataContext = LoadDailyReport( profileID, mostRecentDay.Value );
+						var importedDay = LoadDailyReport( profile.UserProfileID, mostRecentDay.Value );
+						DataContext = importedDay;
+
+						profile.LastImport      = DateTime.Now;
+						profile.MachineID       = importedDay.MachineInfo.SerialNumber;
+						profile.VentilatorModel = importedDay.MachineInfo.ProductName;
+						profile.TherapyMode     = importedDay.Settings.Mode;
+						UserProfileStore.Update( profile );
 					}
 					else
 					{
@@ -1042,6 +1071,14 @@ public partial class MainView : UserControl
 			{
 				if( UserProfileStore.Insert( newProfile ) )
 				{
+					RaiseEvent( new UserProfileEventArgs
+					{
+						RoutedEvent = UserProfileEvents.UserProfileChangedEvent,
+						Source      = this,
+						Profile     = newProfile,
+						Action      = UserProfileAction.Added
+					} );
+
 					ActiveUserProfile = newProfile;
 				}
 			}

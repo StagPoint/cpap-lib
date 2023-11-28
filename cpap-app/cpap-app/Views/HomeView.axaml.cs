@@ -29,7 +29,7 @@ public partial class HomeView : UserControl
 
 		if( change.Property.Name == nameof( DataContext ) )
 		{
-			// Currently this only happens when an import completes, so just load the latest date stored. 
+			// Currently this only happens when an import completes, so just load the latest date stored.
 			DailyScore.LoadLastAvailableDate();
 		}
 	}

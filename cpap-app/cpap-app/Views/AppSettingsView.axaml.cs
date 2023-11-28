@@ -91,11 +91,31 @@ public partial class AppSettingsView : UserControl
 		}
 	}
 	
-	private void GoogleFitSignOut_OnClick( object? sender, RoutedEventArgs e )
+	private async void GoogleFitSignOut_OnClick( object? sender, RoutedEventArgs e )
 	{
+		var msgBox = MessageBoxManager.GetMessageBoxStandard(
+			"Sign out of Google Fit?",
+			"Are you sure you wish to sign out of Google Fit?\nYou will need to sign in again the next time you wish to import data from Google Fit.",
+			ButtonEnum.YesNo,
+			Icon.Info );
+
+		var result = await msgBox.ShowWindowDialogAsync( this.FindAncestorOfType<Window>() );
+		if( result != ButtonResult.Yes )
+		{
+			return;
+		}
+
 		// Saving an invalid access token will prevent access to Google API until the user signs in again
 		AccessTokenStore.SaveAccessTokenInfo( new AccessTokenInfo() );
 		GoogleFitSignOut.IsEnabled = false;
+		
+		msgBox = MessageBoxManager.GetMessageBoxStandard(
+			"Sign out of Google Fit?",
+			"You have been signed out of Google Fit.",
+			ButtonEnum.Ok,
+			Icon.Info );
+		
+		await msgBox.ShowWindowDialogAsync( this.FindAncestorOfType<Window>() );
 	}
 }
 

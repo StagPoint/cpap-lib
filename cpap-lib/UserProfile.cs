@@ -4,9 +4,11 @@ namespace cpaplib
 {
 	public class UserProfile : IComparable<UserProfile>
 	{
-		public int      UserProfileID { get; set; }
-		public DateTime LastLogin     { get; set; } = DateTime.Now;
-		public string   MachineID     { get; set; } = string.Empty;
+		public int      UserProfileID   { get; set; }
+		public DateTime LastLogin       { get; set; } = DateTime.Now;
+		public DateTime LastImport      { get; set; } = DateTime.Today.AddYears( -1 );
+		public string   MachineID       { get; set; } = string.Empty;
+		public string   VentilatorModel { get; set; } = "Unknown";
 
 		public string     UserName            { get; set; } = string.Empty;
 		public string     FirstName           { get; set; } = string.Empty;

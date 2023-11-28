@@ -67,11 +67,15 @@
                 </controls:SettingsExpander>
                 <controls:SettingsExpander Header="Profiles"
                                            Description="Add, remove, and edit user profiles"
-                                           IsClickEnabled="True"
+                                           IsClickEnabled="False"
                                            IconSource="AddFriend"
-                                           ActionIconSource="ChevronRight" />
+                                           ActionIconSource="ChevronRight">
+                    <controls:SettingsExpanderItem>
+                        <views:UserProfileList />
+                    </controls:SettingsExpanderItem>
+                </controls:SettingsExpander>
                 <controls:SettingsExpander Header="Google Fit Integration"
-                                           Description="Add, remove, and edit user profiles"
+                                           Description="Enables the integration of Sleep Stages data from Google Fit"
                                            IsClickEnabled="True"
                                            ActionIconSource="ChevronRight">
                     <controls:SettingsExpander.IconSource>
