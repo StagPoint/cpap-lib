@@ -21,6 +21,7 @@ public partial class SignalChartContainer : UserControl
 {
 	private List<SignalChart> _charts = new();
 
+	private EventGraph?      _eventGraph;
 	private DispatcherTimer? _dragTimer     = null;
 	private SignalChart?     _dragTarget    = null;
 	private int              _dragDirection = 0;
@@ -37,7 +38,7 @@ public partial class SignalChartContainer : UserControl
 		AddHandler( SignalChart.ChartDraggedEvent,              Chart_Dragged );
 		AddHandler( GraphEvents.TimeMarkerChangedEvent,         ChartOnTimeMarkerChanged );
 		AddHandler( GraphEvents.DisplayedRangeChangedEvent,     ChartDisplayedRangeChanged );
-
+		
 		LoadSignalGraphs();
 		LoadSignalVisibilityMenu();
 	}
@@ -294,13 +295,7 @@ public partial class SignalChartContainer : UserControl
 
 	private void UpdateVisibleRange( DateTime startTime, DateTime endTime )
 	{
-		if( DataContext is DailyReport day )
-		{
-			VisibleRange.Minimum    = 0;
-			VisibleRange.Maximum    = (day.RecordingEndTime - day.RecordingStartTime).TotalSeconds;
-			VisibleRange.RangeStart = (startTime - day.RecordingStartTime).TotalSeconds;
-			VisibleRange.RangeEnd   = (endTime - day.RecordingStartTime).TotalSeconds;
-		}
+		_eventGraph!.UpdateVisibleRange( startTime, endTime );
 	}
 
 	private void LoadSignalVisibilityMenu()
@@ -393,6 +388,9 @@ public partial class SignalChartContainer : UserControl
 		List<SignalChartConfiguration> signalConfigs = SignalChartConfigurationStore.GetSignalConfigurations();
 		List<EventMarkerConfiguration> eventConfigs  = EventMarkerConfigurationStore.GetEventMarkerConfigurations();
 
+		_eventGraph = new EventGraph( eventConfigs );
+		PinnedCharts.Children.Add( _eventGraph );
+
 		foreach( var config in signalConfigs )
 		{
 			if( !config.IsVisible )
@@ -480,6 +478,8 @@ public partial class SignalChartContainer : UserControl
 			{
 				control.RenderGraph( true );
 			}
+			
+			_eventGraph!.RenderGraph( true );
 		} );
 
 		_renderTimer.Stop();

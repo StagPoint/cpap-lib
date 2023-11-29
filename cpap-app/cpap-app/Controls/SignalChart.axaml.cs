@@ -300,8 +300,7 @@ public partial class SignalChart : UserControl
 				}
 				break;
 			case nameof( ChartConfiguration ):
-				ChartConfiguration             = change.NewValue as SignalChartConfiguration;
-				btnSettings.ChartConfiguration = ChartConfiguration;
+				btnSettings.ChartConfiguration = change.NewValue as SignalChartConfiguration;
 
 				if( btnSettings.Visualizations.Count == 0 )
 				{
@@ -424,26 +423,6 @@ public partial class SignalChart : UserControl
 		ChartLabel.Cursor = new Cursor( StandardCursorType.SizeNorthSouth );
 
 		e.Handled = true;
-	}
-
-	private void OnAxesChanged( object? sender, EventArgs e )
-	{
-		if( _day == null || !_hasDataAvailable || !IsEnabled )
-		{
-			return;
-		}
-		
-		var currentAxisLimits = Chart.Plot.GetAxisLimits();
-
-		var eventArgs = new DateTimeRangeRoutedEventArgs
-		{
-			RoutedEvent = GraphEvents.DisplayedRangeChangedEvent,
-			Source      = this,
-			StartTime   = _day.RecordingStartTime.AddSeconds( currentAxisLimits.XMin ),
-			EndTime     = _day.RecordingStartTime.AddSeconds( currentAxisLimits.XMax )
-		};
-
-		RaiseEvent( eventArgs );
 	}
 
 	private void OnPointerEntered( object? sender, PointerEventArgs e )
@@ -590,13 +569,16 @@ public partial class SignalChart : UserControl
 		{
 			(double x, double y) = Chart.GetMouseCoordinates();
 
-			var amount = args.Delta.Y * 0.25 + 1.0;
+			var amount = Math.Max( args.Delta.Y * 0.25 + 1.0, 0.25 );
 			Chart.Plot.AxisZoom( amount, 1.0, x, y );
+
+			Debug.WriteLine( $"MouseWheel: {amount}" );
 
 			args.Handled = true;
 
 			HideTimeMarker();
 			OnAxesChanged( this, EventArgs.Empty );
+			Focus();
 		}
 	}
 
@@ -756,6 +738,26 @@ public partial class SignalChart : UserControl
 	#endregion 
 	
 	#region Private functions
+
+	private void OnAxesChanged( object? sender, EventArgs e )
+	{
+		if( _day == null || !_hasDataAvailable || !IsEnabled )
+		{
+			return;
+		}
+		
+		var currentAxisLimits = Chart.Plot.GetAxisLimits();
+
+		var eventArgs = new DateTimeRangeRoutedEventArgs
+		{
+			RoutedEvent = GraphEvents.DisplayedRangeChangedEvent,
+			Source      = this,
+			StartTime   = _day.RecordingStartTime.AddSeconds( currentAxisLimits.XMin ),
+			EndTime     = _day.RecordingStartTime.AddSeconds( currentAxisLimits.XMax )
+		};
+
+		RaiseEvent( eventArgs );
+	}
 
 	private void CancelSelectionMode()
 	{
@@ -2032,7 +2034,7 @@ public partial class SignalChart : UserControl
 		plot.YAxis.TickLabelFormat( x => $"{x:0.##}" );
 		plot.YAxis.Layout( 0, maximumLabelWidth, maximumLabelWidth );
 		plot.YAxis2.Layout( 0, 5, 5 );
-		plot.YAxis.PixelSnap( true );
+		// plot.YAxis.PixelSnap( true );
 
 		if( ChartConfiguration is { AxisMinValue: not null, AxisMaxValue: not null } )
 		{
@@ -2057,6 +2059,7 @@ public partial class SignalChart : UserControl
 			} );
 		}
 		
+		// These changes won't be valid until the graph is rendered, so just render it in low resolution for now
 		RenderGraph( false );
 	}
 	

@@ -113,7 +113,7 @@ namespace cpaplib
 
 			switch( eventType )
 			{
-				case EventType.Unclassified:
+				case EventType.UnclassifiedApnea:
 					markerPosition = EventMarkerPosition.AfterDuration;
 					break;
 				case EventType.ObstructiveApnea:
@@ -196,7 +196,7 @@ namespace cpaplib
 			{ "Central Apnea", EventType.ClearAirway },
 			{ "RERA", EventType.RERA },
 			{ "Arousal", EventType.RERA },
-			{ "Unclassified", EventType.Unclassified },
+			{ "Unclassified", EventType.UnclassifiedApnea },
 		};
 
 		static EventTypeUtil()
@@ -236,7 +236,7 @@ namespace cpaplib
 				throw new Exception( $"{name} is not a valid {nameof( EventType )} value" );
 			}
 			
-			return EventType.Unclassified;
+			return EventType.UnclassifiedApnea;
 		}
 
 		public static string ToName( this EventType type )

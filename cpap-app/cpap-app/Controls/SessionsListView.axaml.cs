@@ -154,7 +154,7 @@ public partial class SessionsListView : UserControl
 		
 		var msgBox = MessageBoxManager.GetMessageBoxStandard(
 			"Delete Session?",
-			$"Are you sure you wish to delete this Session?\n\n{sessionInfo}\n\nIt may not be possible to re-import this Session later.",
+			$"Are you sure you wish to delete this Session?\n\n{sessionInfo}\n\nThis action cannot be undone.",
 			ButtonEnum.YesNo,
 			Icon.Question );
 

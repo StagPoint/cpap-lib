@@ -2,16 +2,15 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:ScottPlot="clr-namespace:ScottPlot.Avalonia;assembly=ScottPlot.Avalonia"
-             xmlns:controls="clr-namespace:cpap_app.Controls"
+             xmlns:avalonia="clr-namespace:ScottPlot.Avalonia;assembly=ScottPlot.Avalonia"
              xmlns:cpaplib="clr-namespace:cpaplib;assembly=cpap-lib"
-             x:Class="cpap_app.Controls.SignalChart"
-             mc:Ignorable="d"
-             d:DesignWidth="800"
+             mc:Ignorable="d" d:DesignWidth="800"
+             x:Class="cpap_app.Controls.EventGraph"
              Height="200"
              Focusable="True"
              ChartForeground="{DynamicResource TextFillColorPrimaryBrush}"
-             ChartBackground="{DynamicResource ControlOnImageFillColorDefaultBrush}"
+             ChartBackground="{DynamicResource SolidBackgroundFillColorBaseBrush}"
+             ChartAlternateBackground="{DynamicResource ControlAltFillColorQuarternaryBrush}"
              ChartBorderColor="{DynamicResource ControlStrokeColorSecondaryBrush}"
              ChartGridLineColor="{DynamicResource TextFillColorSecondaryBrush}"
              Background="{DynamicResource LayerFillColorDefaultBrush}"
@@ -38,40 +37,6 @@
                   Grid.ColumnSpan="3" Grid.RowSpan="3"
                   Stroke="{DynamicResource AccentFillColorSelectedTextBackgroundBrush}" StrokeThickness="1"
                   StartPoint="0,0" EndPoint="0,0" />
-            <Border Name="EventTooltip" CornerRadius="8" Margin="0 34" IsHitTestVisible="False" Tag="Event Tooltip"
-                    VerticalAlignment="Top" IsEnabled="False" ZIndex="9990" Grid.Column="1" Grid.Row="0"
-                    Grid.ColumnSpan="2" Grid.RowSpan="3" Background="Black" MinWidth="50" HorizontalAlignment="Center">
-                <TextBlock Text="{Binding $parent.Tag, Mode=OneWay}" IsVisible="True" IsHitTestVisible="False"
-                           TextWrapping="NoWrap" HorizontalAlignment="Center" MaxLines="1"
-                           Theme="{DynamicResource CaptionTextBlockStyle}" Foreground="White" Padding="12 0 12 2" />
-            </Border>
-            <TextBlock
-                Name="CurrentValue"
-                Grid.Row="0"
-                Grid.Column="1"
-                Grid.RowSpan="2"
-                Padding="45 8"
-                Margin="0 0 0 0"
-                Width="500"
-                HorizontalAlignment="Left"
-                ZIndex="6000"
-                Theme="{DynamicResource CaptionTextBlockStyle}"
-                Text="Current value information goes here"
-                IsHitTestVisible="False">
-            </TextBlock>
-            <StackPanel Orientation="Horizontal"
-                        Grid.Row="0"
-                        Grid.Column="1"
-                        Grid.ColumnSpan="2"
-                        Grid.RowSpan="2"
-                        Margin="0 4 20 0"
-                        Spacing="2"
-                        HorizontalAlignment="Right"
-                        VerticalAlignment="Top"
-                        ZIndex="9999">
-                <controls:SignalSettingsMenuButton Name="btnSettings" IsEnabled="False"
-                                                   ChartConfigurationChanged="OnChartConfigurationChanged" />
-            </StackPanel>
             <Border
                 Grid.Row="0"
                 Grid.Column="0"
@@ -86,7 +51,7 @@
                     Background="Transparent">
                     <TextBlock
                         Name="ChartLabel"
-                        Text="Chart Label"
+                        Text="Event Flags"
                         VerticalAlignment="Center"
                         TextWrapping="NoWrap"
                         Padding="10 0"
@@ -100,7 +65,7 @@
                     </TextBlock>
                 </Label>
             </Border>
-            <ScottPlot:AvaPlot
+            <avalonia:AvaPlot
                 Grid.Row="1"
                 Grid.Column="1"
                 Grid.ColumnSpan="2"
@@ -108,7 +73,7 @@
                 HorizontalAlignment="Stretch"
                 Height="200"
                 Margin="0 0 16 0">
-            </ScottPlot:AvaPlot>
+            </avalonia:AvaPlot>
             <TextBlock Name="NoDataLabel"
                        Grid.Column="0"
                        Grid.ColumnSpan="2"

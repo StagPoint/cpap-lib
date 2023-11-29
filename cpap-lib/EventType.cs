@@ -45,7 +45,7 @@ namespace cpaplib
 		/// <summary>
 		/// An apnea event whose classification could not be determined (neither obstructive nor central)
 		/// </summary>
-		Unclassified,
+		UnclassifiedApnea,
 		/// <summary>
 		/// A full or partial arousal not related to respiratory effort
 		/// </summary>
@@ -107,7 +107,7 @@ namespace cpaplib
 			EventType.ObstructiveApnea,
 			EventType.Hypopnea,
 			EventType.ClearAirway,
-			EventType.Unclassified,
+			EventType.UnclassifiedApnea,
 		};
 
 		public static readonly EventType[] RespiratoryDisturbance =
@@ -116,7 +116,7 @@ namespace cpaplib
 			EventType.ObstructiveApnea,
 			EventType.Hypopnea,
 			EventType.ClearAirway,
-			EventType.Unclassified,
+			EventType.UnclassifiedApnea,
 			EventType.RERA,
 			EventType.FlowLimitation,
 			EventType.FlowReduction,
@@ -161,5 +161,24 @@ namespace cpaplib
 				.Concat( OxygenSaturation )
 				.Concat( Pulse )
 				.ToArray();
+	}
+
+	public static class EventTypeExtensions
+	{
+		public static string ToInitials( this EventType type )
+		{
+			var name   = type.ToString();
+			var result = name.Substring( 0, 1 );
+
+			for( int i = 1; i < name.Length; i++ )
+			{
+				if( char.IsUpper( name[ i ] ) )
+				{
+					result += name[ i ];
+				}
+			}
+
+			return result;
+		}
 	}
 }

@@ -14,7 +14,6 @@
         </StackPanel>
         <Grid DockPanel.Dock="Bottom" Background="{DynamicResource SolidBackgroundFillColorSecondaryBrush}">
            <Grid ColumnDefinitions="*,Auto">
-                <fui:RangeSlider Grid.Column="0" Name="VisibleRange" Width="600" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="12 0" Minimum="0" Maximum="1" StepFrequency="0.01" ToolTipStringFormat="P0" />
                 <Button Grid.Column="1" Name="VisibleGraphMenuButton" HorizontalAlignment="Right" BorderThickness="2" CornerRadius="0"
                         Padding="8 2" Margin="8 4">
                     <Button.Styles>

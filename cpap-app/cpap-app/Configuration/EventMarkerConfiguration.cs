@@ -29,4 +29,9 @@ public class EventMarkerConfiguration
 	public EventMarkerPosition MarkerPosition  { get; set; }
 	public string              Label           { get; set; } = "";
 	public Color               Color           { get; set; }
+
+	public override string ToString()
+	{
+		return $"{EventType} ({Label}) - {Color}";
+	}
 }

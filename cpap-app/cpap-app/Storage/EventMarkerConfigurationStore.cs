@@ -54,7 +54,7 @@ public class EventMarkerConfigurationStore
 				case EventType.Hypopnea:
 				case EventType.ClearAirway:
 				case EventType.RERA:
-				case EventType.Unclassified:
+				case EventType.UnclassifiedApnea:
 				case EventType.CSR:
 				case EventType.FlowReduction:
 					eventMarkerType     = EventMarkerType.Flag;
