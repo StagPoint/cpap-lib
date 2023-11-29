@@ -19,8 +19,7 @@ using cpap_app.Styling;
 
 using cpaplib;
 
-using FluentAvalonia.Core;
-
+using ScottPlot;
 using ScottPlot.Avalonia;
 using ScottPlot.Control;
 using ScottPlot.Plottable;
@@ -52,7 +51,7 @@ public partial class EventGraph : UserControl
 		set => SetAndRaise( ChartConfigurationProperty, ref _chartConfiguration, value );
 	}
 	
-	public List<EventMarkerConfiguration> MarkerConfiguration    { get; set; }
+	public List<EventMarkerConfiguration> MarkerConfiguration { get; set; } = null!;
 
 	public IBrush ChartForeground
 	{
@@ -98,23 +97,23 @@ public partial class EventGraph : UserControl
 	private GraphInteractionMode _interactionMode = GraphInteractionMode.None;
 	private bool                 _hasInputFocus   = false;
 	private Point                _pointerDownPosition;
-	
+	private AxisLimits           _pointerDownAxisLimits = AxisLimits.NoLimits;
+
 	private double _selectionStartTime = 0;
 	private double _selectionEndTime   = 0;
-	private HSpan  _selectionSpan;
+	private HSpan? _selectionSpan      = null;
 
 	private HSpan? _leftOccluder  = null;
 	private HSpan? _rightOccluder = null;
 
 	#endregion 
 	
-	#region Constructor 
-	
-	public EventGraph( List<EventMarkerConfiguration> markerConfiguration )
+	#region Constructor
+
+	public EventGraph()
 	{
 		InitializeComponent();
 		
-		MarkerConfiguration = markerConfiguration;
 		Chart.ContextMenu   = null;
 		
 		PointerWheelChanged += OnPointerWheelChanged;
@@ -125,6 +124,11 @@ public partial class EventGraph : UserControl
 		PointerMoved        += OnPointerMoved;
 		GotFocus            += OnGotFocus;
 		LostFocus           += OnLostFocus;
+	}
+	
+	public EventGraph( List<EventMarkerConfiguration> markerConfiguration ) : this()
+	{
+		MarkerConfiguration = markerConfiguration;
 	}
 
 	#endregion
@@ -268,8 +272,6 @@ public partial class EventGraph : UserControl
 			return;
 		}
 		
-		var time = _day.RecordingStartTime.AddSeconds( timeOffset );
-
 		switch( _interactionMode )
 		{
 			case GraphInteractionMode.Selecting:
@@ -279,21 +281,15 @@ public partial class EventGraph : UserControl
 
 				if( timeOffset < _selectionStartTime )
 				{
-					_selectionSpan.X1 = _selectionEndTime;
-					_selectionSpan.X2 = _selectionStartTime;
+					_selectionSpan!.X1 = _selectionEndTime;
+					_selectionSpan!.X2 = _selectionStartTime;
 				}
 				else
 				{
-					_selectionSpan.X1 = _selectionStartTime;
-					_selectionSpan.X2 = _selectionEndTime;
+					_selectionSpan!.X1 = _selectionStartTime;
+					_selectionSpan!.X2 = _selectionEndTime;
 				}
 
-				// var timeRangeSelected = TimeSpan.FromSeconds( _selectionSpan.X2 - _selectionSpan.X1 );
-				// var totalSeconds      = timeRangeSelected.TotalSeconds;
-				//
-				// EventTooltip.Tag       = totalSeconds > 1.0 ? FormattedTimespanConverter.FormatTimeSpan( timeRangeSelected, TimespanFormatType.Long, false ) : $"{totalSeconds:N1} seconds";
-				// EventTooltip.IsVisible = totalSeconds > double.Epsilon;
-				
 				eventArgs.Handled = true;
 			
 				RenderGraph( false );
@@ -302,9 +298,8 @@ public partial class EventGraph : UserControl
 			}
 			case GraphInteractionMode.Panning:
 			{
-				/*
 				var position  = eventArgs.GetCurrentPoint( this ).Position;
-				var panAmount = (_pointerDownPosition.X - position.X) / Chart.Plot.XAxis.Dims.PxPerUnit;
+				var panAmount = -(_pointerDownPosition.X - position.X) / Chart.Plot.XAxis.Dims.PxPerUnit;
 			
 				double start = 0;
 				double end   = 0;
@@ -320,9 +315,10 @@ public partial class EventGraph : UserControl
 					start = end - _pointerDownAxisLimits.XSpan;
 				}
 				
-				Chart.Plot.SetAxisLimits( start, end );
+				UpdateVisibleRange( start, end );
 				OnAxesChanged( this, EventArgs.Empty );
-				*/
+			
+				eventArgs.Handled = true;
 
 				eventArgs.Handled = true;
 				
@@ -330,13 +326,6 @@ public partial class EventGraph : UserControl
 			}
 			case GraphInteractionMode.None:
 			{
-				/*
-				if( eventArgs.Pointer.Captured == null )
-				{
-					UpdateTimeMarker( time );
-					RaiseTimeMarkerChanged( time );
-				}
-				*/
 				break;
 			}
 		}
@@ -398,8 +387,8 @@ public partial class EventGraph : UserControl
 			case KeyModifiers.None when point.Properties.IsLeftButtonPressed:
 				(_selectionStartTime, _) = Chart.GetMouseCoordinates();
 				_selectionEndTime        = _selectionStartTime;
-				_selectionSpan.X1        = _selectionStartTime;
-				_selectionSpan.X2        = _selectionStartTime;
+				_selectionSpan!.X1        = _selectionStartTime;
+				_selectionSpan!.X2        = _selectionStartTime;
 				_selectionSpan.IsVisible = true;
 
 				_interactionMode = GraphInteractionMode.Selecting;
@@ -409,8 +398,8 @@ public partial class EventGraph : UserControl
 			case KeyModifiers.Shift when point.Properties.IsLeftButtonPressed:
 				(_selectionStartTime, _) = Chart.GetMouseCoordinates();
 				_selectionEndTime        = _selectionStartTime;
-				_selectionSpan.X1        = _selectionStartTime;
-				_selectionSpan.X2        = _selectionStartTime;
+				_selectionSpan!.X1        = _selectionStartTime;
+				_selectionSpan!.X2        = _selectionStartTime;
 				_selectionSpan.IsVisible = true;
 
 				// Provide a 3-minute zoom window around the clicked position
@@ -421,7 +410,7 @@ public partial class EventGraph : UserControl
 				break;
 			default:
 			{
-				if( (eventArgs.KeyModifiers & KeyModifiers.Control) != 0 || point.Properties.IsRightButtonPressed )
+				if( point.Properties.IsRightButtonPressed )
 				{
 					if( !_hasInputFocus )
 					{
@@ -430,8 +419,9 @@ public partial class EventGraph : UserControl
 			
 					Chart.Configuration.Quality = ScottPlot.Control.QualityMode.Low;
 
-					_pointerDownPosition = point.Position;
-					_interactionMode     = GraphInteractionMode.Panning;
+					_pointerDownPosition   = point.Position;
+					_pointerDownAxisLimits = new AxisLimits( _leftOccluder!.X2, _rightOccluder!.X1, 0, 1 );
+					_interactionMode       = GraphInteractionMode.Panning;
 				}
 				break;
 			}
@@ -503,9 +493,17 @@ public partial class EventGraph : UserControl
 		_rightOccluder.X1 = (endTime - _day.RecordingStartTime).TotalSeconds;
 		_rightOccluder.X2 = (_day.RecordingEndTime - _day.RecordingStartTime).TotalSeconds;
 
+		// Duration without fractional seconds 
+		var duration = TimeSpan.FromSeconds( Math.Round( (endTime - startTime).TotalSeconds ) );
+
+		var eventCount         = _day.Events.Count( x => x.StartTime >= startTime && x.StartTime <= endTime && EventTypes.Apneas.Contains( x.Type ) );
+		var apneaHypopneaIndex = eventCount / Math.Max( 1, GetTotalSleepTime( startTime, endTime ).TotalHours );
+
+		CurrentValue.Text = $"{startTime:h:mm:ss tt} to {endTime:h:mm:ss tt}        Duration: {duration:c}        AHI: {apneaHypopneaIndex:F2}";
+
 		RenderGraph( false );
 	}
-	
+
 	public void RenderGraph( bool highQuality )
 	{
 		Chart.Configuration.AxesChangedEventEnabled = false;
@@ -519,6 +517,33 @@ public partial class EventGraph : UserControl
 	#endregion
 	
 	#region Private functions
+
+	private TimeSpan GetTotalSleepTime( DateTime startTime, DateTime endTime )
+	{
+		Debug.Assert( _day != null, nameof( _day ) + " != null" );
+		
+		TimeSpan result = TimeSpan.Zero;
+
+		var cpapSessions = _day.Sessions.Where( x => x.SourceType == SourceType.CPAP );
+
+		foreach( var session in cpapSessions )
+		{
+			if( !DateHelper.RangesOverlap( session.StartTime, session.EndTime, startTime, endTime ) )
+			{
+				continue;
+			}
+
+			var clippedStartTime = DateHelper.Max( session.StartTime, startTime );
+			var clippedEndTime   = DateHelper.Min( session.EndTime, endTime );
+
+			if( clippedEndTime > clippedStartTime )
+			{
+				result += clippedEndTime - clippedStartTime;
+			}
+		}
+
+		return result;
+	}
 
 	private void EndSelectionMode()
 	{
@@ -537,9 +562,9 @@ public partial class EventGraph : UserControl
 
 		// Try to differentiate between a click or simple mousedown and the user intending to select a time range
 		var pixelDifference = Chart.Plot.XAxis.Dims.PxPerUnit * ( _selectionEndTime - _selectionStartTime );
-		if( pixelDifference <= 2 )
+		if( pixelDifference <= 5 )
 		{
-			_selectionSpan.IsVisible = false;
+			_selectionSpan!.IsVisible = false;
 			RenderGraph( true );
 
 			return;
@@ -559,6 +584,7 @@ public partial class EventGraph : UserControl
 
 	public void UpdateVisibleRange( double startTime, double endTime )
 	{
+		Debug.Assert( _day != null, nameof( _day ) + " != null" );
 		UpdateVisibleRange( _day.RecordingStartTime.AddSeconds( startTime ), _day.RecordingStartTime.AddSeconds( endTime ) );
 	}
 	
@@ -598,10 +624,10 @@ public partial class EventGraph : UserControl
 
 	private void CancelSelectionMode()
 	{
-		_interactionMode         = GraphInteractionMode.None;
-		_selectionStartTime      = 0;
-		_selectionEndTime        = 0;
-		_selectionSpan.IsVisible = false;
+		_interactionMode          = GraphInteractionMode.None;
+		_selectionStartTime       = 0;
+		_selectionEndTime         = 0;
+		_selectionSpan!.IsVisible = false;
 
 		RenderGraph( true );
 	}
@@ -614,20 +640,20 @@ public partial class EventGraph : UserControl
 		Chart.IsEnabled        = true;
 		this.IsEnabled         = true;
 
-		var eventTypes = EventTypes.RespiratoryDisturbance;
+		var eventTypes = GetVisibleEventTypes();
 		
 		Chart.Plot.Clear();
 
 		Chart.Plot.SetAxisLimitsX( 0, day.TotalTimeSpan.TotalSeconds );
-		Chart.Plot.SetAxisLimitsY( -eventTypes.Length, 1 );
-		Chart.Plot.YAxis.SetBoundary( -eventTypes.Length, 1 );
+		Chart.Plot.SetAxisLimitsY( -eventTypes.Count, 1 );
+		Chart.Plot.YAxis.SetBoundary( -eventTypes.Count, 1 );
 
-		var positions = new double[ eventTypes.Length ];
-		var labels    = new string[ eventTypes.Length ];
+		var positions = new double[ eventTypes.Count ];
+		var labels    = new string[ eventTypes.Count ];
 
 		var alternateBackgroundColor = ((SolidColorBrush)ChartAlternateBackground).Color.ToDrawingColor().MultiplyAlpha( 0.5f );
 
-		for( int i = 0; i < eventTypes.Length; i++ )
+		for( int i = 0; i < eventTypes.Count; i++ )
 		{
 			positions[ i ] = -i;
 			labels[ i ]    = eventTypes[ i ].ToInitials();
@@ -647,12 +673,22 @@ public partial class EventGraph : UserControl
 			{
 				var top    = -index - 0.5;
 				var bottom = -index + 0.5;
-				var width  = 1;
-				var time   = (evt.StartTime - day.RecordingStartTime).TotalSeconds;
+
+				var bounds = evt.GetTimeBounds();
+				var left   = (bounds.StartTime - day.RecordingStartTime).TotalSeconds;
+				var right  = (bounds.EndTime - day.RecordingStartTime).TotalSeconds;
+
+				// For events like Hypopnea which do not have any recorded duration, we need to provide a minimum width
+				// in order for it to be drawable and visible on the graph. 
+				if( right - left < 1.0 )
+				{
+					left  -= 1.0;
+					right += 1.0;
+				}
 
 				var markerColor = MarkerConfiguration.FirstOrDefault( x => x.EventType == evt.Type )?.Color ?? Color.Red;
 
-				var rect = Chart.Plot.AddRectangle( time - width, time + width, top, bottom );
+				var rect = Chart.Plot.AddRectangle( left, right, top, bottom );
 				rect.BorderLineWidth = 1;
 				rect.BorderColor     = markerColor;
 				rect.Color           = markerColor;
@@ -670,6 +706,14 @@ public partial class EventGraph : UserControl
 		UpdateVisibleRange( _day.RecordingStartTime, _day.RecordingEndTime );
 		
 		RenderGraph( false );
+	}
+
+	private List<EventType> GetVisibleEventTypes()
+	{
+		var eventTypes = EventTypes.RespiratoryDisturbance.ToList();
+		eventTypes.Add( EventType.LargeLeak );
+
+		return eventTypes;
 	}
 
 	private void IndicateNoDataAvailable()
