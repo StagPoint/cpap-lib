@@ -94,7 +94,14 @@ public partial class EventGraph : UserControl
 	private CustomChartStyle?         _chartStyle;
 	private DailyReport?              _day              = null;
 	private bool                      _chartInitialized = false;
-	private bool                      _hasInputFocus    = false;
+
+	private GraphInteractionMode _interactionMode = GraphInteractionMode.None;
+	private bool                 _hasInputFocus   = false;
+	private Point                _pointerDownPosition;
+	
+	private double _selectionStartTime = 0;
+	private double _selectionEndTime   = 0;
+	private HSpan  _selectionSpan;
 
 	private HSpan? _leftOccluder  = null;
 	private HSpan? _rightOccluder = null;
@@ -136,6 +143,87 @@ public partial class EventGraph : UserControl
 		}
 	}
 
+	protected override void OnKeyDown( KeyEventArgs args )
+	{
+		switch( args.Key )
+		{
+			case Key.Left or Key.Right:
+			{
+				var  startTime   = _leftOccluder!.X2;
+				var  endTime     = _rightOccluder!.X1;
+				var  range       = (endTime - startTime);
+				bool isShiftDown = (args.KeyModifiers & KeyModifiers.Shift) != 0;
+				var  amount      = range * (isShiftDown ? 0.25 : 0.10);
+
+				if( args.Key == Key.Left )
+				{
+					startTime = Math.Max( startTime - amount, 0 );
+					endTime   = startTime + range;
+				}
+				else
+				{
+					endTime   = Math.Min( endTime + amount, _rightOccluder.X2 );
+					startTime = endTime - range;
+				}
+			
+				UpdateVisibleRange( startTime, endTime );
+			
+				//HideTimeMarker();
+				OnAxesChanged( this, EventArgs.Empty ); 
+			
+				args.Handled = true;
+				break;
+			}
+			case Key.Up or Key.Down:
+			{
+				double increment = ((args.KeyModifiers & KeyModifiers.Shift) != 0) ? 0.35 : 0.2;
+				double amount    = (args.Key == Key.Up ? -1.0 : 1.0) * increment + 1.0;
+				var    range     = _rightOccluder!.X1 - _leftOccluder!.X2;
+				var    center    = _leftOccluder.X2 + range * 0.5;
+
+				range = Math.Max( range * Math.Max( amount, 0.25 ), MINIMUM_TIME_WINDOW );
+				var left  = Math.Max( center - range * 0.5, _leftOccluder.X1 );
+				var right = Math.Min( center + range * 0.5, _rightOccluder.X2 );
+
+				UpdateVisibleRange( left, right );
+
+				//HideTimeMarker();
+				OnAxesChanged( this, EventArgs.Empty );
+				
+				args.Handled = true;
+				break;
+			}
+			case Key.Escape:
+			{
+				if( _interactionMode == GraphInteractionMode.Selecting )
+				{
+					CancelSelectionMode();
+				}
+				break;
+			}
+			case Key.A:
+			{
+				/*
+				if( args.KeyModifiers == KeyModifiers.None )
+				{
+					// ReSharper disable once SwitchStatementMissingSomeEnumCasesNoDefault
+					switch( _interactionMode )
+					{
+						case GraphInteractionMode.Selecting:
+							AddAnnotationForCurrentSelection();
+							break;
+						case GraphInteractionMode.None when _selectionStartTime > 0:
+							_selectionEndTime = _selectionStartTime;
+							AddAnnotationForCurrentSelection();
+							break;
+					}
+				}
+				*/
+				break;
+			}
+		}
+	}
+	
 	protected override void OnPropertyChanged( AvaloniaPropertyChangedEventArgs change )
 	{
 		base.OnPropertyChanged( change );
@@ -163,16 +251,191 @@ public partial class EventGraph : UserControl
 	
 	#region Event handlers 
 	
-	private void OnPointerMoved( object? sender, PointerEventArgs e )
+	private void OnPointerMoved( object? sender, PointerEventArgs eventArgs )
 	{
+		if( _day == null || !IsEnabled )
+		{
+			return;
+		}
+
+		var mouseRelativePosition = eventArgs.GetCurrentPoint( Chart ).Position;
+
+		(double timeOffset, _) = Chart.Plot.GetCoordinate( (float)mouseRelativePosition.X, (float)mouseRelativePosition.Y );
+
+		// Race condition: Ignore this event when the chart is not yet fully set up
+		if( double.IsNaN( timeOffset ) )
+		{
+			return;
+		}
+		
+		var time = _day.RecordingStartTime.AddSeconds( timeOffset );
+
+		switch( _interactionMode )
+		{
+			case GraphInteractionMode.Selecting:
+			{
+				// TODO: This still allows selecting areas of the Signal that are not in the graph's visible area. Leave it?
+				_selectionEndTime = Math.Max( 0, Math.Min( timeOffset, _day.TotalTimeSpan.TotalSeconds ) );
+
+				if( timeOffset < _selectionStartTime )
+				{
+					_selectionSpan.X1 = _selectionEndTime;
+					_selectionSpan.X2 = _selectionStartTime;
+				}
+				else
+				{
+					_selectionSpan.X1 = _selectionStartTime;
+					_selectionSpan.X2 = _selectionEndTime;
+				}
+
+				// var timeRangeSelected = TimeSpan.FromSeconds( _selectionSpan.X2 - _selectionSpan.X1 );
+				// var totalSeconds      = timeRangeSelected.TotalSeconds;
+				//
+				// EventTooltip.Tag       = totalSeconds > 1.0 ? FormattedTimespanConverter.FormatTimeSpan( timeRangeSelected, TimespanFormatType.Long, false ) : $"{totalSeconds:N1} seconds";
+				// EventTooltip.IsVisible = totalSeconds > double.Epsilon;
+				
+				eventArgs.Handled = true;
+			
+				RenderGraph( false );
+			
+				return;
+			}
+			case GraphInteractionMode.Panning:
+			{
+				/*
+				var position  = eventArgs.GetCurrentPoint( this ).Position;
+				var panAmount = (_pointerDownPosition.X - position.X) / Chart.Plot.XAxis.Dims.PxPerUnit;
+			
+				double start = 0;
+				double end   = 0;
+			
+				if( position.X < _pointerDownPosition.X )
+				{
+					start = Math.Max( 0, _pointerDownAxisLimits.XMin + panAmount );
+					end   = start + _pointerDownAxisLimits.XSpan;
+				}
+				else
+				{
+					end   = Math.Min( _day.TotalTimeSpan.TotalSeconds, _pointerDownAxisLimits.XMax + panAmount );
+					start = end - _pointerDownAxisLimits.XSpan;
+				}
+				
+				Chart.Plot.SetAxisLimits( start, end );
+				OnAxesChanged( this, EventArgs.Empty );
+				*/
+
+				eventArgs.Handled = true;
+				
+				return;
+			}
+			case GraphInteractionMode.None:
+			{
+				/*
+				if( eventArgs.Pointer.Captured == null )
+				{
+					UpdateTimeMarker( time );
+					RaiseTimeMarkerChanged( time );
+				}
+				*/
+				break;
+			}
+		}
 	}
 	
 	private void OnPointerReleased( object? sender, PointerReleasedEventArgs e )
 	{
+		// Don't attempt to do anything if some of the necessary objects have not yet been created.
+		// This was added mostly to prevent exceptions from being thrown in the previewer in design mode.
+		// ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+		if( _selectionSpan == null )
+		{
+			return;
+		}
+		
+		_selectionSpan.IsVisible = false;
+		//EventTooltip.IsVisible   = false;
+		
+		switch( _interactionMode )
+		{
+			case GraphInteractionMode.Selecting:
+				EndSelectionMode();
+				break;
+			case GraphInteractionMode.Panning:
+				// The chart was rendered in low quality while panning, so re-render in high quality now that we're done 
+				//RenderGraph( true );
+				break;
+		}
+
+		_interactionMode = GraphInteractionMode.None;
 	}
-	
-	private void OnPointerPressed( object? sender, PointerPressedEventArgs e )
+
+	private void OnPointerPressed( object? sender, PointerPressedEventArgs eventArgs )
 	{
+		var point = eventArgs.GetCurrentPoint( this );
+		if( point.Properties.IsMiddleButtonPressed )
+		{
+			return;
+		}
+
+		if( eventArgs.Handled || _interactionMode != GraphInteractionMode.None )
+		{
+			return;
+		}
+
+		_selectionStartTime = 0;
+		_selectionEndTime   = 0;
+		
+		// We will want to do different things depending on where the PointerPressed happens, such 
+		// as within the data area of the graph versus on the chart title, etc. 
+		var dataRect = GetDataBounds();
+		if( !dataRect.Contains( point.Position ) )
+		{
+			return;
+		}
+		
+		switch( eventArgs.KeyModifiers )
+		{
+			case KeyModifiers.None when point.Properties.IsLeftButtonPressed:
+				(_selectionStartTime, _) = Chart.GetMouseCoordinates();
+				_selectionEndTime        = _selectionStartTime;
+				_selectionSpan.X1        = _selectionStartTime;
+				_selectionSpan.X2        = _selectionStartTime;
+				_selectionSpan.IsVisible = true;
+
+				_interactionMode = GraphInteractionMode.Selecting;
+			
+				eventArgs.Handled = true;
+				break;
+			case KeyModifiers.Shift when point.Properties.IsLeftButtonPressed:
+				(_selectionStartTime, _) = Chart.GetMouseCoordinates();
+				_selectionEndTime        = _selectionStartTime;
+				_selectionSpan.X1        = _selectionStartTime;
+				_selectionSpan.X2        = _selectionStartTime;
+				_selectionSpan.IsVisible = true;
+
+				// Provide a 3-minute zoom window around the clicked position
+				UpdateVisibleRange( _selectionStartTime - 1.5 * 60, _selectionEndTime + 1.5 * 60 );
+				OnAxesChanged( this, EventArgs.Empty );
+			
+				eventArgs.Handled = true;
+				break;
+			default:
+			{
+				if( (eventArgs.KeyModifiers & KeyModifiers.Control) != 0 || point.Properties.IsRightButtonPressed )
+				{
+					if( !_hasInputFocus )
+					{
+						Focus();
+					}
+			
+					Chart.Configuration.Quality = ScottPlot.Control.QualityMode.Low;
+
+					_pointerDownPosition = point.Position;
+					_interactionMode     = GraphInteractionMode.Panning;
+				}
+				break;
+			}
+		}
 	}
 	
 	private void OnPointerExited( object? sender, PointerEventArgs e )
@@ -191,8 +454,6 @@ public partial class EventGraph : UserControl
 		// and out and the event will be marked Handled so that it doesn't cause scrolling in the parent container. 
 		if( (args.KeyModifiers & KeyModifiers.Control) != 0x00 )
 		{
-			(double x, double y) = Chart.GetMouseCoordinates();
-
 			var range  = _rightOccluder!.X1 - _leftOccluder!.X2;
 			var center = _leftOccluder.X2 + range * 0.5;
 
@@ -200,7 +461,7 @@ public partial class EventGraph : UserControl
 			var left  = Math.Max( center - range * 0.5, _leftOccluder.X1 );
 			var right = Math.Min( center + range * 0.5, _rightOccluder.X2 );
 
-			UpdateVisibleRange( _day.RecordingStartTime.AddSeconds( left ), _day.RecordingStartTime.AddSeconds( right ) );
+			UpdateVisibleRange( left, right );
 
 			args.Handled = true;
 
@@ -257,7 +518,65 @@ public partial class EventGraph : UserControl
 
 	#endregion
 	
-	#region Private functions 
+	#region Private functions
+
+	private void EndSelectionMode()
+	{
+		// Sanity check
+		if( _day == null )
+		{
+			return;
+		}
+		
+		_interactionMode = GraphInteractionMode.None;
+
+		if( _selectionStartTime > _selectionEndTime )
+		{
+			(_selectionStartTime, _selectionEndTime) = (_selectionEndTime, _selectionStartTime);
+		}
+
+		// Try to differentiate between a click or simple mousedown and the user intending to select a time range
+		var pixelDifference = Chart.Plot.XAxis.Dims.PxPerUnit * ( _selectionEndTime - _selectionStartTime );
+		if( pixelDifference <= 2 )
+		{
+			_selectionSpan.IsVisible = false;
+			RenderGraph( true );
+
+			return;
+		}
+
+		// Enforce maximum zoom
+		if( _selectionEndTime < _selectionStartTime + MINIMUM_TIME_WINDOW )
+		{
+			var center = (_selectionStartTime + _selectionEndTime) / 2.0;
+			_selectionStartTime = center - MINIMUM_TIME_WINDOW / 2.0;
+			_selectionEndTime   = center + MINIMUM_TIME_WINDOW / 2.0;
+		}
+		
+		UpdateVisibleRange( _selectionStartTime, _selectionEndTime );
+		OnAxesChanged( this, EventArgs.Empty );
+	}
+
+	public void UpdateVisibleRange( double startTime, double endTime )
+	{
+		UpdateVisibleRange( _day.RecordingStartTime.AddSeconds( startTime ), _day.RecordingStartTime.AddSeconds( endTime ) );
+	}
+	
+	private Rect GetDataBounds()
+	{
+		var chartBounds = Chart.Bounds;
+		var xDims       = Chart.Plot.XAxis.Dims;
+		var yDims       = Chart.Plot.YAxis.Dims;
+		
+		var rect = new Rect(
+			(int)(chartBounds.X + xDims.DataOffsetPx),
+			(int)(chartBounds.Y + yDims.DataOffsetPx),
+			(int)xDims.DataSizePx, 
+			(int)yDims.DataSizePx
+		);
+
+		return rect;
+	}
 	
 	private void OnAxesChanged( object? sender, EventArgs e )
 	{
@@ -279,6 +598,12 @@ public partial class EventGraph : UserControl
 
 	private void CancelSelectionMode()
 	{
+		_interactionMode         = GraphInteractionMode.None;
+		_selectionStartTime      = 0;
+		_selectionEndTime        = 0;
+		_selectionSpan.IsVisible = false;
+
+		RenderGraph( true );
 	}
 	
 	private void LoadData( DailyReport day )
@@ -337,6 +662,10 @@ public partial class EventGraph : UserControl
 		var occluderColor = Color.Gray.MultiplyAlpha( 0.25f );
 		_leftOccluder  = Chart.Plot.AddHorizontalSpan( 0, 0, occluderColor );
 		_rightOccluder = Chart.Plot.AddHorizontalSpan( 0, 0, occluderColor );
+
+		_selectionSpan                = Chart.Plot.AddHorizontalSpan( -1, -1, Color.Red.MultiplyAlpha( 0.2f ), null );
+		_selectionSpan.IgnoreAxisAuto = true;
+		_selectionSpan.IsVisible      = false;
 
 		UpdateVisibleRange( _day.RecordingStartTime, _day.RecordingEndTime );
 		
@@ -429,6 +758,17 @@ public partial class EventGraph : UserControl
 		return (float)Math.Ceiling( formatted.Width );
 	}
 
+	#endregion
+	
+	#region Nested types
+
+	private enum GraphInteractionMode
+	{
+		None,
+		Panning,
+		Selecting,
+	}
+	
 	#endregion
 }
 

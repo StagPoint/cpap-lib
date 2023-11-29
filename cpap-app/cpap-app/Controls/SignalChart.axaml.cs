@@ -129,13 +129,14 @@ public partial class SignalChart : UserControl
 	private bool                      _hasInputFocus      = false;
 	private bool                      _hasDataAvailable   = false;
 	private bool                      _chartInitialized   = false;
-	private double                    _selectionStartTime = 0;
-	private double                    _selectionEndTime   = 0;
 	private GraphInteractionMode      _interactionMode    = GraphInteractionMode.None;
 	private AxisLimits                _pointerDownAxisLimits;
 	private Point                     _pointerDownPosition;
 
-	private HSpan          _selectionSpan;
+	private double _selectionStartTime = 0;
+	private double _selectionEndTime   = 0;
+	private HSpan  _selectionSpan;
+	
 	private VLine          _hoverMarkerLine;
 	private HSpan          _hoverMarkerSpan;
 	private ReportedEvent? _hoverEvent = null;
@@ -540,7 +541,7 @@ public partial class SignalChart : UserControl
 			_selectionSpan.IsVisible = true;
 
 			// Provide a 3-minute zoom window around the clicked position
-			ZoomTo( _selectionStartTime - 1.5, _selectionEndTime + 1.5 );
+			ZoomTo( _selectionStartTime - 1.5 * 60, _selectionEndTime + 1.5 * 60 );
 			
 			eventArgs.Handled = true;
 		}
@@ -719,7 +720,11 @@ public partial class SignalChart : UserControl
 		ZoomTo( offsetStart, offsetEnd );
 	}
 
-	public Rect GetDataBounds()
+	#endregion 
+	
+	#region Private functions
+
+	private Rect GetDataBounds()
 	{
 		var chartBounds = Chart.Bounds;
 		var xDims       = Chart.Plot.XAxis.Dims;
@@ -735,10 +740,6 @@ public partial class SignalChart : UserControl
 		return rect;
 	}
 	
-	#endregion 
-	
-	#region Private functions
-
 	private void OnAxesChanged( object? sender, EventArgs e )
 	{
 		if( _day == null || !_hasDataAvailable || !IsEnabled )
