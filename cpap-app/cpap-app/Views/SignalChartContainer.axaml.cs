@@ -19,6 +19,8 @@ namespace cpap_app.Views;
 
 public partial class SignalChartContainer : UserControl
 {
+	private const string SETTING_EVENTGRAPH_ISVISIBLE = "EventGraph_IsVisible";
+
 	private List<SignalChart> _charts = new();
 
 	private EventGraph?      _eventGraph;
@@ -310,8 +312,22 @@ public partial class SignalChartContainer : UserControl
 		List<SignalChartConfiguration> signalConfigs = SignalChartConfigurationStore.GetSignalConfigurations();
 		List<EventMarkerConfiguration> eventConfigs  = EventMarkerConfigurationStore.GetEventMarkerConfigurations();
 
-		int totalConfigs   = 0;
+		int totalConfigs   = 1;
 		int visibleConfigs = 0;
+
+		var eventFlagsViewModel = new CheckmarkMenuItemViewModel()
+		{
+			Label     = "Event Flags",
+			IsChecked = _eventGraph!.IsVisible,
+		};
+
+		eventFlagsViewModel.PropertyChanged += ( sender, args ) =>
+		{
+			_eventGraph.IsVisible = !_eventGraph.IsVisible;
+			ApplicationSettingsStore.SaveNumericSetting( SETTING_EVENTGRAPH_ISVISIBLE, _eventGraph.IsVisible ? 1 : 0 );
+		};
+
+		menu.Items.Add( new CheckMarkMenuItem() { DataContext = eventFlagsViewModel } );
 
 		foreach( var config in signalConfigs )
 		{
@@ -390,6 +406,8 @@ public partial class SignalChartContainer : UserControl
 
 		_eventGraph = new EventGraph( eventConfigs );
 		PinnedCharts.Children.Add( _eventGraph );
+
+		_eventGraph.IsVisible = ApplicationSettingsStore.GetNumericSetting( SETTING_EVENTGRAPH_ISVISIBLE, 1 ) > 0.5;
 
 		foreach( var config in signalConfigs )
 		{

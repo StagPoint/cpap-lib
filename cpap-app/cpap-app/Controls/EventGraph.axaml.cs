@@ -480,7 +480,7 @@ public partial class EventGraph : UserControl
 
 	public void UpdateVisibleRange( DateTime startTime, DateTime endTime )
 	{
-		if( _day == null )
+		if( _day == null || _leftOccluder == null )
 		{
 			return;
 		}

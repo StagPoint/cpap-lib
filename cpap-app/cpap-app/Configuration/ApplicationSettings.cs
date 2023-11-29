@@ -2,7 +2,19 @@
 
 public class ApplicationSettings
 {
-	public int DefaultUserProfile { get; set; }
+	public ApplicationThemeType Theme               { get; set; }
+}
 
-	public ApplicationThemeType Theme { get; set; }
+public class StoredNumericSetting
+{
+	public int    ID    { get; set; }
+	public string Key   { get; set; } = string.Empty;
+	public double Value { get; set; } = 0;
+}
+
+public class StoredStringSetting
+{
+	public int    ID    { get; set; }
+	public string Key   { get; set; } = string.Empty;
+	public string Value { get; set; } = string.Empty;
 }

@@ -9,7 +9,7 @@ namespace cpap_app.Events;
 
 public class UserProfileEventArgs : RoutedEventArgs
 {
-	public UserProfile   Profile { get; set; }
+	public UserProfile       Profile { get; set; } = null!;
 	public UserProfileAction Action  { get; set; }
 }
 
