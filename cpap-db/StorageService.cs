@@ -529,16 +529,16 @@ namespace cpap_db
 			{
 				while( SQLite3.Step( stmt ) == SQLite3.Result.Row )
 				{
-					var row = new DataRow();
-
 					int columnCount = SQLite3.ColumnCount( stmt );
+					var row         = new DataRow( columnCount );
+
 					for( int index = 0; index < columnCount; ++index )
 					{
 						var columnName  = SQLite3.ColumnName( stmt, index );
 						var columnType  = SQLite3.ColumnType( stmt, index );
-						var columnValue = ReadColumn( Connection, stmt, index, columnType );
+						var columnValue = ReadColumn( stmt, index, columnType );
 
-						row[ columnName ] = columnValue;
+						row.AddColumn( index, columnName, columnType, columnValue );
 					}
 
 					result.Add( row );
@@ -621,11 +621,11 @@ namespace cpap_db
 			}
 		}
 
-		internal static object ReadColumn( SQLiteConnection connection, sqlite3_stmt stmt, int index, SQLite3.ColType type )
+		internal static object ReadColumn( sqlite3_stmt stmt, int index, SQLite3.ColType type )
 		{
 			return type switch
 			{
-				SQLite3.ColType.Integer => SQLite3.ColumnInt( stmt, index ),
+				SQLite3.ColType.Integer => SQLite3.ColumnInt64( stmt, index ),
 				SQLite3.ColType.Float   => SQLite3.ColumnDouble( stmt, index ),
 				SQLite3.ColType.Text    => SQLite3.ColumnString( stmt, index ),
 				SQLite3.ColType.Blob    => SQLite3.ColumnByteArray( stmt, index ),
@@ -634,7 +634,7 @@ namespace cpap_db
 			};
 		}
 		
-		internal static object ReadColumn( SQLiteConnection connection, sqlite3_stmt stmt, int index, SQLite3.ColType type, Type clrType )
+		internal static object ReadColumn( sqlite3_stmt stmt, int index, SQLite3.ColType type, Type clrType, bool storeTimeAsTicks = true )
 		{
 			if( type == SQLite3.ColType.Null )
 			{
@@ -676,7 +676,7 @@ namespace cpap_db
 
 			if( clrType == typeof( TimeSpan ) )
 			{
-				if( connection.StoreTimeSpanAsTicks )
+				if( storeTimeAsTicks )
 				{
 					return new TimeSpan( SQLite3.ColumnInt64( stmt, index ) );
 				}
@@ -713,7 +713,7 @@ namespace cpap_db
 				return (uint)SQLite3.ColumnInt64( stmt, index );
 			}
 
-			if( clrType == typeof( Decimal ) )
+			if( clrType == typeof( decimal ) )
 			{
 				return (Decimal)SQLite3.ColumnDouble( stmt, index );
 			}
@@ -761,6 +761,146 @@ namespace cpap_db
 			throw new NotSupportedException( $"Unhandled type {clrType}" );
 		}
 
+		internal static object ConvertValue( object value, SQLite3.ColType dbType, Type clrType )
+		{
+			if( dbType == SQLite3.ColType.Null )
+			{
+				return null;
+			}
+
+			TypeInfo typeInfo = clrType.GetTypeInfo();
+
+			if( typeInfo.IsGenericType && typeInfo.GetGenericTypeDefinition() == typeof( Nullable<> ) )
+			{
+				clrType  = typeInfo.GenericTypeArguments[ 0 ];
+				typeInfo = clrType.GetTypeInfo();
+			}
+
+			if( clrType == typeof( string ) )
+			{
+				Debug.Assert( dbType == SQLite3.ColType.Text );
+				return (string)value;
+			}
+
+			if( clrType == typeof( int ) )
+			{
+				Debug.Assert( dbType == SQLite3.ColType.Integer );
+				return (int)value;
+			}
+
+			if( clrType == typeof( bool ) )
+			{
+				Debug.Assert( dbType == SQLite3.ColType.Integer );
+				return (long)value > 0;
+			}
+
+			if( clrType == typeof( double ) )
+			{
+				Debug.Assert( dbType == SQLite3.ColType.Float );
+				return (double)value;
+			}
+
+			if( clrType == typeof( float ) )
+			{
+				Debug.Assert( dbType == SQLite3.ColType.Float );
+				return (float)value;
+			}
+
+			if( clrType == typeof( TimeSpan ) )
+			{
+				Debug.Assert( dbType == SQLite3.ColType.Integer );
+				return new TimeSpan( (long)value );
+			}
+
+			if( clrType == typeof( DateTime ) )
+			{
+				Debug.Assert( dbType == SQLite3.ColType.Integer );
+				return new DateTime( (long)value, DateTimeKind.Local );
+			}
+
+			if( clrType == typeof( DateTimeOffset ) )
+			{
+				Debug.Assert( dbType == SQLite3.ColType.Integer );
+				return new DateTimeOffset( (long)value, TimeSpan.Zero );
+			}
+
+			if( typeInfo.IsEnum )
+			{
+				if( dbType != SQLite3.ColType.Text )
+				{
+					Debug.Assert( dbType == SQLite3.ColType.Integer );
+					return (int)(long)value;
+				}
+
+				return Enum.Parse( clrType, (string)value, true );
+			}
+
+			if( clrType == typeof( long ) )
+			{
+				Debug.Assert( dbType == SQLite3.ColType.Integer );
+				return (long)value;
+			}
+
+			if( clrType == typeof( uint ) )
+			{
+				Debug.Assert( dbType == SQLite3.ColType.Integer );
+				return (uint)value;
+			}
+
+			if( clrType == typeof( decimal ) )
+			{
+				Debug.Assert( dbType == SQLite3.ColType.Float );
+				return (decimal)value;
+			}
+
+			if( clrType == typeof( byte ) )
+			{
+				Debug.Assert( dbType == SQLite3.ColType.Integer );
+				return (byte)value;
+			}
+
+			if( clrType == typeof( ushort ) )
+			{
+				Debug.Assert( dbType == SQLite3.ColType.Integer );
+				return (ushort)value;
+			}
+
+			if( clrType == typeof( short ) )
+			{
+				Debug.Assert( dbType == SQLite3.ColType.Integer );
+				return (short)value;
+			}
+
+			if( clrType == typeof( sbyte ) )
+			{
+				Debug.Assert( dbType == SQLite3.ColType.Integer );
+				return (sbyte)value;
+			}
+
+			if( clrType == typeof( byte[] ) )
+			{
+				return (byte[])value;
+			}
+
+			if( clrType == typeof( Guid ) )
+			{
+				return new Guid( (string)value );
+			}
+
+			if( clrType == typeof( Uri ) )
+			{
+				return new Uri( (string)value );
+			}
+
+			if( clrType == typeof( Color ) )
+			{
+				Debug.Assert( dbType == SQLite3.ColType.Integer );
+				return Color.FromArgb( (int)value );
+			}
+
+			throw new NotSupportedException( $"Unhandled type {clrType}" );
+		}
+
 		#endregion 
 		
 		#region IDisposable interface implementation
@@ -779,18 +919,39 @@ namespace cpap_db
 		{
 			#region Public properties
 			
-			public int ColumnCount { get => _columns.Count; }
+			public int ColumnCount { get => _columnCount; }
 			
 			#endregion 
 			
 			#region Private fields
 
-			private List<KeyValuePair<string, object>> _columns = new();
+			private List<KeyValuePair<string, object>> _columns     = null;
+			private List<SQLite3.ColType>              _columnTypes = null;	
+
+			private int _columnCount;
 
 			#endregion
 			
+			#region Constructor
+
+			public DataRow( int columnCount )
+			{
+				_columnCount = columnCount;
+				_columns     = new List<KeyValuePair<string, object>>( columnCount );
+				_columnTypes = new List<SQLite3.ColType>( columnCount );
+			}
+			
+			#endregion 
+			
 			#region Public functions
 
+			public void AddColumn( int index, string columnName, SQLite3.ColType columnType, object columnValue )
+			{
+				Debug.Assert( index == _columns.Count, "Column index mismatch" );
+				_columns.Add( new KeyValuePair<string, object>( columnName, columnValue ) );
+				_columnTypes.Add( columnType );
+			}
+			
 			public string GetColumnName( int index )
 			{
 				return _columns[ index ].Key;
@@ -799,6 +960,29 @@ namespace cpap_db
 			public object GetValue( int index )
 			{
 				return _columns[ index ].Value;
+			}
+
+			public SQLite3.ColType GetColumnType( int index )
+			{
+				return _columnTypes[ index ];
+			}
+			
+			public SQLite3.ColType GetColumnType( string key, StringComparison comparison = StringComparison.Ordinal )
+			{
+				for( int i = 0; i < _columnCount; i++ )
+				{
+					if( string.Equals( _columns[ i ].Key, key, comparison ) )
+					{
+						return _columnTypes[ i ];
+					}
+				}
+
+				throw new KeyNotFoundException();
+			}
+			
+			public Dictionary<string, object> ToDictionary()
+			{
+				return new Dictionary<string, object>( _columns );
 			}
 			
 			#endregion 
@@ -837,10 +1021,11 @@ namespace cpap_db
 					}
 
 					_columns.Add( new KeyValuePair<string, object>( key, value ) );
+					Debug.Assert( _columns.Count <= _columnCount, "Column count mismatch" );
 				}
 			}
 			
-			#endregion 
+			#endregion
 		}
 		
 		#endregion

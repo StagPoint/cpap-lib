@@ -589,6 +589,35 @@ public class DatabaseMapping<T> : DatabaseMapping
 
 	#region Public functions
 
+	public T ExtractFromDataRow( StorageService.DataRow data )
+	{
+		var obj = new T();
+		var map = data.ToDictionary();
+
+		foreach( var column in Columns )
+		{
+			if( map.TryGetValue( column.ColumnName, out object value ) )
+			{
+				value = StorageService.ConvertValue( value, data.GetColumnType( column.ColumnName ), column.Type );				
+				column.SetValue( obj, value );
+			}
+		}
+
+		return obj;
+	}
+
+	public List<T> ExtractFromDataRows( List<StorageService.DataRow> rows )
+	{
+		var list = new List<T>( rows.Count );
+
+		foreach( var row in rows )
+		{
+			list.Add( ExtractFromDataRow( row ) );
+		}
+
+		return list;
+	}
+
 	internal List<T> ExecuteQuery<P>( SQLiteConnection connection, string query, IList<P> primaryKeys, params object[] arguments ) 
 		where P : struct
 	{
@@ -617,13 +646,13 @@ public class DatabaseMapping<T> : DatabaseMapping
 					var columnMapping = GetColumnByName( columnName );
 					if( columnMapping != null )
 					{
-						var val = StorageService.ReadColumn( connection, stmt, index, columnType, columnMapping.Type );
+						var val = StorageService.ReadColumn( stmt, index, columnType, columnMapping.Type );
 
 						columnMapping.SetValue( obj, val );
 					}
 					else if( PrimaryKey != null && primaryKeys != null && columnName.Equals( PrimaryKey.ColumnName, StringComparison.OrdinalIgnoreCase ) )
 					{
-						var val = StorageService.ReadColumn( connection, stmt, index, columnType, PrimaryKey.Type );
+						var val = StorageService.ReadColumn( stmt, index, columnType, PrimaryKey.Type );
 						primaryKeys.Add( (P)val );
 
 						if( PrimaryKey.PropertyAccessor != null )
@@ -671,14 +700,14 @@ public class DatabaseMapping<T> : DatabaseMapping
 					var columnMapping  = GetColumnByName( columnName );
 					if( columnMapping != null )
 					{
-						var columnValue = StorageService.ReadColumn( connection, stmt, index, columnType, columnMapping.Type );
+						var columnValue = StorageService.ReadColumn( stmt, index, columnType, columnMapping.Type );
 						columnMapping.SetValue( obj, columnValue );
 					}
 					else if( PrimaryKey != null && PrimaryKey.ColumnName.Equals( columnName, StringComparison.OrdinalIgnoreCase ) )
 					{
 						if( PrimaryKey.PropertyAccessor != null )
 						{
-							var columnValue = StorageService.ReadColumn( connection, stmt, index, columnType, PrimaryKey.Type );
+							var columnValue = StorageService.ReadColumn( stmt, index, columnType, PrimaryKey.Type );
 							PrimaryKey.PropertyAccessor.SetValue( obj, columnValue );
 						}
 					}
