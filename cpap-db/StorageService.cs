@@ -183,6 +183,20 @@ namespace cpap_db
 		#endregion 
 		
 		#region Public functions (cpap-lib specific)
+
+		public List<DailyReport> LoadDailyReportsForRange( int profileID, DateTime start, DateTime end )
+		{
+			List<DailyReport> days = new List<DailyReport>();
+
+			var dates = GetStoredDates( profileID ).Where( x => x >= start && x <= end ).ToArray();
+
+			foreach( var date in dates )
+			{
+				days.Add( LoadDailyReport( profileID, date ) );
+			}
+
+			return days;
+		}
 		
 		public DailyReport LoadDailyReport( int profileID, DateTime date )
 		{
@@ -486,6 +500,17 @@ namespace cpap_db
 		public int Execute( string query, params object[] arguments )
 		{
 			return Connection.Execute( query, arguments );
+		}
+
+		public List<T> Query<T>( string query, params object[] arguments ) where T : class, new()
+		{
+			var mapping = GetMapping<T>();
+			if( mapping == null )
+			{
+				throw new InvalidOperationException( $"Could not find an existing mapping for type {typeof( T )}" );
+			}
+
+			return mapping.ExecuteQuery( Connection, query, arguments );
 		}
 
 		public List<DataRow> Query( string query, params object[] arguments )

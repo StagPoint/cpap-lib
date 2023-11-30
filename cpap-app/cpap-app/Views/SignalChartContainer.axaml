@@ -38,8 +38,7 @@
         <ScrollViewer
             Name="ScrollContainer"
             DockPanel.Dock="Top"
-            HorizontalScrollBarVisibility="Disabled"
-            VerticalScrollBarVisibility="Auto">
+            HorizontalScrollBarVisibility="Disabled">
             <StackPanel Name="UnPinnedCharts">
                 <!-- Un-pinned charts will be added here by the code-behind -->
             </StackPanel>
