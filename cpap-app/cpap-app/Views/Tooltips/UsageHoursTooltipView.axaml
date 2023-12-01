@@ -1,0 +1,21 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewModels="clr-namespace:cpap_app.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="300" 
+             x:Class="cpap_app.Views.Tooltips.UsageHoursTooltipView"
+             x:DataType="viewModels:UsageHoursViewModel">
+    <Design.DataContext>
+        <viewModels:UsageHoursViewModel/>
+    </Design.DataContext>
+    <Grid ColumnDefinitions="Auto,12,Auto" RowDefinitions="Auto,Auto,Auto">
+        
+        <TextBlock Grid.Column="0" Grid.Row="0" Text="Date:" FontWeight="Bold" />
+        <TextBlock Grid.Column="2" Grid.Row="0" Text="{Binding Date, StringFormat={}{0:D}}" />
+        
+        <TextBlock Grid.Column="0" Grid.Row="1" Text="Usage:" FontWeight="Bold" />
+        <TextBlock Grid.Column="2" Grid.Row="1" Text="{Binding TotalSleepTime, StringFormat={}{0:g}}" />
+        
+    </Grid>
+</UserControl>

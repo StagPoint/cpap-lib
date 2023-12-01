@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:avalonia="clr-namespace:ScottPlot.Avalonia;assembly=ScottPlot.Avalonia"
              xmlns:viewModels="clr-namespace:cpap_app.ViewModels"
+             xmlns:tooltips="clr-namespace:cpap_app.Views.Tooltips"
              mc:Ignorable="d" 
              d:DesignWidth="800" 
              x:Class="cpap_app.Controls.UsageHoursGraph"
@@ -18,18 +19,7 @@
              x:DataType="viewModels:HistoryViewModel">
     <ToolTip.Tip>
         <ToolTip>
-            <ToolTip.Styles>
-                <Style Selector="TextBlock">
-                    <Setter Property="FontSize" Value="16" />
-                </Style>
-            </ToolTip.Styles>
-            <StackPanel>
-                <TextBlock Text="Now is the time for all good men" />
-                <TextBlock Text="Now is the time for all good men" />
-                <TextBlock Text="Now is the time for all good men" />
-                <TextBlock Text="Now is the time for all good men" />
-                <TextBlock Text="Now is the time for all good men" />
-            </StackPanel>
+            <tooltips:UsageHoursTooltipView/>
         </ToolTip>
     </ToolTip.Tip>
     <Design.DataContext>

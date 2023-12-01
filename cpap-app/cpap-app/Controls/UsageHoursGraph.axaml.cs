@@ -140,6 +140,12 @@ public partial class UsageHoursGraph : UserControl
 		if( change.NewValue is HistoryViewModel vm )
 		{
 			LoadData( vm );
+
+			var tooltip = ToolTip.GetTip( this ) as Control;
+			if( tooltip != null )
+			{
+				tooltip.DataContext = null;
+			}
 		}
 	}
 
@@ -236,6 +242,7 @@ public partial class UsageHoursGraph : UserControl
 				}
 
 				eventArgs.Handled = true;
+				ToolTip.SetIsOpen( this, false );
 			
 				RenderGraph( false );
 			
@@ -264,8 +271,7 @@ public partial class UsageHoursGraph : UserControl
 				OnAxesChanged( this, EventArgs.Empty );
 			
 				eventArgs.Handled = true;
-
-				eventArgs.Handled = true;
+				ToolTip.SetIsOpen( this, false );
 				
 				return;
 			}
@@ -288,7 +294,7 @@ public partial class UsageHoursGraph : UserControl
 				_selectionSpan.IsVisible = true;
 				
 				OnHover( point, hoveredDayIndex, hoveredDate );
-				RenderGraph( false );
+				RenderGraph( true );
 				
 				break;
 			}
@@ -388,6 +394,13 @@ public partial class UsageHoursGraph : UserControl
 	
 	private void OnPointerExited( object? sender, PointerEventArgs e )
 	{
+		ToolTip.SetIsOpen( this, false );
+
+		if( _selectionSpan != null )
+		{
+			_selectionSpan.IsVisible = false;
+			RenderGraph( true );
+		}
 	}
 	
 	private void OnPointerEntered( object? sender, PointerEventArgs e )
@@ -396,6 +409,8 @@ public partial class UsageHoursGraph : UserControl
 	
 	private void OnPointerWheelChanged( object? sender, PointerWheelEventArgs args )
 	{
+		ToolTip.SetIsOpen( this, false );
+
 		// Because the charts are likely going to be used within a scrolling container, I've disabled the built-in mouse wheel 
 		// handling which performs zooming, and re-implemented it here with the additional requirement that the Control key be
 		// held down while scrolling the mouse wheel in order to zoom. If the Control key is held down, the chart will zoom in
@@ -412,6 +427,8 @@ public partial class UsageHoursGraph : UserControl
 			OnAxesChanged( this, EventArgs.Empty );
 			Focus();
 			
+			_selectionSpan!.IsVisible = false;
+		
 			RenderGraph( false );
 		}
 	}
@@ -448,7 +465,7 @@ public partial class UsageHoursGraph : UserControl
 
 	protected virtual void OnHover( PointerPoint mousePosition, int hoveredDayIndex, DateTime hoveredDate )
 	{
-		const int SPACING = 50;
+		const int SPACING = 12;
 
 		var day = _history.Days.FirstOrDefault( x => x.ReportDate.Date == hoveredDate );
 		if( day == null )
@@ -459,6 +476,14 @@ public partial class UsageHoursGraph : UserControl
 
 		var tooltip = ToolTip.GetTip( this ) as ToolTip;
 		Debug.Assert( tooltip != null, nameof( tooltip ) + " != null" );
+		
+		tooltip.DataContext = new UsageHoursViewModel
+		{
+			Date           = hoveredDate,
+			TotalTimeSpan  = day.TotalTimeSpan,
+			TotalSleepTime = day.TotalSleepTime,
+			NonTherapyTime = day.TotalTimeSpan - day.TotalSleepTime
+		};
 
 		var axisLimits      = Chart.Plot.GetAxisLimits();
 		var onLeftSide      = hoveredDayIndex < axisLimits.XCenter;
@@ -467,7 +492,7 @@ public partial class UsageHoursGraph : UserControl
 		
 		ToolTip.SetPlacement( this, PlacementMode.LeftEdgeAlignedTop );
 		ToolTip.SetHorizontalOffset( this, tooltipPosition );
-		ToolTip.SetVerticalOffset( this, 0 );
+		ToolTip.SetVerticalOffset( this, mousePosition.Position.Y - tooltip.Bounds.Height + SPACING ); 
 		ToolTip.SetIsOpen( this, true );
 	}
 
