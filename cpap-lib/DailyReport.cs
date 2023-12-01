@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace cpaplib
 {
-	public class DailyReport
+	public class DailyReport : IComparable<DailyReport>
 	{
 		#region Public properties
 
@@ -242,6 +242,15 @@ namespace cpaplib
 		}
 
 		#endregion
+		
+		#region IComparable<DailyReport> interface implementation 
+		
+		public int CompareTo( DailyReport other )
+		{
+			return other == null ? 0 : ReportDate.Date.CompareTo( other.ReportDate.Date );
+		}
+
+		#endregion 
 
 		#region Base class overrides
 

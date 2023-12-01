@@ -514,7 +514,7 @@ public partial class SignalChart : UserControl
 
 		// We will want to do different things depending on where the PointerPressed happens, such 
 		// as within the data area of the graph versus on the chart title, etc. 
-		var dataRect = GetDataBounds();
+		var dataRect = GetDataAreaBounds();
 		if( !dataRect.Contains( point.Position ) )
 		{
 			return;
@@ -572,8 +572,6 @@ public partial class SignalChart : UserControl
 
 			var amount = Math.Max( args.Delta.Y * 0.25 + 1.0, 0.25 );
 			Chart.Plot.AxisZoom( amount, 1.0, x, y );
-
-			Debug.WriteLine( $"MouseWheel: {amount}" );
 
 			args.Handled = true;
 
@@ -724,7 +722,7 @@ public partial class SignalChart : UserControl
 	
 	#region Private functions
 
-	private Rect GetDataBounds()
+	private Rect GetDataAreaBounds()
 	{
 		var chartBounds = Chart.Bounds;
 		var xDims       = Chart.Plot.XAxis.Dims;
@@ -1442,7 +1440,7 @@ public partial class SignalChart : UserControl
 		}
 
 		var timeOffset    = (time - _day.RecordingStartTime).TotalSeconds; 
-		var dataRect      = GetDataBounds();
+		var dataRect      = GetDataAreaBounds();
 		var dims          = Chart.Plot.XAxis.Dims;
 		var mousePosition = dims.PxPerUnit * (timeOffset - dims.Min) + dataRect.Left;
 
@@ -2084,16 +2082,5 @@ public partial class SignalChart : UserControl
 	}
 
 	#endregion 
-	
-	#region Nested types
-
-	private enum GraphInteractionMode
-	{
-		None,
-		Panning,
-		Selecting,
-	}
-	
-	#endregion
 }
 

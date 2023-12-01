@@ -16,6 +16,22 @@
              ChartGridLineColor="{DynamicResource TextFillColorSecondaryBrush}"
              Background="{DynamicResource LayerFillColorDefaultBrush}"
              x:DataType="viewModels:HistoryViewModel">
+    <ToolTip.Tip>
+        <ToolTip>
+            <ToolTip.Styles>
+                <Style Selector="TextBlock">
+                    <Setter Property="FontSize" Value="16" />
+                </Style>
+            </ToolTip.Styles>
+            <StackPanel>
+                <TextBlock Text="Now is the time for all good men" />
+                <TextBlock Text="Now is the time for all good men" />
+                <TextBlock Text="Now is the time for all good men" />
+                <TextBlock Text="Now is the time for all good men" />
+                <TextBlock Text="Now is the time for all good men" />
+            </StackPanel>
+        </ToolTip>
+    </ToolTip.Tip>
     <Design.DataContext>
         <viewModels:HistoryViewModel/>
     </Design.DataContext>

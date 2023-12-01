@@ -344,6 +344,7 @@ public partial class EventGraph : UserControl
 		_selectionSpan.IsVisible = false;
 		//EventTooltip.IsVisible   = false;
 		
+		// ReSharper disable once SwitchStatementMissingSomeEnumCasesNoDefault
 		switch( _interactionMode )
 		{
 			case GraphInteractionMode.Selecting:
@@ -360,6 +361,11 @@ public partial class EventGraph : UserControl
 
 	private void OnPointerPressed( object? sender, PointerPressedEventArgs eventArgs )
 	{
+		if( DataContext == null )
+		{
+			return;
+		}
+		
 		var point = eventArgs.GetCurrentPoint( this );
 		if( point.Properties.IsMiddleButtonPressed )
 		{
@@ -376,12 +382,13 @@ public partial class EventGraph : UserControl
 		
 		// We will want to do different things depending on where the PointerPressed happens, such 
 		// as within the data area of the graph versus on the chart title, etc. 
-		var dataRect = GetDataBounds();
+		var dataRect = GetDataAreaBounds();
 		if( !dataRect.Contains( point.Position ) )
 		{
 			return;
 		}
 		
+		// ReSharper disable once SwitchStatementHandlesSomeKnownEnumValuesWithDefault
 		switch( eventArgs.KeyModifiers )
 		{
 			case KeyModifiers.None when point.Properties.IsLeftButtonPressed:
@@ -588,7 +595,7 @@ public partial class EventGraph : UserControl
 		UpdateVisibleRange( _day.RecordingStartTime.AddSeconds( startTime ), _day.RecordingStartTime.AddSeconds( endTime ) );
 	}
 	
-	private Rect GetDataBounds()
+	private Rect GetDataAreaBounds()
 	{
 		var chartBounds = Chart.Bounds;
 		var xDims       = Chart.Plot.XAxis.Dims;
@@ -704,8 +711,6 @@ public partial class EventGraph : UserControl
 		_selectionSpan.IsVisible      = false;
 
 		UpdateVisibleRange( _day.RecordingStartTime, _day.RecordingEndTime );
-		
-		RenderGraph( false );
 	}
 
 	private List<EventType> GetVisibleEventTypes()
@@ -802,17 +807,6 @@ public partial class EventGraph : UserControl
 		return (float)Math.Ceiling( formatted.Width );
 	}
 
-	#endregion
-	
-	#region Nested types
-
-	private enum GraphInteractionMode
-	{
-		None,
-		Panning,
-		Selecting,
-	}
-	
 	#endregion
 }
 
