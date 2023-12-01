@@ -10,107 +10,10 @@
              x:Class="cpap_app.Controls.UsageHoursGraph"
              Height="200"
              Focusable="True"
-             ChartForeground="{DynamicResource TextFillColorPrimaryBrush}"
-             ChartBackground="{DynamicResource SolidBackgroundFillColorBaseBrush}"
-             ChartAlternateBackground="{DynamicResource ControlAltFillColorQuarternaryBrush}"
-             ChartBorderColor="{DynamicResource ControlStrokeColorSecondaryBrush}"
-             ChartGridLineColor="{DynamicResource TextFillColorSecondaryBrush}"
-             Background="{DynamicResource LayerFillColorDefaultBrush}"
              x:DataType="viewModels:HistoryViewModel">
     <ToolTip.Tip>
         <ToolTip>
             <tooltips:UsageHoursTooltipView/>
         </ToolTip>
     </ToolTip.Tip>
-    <Design.DataContext>
-        <viewModels:HistoryViewModel/>
-    </Design.DataContext>
-    <UserControl.Styles>
-        <Style Selector="Border#FocusAdornerBorder">
-            <Setter Property="BorderBrush" Value="Transparent" /> 
-        </Style>
-        <Style Selector="Border.FocusAdorner">
-            <Setter Property="BorderBrush" Value="{DynamicResource AccentFillColorDefaultBrush}" /> 
-        </Style>
-        <Style Selector="Border">
-            <Setter Property="Transitions">
-                <Transitions>
-                    <BrushTransition Property="BorderBrush" Easing="SineEaseInOut" Duration="00:00:0.15" />
-                </Transitions>
-            </Setter>
-        </Style>
-    </UserControl.Styles>
-    <Border Name="FocusAdornerBorder" BorderThickness="4 0 0 0" Background="Transparent">
-        <Grid Name="ContainerGrid" RowDefinitions="18,*,Auto" ColumnDefinitions="36,*,36" Background="Transparent">
-            <Line Name="TimeMarkerLine" IsEnabled="False" ZIndex="5000" Grid.Column="0" Grid.Row="0"
-                  Grid.ColumnSpan="3" Grid.RowSpan="3"
-                  Stroke="{DynamicResource AccentFillColorSelectedTextBackgroundBrush}" StrokeThickness="1"
-                  StartPoint="0,0" EndPoint="0,0" />
-            <TextBlock
-                Name="CurrentValue"
-                Grid.Row="0"
-                Grid.Column="1"
-                Grid.RowSpan="2"
-                IsVisible="False"
-                Padding="45 8"
-                Margin="0 0 0 0"
-                HorizontalAlignment="Left"
-                ZIndex="6000"
-                Theme="{DynamicResource CaptionTextBlockStyle}"
-                Text="Current value information goes here"
-                IsHitTestVisible="False">
-            </TextBlock>
-            <Border
-                Grid.Row="0"
-                Grid.Column="0"
-                Grid.RowSpan="2"
-                Background="Transparent">
-                <Label
-                    Width="200"
-                    Height="200"
-                    HorizontalContentAlignment="Center"
-                    VerticalContentAlignment="Center"
-                    VerticalAlignment="Center"
-                    Background="Transparent">
-                    <TextBlock
-                        Name="ChartLabel"
-                        Text="Usage Hours"
-                        VerticalAlignment="Center"
-                        TextWrapping="NoWrap"
-                        Padding="10 0"
-                        Background="Transparent"
-                        Theme="{DynamicResource SubtitleTextBlockStyle}">
-                        <TextBlock.RenderTransform>
-                            <TransformGroup>
-                                <RotateTransform Angle="-90" />
-                            </TransformGroup>
-                        </TextBlock.RenderTransform>
-                    </TextBlock>
-                </Label>
-            </Border>
-            <avalonia:AvaPlot
-                Grid.Row="1"
-                Grid.Column="1"
-                Grid.ColumnSpan="2"
-                Name="Chart"
-                HorizontalAlignment="Stretch"
-                Height="200"
-                Margin="0 0 16 0">
-            </avalonia:AvaPlot>
-            <TextBlock Name="NoDataLabel"
-                       Grid.Column="0"
-                       Grid.ColumnSpan="2"
-                       Grid.Row="1"
-                       Theme="{DynamicResource SubtitleTextBlockStyle}"
-                       Text="There is no data available to display"
-                       VerticalAlignment="Center"
-                       HorizontalAlignment="Center"
-                       Margin="100 -30 0 0"
-                       IsVisible="True">
-            </TextBlock>
-            <Separator Name="BottomSeparator" Background="{DynamicResource FocusStrokeColorOuterBrush}" Grid.Column="0"
-                       Grid.Row="2" Grid.ColumnSpan="3" IsHitTestVisible="False" />
-        </Grid>
-    </Border>
-
 </UserControl>

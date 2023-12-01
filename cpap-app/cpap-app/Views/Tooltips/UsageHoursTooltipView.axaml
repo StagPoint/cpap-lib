@@ -3,19 +3,23 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:cpap_app.ViewModels"
-             mc:Ignorable="d" d:DesignWidth="300" 
+             mc:Ignorable="d"
              x:Class="cpap_app.Views.Tooltips.UsageHoursTooltipView"
-             x:DataType="viewModels:UsageHoursViewModel">
+             x:DataType="viewModels:UsageHoursViewModel"
+             Width="150">
     <Design.DataContext>
         <viewModels:UsageHoursViewModel/>
     </Design.DataContext>
-    <Grid ColumnDefinitions="Auto,12,Auto" RowDefinitions="Auto,Auto,Auto">
+    <Grid ColumnDefinitions="Auto,12,Auto" RowDefinitions="Auto,Auto,Auto" HorizontalAlignment="Left">
         
         <TextBlock Grid.Column="0" Grid.Row="0" Text="Date:" FontWeight="Bold" />
-        <TextBlock Grid.Column="2" Grid.Row="0" Text="{Binding Date, StringFormat={}{0:D}}" />
+        <TextBlock Grid.Column="2" Grid.Row="0" Text="{Binding Date, StringFormat={}{0:d}}" />
         
         <TextBlock Grid.Column="0" Grid.Row="1" Text="Usage:" FontWeight="Bold" />
         <TextBlock Grid.Column="2" Grid.Row="1" Text="{Binding TotalSleepTime, StringFormat={}{0:g}}" />
+        
+        <TextBlock Grid.Column="0" Grid.Row="2" Text="Mask Off:" FontWeight="Bold" />
+        <TextBlock Grid.Column="2" Grid.Row="2" Text="{Binding NonTherapyTime, StringFormat={}{0:g}}" />
         
     </Grid>
 </UserControl>
