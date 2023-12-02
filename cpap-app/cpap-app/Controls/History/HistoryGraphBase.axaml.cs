@@ -426,10 +426,14 @@ public partial class HistoryGraphBase : UserControl
 		// and out and the event will be marked Handled so that it doesn't cause scrolling in the parent container. 
 		if( (args.KeyModifiers & KeyModifiers.Control) != 0x00 )
 		{
-			(double x, double y) = Chart.GetMouseCoordinates();
+			(double x, _) = Chart.GetMouseCoordinates();
 
 			var amount = Math.Max( args.Delta.Y * 0.25 + 1.0, 0.25 );
-			Chart.Plot.AxisZoom( amount, 1.0, x, y );
+			Chart.Plot.AxisZoom( amount, 1.0, x );
+			
+			// There is an "off by one" issue with Bar charts that allows zooming past the defined limits 
+			// when using AxisZoom(), so we need to force update the axis limits ourselves.
+			ForceUpdateAxisLimits();
 
 			args.Handled = true;
 
@@ -539,8 +543,9 @@ public partial class HistoryGraphBase : UserControl
 		
 		var plot = chart.Plot;
 		
+		// ReSharper disable once StringLiteralTypo
 		// Measure enough space for a vertical axis label, padding, and the longest anticipated tick label 
-		var maximumLabelWidth = MeasureText( "8888%", _chartStyle.TickLabelFontName, 12 );
+		var maximumLabelWidth = MeasureText( "XXXXXXX", _chartStyle.TickLabelFontName, 12 );
 
 		// We will be replacing most of the built-in mouse interactivity with bespoke functionality
 		Chart.Configuration.ScrollWheelZoom      = false;
@@ -557,7 +562,7 @@ public partial class HistoryGraphBase : UserControl
 		
 		plot.XAxis.TickLabelFormat( TickFormatter );
 		plot.XAxis.MinimumTickSpacing( 1f );
-		plot.XAxis.TickDensity( 1f );
+		plot.XAxis.TickDensity( 2f );
 		plot.XAxis.Layout( padding: 0 );
 		plot.XAxis.MajorGrid( false );
 		plot.XAxis.AxisTicks.MajorTickLength = 4;
@@ -574,7 +579,7 @@ public partial class HistoryGraphBase : UserControl
 		plot.YAxis.SetBoundary( 0, 10 );
 		plot.YAxis.MajorGrid( true );
 		plot.YAxis.MinorGrid( false );
-
+		
 		chart.Configuration.LockVerticalAxis = true;
 
 		// These changes won't be valid until the graph is rendered, so just render it in low resolution for now
@@ -584,6 +589,16 @@ public partial class HistoryGraphBase : UserControl
 	#endregion 
 
 	#region Private functions 
+	
+	private void ForceUpdateAxisLimits()
+	{
+		Chart.Configuration.AxesChangedEventEnabled = false;
+		{
+			var axisLimits = Chart.Plot.GetAxisLimits();
+			Chart.Plot.SetAxisLimitsX( axisLimits.XMin, axisLimits.XMax );
+		}
+		Chart.Configuration.AxesChangedEventEnabled = true;
+	}
 	
 	protected void EndSelectionMode()
 	{
@@ -688,8 +703,7 @@ public partial class HistoryGraphBase : UserControl
 
 	protected string TickFormatter( double time )
 	{
-		var date = _history.Start.AddDays( time - 0.5 );
-
+		var date = _history.Start.AddDays( Math.Round( time ) );
 		return $"{date:d}";
 	}
 

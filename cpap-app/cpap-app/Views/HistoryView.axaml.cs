@@ -16,8 +16,6 @@ using cpap_db;
 
 using cpaplib;
 
-using FluentAvalonia.Core;
-
 namespace cpap_app.Views;
 
 public partial class HistoryView : UserControl
@@ -53,7 +51,7 @@ public partial class HistoryView : UserControl
 	{
 		base.OnApplyTemplate( e );
 
-		var ignoredSignals = new string[]
+		var ignoredSignals = new[]
 		{
 			SignalNames.EPAP, 
 			SignalNames.MaskPressureLow, 
@@ -63,7 +61,7 @@ public partial class HistoryView : UserControl
 			SignalNames.Movement,
 		};
 
-		var sql = "SELECT DISTINCT signal.Name, signal.UnitOfMeasurement FROM signal";
+		const string sql = "SELECT DISTINCT signal.Name, signal.UnitOfMeasurement FROM signal";
 		
 		using var store = StorageService.Connect();
 		StorageService.CreateMapping<SignalNamesAndUnits>();

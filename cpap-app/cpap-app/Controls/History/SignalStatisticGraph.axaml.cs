@@ -154,13 +154,19 @@ public partial class SignalStatisticGraph : HistoryGraphBase
 
 		var range = MaxValue - MinValue;
 
-		var positions = new double[ DIVISIONS ];
-		var labels    = new string[ DIVISIONS ];
+		var positions    = new double[ DIVISIONS ];
+		var labels       = new string[ DIVISIONS ];
+		var wholeNumbers = true;
 
 		for( int i = 0; i < DIVISIONS; i++ )
 		{
-			positions[ i ] = MinValue + i * (range / (DIVISIONS - 1));
-			labels[ i ]    = $"{positions[ i ]:F0}";
+			positions[ i ] =  MinValue + i * (range / (DIVISIONS - 1));
+			wholeNumbers   &= positions[ i ] % 1.0 == 0.0;
+		}
+
+		for( int i = 0; i < DIVISIONS; i++ )
+		{
+			labels[ i ] = wholeNumbers ? $"{positions[ i ]}" : $"{positions[ i ]:F2}";
 		}
 
 		Chart.Plot.YAxis.ManualTickPositions( positions, labels );

@@ -8,7 +8,7 @@
              x:Class="cpap_app.Views.SignalChartContainer"
              Background="Transparent">
     <DockPanel LastChildFill="True">
-        <StackPanel Name="PinnedCharts" DockPanel.Dock="Top"
+        <StackPanel Name="PinnedCharts" DockPanel.Dock="Top" Margin="0 0 12 0"
                     Background="{DynamicResource SolidBackgroundFillColorSecondaryBrush}">
             <!-- Pinned charts will be added here by the code-behind -->
         </StackPanel>
@@ -38,6 +38,8 @@
         <ScrollViewer
             Name="ScrollContainer"
             DockPanel.Dock="Top"
+            Padding="0 0 12 0"
+            VerticalScrollBarVisibility="Visible"
             HorizontalScrollBarVisibility="Disabled">
             <StackPanel Name="UnPinnedCharts">
                 <!-- Un-pinned charts will be added here by the code-behind -->

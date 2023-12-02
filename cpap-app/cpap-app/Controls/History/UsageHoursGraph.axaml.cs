@@ -6,7 +6,6 @@ using cpap_app.Helpers;
 using cpap_app.ViewModels;
 using cpap_app.ViewModels.Tooltips;
 
-using cpap_db;
 using cpaplib;
 
 using Color = System.Drawing.Color;
@@ -60,6 +59,7 @@ public partial class UsageHoursGraph : HistoryGraphBase
 				continue;
 			}
 
+			// TODO: There is one date in the sample data that actually has a duplicate with the same date. Find out why. 
 			Debug.Assert( values[ index ] == 0, "Duplicate index" );
 			
 			values[ index ] = day.TotalSleepTime.TotalHours;
@@ -77,7 +77,7 @@ public partial class UsageHoursGraph : HistoryGraphBase
 		for( int i = 0; i < 5; i++ )
 		{
 			positions[ i ] = i == 0 ? 0.0 : i * maxTime / 4;
-			labels[ i ]    = positions[ i ].ToString( "F0" );
+			labels[ i ]    = positions[ i ].ToString( "F2" );
 		}
 
 		Chart.Plot.YAxis.ManualTickPositions( positions, labels );
