@@ -124,19 +124,19 @@ public partial class SignalStatisticGraph : HistoryGraphBase
 
 		var colorIndex = ColorIndex;
 
-		var maxChart = Chart.Plot.AddBar( values99, DataColors.GetDataColor( colorIndex + 0 ).ToDrawingColor() );
+		var maxChart = Chart.Plot.AddBar( values99, DataColors.GetLightThemeColor( colorIndex + 0 ).ToDrawingColor() );
 		maxChart.BarWidth        = 0.95;
 		maxChart.BorderLineWidth = 1;
 
-		var percentile95Chart = Chart.Plot.AddBar( values95, DataColors.GetDataColor( colorIndex + 1 ).ToDrawingColor() );
+		var percentile95Chart = Chart.Plot.AddBar( values95, DataColors.GetLightThemeColor( colorIndex + 1 ).ToDrawingColor() );
 		percentile95Chart.BarWidth        = 0.95;
 		percentile95Chart.BorderLineWidth = 1;
 
-		var medianChart = Chart.Plot.AddBar( valuesMedian, DataColors.GetDataColor( colorIndex + 2 ).ToDrawingColor() );
+		var medianChart = Chart.Plot.AddBar( valuesMedian, DataColors.GetLightThemeColor( colorIndex + 2 ).ToDrawingColor() );
 		medianChart.BarWidth        = 0.95;
 		medianChart.BorderLineWidth = 1;
 
-		var minChart = Chart.Plot.AddBar( valuesMin, DataColors.GetDataColor( colorIndex + 3 ).ToDrawingColor() );
+		var minChart = Chart.Plot.AddBar( valuesMin, DataColors.GetLightThemeColor( colorIndex + 3 ).ToDrawingColor() );
 		minChart.BarWidth        = 0.95;
 		minChart.BorderLineWidth = 1;
 

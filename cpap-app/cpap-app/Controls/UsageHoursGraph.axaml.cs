@@ -66,7 +66,7 @@ public partial class UsageHoursGraph : HistoryGraphBase
 			maxUsageTime    = Math.Max( maxUsageTime, values[ index ] );
 		}
 
-		var barChart = Chart.Plot.AddBar( values, DataColors.GetDataColor( 0 ).ToDrawingColor() );
+		var barChart = Chart.Plot.AddBar( values, DataColors.GetLightThemeColor( 0 ).ToDrawingColor() );
 		barChart.BarWidth        = 0.95;
 		barChart.BorderLineWidth = 1;
 

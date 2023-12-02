@@ -34,6 +34,16 @@ public class DataColors
 		0xffffa600,
 	};
 
+	public static Color GetDarkThemeColor( int index )
+	{
+		return Color.FromUInt32( DarkThemeColors[ index % DarkThemeColors.Length ] );
+	}
+
+	public static Color GetLightThemeColor( int index )
+	{
+		return Color.FromUInt32( LightThemeColors[ index % LightThemeColors.Length ] );
+	}
+
 	public static Color GetDataColor( int index )
 	{
 		var isDarkTheme = Application.Current?.ActualThemeVariant == ThemeVariant.Dark;
