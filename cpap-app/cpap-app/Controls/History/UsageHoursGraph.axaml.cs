@@ -20,8 +20,8 @@ public partial class UsageHoursGraph : HistoryGraphBase
 	public UsageHoursGraph()
 	{
 		InitializeComponent();
-		
-		GraphTitle.Text   = "Usage Time";
+
+		GraphTitle.Text = "Usage Time";
 	}
 	
 	#endregion 

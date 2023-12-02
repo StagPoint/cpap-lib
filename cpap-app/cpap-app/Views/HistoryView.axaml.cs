@@ -9,6 +9,7 @@ using Avalonia.Threading;
 
 using cpap_app.Controls;
 using cpap_app.Events;
+using cpap_app.Helpers;
 using cpap_app.ViewModels;
 
 using cpap_db;
@@ -153,7 +154,8 @@ public partial class HistoryView : UserControl
 			WHERE [{dayMapping.ForeignKey.ColumnName}] = ? AND [{nameof( DailyReport.ReportDate )}] BETWEEN ? AND ? 
 			ORDER BY [{dayMapping.TableName}].[{dayMapping.PrimaryKey.ColumnName}]";
 
-		// Only load the part of the DailyReports that is going to be relevant to the consumer (skipping Signal data, for instance)
+		// Only load the part of the DailyReports that is going to be relevant to the consumer
+		// (skipping Signal and Settings data, for instance)
 		var days = store.Query<DailyReport>( dayQuery, profileID, start, end );
 		foreach( var day in days )
 		{
@@ -169,7 +171,7 @@ public partial class HistoryView : UserControl
 
 		var viewModel = new HistoryViewModel()
 		{
-			Start = start,
+			Start = days.Count > 0 ? DateHelper.Max( start, days[ 0 ].ReportDate.Date ) : start,
 			End   = end,
 			Days  = days
 		};

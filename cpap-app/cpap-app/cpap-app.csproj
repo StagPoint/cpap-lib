@@ -51,5 +51,17 @@
         <DependentUpon>EventSummaryView.axaml</DependentUpon>
         <SubType>Code</SubType>
       </Compile>
+      <Compile Update="Controls\History\HistoryGraphBase.axaml.cs">
+        <DependentUpon>HistoryGraphBase.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="Controls\History\UsageHoursGraph.axaml.cs">
+        <DependentUpon>UsageHoursGraph.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="Controls\History\SignalStatisticGraph.axaml.cs">
+        <DependentUpon>SignalStatisticGraph.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
     </ItemGroup>
 </Project>

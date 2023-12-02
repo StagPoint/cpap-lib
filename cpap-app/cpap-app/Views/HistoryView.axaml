@@ -16,14 +16,7 @@
             HorizontalScrollBarVisibility="Disabled">
             <StackPanel Name="Graphs">
                 <controls:UsageHoursGraph />
-                <!--
-                <controls:SignalStatisticGraph Title="Flow Limit" SignalName="Flow Limit" MaxValue="1" MinValue="0" Units="" />
-                <controls:SignalStatisticGraph Title="Leak Rate" SignalName="Leak Rate" MaxValue="50" MinValue="0" Units="L/min" />
-                <controls:SignalStatisticGraph Title="Resp. Rate" SignalName="Respiration Rate" MaxValue="50" MinValue="0" Units="bpm" />
-                <controls:SignalStatisticGraph Title="Tidal Volume" SignalName="Tidal Volume" MaxValue="2000" MinValue="0" Units="ml" />
-                <controls:SignalStatisticGraph Title="Minute Vent" SignalName="Minute Vent" MaxValue="30" MinValue="0" Units="L/min" />
-                <controls:SignalStatisticGraph Title="SP02" SignalName="SpO2" MaxValue="100" MinValue="50" Units="%" />
-            -->
+                <controls:AhiHistoryGraph />
             </StackPanel>
         </ScrollViewer>
     </DockPanel>

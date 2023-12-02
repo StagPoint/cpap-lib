@@ -178,11 +178,6 @@ public partial class SignalStatisticGraph : HistoryGraphBase
 	{
 		var stats = day.Statistics.FirstOrDefault( x => x.SignalName == SignalName );
 
-		if( stats == null )
-		{
-			return null;
-		}
-		
 		return new SignalStatisticsViewModel()
 		{
 			Date       = day.ReportDate.Date,

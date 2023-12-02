@@ -4,14 +4,14 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:cpap_app.ViewModels"
              xmlns:tooltips="clr-namespace:cpap_app.Views.Tooltips"
-             mc:Ignorable="d" 
+             mc:Ignorable="d"
              d:DesignWidth="800"
              d:DesignHeight="200"
-             x:Class="cpap_app.Controls.UsageHoursGraph"
-             x:DataType="viewModels:HistoryViewModel">
+             x:DataType="viewModels:HistoryViewModel"
+             x:Class="cpap_app.Controls.AhiHistoryGraph">
     <ToolTip.Tip>
         <ToolTip>
-            <tooltips:UsageHoursTooltipView/>
+            <tooltips:AhiHistoryTooltip />
         </ToolTip>
     </ToolTip.Tip>
 </UserControl>

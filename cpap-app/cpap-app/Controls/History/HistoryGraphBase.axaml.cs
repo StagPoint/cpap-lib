@@ -496,23 +496,18 @@ public partial class HistoryGraphBase : UserControl
 		const int VERT_OFFSET = 12;
 
 		var day = _history.Days.FirstOrDefault( x => x.ReportDate.Date == hoveredDate );
-		if( day == null )
-		{
-			ToolTip.SetIsOpen( this, false );
-			return;
-		}
 		
 		var tooltip = ToolTip.GetTip( this ) as ToolTip;
 		Debug.Assert( tooltip != null, nameof( tooltip ) + " != null" );
 
-		tooltip.DataContext = BuildTooltipDataContext( day );
+		tooltip.DataContext = BuildTooltipDataContext( day ?? new DailyReport() { ReportDate = hoveredDate } );
 		if( tooltip.DataContext == null )
 		{
 			ToolTip.SetIsOpen( this, false );
 			return;
 		}
 
-		tooltip.Measure( tooltip.DesiredSize );
+		tooltip.Measure( Bounds.Size );
 
 		var axisLimits       = Chart.Plot.GetAxisLimits();
 		var onLeftSide       = hoveredDayIndex < axisLimits.XCenter;
@@ -520,10 +515,11 @@ public partial class HistoryGraphBase : UserControl
 		var tooltipPositionX = !onLeftSide ? mousePosition.Position.X - HORZ_OFFSET : mousePosition.Position.X + HORZ_OFFSET + tooltipWidth;
 		var tooltipPositionY = mousePosition.Position.Y - tooltip.Bounds.Height + VERT_OFFSET;
 		
+		tooltip.InvalidateVisual();
+		ToolTip.SetIsOpen( this, true );
 		ToolTip.SetPlacement( this, PlacementMode.LeftEdgeAlignedTop );
 		ToolTip.SetHorizontalOffset( this, tooltipPositionX );
 		ToolTip.SetVerticalOffset( this, tooltipPositionY ); 
-		ToolTip.SetIsOpen( this, true );
 	}
 	
 	protected virtual object? BuildTooltipDataContext( DailyReport day )
@@ -561,10 +557,11 @@ public partial class HistoryGraphBase : UserControl
 		
 		plot.XAxis.TickLabelFormat( TickFormatter );
 		plot.XAxis.MinimumTickSpacing( 1f );
+		plot.XAxis.TickDensity( 1f );
 		plot.XAxis.Layout( padding: 0 );
 		plot.XAxis.MajorGrid( false );
 		plot.XAxis.AxisTicks.MajorTickLength = 4;
-		plot.XAxis.AxisTicks.MinorTickLength = 4;
+		plot.XAxis.AxisTicks.MinorTickLength = 0;
 		plot.XAxis2.Layout( 8, 1, 1 );
 		plot.XAxis.SetZoomInLimit( MINIMUM_TIME_WINDOW );
 
@@ -691,7 +688,7 @@ public partial class HistoryGraphBase : UserControl
 
 	protected string TickFormatter( double time )
 	{
-		var date = _history.Start.AddDays( time );
+		var date = _history.Start.AddDays( time - 0.5 );
 
 		return $"{date:d}";
 	}
