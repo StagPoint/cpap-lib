@@ -3,7 +3,11 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:avalonia="clr-namespace:ScottPlot.Avalonia;assembly=ScottPlot.Avalonia"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             mc:Ignorable="d" 
+             d:DesignWidth="800"
+             d:DesignHeight="200"
+             Height="180"
+             Focusable="True"
              ChartForeground="{DynamicResource TextFillColorPrimaryBrush}"
              ChartBackground="{DynamicResource SolidBackgroundFillColorBaseBrush}"
              ChartAlternateBackground="{DynamicResource ControlAltFillColorQuarternaryBrush}"
@@ -32,21 +36,7 @@
         </Style>
     </UserControl.Styles>
     <Border Name="FocusAdornerBorder" BorderThickness="4 0 0 0" Background="Transparent">
-        <Grid Name="ContainerGrid" RowDefinitions="18,*,Auto" ColumnDefinitions="36,*,36" Background="Transparent">
-            <TextBlock
-                Name="CurrentValue"
-                Grid.Row="0"
-                Grid.Column="1"
-                Grid.RowSpan="2"
-                IsVisible="False"
-                Padding="45 8"
-                Margin="0 0 0 0"
-                HorizontalAlignment="Left"
-                ZIndex="6000"
-                Theme="{DynamicResource CaptionTextBlockStyle}"
-                Text="Current value information goes here"
-                IsHitTestVisible="False">
-            </TextBlock>
+        <Grid Name="ContainerGrid" RowDefinitions="0,*,Auto" ColumnDefinitions="36,*,36" Background="Transparent">
             <Border
                 Grid.Row="0"
                 Grid.Column="0"
@@ -54,7 +44,7 @@
                 Background="Transparent">
                 <Label
                     Width="200"
-                    Height="200"
+                    Height="180"
                     HorizontalContentAlignment="Center"
                     VerticalContentAlignment="Center"
                     VerticalAlignment="Center"
@@ -81,7 +71,7 @@
                 Grid.ColumnSpan="2"
                 Name="Chart"
                 HorizontalAlignment="Stretch"
-                Height="200"
+                Height="180"
                 Margin="0 0 16 0">
             </avalonia:AvaPlot>
             <TextBlock Name="NoDataLabel"

@@ -2,7 +2,7 @@
 
 using cpap_app.Converters;
 
-namespace cpap_app.ViewModels;
+namespace cpap_app.ViewModels.Tooltips;
 
 public class UsageHoursViewModel
 {

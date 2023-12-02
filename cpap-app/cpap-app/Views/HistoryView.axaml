@@ -3,10 +3,10 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:controls="clr-namespace:cpap_app.Controls"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="800"
              x:Class="cpap_app.Views.HistoryView">
     <DockPanel LastChildFill="True">
-        <Grid DockPanel.Dock="Bottom" Background="{DynamicResource SolidBackgroundFillColorSecondaryBrush}">
+        <Grid DockPanel.Dock="Bottom" Height="24" Background="{DynamicResource SolidBackgroundFillColorSecondaryBrush}">
             <TextBlock>Status Bar</TextBlock>
         </Grid>
         <Separator DockPanel.Dock="Bottom" Background="{DynamicResource FocusStrokeColorOuterBrush}" />
@@ -16,6 +16,14 @@
             HorizontalScrollBarVisibility="Disabled">
             <StackPanel Name="Graphs">
                 <controls:UsageHoursGraph />
+                <!--
+                <controls:SignalStatisticGraph Title="Flow Limit" SignalName="Flow Limit" MaxValue="1" MinValue="0" Units="" />
+                <controls:SignalStatisticGraph Title="Leak Rate" SignalName="Leak Rate" MaxValue="50" MinValue="0" Units="L/min" />
+                <controls:SignalStatisticGraph Title="Resp. Rate" SignalName="Respiration Rate" MaxValue="50" MinValue="0" Units="bpm" />
+                <controls:SignalStatisticGraph Title="Tidal Volume" SignalName="Tidal Volume" MaxValue="2000" MinValue="0" Units="ml" />
+                <controls:SignalStatisticGraph Title="Minute Vent" SignalName="Minute Vent" MaxValue="30" MinValue="0" Units="L/min" />
+                <controls:SignalStatisticGraph Title="SP02" SignalName="SpO2" MaxValue="100" MinValue="50" Units="%" />
+            -->
             </StackPanel>
         </ScrollViewer>
     </DockPanel>

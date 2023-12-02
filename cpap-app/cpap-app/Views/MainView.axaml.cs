@@ -221,7 +221,9 @@ public partial class MainView : UserControl
 					
 					LoadTabPage( page, transition );
 
-					if( object.ReferenceEquals( NavView.SelectedItem, navDailyReport ) )
+					var closePaneWhenLoading = new[] { navDailyReport, navHistory };
+
+					if( closePaneWhenLoading.Contains( NavView.SelectedItem ) )
 					{
 						navView.PaneDisplayMode = NavigationViewPaneDisplayMode.LeftCompact;
 					}

@@ -2,11 +2,10 @@
 using System.Diagnostics;
 using System.Linq;
 
-using Avalonia.Controls;
-using Avalonia.Input;
-
 using cpap_app.Helpers;
 using cpap_app.ViewModels;
+using cpap_app.ViewModels.Tooltips;
+
 using cpap_db;
 using cpaplib;
 
@@ -29,41 +28,6 @@ public partial class UsageHoursGraph : HistoryGraphBase
 	
 	#region Private functions
 
-	protected override void OnHover( PointerPoint mousePosition, int hoveredDayIndex, DateTime hoveredDate )
-	{
-		const int SPACING = 12;
-
-		var day = _history.Days.FirstOrDefault( x => x.ReportDate.Date == hoveredDate );
-		if( day == null )
-		{
-			ToolTip.SetIsOpen( this, false );
-			return;
-		}
-		
-		var tooltip = ToolTip.GetTip( this ) as ToolTip;
-		Debug.Assert( tooltip != null, nameof( tooltip ) + " != null" );
-		
-		tooltip.DataContext = new UsageHoursViewModel
-		{
-			Date           = hoveredDate,
-			TotalTimeSpan  = day.TotalTimeSpan,
-			TotalSleepTime = day.TotalSleepTime,
-			NonTherapyTime = CalculateMaskOffTime( day ),
-		};
-
-		tooltip.Measure( tooltip.DesiredSize );
-
-		var axisLimits      = Chart.Plot.GetAxisLimits();
-		var onLeftSide      = hoveredDayIndex < axisLimits.XCenter;
-		var tooltipWidth    = tooltip.Bounds.Width;
-		var tooltipPosition = !onLeftSide ? mousePosition.Position.X - SPACING : mousePosition.Position.X + SPACING + tooltipWidth;
-		
-		ToolTip.SetPlacement( this, PlacementMode.LeftEdgeAlignedTop );
-		ToolTip.SetHorizontalOffset( this, tooltipPosition );
-		ToolTip.SetVerticalOffset( this, mousePosition.Position.Y - tooltip.Bounds.Height + SPACING ); 
-		ToolTip.SetIsOpen( this, true );
-	}
-	
 	protected override void LoadData( HistoryViewModel viewModel )
 	{
 		_history = viewModel;
@@ -82,8 +46,6 @@ public partial class UsageHoursGraph : HistoryGraphBase
 		
 		Chart.Plot.SetAxisLimitsY( 0, 12 );
 		Chart.Plot.YAxis.SetBoundary( 0, 12 );
-
-		using var store = StorageService.Connect();
 
 		var days         = viewModel.Days;
 		var values       = new double[ totalDays ];
@@ -104,7 +66,7 @@ public partial class UsageHoursGraph : HistoryGraphBase
 			maxUsageTime    = Math.Max( maxUsageTime, values[ index ] );
 		}
 
-		var barChart = Chart.Plot.AddBar( values );
+		var barChart = Chart.Plot.AddBar( values, DataColors.GetDataColor( 0 ).ToDrawingColor() );
 		barChart.BarWidth        = 0.95;
 		barChart.BorderLineWidth = 1;
 
@@ -127,7 +89,18 @@ public partial class UsageHoursGraph : HistoryGraphBase
 		RenderGraph( true );
 	}
 	
-	private TimeSpan CalculateMaskOffTime( DailyReport day )
+	protected override object BuildTooltipDataContext( DailyReport day )
+	{
+		return new UsageHoursViewModel
+		{
+			Date           = day.ReportDate.Date,
+			TotalTimeSpan  = day.TotalTimeSpan,
+			TotalSleepTime = day.TotalSleepTime,
+			NonTherapyTime = CalculateMaskOffTime( day ),
+		};
+	}
+
+	private static TimeSpan CalculateMaskOffTime( DailyReport day )
 	{
 		var result = TimeSpan.Zero;
 

@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Globalization;
+using System.Linq;
 
 using Avalonia;
 using Avalonia.Controls;
@@ -11,6 +13,8 @@ using Avalonia.Media;
 using cpap_app.Events;
 using cpap_app.Styling;
 using cpap_app.ViewModels;
+
+using cpaplib;
 
 using ScottPlot;
 using ScottPlot.Avalonia;
@@ -28,6 +32,7 @@ public partial class HistoryGraphBase : UserControl
 	public static readonly StyledProperty<IBrush> ChartGridLineColorProperty       = AvaloniaProperty.Register<SignalChart, IBrush>( nameof( ChartGridLineColor ) );
 	public static readonly StyledProperty<IBrush> ChartForegroundProperty          = AvaloniaProperty.Register<SignalChart, IBrush>( nameof( ChartForeground ) );
 	public static readonly StyledProperty<IBrush> ChartBorderColorProperty         = AvaloniaProperty.Register<SignalChart, IBrush>( nameof( ChartBorderColor ) );
+	public static readonly StyledProperty<int>    ColorIndexProperty               = AvaloniaProperty.Register<SignalStatisticGraph, int>( nameof( ColorIndex ) );
 
 	#endregion
 	
@@ -63,6 +68,12 @@ public partial class HistoryGraphBase : UserControl
 		set => SetValue( ChartBorderColorProperty, value );
 	}
 	
+	public int ColorIndex
+	{
+		get => GetValue( ColorIndexProperty );
+		set => SetValue( ColorIndexProperty, value );
+	}
+
 	#endregion
 	
 	#region Private fields
@@ -87,7 +98,8 @@ public partial class HistoryGraphBase : UserControl
 	
 	#region Constructor 
 	
-	protected HistoryGraphBase()
+	// ReSharper disable once MemberCanBeProtected.Global
+	public HistoryGraphBase()
 	{
 		InitializeComponent();
 		
@@ -444,15 +456,23 @@ public partial class HistoryGraphBase : UserControl
 
 	#endregion 
 	
-	#region Public functions 
+	#region Public functions
+
+	public void UpdateVisibleRange( DateTime start, DateTime end )
+	{
+		var startOffset = (start - _history.Start).TotalDays;
+		var endOffset   = (end - _history.Start).TotalDays;
+
+		UpdateVisibleRange( startOffset, endOffset );
+	}
 	
 	public void UpdateVisibleRange( double start, double end )
 	{
 		Chart.Configuration.AxesChangedEventEnabled = false;
-		Chart.Plot.SetAxisLimitsX( start, end );
-		
-		RenderGraph( false );
-		
+		{
+			Chart.Plot.SetAxisLimitsX( start, end );
+			RenderGraph( false );
+		}
 		Chart.Configuration.AxesChangedEventEnabled = true;
 	}
 	
@@ -472,7 +492,43 @@ public partial class HistoryGraphBase : UserControl
 
 	protected virtual void OnHover( PointerPoint mousePosition, int hoveredDayIndex, DateTime hoveredDate )
 	{
+		const int HORZ_OFFSET = 24;
+		const int VERT_OFFSET = 12;
 
+		var day = _history.Days.FirstOrDefault( x => x.ReportDate.Date == hoveredDate );
+		if( day == null )
+		{
+			ToolTip.SetIsOpen( this, false );
+			return;
+		}
+		
+		var tooltip = ToolTip.GetTip( this ) as ToolTip;
+		Debug.Assert( tooltip != null, nameof( tooltip ) + " != null" );
+
+		tooltip.DataContext = BuildTooltipDataContext( day );
+		if( tooltip.DataContext == null )
+		{
+			ToolTip.SetIsOpen( this, false );
+			return;
+		}
+
+		tooltip.Measure( tooltip.DesiredSize );
+
+		var axisLimits       = Chart.Plot.GetAxisLimits();
+		var onLeftSide       = hoveredDayIndex < axisLimits.XCenter;
+		var tooltipWidth     = tooltip.Bounds.Width;
+		var tooltipPositionX = !onLeftSide ? mousePosition.Position.X - HORZ_OFFSET : mousePosition.Position.X + HORZ_OFFSET + tooltipWidth;
+		var tooltipPositionY = mousePosition.Position.Y - tooltip.Bounds.Height + VERT_OFFSET;
+		
+		ToolTip.SetPlacement( this, PlacementMode.LeftEdgeAlignedTop );
+		ToolTip.SetHorizontalOffset( this, tooltipPositionX );
+		ToolTip.SetVerticalOffset( this, tooltipPositionY ); 
+		ToolTip.SetIsOpen( this, true );
+	}
+	
+	protected virtual object? BuildTooltipDataContext( DailyReport day )
+	{
+		return null;
 	}
 	
 	protected virtual void LoadData( HistoryViewModel viewModel )
@@ -488,7 +544,7 @@ public partial class HistoryGraphBase : UserControl
 		var plot = chart.Plot;
 		
 		// Measure enough space for a vertical axis label, padding, and the longest anticipated tick label 
-		var maximumLabelWidth = MeasureText( "888", _chartStyle.TickLabelFontName, 12 );
+		var maximumLabelWidth = MeasureText( "8888%", _chartStyle.TickLabelFontName, 12 );
 
 		// We will be replacing most of the built-in mouse interactivity with bespoke functionality
 		Chart.Configuration.ScrollWheelZoom      = false;
@@ -606,6 +662,7 @@ public partial class HistoryGraphBase : UserControl
 		
 		RaiseEvent( eventArgs );
 	}
+	
 	protected void CancelSelectionMode()
 	{
 		_interactionMode          = GraphInteractionMode.None;
