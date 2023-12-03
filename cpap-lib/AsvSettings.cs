@@ -2,10 +2,10 @@
 {
 	public class AsvSettings
 	{
-		public double StartPressure { get; set; }
-		public double MinPressure   { get; set; }
-		public double MaxPressure   { get; set; }
-		
+		public double StartPressure      { get; set; }
+		public double MinPressureSupport { get; set; }
+		public double MaxPressureSupport { get; set; }
+
 		public double EPAP    { get; set; }
 		public double EpapMin { get; set; }
 		public double EpapMax { get; set; }

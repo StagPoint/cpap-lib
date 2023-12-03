@@ -351,12 +351,16 @@ namespace cpaplib
 			// Remove all sessions that did not have signal data. This happens (for instance) when the ResMed machine reports a 
 			// MaskOn/MaskOff session that is too short for any data to be recorded. 
 			day.Sessions.RemoveAll( x => x.Signals.Count == 0 );
+			
 			foreach( var maskSession in day.Sessions )
 			{
 				// Remove all signals whose values are all out of range. This is how the AirSense indicates that 
 				// there is no SpO2 or Pulse information when a pulse oximeter is not attached, and there may 
 				// be other similar situations I haven't encountered yet (and in any case such signals are not valid). 
-				maskSession.Signals.RemoveAll( x => !x.Samples.Any( value => value >= x.MinValue ) );
+				maskSession.Signals.RemoveAll( x =>
+					(x.Name == SignalNames.SpO2 || x.Name == SignalNames.Pulse) &&
+					!x.Samples.Any( value => value >= x.MinValue )
+				);
 			}
 
 			// Remove all sessions that are shorter than five minutes
@@ -437,33 +441,6 @@ namespace cpaplib
 			day.RecordingEndTime   = lastRecordedTime;
 			day.TotalSleepTime     = TimeSpan.FromSeconds( day.Sessions.Sum( x => x.Duration.TotalSeconds ) );
 
-
-/* Unmerged change from project 'cpap-lib'
-Before:
-			// Calculate statistics (min, avg, median, max, etc) for each Signal
-			CalculateSignalStatistics( day );
-After:
-            // Calculate statistics (min, avg, median, max, etc) for each Signal
-            ResMedDataLoader.CalculateSignalStatistics( day );
-*/
-
-/* Unmerged change from project 'cpap-lib'
-Before:
-			// Calculate statistics (min, avg, median, max, etc) for each Signal
-			CalculateSignalStatistics( day );
-After:
-            // Calculate statistics (min, avg, median, max, etc) for each Signal
-            ResMedDataLoader.CalculateSignalStatistics( day );
-*/
-
-/* Unmerged change from project 'cpap-lib'
-Before:
-			// Calculate statistics (min, avg, median, max, etc) for each Signal
-			CalculateSignalStatistics( day );
-After:
-            // Calculate statistics (min, avg, median, max, etc) for each Signal
-            ResMedDataLoader.CalculateSignalStatistics( day );
-*/
             // Calculate statistics (min, avg, median, max, etc) for each Signal
             CalculateSignalStatistics( day );
 			
@@ -980,24 +957,55 @@ After:
 			else
 			{
 				var mode = (int)data.GetValue( "Mode" );
-				if( mode >= (int)OperatingMode.MAX_VALUE )
+
+				switch ( mode ) 
 				{
-					mode = -1;
-				}
+					case 11:    
+						// "For Her" model, which is just a different AutoCPAP
+						mode = (int)OperatingMode.APAP;
+						break;
+					case 9:
+						mode = (int)OperatingMode.AVAPS;
+						break;
+					case 8: 
+						mode = (int)OperatingMode.ASV_VARIABLE_EPAP;
+						break;
+					case 7:
+						mode = (int)OperatingMode.ASV;
+						break;
+					case 6:
+						mode = (int)OperatingMode.BILEVEL_AUTO_FIXED_PS;
+						break;
+					case 5:
+					case 4:
+					case 3:
+					case 2:
+						mode = (int)OperatingMode.BILEVEL_FIXED;
+						break;
+					case 1:    
+						mode = (int)OperatingMode.APAP; 
+						break;
+					case 0:
+						mode = (int)OperatingMode.CPAP;
+						break;
+					default:
+						mode = (int)OperatingMode.UNKNOWN;
+						break;
+				}    
 
 				settings.Mode = (OperatingMode)mode;
 			}
-
-			if(settings. Mode == OperatingMode.ASV )
+			
+			if(settings.Mode == OperatingMode.ASV )
 			{
 				settings.ASV = new AsvSettings
 				{
 					StartPressure = data[ "S.AV.StartPress" ],
-					MinPressure   = data[ "S.AV.MinPS" ],
-					MaxPressure   = data[ "S.AV.MaxPS" ],
+					MinPressureSupport   = data[ "S.AV.MinPS" ],
+					MaxPressureSupport   = data[ "S.AV.MaxPS" ],
 					EPAP          = data[ "S.AV.EPAP" ],
-					EpapMin       = data[ "S.AV.EPAP" ],
-					EpapMax       = data[ "S.AV.EPAP" ],
+					EpapMin       = data[ "S.AA.MinEPAP" ],
+					EpapMax       = data[ "S.AA.MaxEPAP" ],
 					IpapMin       = data[ "S.AV.EPAP" ] + data[ "S.AV.MinPS" ],
 					IpapMax       = data[ "S.AV.EPAP" ] + data[ "S.AV.MaxPS" ],
 				};
@@ -1007,8 +1015,8 @@ After:
 				settings.ASV = new AsvSettings
 				{
 					StartPressure = data[ "S.AA.StartPress" ],
-					MinPressure   = data[ "S.AA.MinPS" ],
-					MaxPressure   = data[ "S.AA.MaxPS" ],
+					MinPressureSupport   = data[ "S.AA.MinPS" ],
+					MaxPressureSupport   = data[ "S.AA.MaxPS" ],
 					EPAP          = data[ "S.AA.MinEPAP" ],
 					EpapMin       = data[ "S.AA.MinEPAP" ],
 					EpapMax       = data[ "S.AA.MaxEPAP" ],
@@ -1050,15 +1058,17 @@ After:
 			settings.CPAP.StartPressure = data["S.C.StartPress"];
 			settings.CPAP.Pressure      = data["S.C.Press"];
 
-			settings.EPR.ClinicianEnabled = data["S.EPR.ClinEnable"] >= 0.5;
-			settings.EPR.EprEnabled       = data["S.EPR.EPREnable"] >= 0.5;
-			settings.EPR.Level            = (int)data["S.EPR.Level"];
-			settings.EPR.Mode             = (EprType)(int)(data["S.EPR.EPRType"] + 1);
+			if( data.ContainsKey( "S.EPR.EPREnable" ) )
+			{
+				settings.EPR.EprEnabled = data[ "S.EPR.EPREnable" ] >= 0.5;
+				settings.EPR.Level      = (int)data[ "S.EPR.Level" ];
+				settings.EPR.Mode       = (EprType)(int)(data[ "S.EPR.EPRType" ] + 1);
 
-			settings.AutoSet.ResponseType  = (AutoSetResponseType)(int)data["S.AS.Comfort"];
-			settings.AutoSet.StartPressure = data["S.AS.StartPress"];
-			settings.AutoSet.MaxPressure   = data["S.AS.MaxPress"];
-			settings.AutoSet.MinPressure   = data["S.AS.MinPress"];
+				settings.AutoSet.ResponseType  = (AutoSetResponseType)(int)data[ "S.AS.Comfort" ];
+				settings.AutoSet.StartPressure = data[ "S.AS.StartPress" ];
+				settings.AutoSet.MaxPressure   = data[ "S.AS.MaxPress" ];
+				settings.AutoSet.MinPressure   = data[ "S.AS.MinPress" ];
+			}
 
 			settings.RampMode = (RampModeType)(int)data["S.RampEnable"];
 			settings.RampTime = data["S.RampTime"];

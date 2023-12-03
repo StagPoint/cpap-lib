@@ -12,6 +12,7 @@ namespace cpaplib
 		public const string LeakRate        = "Leak Rate";
 		public const string TidalVolume     = "Tidal Volume";
 		public const string MinuteVent      = "Minute Vent";
+		public const string TargetVent      = "Target Ventilation";
 		public const string FlowLimit       = "Flow Limit";
 		public const string RespirationRate = "Respiration Rate";
 		public const string InspirationTime = "Inspiration Time";
@@ -59,6 +60,9 @@ namespace cpaplib
 
 			{ "MinVent.2s", MinuteVent },
 			{ "MinVent", MinuteVent },
+
+			{ "TgMV", TargetVent },
+			{ "TgtVent.2s", TargetVent },
 
 			{ "Snore.2s", Snore },
 			{ "Snore", Snore },

@@ -198,6 +198,7 @@ public static class SignalChartConfigurationStore
 					config.Title        = "Sleep Stage";
 					config.AxisMaxValue = 0;
 					config.AxisMaxValue = 5;
+					config.InvertAxisY  = true;
 					config.IsVisible    = false;
 					config.ShowStepped  = true;
 					break;

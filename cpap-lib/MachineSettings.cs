@@ -30,6 +30,8 @@ namespace cpaplib
 						return CPAP.StartPressure;
 					case OperatingMode.APAP:
 						return AutoSet.StartPressure;
+					case OperatingMode.ASV:
+						return ASV.StartPressure;
 					default:
 						throw new ArgumentOutOfRangeException();
 				}

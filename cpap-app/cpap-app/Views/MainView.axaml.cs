@@ -285,7 +285,7 @@ public partial class MainView : UserControl
 			ShowProgressBar = true,
 			IconSource      = new SymbolIconSource { Symbol = Symbol.Upload },
 			SubHeader       = "Importing sleep information from Google Fit",
-			Content         = "Please wait while your data is imported. This may take a few seconds.",
+			Content         = "Please wait while your data is imported. This may take a while.",
 			Buttons =
 			{
 				TaskDialogButton.CancelButton
@@ -634,7 +634,7 @@ public partial class MainView : UserControl
 			ShowProgressBar = true,
 			IconSource      = new SymbolIconSource { Symbol = Symbol.Upload },
 			SubHeader       = "Performing Import",
-			Content         = "Please wait while your data is imported. This may take a few seconds.",
+			Content         = "Please wait while your data is imported. This may take a while.",
 			Buttons =
 			{
 				TaskDialogButton.CancelButton
@@ -644,7 +644,8 @@ public partial class MainView : UserControl
 		var appWindow = TopLevel.GetTopLevel( this ) as AppWindow;
 		appWindow?.PlatformFeatures.SetTaskBarProgressBarState( TaskBarProgressBarState.Indeterminate );
 
-		bool dataWasImported = false;
+		bool dataWasImported       = false;
+		bool operationWasCancelled = false;
 
 		td.Opened += async ( _, _ ) =>
 		{
@@ -655,6 +656,11 @@ public partial class MainView : UserControl
 			{
 				for( int i = 0; i < filePicker.Count; i++ )
 				{
+					if( operationWasCancelled )
+					{
+						break;
+					}
+							
 					var fileItem = filePicker[ i ];
 					var importers = OximetryImporterRegistry.FindCompatibleImporters( fileItem.Name );
 					if( importers.Count == 0 )
@@ -678,6 +684,11 @@ public partial class MainView : UserControl
 
 						foreach( var importer in importers )
 						{
+							if( operationWasCancelled )
+							{
+								break;
+							}
+							
 							var data = importer.Load( fileItem.Name, file, importOptions, eventGeneratorConfig );
 							if( data is { Sessions.Count: > 0 } )
 							{
@@ -728,6 +739,11 @@ public partial class MainView : UserControl
 
 					for( var loop = minDate; loop <= maxDate; loop = loop.AddDays( 1 ) )
 					{
+						if( operationWasCancelled )
+						{
+							break;
+						}
+							
 						// Copy the current date, because otherwise captures might reference the wrong value
 						var date = loop;
 
@@ -799,16 +815,21 @@ public partial class MainView : UserControl
 			} );
 		};
 
-		await td.ShowAsync();	
+		var result = await td.ShowAsync();
+		if( (TaskDialogStandardResult)result == TaskDialogStandardResult.Cancel )
+		{
+			operationWasCancelled = true;
+		}
 
 		if( metaSessions.Count == 0 || !dataWasImported )
 		{
-			const string upToDate     = "All pulse oximetry data was already up to date.";
+			const string upToDate  = "All pulse oximetry data was already up to date.";
+			const string cancelled = "The import operation was cancelled";
 			//const string noMatchFound = "One or more of the files you selected could not be matched to any existing CPAP sessions.";
 			
 			var dialog = MessageBoxManager.GetMessageBoxStandard(
 				$"Import from Pulse Oximetry File",
-				upToDate,
+				operationWasCancelled ? cancelled : upToDate,
 				ButtonEnum.Ok,
 				Icon.Warning );
 
@@ -939,7 +960,7 @@ public partial class MainView : UserControl
 			ShowProgressBar = true,
 			IconSource      = new SymbolIconSource { Symbol = Symbol.Upload },
 			SubHeader       = "Performing Import",
-			Content         = "Please wait while your CPAP data is imported. This may take a few seconds.",
+			Content         = "Please wait while your CPAP data is imported. This may take a while.",
 			Buttons =
 			{
 				TaskDialogButton.CancelButton

@@ -2,6 +2,7 @@
 
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Interactivity;
 
 using cpap_app.ViewModels;
@@ -21,6 +22,13 @@ public partial class HomeView : UserControl
 		InitializeComponent();
 		
 		ActiveUserProfile = UserProfileStore.GetLastUserProfile();
+	}
+
+	protected override void OnApplyTemplate( TemplateAppliedEventArgs e )
+	{
+		base.OnApplyTemplate( e );
+		
+		DailyScore.DataContext = null;
 	}
 
 	protected override void OnPropertyChanged( AvaloniaPropertyChangedEventArgs change )
