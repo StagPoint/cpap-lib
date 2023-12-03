@@ -7,6 +7,7 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 
+using cpap_app.Configuration;
 using cpap_app.Controls;
 using cpap_app.Events;
 using cpap_app.Helpers;
@@ -62,7 +63,7 @@ public partial class HistoryView : UserControl
 			SignalNames.Movement,
 		};
 
-		const string sql = "SELECT DISTINCT signal.Name, signal.UnitOfMeasurement FROM signal";
+		const string sql = "SELECT DISTINCT signal.Name, signal.UnitOfMeasurement, signal.MinValue, signal.MaxValue FROM signal";
 		
 		using var store = StorageService.Connect();
 		StorageService.CreateMapping<SignalNamesAndUnits>();
@@ -77,14 +78,30 @@ public partial class HistoryView : UserControl
 				continue;
 			}
 
-			var units = signalNamesAndUnits.FirstOrDefault( x => x.Name == config.SignalName )?.UnitOfMeasurement ?? "";
+			var signalDefaults = signalNamesAndUnits.FirstOrDefault( x => x.Name == config.SignalName );
+
+			var units = signalDefaults?.UnitOfMeasurement ?? "";
+
+			double? minValue = config.AxisMinValue;
+			double? maxValue = config.AxisMaxValue;
+
+			if( config.ScalingMode == AxisScalingMode.Defaults )
+			{
+				minValue = signalDefaults.MinValue;
+				maxValue = signalDefaults.MaxValue;
+			}
+			else if( config.ScalingMode == AxisScalingMode.AutoFit )
+			{
+				minValue = null;
+				maxValue = null;
+			}
 
 			var graph = new SignalStatisticGraph()
 			{
 				Title      = config.Title,
 				SignalName = config.SignalName,
-				MinValue   = config.AxisMinValue,
-				MaxValue   = config.AxisMaxValue,
+				MinValue   = minValue,
+				MaxValue   = maxValue,
 				Units      = units,
 			};
 
@@ -186,6 +203,8 @@ public partial class HistoryView : UserControl
 	{
 		public string Name              { get; set; } = string.Empty;
 		public string UnitOfMeasurement { get; set; } = string.Empty;
+		public double MinValue          { get; set; }
+		public double MaxValue          { get; set; }
 	}
 	
 	#endregion 

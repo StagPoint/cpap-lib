@@ -34,24 +34,24 @@ public partial class DailySettingsView : UserControl
 		var viewModel = new MachineSettingsViewModel();
 		var items     = viewModel.Settings;
 
-		items.Add( new MachineSettingsItemViewModel( "Mode", settings.Mode ) );
+		items.Add( new MachineSettingsItemViewModel( "Mode", GetModeString( settings.Mode ) ) );
 
-		if( settings.Mode == OperatingMode.CPAP )
+		switch( settings.Mode )
 		{
-			items.Add( new MachineSettingsItemViewModel( "Pressure", settings.CPAP.Pressure, "cmH20" ) );
-		}
-		else if( settings.Mode == OperatingMode.APAP )
-		{
-			items.Add( new MachineSettingsItemViewModel( "Min Pressure",  settings.AutoSet.MinPressure, "cmH20" ) );
-			items.Add( new MachineSettingsItemViewModel( "Max Pressure",  settings.AutoSet.MaxPressure, "cmH20" ) );
-			items.Add( new MachineSettingsItemViewModel( "Response Type", settings.AutoSet.ResponseType ) );
-		}
-		else if( settings.Mode == OperatingMode.ASV )
-		{
-			items.Add( new MachineSettingsItemViewModel( "EPAP",     settings.ASV.EPAP,                       "cmH20" ) );
-			items.Add( new MachineSettingsItemViewModel( "Max IPAP", $"{settings.ASV.IpapMax:F2}",            "cmH20" ) );
-			items.Add( new MachineSettingsItemViewModel( "PS Min",   $"{settings.ASV.MinPressureSupport:F2}", "cmH20" ) );
-			items.Add( new MachineSettingsItemViewModel( "PS Max",   $"{settings.ASV.MaxPressureSupport:F2}", "cmH20" ) );
+			case OperatingMode.CPAP:
+				items.Add( new MachineSettingsItemViewModel( "Pressure", settings.CPAP.Pressure, "cmH20" ) );
+				break;
+			case OperatingMode.APAP:
+				items.Add( new MachineSettingsItemViewModel( "Min Pressure",  settings.AutoSet.MinPressure, "cmH20" ) );
+				items.Add( new MachineSettingsItemViewModel( "Max Pressure",  settings.AutoSet.MaxPressure, "cmH20" ) );
+				items.Add( new MachineSettingsItemViewModel( "Response Type", settings.AutoSet.ResponseType ) );
+				break;
+			case OperatingMode.ASV:
+				items.Add( new MachineSettingsItemViewModel( "EPAP",     settings.ASV.EPAP,                       "cmH20" ) );
+				items.Add( new MachineSettingsItemViewModel( "Max IPAP", $"{settings.ASV.IpapMax:F2}",            "cmH20" ) );
+				items.Add( new MachineSettingsItemViewModel( "PS Min",   $"{settings.ASV.MinPressureSupport:F2}", "cmH20" ) );
+				items.Add( new MachineSettingsItemViewModel( "PS Max",   $"{settings.ASV.MaxPressureSupport:F2}", "cmH20" ) );
+				break;
 		}
 
 		items.Add( new MachineSettingsItemViewModel( "Ramp Mode", settings.RampMode ) );
@@ -84,5 +84,18 @@ public partial class DailySettingsView : UserControl
 		items.Add( new MachineSettingsItemViewModel( "Temperature",     $"{settings.Temperature:F1}", "\u00b0F" ) );
 
 		return viewModel;
+	}
+	
+	private static string GetModeString( OperatingMode mode )
+	{
+		// TODO: Should probably refer to the raw Mode setting to differentiate modes, which would entail making the raw settings data available 
+		return mode switch
+		{
+			OperatingMode.CPAP              => "CPAP",
+			OperatingMode.APAP              => "Auto",
+			OperatingMode.ASV               => "ASV",
+			OperatingMode.ASV_VARIABLE_EPAP => "ASV Auto",
+			_                               => mode.ToString()
+		};
 	}
 }

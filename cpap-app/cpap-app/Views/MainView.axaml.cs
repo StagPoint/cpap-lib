@@ -205,6 +205,7 @@ public partial class MainView : UserControl
 					return;
 				case System.Type pageType:
 				{
+					// Clear out any DailyReport from previous views or profiles
 					DataContext = null;
 					
 					var page = Activator.CreateInstance( pageType ) as Control;
@@ -859,6 +860,7 @@ public partial class MainView : UserControl
 
 	private void HandleLoadDateRequest( object? sender, DateTimeRoutedEventArgs e )
 	{
+		// NOTE: Changing to the Daily Report tab clears the DataContext, so this *must* be done first 
 		NavView.SelectedItem = navDailyReport;
 
 		var day       = LoadDailyReport( ActiveUserProfile.UserProfileID, e.DateTime );
@@ -866,6 +868,7 @@ public partial class MainView : UserControl
 
 		viewModel.ReloadRequired += ( _, args ) =>
 		{
+			// Of course sender is going to be a DailyReportViewModel, but this is a convenient sanity check  
 			if( sender is DailyReportViewModel vm )
 			{
 				DataContext = vm;
