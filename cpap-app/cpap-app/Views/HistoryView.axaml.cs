@@ -53,6 +53,7 @@ public partial class HistoryView : UserControl
 
 		var ignoredSignals = new[]
 		{
+			SignalNames.FlowRate,
 			SignalNames.EPAP, 
 			SignalNames.MaskPressureLow, 
 			SignalNames.MaskPressure, 
@@ -71,7 +72,7 @@ public partial class HistoryView : UserControl
 		var chartConfigs = SignalChartConfigurationStore.GetSignalConfigurations();
 		foreach( var config in chartConfigs )
 		{
-			if( !config.IsVisible || config.AxisMinValue < 0 || ignoredSignals.Contains( config.SignalName ) )
+			if( !config.IsVisible || !config.ShowInTrends || ignoredSignals.Contains( config.SignalName ) )
 			{
 				continue;
 			}
@@ -82,8 +83,8 @@ public partial class HistoryView : UserControl
 			{
 				Title      = config.Title,
 				SignalName = config.SignalName,
-				MinValue   = config.AxisMinValue ?? double.MinValue,
-				MaxValue   = config.AxisMaxValue ?? double.MinValue,
+				MinValue   = config.AxisMinValue,
+				MaxValue   = config.AxisMaxValue,
 				Units      = units,
 			};
 

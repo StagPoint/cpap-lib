@@ -60,6 +60,11 @@ public class SignalChartConfiguration : IComparable<SignalChartConfiguration>
 	public bool IsVisible { get; set; } = true;
 
 	/// <summary>
+	/// Whether the Signal's chart is displayed in the History/Trends view
+	/// </summary>
+	public bool ShowInTrends { get; set; } = true;
+
+	/// <summary>
 	/// If set, indicates the position on the Y axis to show a dotted red line indicating the top of a normal range 
 	/// </summary>
 	public double? BaselineHigh { get; set; }

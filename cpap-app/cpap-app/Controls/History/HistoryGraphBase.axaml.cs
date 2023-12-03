@@ -128,6 +128,12 @@ public partial class HistoryGraphBase : UserControl
 			InitializeChartProperties( Chart );
 		}
 
+		if( _history.Days.Count == 0 )
+		{
+			ShowNoDataAvailable();
+			return;
+		}
+
 		LoadData( _history );
 	}
 
@@ -142,7 +148,14 @@ public partial class HistoryGraphBase : UserControl
 
 		if( change.NewValue is HistoryViewModel vm )
 		{
-			LoadData( vm );
+			if( vm.Days.Count == 0 )
+			{
+				ShowNoDataAvailable();
+			}
+			else
+			{
+				LoadData( vm );
+			}
 
 			if( ToolTip.GetTip( this ) is Control tooltip )
 			{
@@ -590,6 +603,15 @@ public partial class HistoryGraphBase : UserControl
 
 	#region Private functions 
 	
+	protected void ShowNoDataAvailable()
+	{
+		Chart.Plot.Clear();
+		
+		NoDataLabel.IsVisible = true;
+		Chart.IsEnabled       = false;
+		this.IsEnabled        = false;
+	}
+
 	private void ForceUpdateAxisLimits()
 	{
 		Chart.Configuration.AxesChangedEventEnabled = false;

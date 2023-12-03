@@ -18,11 +18,11 @@ public partial class SignalStatisticGraph : HistoryGraphBase
 {
 	#region Public properties 
 	
-	public static readonly StyledProperty<string> TitleProperty      = AvaloniaProperty.Register<SignalStatisticGraph, string>( nameof( Title ) );
-	public static readonly StyledProperty<string> SignalNameProperty = AvaloniaProperty.Register<SignalStatisticGraph, string>( nameof( SignalName ) );
-	public static readonly StyledProperty<string> UnitsProperty      = AvaloniaProperty.Register<SignalStatisticGraph, string>( nameof( Units ) );
-	public static readonly StyledProperty<double> MinValueProperty   = AvaloniaProperty.Register<SignalStatisticGraph, double>( nameof( MinValue ) );
-	public static readonly StyledProperty<double> MaxValueProperty   = AvaloniaProperty.Register<SignalStatisticGraph, double>( nameof( MaxValue ) );
+	public static readonly StyledProperty<string>  TitleProperty      = AvaloniaProperty.Register<SignalStatisticGraph, string>( nameof( Title ) );
+	public static readonly StyledProperty<string>  SignalNameProperty = AvaloniaProperty.Register<SignalStatisticGraph, string>( nameof( SignalName ) );
+	public static readonly StyledProperty<string>  UnitsProperty      = AvaloniaProperty.Register<SignalStatisticGraph, string>( nameof( Units ) );
+	public static readonly StyledProperty<double?> MinValueProperty   = AvaloniaProperty.Register<SignalStatisticGraph, double?>( nameof( MinValue ) );
+	public static readonly StyledProperty<double?> MaxValueProperty   = AvaloniaProperty.Register<SignalStatisticGraph, double?>( nameof( MaxValue ) );
 
 	public string Title
 	{
@@ -42,13 +42,13 @@ public partial class SignalStatisticGraph : HistoryGraphBase
 		set => SetValue( UnitsProperty, value );
 	}
 
-	public double MinValue
+	public double? MinValue
 	{
 		get => GetValue( MinValueProperty );
 		set => SetValue( MinValueProperty, value );
 	}
 
-	public double MaxValue
+	public double? MaxValue
 	{
 		get => GetValue( MaxValueProperty );
 		set => SetValue( MaxValueProperty, value );
@@ -76,25 +76,16 @@ public partial class SignalStatisticGraph : HistoryGraphBase
 
 	protected override void LoadData( HistoryViewModel viewModel )
 	{
+		Chart.Plot.Clear();
+
 		_history = viewModel;
-		
+
 		NoDataLabel.IsVisible = false;
 		Chart.IsEnabled       = true;
 		this.IsEnabled        = true;
 
-		Chart.Plot.Clear();
-
-		if( viewModel.Days.Count == 0 )
-		{
-			return;
-		}
-
 		var totalDays = viewModel.TotalDays;
 
-		// NOTE: For some reason, we need to offset the beginning and end to account for centered bar offsets
-		Chart.Plot.SetAxisLimitsX( -0.5, totalDays - 0.5 );
-		Chart.Plot.XAxis.SetBoundary( -0.5, totalDays - 0.5 );
-		
 		var days         = viewModel.Days;
 		var valuesMedian = new double[ totalDays ];
 		var values99     = new double[ totalDays ];
@@ -142,17 +133,18 @@ public partial class SignalStatisticGraph : HistoryGraphBase
 
 		const int DIVISIONS = 6;
 
-		if( MinValue < 0 )
-		{
-			MinValue = valuesMin.Min();
-		}
+		var minValue = MinValue ?? valuesMin.Min();
+		var maxValue = MaxValue ?? values99.Max();
+		var range    = maxValue - minValue;
 
-		if( MaxValue < 0 || MaxValue < MinValue )
+		// Don't show signal stats for any Signal whose data is missing or which consists of both
+		// positive and negative values (for which Statistics wouldn't be valid anyways).   
+		if( range < 1e-4f || (minValue >= 0 != maxValue >= 0) )
 		{
-			MaxValue = values99.Max();
-		}
+			ShowNoDataAvailable();
 
-		var range = MaxValue - MinValue;
+			return;
+		}
 
 		var positions    = new double[ DIVISIONS ];
 		var labels       = new string[ DIVISIONS ];
@@ -160,7 +152,7 @@ public partial class SignalStatisticGraph : HistoryGraphBase
 
 		for( int i = 0; i < DIVISIONS; i++ )
 		{
-			positions[ i ] =  MinValue + i * (range / (DIVISIONS - 1));
+			positions[ i ] =  minValue + i * (range / (DIVISIONS - 1));
 			wholeNumbers   &= positions[ i ] % 1.0 == 0.0;
 		}
 
@@ -170,8 +162,12 @@ public partial class SignalStatisticGraph : HistoryGraphBase
 		}
 
 		Chart.Plot.YAxis.ManualTickPositions( positions, labels );
-		Chart.Plot.SetAxisLimitsY( MinValue, MaxValue );
-		Chart.Plot.YAxis.SetBoundary( MinValue, MaxValue );
+		Chart.Plot.SetAxisLimitsY( minValue, maxValue );
+		Chart.Plot.YAxis.SetBoundary( minValue, maxValue );
+		
+		// NOTE: For some reason, we need to offset the beginning and end to account for centered bar offsets
+		Chart.Plot.SetAxisLimitsX( -0.5, totalDays - 0.5 );
+		Chart.Plot.XAxis.SetBoundary( -0.5, totalDays - 0.5 );
 		
 		_selectionSpan                = Chart.Plot.AddHorizontalSpan( -1, -1, Color.Red.MultiplyAlpha( 0.35f ), null );
 		_selectionSpan.IgnoreAxisAuto = true;

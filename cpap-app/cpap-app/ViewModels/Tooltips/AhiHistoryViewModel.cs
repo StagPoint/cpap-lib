@@ -1,16 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 
 using cpaplib;
-
-using FluentAvalonia.Core;
 
 namespace cpap_app.ViewModels.Tooltips;
 
 public class AhiHistoryViewModel
 {
-	public DateTime Date { get; set; }
+	public DateTime Date    { get; set; }
+	public bool     IsEmpty { get; set; }
 
 	public double   ApneaHypopneaIndex { get; set; }
 	public int      TotalApneaCount    { get; set; }
@@ -30,7 +28,13 @@ public class AhiHistoryViewModel
 
 	public AhiHistoryViewModel( DailyReport day )
 	{
-		Date = day.ReportDate.Date;
+		Date    = day.ReportDate.Date;
+		IsEmpty = day.Sessions.Count == 0;
+
+		if( IsEmpty )
+		{
+			return;
+		}
 		
 		var events          = day.Events.Where( x => EventTypes.Apneas.Contains( x.Type ) ).ToList();
 		var totalSleepHours = Math.Max( day.TotalSleepTime.TotalHours, 1.0 );
@@ -54,6 +58,7 @@ public class AhiHistoryViewModel
 	
 	public AhiHistoryViewModel()
 	{
-		Date = DateTime.Today;
+		Date    = DateTime.Today;
+		IsEmpty = true;
 	}
 }

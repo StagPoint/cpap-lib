@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 using cpap_app.Configuration;
 using cpap_app.Converters;
@@ -83,6 +84,7 @@ public static class SignalChartConfigurationStore
 				case SignalNames.FlowRate:
 					config.BaselineHigh    = 0;
 					config.DisplayedEvents = new List<EventType>( EventTypes.RespiratoryDisturbance );
+					config.ShowInTrends    = false;
 					break;
 				
 				case SignalNames.Pressure:
@@ -96,6 +98,7 @@ public static class SignalChartConfigurationStore
 					config.AxisMinValue = 0;
 					config.AxisMaxValue = 20;
 					config.ScalingMode  = AxisScalingMode.Override;
+					config.ShowInTrends = false;
 					break;
 				
 				case SignalNames.LeakRate:
@@ -161,14 +164,16 @@ public static class SignalChartConfigurationStore
 				
 				case SignalNames.Snore:
 				case SignalNames.Movement:
-					config.ShowStepped = true;
-					config.ScalingMode = AxisScalingMode.AutoFit;
+					config.ShowStepped  = true;
+					config.ScalingMode  = AxisScalingMode.AutoFit;
+					config.ShowInTrends = false;
 					break;
 				
 				case SignalNames.AHI:
-					config.Title       = "AHI";
-					config.ShowStepped = true;
-					config.ScalingMode = AxisScalingMode.AutoFit;
+					config.Title        = "AHI";
+					config.ShowStepped  = true;
+					config.ScalingMode  = AxisScalingMode.AutoFit;
+					config.ShowInTrends = false;
 					config.DisplayedEvents.AddRange( EventTypes.Apneas );
 					break;
 				
@@ -177,6 +182,7 @@ public static class SignalChartConfigurationStore
 					config.ScalingMode  = AxisScalingMode.Override;
 					config.AxisMinValue = 0;
 					config.AxisMaxValue = 12;
+					config.ShowInTrends = false;
 					break;
 				
 				case SignalNames.ExpirationTime:
@@ -184,6 +190,7 @@ public static class SignalChartConfigurationStore
 					config.ScalingMode  = AxisScalingMode.Override;
 					config.AxisMinValue = 0;
 					config.AxisMaxValue = 10;
+					config.ShowInTrends = false;
 					break;
 				
 				case SignalNames.InspToExpRatio:
@@ -192,6 +199,7 @@ public static class SignalChartConfigurationStore
 					config.AxisMinValue = 0;
 					config.AxisMaxValue = 4;
 					config.ScalingMode  = AxisScalingMode.Override;
+					config.ShowInTrends = false;
 					break;
 				
 				case SignalNames.SleepStages:
@@ -201,6 +209,11 @@ public static class SignalChartConfigurationStore
 					config.InvertAxisY  = true;
 					config.IsVisible    = false;
 					config.ShowStepped  = true;
+					config.ShowInTrends = false;
+					break;
+				
+				case SignalNames.TargetVent:
+					config.ShowInTrends = false;
 					break;
 			}
 
