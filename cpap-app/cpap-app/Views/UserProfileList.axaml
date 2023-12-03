@@ -3,6 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:cpaplib="clr-namespace:cpaplib;assembly=cpap-lib"
+             xmlns:views="clr-namespace:cpap_app.Views"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="cpap_app.Views.UserProfileList"
              Padding="2">
@@ -10,6 +11,15 @@
         <StyleInclude Source="/Styling/GridStyles.axaml" />
     </UserControl.Styles>
     <StackPanel Orientation="Vertical" Grid.IsSharedSizeScope="True">
+
+        <Border Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}" BorderBrush="{DynamicResource ControlElevationBorderBrush}" BorderThickness="1" Padding="4">
+            <TextBlock HorizontalAlignment="Left" FontSize="16">
+                <Run>Currently signed in as:</Run>
+                <Run Text="{Binding $parent[views:MainView].ActiveUserProfile.UserName}" FontWeight="Bold" />
+            </TextBlock>
+        </Border>
+        
+        <Border Height="12" />
 
         <!-- Column headers -->
         <Border Classes="ColumnHeader">

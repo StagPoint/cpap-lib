@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 using Avalonia;
 using Avalonia.Controls;
@@ -12,6 +13,7 @@ using cpap_app.ViewModels;
 using cpaplib;
 
 using FluentAvalonia.UI.Controls;
+using FluentAvalonia.UI.Windowing;
 
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
@@ -118,6 +120,7 @@ public partial class UserProfileList : UserControl
 		
 		string message = @$"Are you ABSOLUTELY SURE that you want to delete the profile for {profile.UserName}?
 Doing so will also erase all of the data associated with this profile.
+
 THIS OPERATION CANNOT BE UNDONE";
 
 		var confirmDialog = MessageBoxManager.GetMessageBoxStandard(
@@ -132,7 +135,36 @@ THIS OPERATION CANNOT BE UNDONE";
 			return;
 		}
 
-		UserProfileStore.Delete( profile );
+		var appWindow = TopLevel.GetTopLevel( this ) as AppWindow;
+		appWindow?.PlatformFeatures.SetTaskBarProgressBarState( TaskBarProgressBarState.Indeterminate );
+
+		var progressDialog = new TaskDialog
+		{
+			XamlRoot        = appWindow,
+			Title           = $"Delete User Profile",
+			MinWidth        = 500,
+			ShowProgressBar = true,
+			IconSource      = new SymbolIconSource { Symbol = Symbol.Delete },
+			SubHeader       = $"Deleting Profile: {profile.UserName}",
+			Content         = "Please wait while the profile data is deleted. This may take a while.",
+			Buttons         = { },
+		};
+
+		progressDialog.Opened += async ( _, _ ) =>
+		{
+			// Show an animated indeterminate progress bar
+			progressDialog.SetProgressBarState( 0, TaskDialogProgressState.Indeterminate );
+
+			await Task.Run( () =>
+			{
+				UserProfileStore.Delete( profile );
+			} );
+
+			progressDialog.Hide();
+		};
+
+		await progressDialog.ShowAsync();
+		appWindow?.PlatformFeatures.SetTaskBarProgressBarState( TaskBarProgressBarState.None );
 
 		allUserProfiles.RemoveAll( x => x.UserProfileID == profile.UserProfileID );
 

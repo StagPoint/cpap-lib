@@ -31,6 +31,7 @@ namespace cpaplib
 					case OperatingMode.APAP:
 						return AutoSet.StartPressure;
 					case OperatingMode.ASV:
+					case OperatingMode.ASV_VARIABLE_EPAP:
 						return ASV.StartPressure;
 					default:
 						throw new ArgumentOutOfRangeException();

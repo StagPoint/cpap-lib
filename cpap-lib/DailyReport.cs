@@ -34,6 +34,18 @@ namespace cpaplib
 		public TimeSpan TotalTimeSpan { get => RecordingEndTime - RecordingStartTime; }
 
 		/// <summary>
+		/// Returns true if this instance contains detailed session data, or false if not (such as when the user
+		/// did not have an SD card in the machine) 
+		/// </summary>
+		public bool HasSessionData
+		{
+			get
+			{
+				return Sessions.Count > 0 && Sessions.Any( x => x.Signals.Count > 0 );
+			}
+		}
+
+		/// <summary>
 		/// Returns the number of "Mask Times" for the day
 		/// </summary>
 		internal int MaskEvents { get; set; }
@@ -113,18 +125,18 @@ namespace cpaplib
 		/// </summary>
 		public void RefreshTimeRange()
 		{
-			if( Sessions.Count > 0 )
+			if( HasSessionData )
 			{
 				RecordingStartTime = Sessions.Min( x => x.StartTime );
 				RecordingEndTime   = Sessions.Max( x => x.EndTime );
 				TotalSleepTime     = CalculateTotalSleepTime();
 			}
-			else
-			{
-				RecordingStartTime = ReportDate.Date.AddHours( 12 );
-				RecordingEndTime   = RecordingStartTime;
-				TotalSleepTime     = TimeSpan.Zero;
-			}
+			// else
+			// {
+			// 	RecordingStartTime = ReportDate.Date.AddHours( 12 );
+			// 	RecordingEndTime   = RecordingStartTime;
+			// 	TotalSleepTime     = TimeSpan.Zero;
+			// }
 		}
 
 		/// <summary>

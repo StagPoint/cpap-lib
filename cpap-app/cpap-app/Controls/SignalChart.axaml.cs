@@ -1602,12 +1602,11 @@ public partial class SignalChart : UserControl
 		}
 		
 		_day = day;
-		
+		_events.Clear();
+
 		// Subscribe to events that allow us to keep everything synchronized with the rest of the User Interface
 		viewModel.AnnotationsChanged += OnAnnotationsChanged;
 		
-		_events.Clear();
-
 		CurrentValue.Text = "";
 
 		if( ChartConfiguration == null )
@@ -1621,9 +1620,10 @@ public partial class SignalChart : UserControl
 			Chart.Plot.Clear();
 			
 			// Check to see if there are any sessions with the named Signal. If not, display the "No Data Available" message and eject.
-			_hasDataAvailable = day.Sessions.FirstOrDefault( x => x.GetSignalByName( ChartConfiguration.SignalName ) != null ) != null;
+			_hasDataAvailable = day.HasSessionData && day.Sessions.FirstOrDefault( x => x.GetSignalByName( ChartConfiguration.SignalName ) != null ) != null;
 			if( !_hasDataAvailable )
 			{
+				_day = null;
 				IndicateNoDataAvailable();
 
 				return;

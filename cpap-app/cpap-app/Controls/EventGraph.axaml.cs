@@ -642,6 +642,17 @@ public partial class EventGraph : UserControl
 	private void LoadData( DailyReport day )
 	{
 		_day = day;
+
+		Chart.Plot.Clear();
+
+		// If there are no Sessions (or no Signals), then indicate that there is no data available
+		if( !day.HasSessionData )
+		{
+			_day = null;
+			IndicateNoDataAvailable();
+
+			return;
+		}
 		
 		NoDataLabel.IsVisible  = false;
 		Chart.IsEnabled        = true;
@@ -649,8 +660,6 @@ public partial class EventGraph : UserControl
 
 		var eventTypes = GetVisibleEventTypes();
 		
-		Chart.Plot.Clear();
-
 		Chart.Plot.SetAxisLimitsX( 0, day.TotalTimeSpan.TotalSeconds );
 		Chart.Plot.SetAxisLimitsY( -eventTypes.Count, 1 );
 		Chart.Plot.YAxis.SetBoundary( -eventTypes.Count, 1 );

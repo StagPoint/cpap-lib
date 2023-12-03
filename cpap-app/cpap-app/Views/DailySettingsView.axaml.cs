@@ -48,10 +48,10 @@ public partial class DailySettingsView : UserControl
 		}
 		else if( settings.Mode == OperatingMode.ASV )
 		{
-			items.Add( new MachineSettingsItemViewModel( "EPAP", settings.ASV.EPAP, "cmH20" ) );
-			items.Add( new MachineSettingsItemViewModel( "Max IPAP", settings.ASV.IpapMax, "cmH20" ) );
-			items.Add( new MachineSettingsItemViewModel( "PS Min", settings.ASV.MinPressureSupport, "cmH20" ) );
-			items.Add( new MachineSettingsItemViewModel( "PS Max", settings.ASV.MaxPressureSupport, "cmH20" ) );
+			items.Add( new MachineSettingsItemViewModel( "EPAP",     settings.ASV.EPAP,                       "cmH20" ) );
+			items.Add( new MachineSettingsItemViewModel( "Max IPAP", $"{settings.ASV.IpapMax:F2}",            "cmH20" ) );
+			items.Add( new MachineSettingsItemViewModel( "PS Min",   $"{settings.ASV.MinPressureSupport:F2}", "cmH20" ) );
+			items.Add( new MachineSettingsItemViewModel( "PS Max",   $"{settings.ASV.MaxPressureSupport:F2}", "cmH20" ) );
 		}
 
 		items.Add( new MachineSettingsItemViewModel( "Ramp Mode", settings.RampMode ) );

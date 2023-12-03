@@ -44,7 +44,7 @@
             </Grid>
 
             <Expander
-                IsVisible="{Binding Sessions.Count}"
+                IsVisible="{Binding HasSessionData}"
                 ExpandDirection="Down"
                 IsExpanded="True"
                 VerticalAlignment="Top" 
@@ -61,7 +61,7 @@
             </Expander>
 
             <Expander
-                IsVisible="{Binding Sessions.Count}"
+                IsVisible="{Binding HasSessionData}"
                 ExpandDirection="Down"
                 IsExpanded="True"
                 VerticalAlignment="Top" 
@@ -92,7 +92,7 @@
             </Expander>
 
             <Expander
-                IsVisible="{Binding Sessions.Count}"
+                IsVisible="{Binding HasSessionData}"
                 ExpandDirection="Down"
                 IsExpanded="True"
                 VerticalAlignment="Top" 

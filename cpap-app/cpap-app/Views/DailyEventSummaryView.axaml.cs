@@ -32,6 +32,12 @@ public partial class DailyEventSummaryView : UserControl
 				return;
 			case DailyReport day:
 			{
+				if( !day.HasSessionData )
+				{
+					IndicateNoDataAvailable();
+					return;
+				}
+				
 				var viewModel = new EventSummaryViewModel( day );
 				viewModel.Indexes.Add( new EventGroupSummary( "Apnea/Hypopnea Index (AHI)", EventTypes.Apneas, day.TotalSleepTime, day.Events ) );
 
@@ -40,10 +46,17 @@ public partial class DailyEventSummaryView : UserControl
 					viewModel.Indexes.Add( new EventGroupSummary( "Respiratory Disturbance (RDI)", EventTypes.RespiratoryDisturbance, day.TotalSleepTime, day.Events ) );
 				}
 
+				Events.IsVisible   = true;
 				Events.DataContext = viewModel;
 				break;
 			}
 		}
+	}
+	
+	private void IndicateNoDataAvailable()
+	{
+		Events.DataContext = null;
+		Events.IsVisible   = false;
 	}
 }
 

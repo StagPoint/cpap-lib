@@ -25,6 +25,21 @@ namespace cpaplib
 			// "SETTINGS",
 			"DATALOG",
 		};
+		
+		private static Dictionary<int, OperatingMode> s_modeMapping = new Dictionary<int, OperatingMode>()
+		{
+			{ 11, OperatingMode.APAP }, // "For Her" model, which is just AutoCPAP with custom algorithms
+			{ 9, OperatingMode.AVAPS },
+			{ 8, OperatingMode.ASV_VARIABLE_EPAP },
+			{ 7, OperatingMode.ASV },
+			{ 6, OperatingMode.BILEVEL_AUTO_FIXED_PS },
+			{ 5, OperatingMode.BILEVEL_FIXED },
+			{ 4, OperatingMode.BILEVEL_FIXED },
+			{ 3, OperatingMode.BILEVEL_FIXED },
+			{ 2, OperatingMode.BILEVEL_FIXED },
+			{ 1, OperatingMode.APAP },
+			{ 0, OperatingMode.CPAP },
+		};
 
 		private MachineIdentification _machineInfo    = new MachineIdentification();
 		private TimeSpan              _timeAdjustment = TimeSpan.Zero;
@@ -414,38 +429,45 @@ namespace cpaplib
 			// we can update the StartTime and EndTime of the Sessions. These values were previously set by the 
 			// MaskOn/MaskOff values, which are convenience values used to match up session files and not accurate
 			// start and end times. 
-			foreach( var session in day.Sessions )
+			if( day.HasSessionData )
 			{
-				// Reset the session times to ensure that we don't keep artificial boundary times 
-				session.StartTime = DateTime.MaxValue;
-				session.EndTime   = DateTime.MinValue;
-				
-				// Session start and end times must bound all signal start and end times 
-				foreach( var signal in session.Signals )
+				foreach( var session in day.Sessions )
 				{
-					session.StartTime = DateUtil.Min( session.StartTime, signal.StartTime );
-					session.EndTime   = DateUtil.Max( session.EndTime, signal.EndTime );
+					// Reset the session times to ensure that we don't keep artificial boundary times 
+					session.StartTime = DateTime.MaxValue;
+					session.EndTime   = DateTime.MinValue;
+
+					// Session start and end times must bound all signal start and end times 
+					foreach( var signal in session.Signals )
+					{
+						session.StartTime = DateUtil.Min( session.StartTime, signal.StartTime );
+						session.EndTime   = DateUtil.Max( session.EndTime, signal.EndTime );
+					}
+
+					// Generate any additional signals that we need
+					GenerateCalculatedSignals( day, session );
+
+					lastRecordedTime  = DateUtil.Max( lastRecordedTime, session.EndTime );
+					firstRecordedTime = DateUtil.Min( firstRecordedTime, session.StartTime );
 				}
-
-				// Generate any additional signals that we need
-				GenerateCalculatedSignals( day, session );
 				
-				lastRecordedTime  = DateUtil.Max( lastRecordedTime, session.EndTime );
-				firstRecordedTime = DateUtil.Min( firstRecordedTime, session.StartTime );
-			}
+				// There is probably *some* value in keeping the "reported" start times and durations, but if so I cannot
+				// think of what it is and doing so makes working with and displaying the data a lot more frustrating, so
+				// we'll use the *actual* recorded session times instead. 
+				day.RecordingStartTime = firstRecordedTime;
+				day.RecordingEndTime   = lastRecordedTime;
+				day.TotalSleepTime     = TimeSpan.FromSeconds( day.Sessions.Sum( x => x.Duration.TotalSeconds ) );
 
-			// There is probably *some* value in keeping the "reported" start times and durations, but if so I cannot
-			// think of what it is and doing so makes working with and displaying the data a lot more frustrating, so
-			// we'll use the *actual* recorded session times instead. 
-			day.RecordingStartTime = firstRecordedTime;
-			day.RecordingEndTime   = lastRecordedTime;
-			day.TotalSleepTime     = TimeSpan.FromSeconds( day.Sessions.Sum( x => x.Duration.TotalSeconds ) );
-
-            // Calculate statistics (min, avg, median, max, etc) for each Signal
-            CalculateSignalStatistics( day );
+				// Calculate statistics (min, avg, median, max, etc) for each Signal
+				CalculateSignalStatistics( day );
 			
-			// Generate events that are of interest which are not reported by the ResMed machine
-			GenerateEvents( day );
+				// Generate events that are of interest which are not reported by the ResMed machine
+				GenerateEvents( day );
+			}
+			else
+			{
+				Debug.WriteLine( $"No session data: {day.ReportDate}" );
+			}
 		}
 		
 		private static void GenerateCalculatedSignals( DailyReport day, Session session )
@@ -877,6 +899,9 @@ namespace cpaplib
 
 					day.Sessions.Add( session );
 				}
+
+				day.RecordingStartTime = day.Sessions.Min( x => x.StartTime );
+				day.RecordingEndTime   = day.Sessions.Max( x => x.EndTime );
 			}
 			
             // Remove all days that are too short to be valid or are otherwise invalid
@@ -958,42 +983,14 @@ namespace cpaplib
 			{
 				var mode = (int)data.GetValue( "Mode" );
 
-				switch ( mode ) 
+				if( s_modeMapping.TryGetValue( mode, out OperatingMode mappedMode ) )
 				{
-					case 11:    
-						// "For Her" model, which is just a different AutoCPAP
-						mode = (int)OperatingMode.APAP;
-						break;
-					case 9:
-						mode = (int)OperatingMode.AVAPS;
-						break;
-					case 8: 
-						mode = (int)OperatingMode.ASV_VARIABLE_EPAP;
-						break;
-					case 7:
-						mode = (int)OperatingMode.ASV;
-						break;
-					case 6:
-						mode = (int)OperatingMode.BILEVEL_AUTO_FIXED_PS;
-						break;
-					case 5:
-					case 4:
-					case 3:
-					case 2:
-						mode = (int)OperatingMode.BILEVEL_FIXED;
-						break;
-					case 1:    
-						mode = (int)OperatingMode.APAP; 
-						break;
-					case 0:
-						mode = (int)OperatingMode.CPAP;
-						break;
-					default:
-						mode = (int)OperatingMode.UNKNOWN;
-						break;
-				}    
-
-				settings.Mode = (OperatingMode)mode;
+					settings.Mode = mappedMode;
+				}
+				else
+				{
+					settings.Mode = (OperatingMode)mode;
+				}
 			}
 			
 			if(settings.Mode == OperatingMode.ASV )
