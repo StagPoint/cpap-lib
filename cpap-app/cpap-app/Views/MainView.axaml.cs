@@ -172,6 +172,8 @@ public partial class MainView : UserControl
 		{
 			ActiveUserProfile = e.Profile;
 		}
+
+		DataContext = null;
 		
 		LoadProfileMenu();
 	}
@@ -203,6 +205,8 @@ public partial class MainView : UserControl
 					return;
 				case System.Type pageType:
 				{
+					DataContext = null;
+					
 					var page = Activator.CreateInstance( pageType ) as Control;
 					if( page == null )
 					{
@@ -855,6 +859,8 @@ public partial class MainView : UserControl
 
 	private void HandleLoadDateRequest( object? sender, DateTimeRoutedEventArgs e )
 	{
+		NavView.SelectedItem = navDailyReport;
+
 		var day       = LoadDailyReport( ActiveUserProfile.UserProfileID, e.DateTime );
 		var viewModel = new DailyReportViewModel( ActiveUserProfile, day );
 
@@ -867,8 +873,6 @@ public partial class MainView : UserControl
 		};
 
 		DataContext = viewModel;
-
-		NavView.SelectedItem = navDailyReport;
 	}
 
 	private void HandleImportRequestOximetry( object? sender, ImportRequestEventArgs e )

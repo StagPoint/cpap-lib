@@ -132,8 +132,9 @@ public static class SignalChartConfigurationStore
 					break;
 				
 				case SignalNames.MinuteVent:
-					config.BaselineHigh = 12;
-					config.BaselineLow  = 4;
+					config.SecondarySignalName = SignalNames.TargetVent;
+					config.BaselineHigh        = 12;
+					config.BaselineLow         = 4;
 					break;
 				
 				case SignalNames.RespirationRate:
