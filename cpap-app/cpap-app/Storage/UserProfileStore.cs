@@ -8,7 +8,7 @@ namespace cpap_app.ViewModels;
 
 public class UserProfileStore
 {
-	public static UserProfile GetLastUserProfile()
+	public static UserProfile GetActiveUserProfile()
 	{
 		using var store = StorageService.Connect();
 

@@ -299,8 +299,9 @@ public partial class HistoryGraphBase : UserControl
 			}
 			case GraphInteractionMode.None:
 			{
-				var point = eventArgs.GetCurrentPoint( this );
+				var point    = eventArgs.GetCurrentPoint( this );
 				var dataRect = GetDataAreaBounds();
+				
 				if( !dataRect.Contains( point.Position ) )
 				{
 					return;

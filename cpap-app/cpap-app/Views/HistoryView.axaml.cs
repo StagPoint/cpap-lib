@@ -45,7 +45,8 @@ public partial class HistoryView : UserControl
 	{
 		base.OnLoaded( e );
 
-		DataContext = BuildDataContext();
+		DateRangeCombo.SelectedIndex = 0;
+		CurrentDateSelection.Text    = $"{DateTime.Today:D}";
 	}
 
 	protected override void OnApplyTemplate( TemplateAppliedEventArgs e )
@@ -121,6 +122,45 @@ public partial class HistoryView : UserControl
 
 	#region Event handlers
 
+	private void DateRangeCombo_SelectionChanged( object? sender, SelectionChangedEventArgs e )
+	{
+		if( sender is not ComboBox combo )
+		{
+			return;
+		}
+		
+		if( combo.SelectedItem is ComboBoxItem { Tag: string value } )
+		{
+			using var store = StorageService.Connect();
+
+			var profileID         = UserProfileStore.GetActiveUserProfile()?.UserProfileID ?? 0;
+			var lastAvailableDate = store.GetMostRecentStoredDate( profileID );
+
+			// If a set number of days is defined, show only that number of days (from the last available date)
+			if( int.TryParse( value, out int amount ) )
+			{
+				RangeStart.SelectedDate = lastAvailableDate.AddDays( -amount );
+				RangeEnd.SelectedDate   = lastAvailableDate;
+
+				DataContext = BuildDataContext();
+			}
+			else if( string.Equals( value, "all", StringComparison.OrdinalIgnoreCase ) )
+			{
+				var allDates = store.GetStoredDates( profileID );
+				RangeStart.SelectedDate = allDates[ 0 ];
+				RangeEnd.SelectedDate   = allDates[ ^1 ];
+
+				DataContext = BuildDataContext();
+			}
+		}
+	}
+	
+	private void RefreshDateRange_OnClick( object? sender, RoutedEventArgs e )
+	{
+		DateRangeCombo.SelectedIndex = DateRangeCombo.ItemCount - 1;
+		DataContext                  = BuildDataContext();
+	}
+	
 	private void OnGraphDisplayedRangeChanged( object? sender, DateTimeRangeRoutedEventArgs e )
 	{
 		foreach( var graph in _charts )
@@ -154,14 +194,14 @@ public partial class HistoryView : UserControl
 		_renderTimer.Start();
 	}
 	
-	private static HistoryViewModel BuildDataContext()
+	private HistoryViewModel BuildDataContext()
 	{
 		using var store = StorageService.Connect();
 
-		var start = DateTime.Today.AddDays( -180 );
-		var end   = DateTime.Today;
+		var start = RangeStart.SelectedDate ?? DateTime.Today.AddDays( -90 );
+		var end   = RangeEnd.SelectedDate ?? DateTime.Today;
 
-		var profileID  = UserProfileStore.GetLastUserProfile().UserProfileID;
+		var profileID  = UserProfileStore.GetActiveUserProfile().UserProfileID;
 		var dayMapping = StorageService.GetMapping<DailyReport>();
 
 		var dayQuery = $@"
@@ -207,6 +247,6 @@ public partial class HistoryView : UserControl
 		public double MaxValue          { get; set; }
 	}
 	
-	#endregion 
+	#endregion
 }
 

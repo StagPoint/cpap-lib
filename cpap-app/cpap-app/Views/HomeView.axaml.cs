@@ -21,7 +21,7 @@ public partial class HomeView : UserControl
 	{
 		InitializeComponent();
 		
-		ActiveUserProfile = UserProfileStore.GetLastUserProfile();
+		ActiveUserProfile = UserProfileStore.GetActiveUserProfile();
 	}
 
 	protected override void OnApplyTemplate( TemplateAppliedEventArgs e )

@@ -119,7 +119,7 @@ public partial class MainView : UserControl
 		btnImportOximetry.Click  += HandleImportRequestOximetry;
 		btnImportGoogleFit.Click += HandleImportRequestGoogleFit;
 		
-		ActiveUserProfile = UserProfileStore.GetLastUserProfile();
+		ActiveUserProfile = UserProfileStore.GetActiveUserProfile();
 		
 		navProfile.Tapped += ( sender, args ) =>
 		{
@@ -161,7 +161,7 @@ public partial class MainView : UserControl
 		{
 			if( e.Action == UserProfileAction.Deleted )
 			{
-				ActiveUserProfile = UserProfileStore.GetLastUserProfile();
+				ActiveUserProfile = UserProfileStore.GetActiveUserProfile();
 			}
 			else
 			{

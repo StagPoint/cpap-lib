@@ -3,11 +3,36 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:controls="clr-namespace:cpap_app.Controls"
+             xmlns:controls1="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="800"
              x:Class="cpap_app.Views.HistoryView">
     <DockPanel LastChildFill="True">
-        <Grid DockPanel.Dock="Bottom" Height="24" Background="{DynamicResource SolidBackgroundFillColorSecondaryBrush}">
-            <TextBlock>Status Bar</TextBlock>
+        <Grid DockPanel.Dock="Bottom" ColumnDefinitions="Auto,Auto,12,Auto,Auto,12,Auto,Auto,8,Auto,24,Auto,*" Background="{DynamicResource SolidBackgroundFillColorSecondaryBrush}">
+            <Grid.Styles>
+                <Style Selector="TextBlock">
+                    <Setter Property="VerticalAlignment" Value="Center" />
+                    <Setter Property="Margin" Value="0 0 8 0" />
+                </Style>
+            </Grid.Styles>
+            <TextBlock Grid.Column="0">Date Range</TextBlock>
+            <ComboBox Grid.Column="1" Name="DateRangeCombo" SelectionChanged="DateRangeCombo_SelectionChanged">
+                <ComboBoxItem Content="Last 90 Days" Tag="90" />
+                <ComboBoxItem Content="Last 60 Days" Tag="60" />
+                <ComboBoxItem Content="Last 30 Days" Tag="30" />
+                <ComboBoxItem Content="Last 14 Days" Tag="14" />
+                <ComboBoxItem Content="Last 7 Days" Tag="7" />
+                <ComboBoxItem Content="Last Year" Tag="365" />
+                <ComboBoxItem Content="Everything" Tag="all" />
+                <ComboBoxItem Content="Custom Range" />
+            </ComboBox>
+            <TextBlock Grid.Column="3" Text="Start" />
+            <CalendarDatePicker Grid.Column="4" Name="RangeStart" />
+            <TextBlock Grid.Column="6" Text="End" />
+            <CalendarDatePicker Grid.Column="7" Name="RangeEnd" />
+            <Button Grid.Column="9" Name="RefreshDateRange" Click="RefreshDateRange_OnClick">
+                <controls1:SymbolIcon Symbol="Refresh" />
+            </Button>
+            <TextBlock Grid.Column="11" Name="CurrentDateSelection" Text="CURRENT DATE SELECTION HERE" FontWeight="Bold" />
         </Grid>
         <Separator DockPanel.Dock="Bottom" Background="{DynamicResource FocusStrokeColorOuterBrush}" />
         <ScrollViewer
@@ -17,8 +42,8 @@
             HorizontalScrollBarVisibility="Disabled"
             Padding="0 0 12 0">
             <StackPanel Name="Graphs">
-                <controls:UsageHoursGraph />
                 <controls:AhiHistoryGraph />
+                <controls:UsageHoursGraph />
             </StackPanel>
         </ScrollViewer>
     </DockPanel>

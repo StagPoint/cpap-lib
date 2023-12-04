@@ -12,7 +12,7 @@ public class HistoryViewModel : ViewModelBase
 
 	public int TotalDays
 	{
-		get => (int)Math.Ceiling( (End.Date - Start.Date).TotalDays );
+		get => (int)Math.Floor( (End.Date - Start.Date).TotalDays + 1.0 );
 	}
 
 	public List<DailyReport> Days = new List<DailyReport>();

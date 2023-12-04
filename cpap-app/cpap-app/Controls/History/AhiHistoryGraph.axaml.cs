@@ -44,8 +44,8 @@ public partial class AhiHistoryGraph : HistoryGraphBase
 		var totalDays = viewModel.TotalDays;
 
 		// NOTE: For some reason, we need to offset the beginning and end to account for centered bar offsets
-		Chart.Plot.SetAxisLimitsX( -0.5, totalDays - 0.5 );
-		Chart.Plot.XAxis.SetBoundary( -0.5, totalDays - 0.5 );
+		Chart.Plot.SetAxisLimitsX( -0.5, totalDays + 0.5 );
+		Chart.Plot.XAxis.SetBoundary( -0.5, totalDays + 0.5 );
 		
 		var days   = viewModel.Days;
 		
