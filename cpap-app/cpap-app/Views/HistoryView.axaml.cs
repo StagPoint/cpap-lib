@@ -35,6 +35,7 @@ public partial class HistoryView : UserControl
 		InitializeComponent();
 
 		AddHandler( GraphEvents.DisplayedRangeChangedEvent, OnGraphDisplayedRangeChanged );
+		AddHandler( TimeSelection.TimeSelectedEvent, OnDaySelected  );
 	}
 
 	#endregion
@@ -122,6 +123,11 @@ public partial class HistoryView : UserControl
 
 	#region Event handlers
 
+	private void OnDaySelected( object? sender, DateTimeRoutedEventArgs e )
+	{
+		CurrentDateSelection.Text = $"{e.DateTime:D}";
+	}
+	
 	private void DateRangeCombo_SelectionChanged( object? sender, SelectionChangedEventArgs e )
 	{
 		if( sender is not ComboBox combo )

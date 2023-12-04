@@ -133,7 +133,7 @@ public partial class HistoryGraphBase : UserControl
 			ShowNoDataAvailable();
 			return;
 		}
-
+		
 		LoadData( _history );
 	}
 
@@ -304,6 +304,11 @@ public partial class HistoryGraphBase : UserControl
 				
 				if( !dataRect.Contains( point.Position ) )
 				{
+					// Since we'll be handling the tooltips in a custom manner, set an insanely long time
+					// before Avalonia attempts to show the tooltip itself. 
+					ToolTip.SetShowDelay( this, int.MaxValue );
+					ToolTip.SetIsOpen( this, false );
+					
 					return;
 				}
 		
@@ -537,7 +542,14 @@ public partial class HistoryGraphBase : UserControl
 		ToolTip.SetIsOpen( this, true );
 		ToolTip.SetPlacement( this, PlacementMode.LeftEdgeAlignedTop );
 		ToolTip.SetHorizontalOffset( this, tooltipPositionX );
-		ToolTip.SetVerticalOffset( this, tooltipPositionY ); 
+		ToolTip.SetVerticalOffset( this, tooltipPositionY );
+
+		RaiseEvent( new DateTimeRoutedEventArgs
+		{
+			RoutedEvent = TimeSelection.TimeSelectedEvent,
+			DateTime    = hoveredDate,
+			Source      = this,
+		} );
 	}
 	
 	protected virtual object? BuildTooltipDataContext( DailyReport day )
