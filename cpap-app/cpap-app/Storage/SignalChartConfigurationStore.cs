@@ -166,17 +166,19 @@ public static class SignalChartConfigurationStore
 				
 				case SignalNames.Snore:
 				case SignalNames.Movement:
+					config.IsVisible    = false;
 					config.ShowStepped  = true;
 					config.ScalingMode  = AxisScalingMode.AutoFit;
 					config.ShowInTrends = false;
 					break;
 				
 				case SignalNames.AHI:
-					config.Title        = "AHI";
-					config.ShowStepped  = true;
-					config.ScalingMode  = AxisScalingMode.AutoFit;
-					config.ShowInTrends = false;
-					config.DisplayedEvents.AddRange( EventTypes.Apneas );
+					config.Title           = "AHI";
+					config.ShowStepped     = true;
+					config.ScalingMode     = AxisScalingMode.AutoFit;
+					config.ShowInTrends    = false;
+					config.IsVisible       = false;
+					config.DisplayedEvents = new List<EventType>( EventTypes.Apneas );
 					break;
 				
 				case SignalNames.InspirationTime:
@@ -216,6 +218,7 @@ public static class SignalChartConfigurationStore
 				
 				case SignalNames.TargetVent:
 					config.ShowInTrends = false;
+					config.IsVisible    = false;
 					break;
 			}
 

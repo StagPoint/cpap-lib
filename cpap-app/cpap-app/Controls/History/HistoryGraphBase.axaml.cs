@@ -670,7 +670,7 @@ public partial class HistoryGraphBase : UserControl
 				return;
 			}
 
-			menuItem.Header    = $"View {_hoveredDate:d}";
+			menuItem.Header    = $"Go to: {_hoveredDate:D}";
 			menuItem.IsVisible = true;
 		};
 	}
