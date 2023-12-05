@@ -35,15 +35,9 @@ namespace cpaplib
 
 		/// <summary>
 		/// Returns true if this instance contains detailed Signal and Event data, or false if not (such as when the user
-		/// did not have an SD card in the machine) 
+		/// did not have an SD card in the machine). This value is set during import and is never updated.
 		/// </summary>
-		public bool HasDetailData
-		{
-			get
-			{
-				return Sessions.Count > 0 && Sessions.Any( x => x.Signals.Count > 0 );
-			}
-		}
+		public bool HasDetailData { get; set; }
 
 		/// <summary>
 		/// Returns the number of "Mask Times" for the day
@@ -82,7 +76,8 @@ namespace cpaplib
 		public List<Session> Sessions { get; set; } = new List<Session>();
 		
 		/// <summary>
-		/// A summary of event indices (like Apnea/Hypopnea Index) reported by the machine. 
+		/// A summary of event indices (like Apnea/Hypopnea Index) reported by the machine.
+		/// This summary is generated during import and is never updated. 
 		/// </summary>
 		public EventSummary EventSummary { get; set; }
 

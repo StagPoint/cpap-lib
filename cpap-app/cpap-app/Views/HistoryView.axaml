@@ -7,7 +7,7 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="800"
              x:Class="cpap_app.Views.HistoryView">
     <DockPanel LastChildFill="True">
-        <Grid DockPanel.Dock="Bottom" ColumnDefinitions="Auto,Auto,12,Auto,Auto,12,Auto,Auto,8,Auto,24,Auto,*" Background="{DynamicResource SolidBackgroundFillColorSecondaryBrush}">
+        <Grid DockPanel.Dock="Bottom" ColumnDefinitions="Auto,Auto,24,Auto,Auto,12,Auto,Auto,8,Auto,24,Auto,*" Background="{DynamicResource SolidBackgroundFillColorSecondaryBrush}">
             <Grid.Styles>
                 <Style Selector="TextBlock">
                     <Setter Property="VerticalAlignment" Value="Center" />
@@ -15,7 +15,7 @@
                 </Style>
             </Grid.Styles>
             <TextBlock Grid.Column="0">Date Range</TextBlock>
-            <ComboBox Grid.Column="1" Name="DateRangeCombo" SelectionChanged="DateRangeCombo_SelectionChanged">
+            <ComboBox Grid.Column="1" Name="DateRangeCombo" Width="175" SelectionChanged="DateRangeCombo_SelectionChanged">
                 <ComboBoxItem Content="Last 90 Days" Tag="90" />
                 <ComboBoxItem Content="Last 60 Days" Tag="60" />
                 <ComboBoxItem Content="Last 30 Days" Tag="30" />
@@ -26,9 +26,9 @@
                 <ComboBoxItem Content="Custom Range" />
             </ComboBox>
             <TextBlock Grid.Column="3" Text="Start" />
-            <CalendarDatePicker Grid.Column="4" Name="RangeStart" />
+            <CalendarDatePicker Grid.Column="4" Name="RangeStart" Width="150" />
             <TextBlock Grid.Column="6" Text="End" />
-            <CalendarDatePicker Grid.Column="7" Name="RangeEnd" />
+            <CalendarDatePicker Grid.Column="7" Name="RangeEnd" Width="150" />
             <Button Grid.Column="9" Name="RefreshDateRange" Click="RefreshDateRange_OnClick">
                 <controls1:SymbolIcon Symbol="Refresh" />
             </Button>

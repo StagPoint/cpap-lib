@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 
 using cpaplib;
@@ -39,7 +40,7 @@ public class AhiHistoryViewModel
 			return;
 		}
 
-		if( !day.HasDetailData )
+		if( day.Events.Count == 0 && !day.HasDetailData )
 		{
 			ApneaHypopneaIndex = day.EventSummary.AHI;
 			

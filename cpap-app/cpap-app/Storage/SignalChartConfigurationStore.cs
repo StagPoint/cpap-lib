@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 
 using cpap_app.Configuration;
 using cpap_app.Converters;
@@ -82,9 +81,11 @@ public static class SignalChartConfigurationStore
 					continue;
 				
 				case SignalNames.FlowRate:
-					config.BaselineHigh    = 0;
-					config.DisplayedEvents = new List<EventType>( EventTypes.RespiratoryDisturbance );
-					config.ShowInTrends    = false;
+					config.BaselineHigh = 0;
+					config.ShowInTrends = false;
+					
+					config.DisplayedEvents = new List<EventType>( EventTypes.Apneas );
+					config.DisplayedEvents.Add( EventType.RERA );
 					break;
 				
 				case SignalNames.Pressure:

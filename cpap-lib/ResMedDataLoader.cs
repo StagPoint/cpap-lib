@@ -363,9 +363,8 @@ namespace cpaplib
 				}
 			}
 
-			// Remove all sessions that did not have signal data. This happens (for instance) when the ResMed machine reports a 
-			// MaskOn/MaskOff session that is too short for any data to be recorded. 
-			day.Sessions.RemoveAll( x => x.Signals.Count == 0 );
+			// Indicate whether the day has any detail data 
+			day.HasDetailData = day.Sessions.Any( x => x.Signals.Count > 0 );
 			
 			foreach( var maskSession in day.Sessions )
 			{
