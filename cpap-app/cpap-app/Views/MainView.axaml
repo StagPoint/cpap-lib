@@ -62,7 +62,7 @@
                         </MenuFlyout>
                     </ui:NavigationViewItem.ContextFlyout>
                 </ui:NavigationViewItem>
-                <ui:NavigationViewItem Name="navHistory" Content="History" Tag="{x:Type views:HistoryView}">
+                <ui:NavigationViewItem Name="navHistory" Content="Trends" Tag="{x:Type views:HistoryView}">
                     <ui:NavigationViewItem.IconSource>
                         <ui:FontIconSource Glyph="&#xE81C;" FontFamily="Segoe MDL2 Assets" />
                     </ui:NavigationViewItem.IconSource>
@@ -72,11 +72,13 @@
                         <ui:FontIconSource Glyph="&#xE8EF;" FontFamily="Segoe MDL2 Assets" />
                     </ui:NavigationViewItem.IconSource>
                 </ui:NavigationViewItem>
+                <!--
                 <ui:NavigationViewItem Name="navReports" Content="Reports" Tag="{x:Type views:ReportsView}">
                     <ui:NavigationViewItem.IconSource>
                         <ui:FontIconSource Glyph="&#xE9F9;" FontFamily="Segoe MDL2 Assets" />
                     </ui:NavigationViewItem.IconSource>
                 </ui:NavigationViewItem>
+                -->
                 <ui:NavigationViewItem Name="navProfile" Content="Profile" IconSource="Contact">
                     <ui:NavigationViewItem.ContextFlyout>
                         <MenuFlyout>

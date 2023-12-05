@@ -38,7 +38,7 @@ public class DailyReportViewModel : DailyReport, INotifyPropertyChanged
 	public DailyReportViewModel( UserProfile user, DailyReport source )
 	{
 		UserProfile = user ?? throw new ArgumentNullException( nameof( user ) );
-		Copy( source );
+		Copy( source ?? throw new ArgumentNullException( nameof( source ) ) );
 	}
 
 	#endregion
@@ -159,6 +159,11 @@ public class DailyReportViewModel : DailyReport, INotifyPropertyChanged
 
 	private void Copy( DailyReport source )
 	{
+		if( source == null )
+		{
+			throw new ArgumentNullException( $"{nameof( source )} cannot be NULL" );
+		}
+		
 		// Copy all of the source's property values to this instance
 		var properties = typeof( DailyReport ).GetTypeInfo().GetProperties( BindingFlags.Instance | BindingFlags.Public );
 		foreach( var prop in properties )

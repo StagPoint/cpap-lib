@@ -47,7 +47,7 @@
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Text="{Binding Name}" />
                             <TextBlock Grid.Column="2" Text="{Binding IndexValue, Mode=OneWay, StringFormat={}{0:F2}}" />
-                            <TextBlock Grid.Column="4" Text="{Binding TotalTime, Mode=OneWay, StringFormat={}{0:hh\\:mm\\:ss}}" />
+                            <TextBlock Grid.Column="4" Text="{Binding TotalTime, Mode=OneWay, StringFormat={}{0:hh\\:mm\\:ss}}" IsVisible="{Binding TotalTime.TotalHours}" />
                         </Grid>
                     </DataTemplate>
                 </ItemsRepeater.ItemTemplate>
@@ -66,7 +66,7 @@
                 <TextBlock Grid.Column="0" Grid.Row="0" Text="Event" />
                 <TextBlock Grid.Column="1" Grid.Row="0" Text="#/Hour" HorizontalAlignment="Center" />
                 <TextBlock Grid.Column="2" Grid.Row="0" Text="Total" HorizontalAlignment="Center" />
-                <TextBlock Grid.Column="3" Grid.Row="0" Text="Time" />
+                <TextBlock Grid.Column="3" Grid.Row="0" Text="Time" IsVisible="{Binding !SummaryOnly}" />
                 <Rectangle Grid.Column="1" Grid.Row="0" Classes="HeaderSeparator" />
                 <Rectangle Grid.Column="2" Grid.Row="0" Classes="HeaderSeparator" />
                 <Rectangle Grid.Column="3" Grid.Row="0" Classes="HeaderSeparator" />
@@ -74,7 +74,7 @@
         </Border>
 
         <!-- Events -->
-        <ItemsRepeater ItemsSource="{Binding Items}" Margin="0 2 0 0" VerticalCacheLength="100">
+        <ItemsRepeater ItemsSource="{Binding Items}" IsVisible="{Binding Items.Count}" Margin="0 2 0 0" VerticalCacheLength="100">
             <ItemsRepeater.Styles>
                 <Style Selector="TextBlock">
                     <Setter Property="IsHitTestVisible" Value="False" />

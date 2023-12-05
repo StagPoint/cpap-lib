@@ -7,8 +7,9 @@ namespace cpap_app.ViewModels.Tooltips;
 
 public class AhiHistoryViewModel
 {
-	public DateTime Date    { get; set; }
-	public bool     IsEmpty { get; set; }
+	public DateTime Date        { get; set; }
+	public bool     IsEmpty     { get; set; }
+	public bool     SummaryOnly { get; set; }
 
 	public double   ApneaHypopneaIndex { get; set; }
 	public int      TotalApneaCount    { get; set; }
@@ -31,13 +32,29 @@ public class AhiHistoryViewModel
 		Date    = day.ReportDate.Date;
 		IsEmpty = day.Sessions.Count == 0;
 
+		var totalSleepHours = Math.Max( day.TotalSleepTime.TotalHours, 1.0 );
+
 		if( IsEmpty )
 		{
 			return;
 		}
+
+		if( !day.HasDetailData )
+		{
+			ApneaHypopneaIndex = day.EventSummary.AHI;
+			
+			ObstructiveIndex = day.EventSummary.ApneaIndex;
+			ObstructiveCount = (int)Math.Ceiling( ObstructiveIndex * totalSleepHours );
+			
+			HypopneaIndex = day.EventSummary.HypopneaIndex;
+			HypopneaCount = (int)Math.Ceiling( HypopneaIndex * totalSleepHours );
+
+			SummaryOnly = true;
+
+			return;
+		}
 		
 		var events          = day.Events.Where( x => EventTypes.Apneas.Contains( x.Type ) ).ToList();
-		var totalSleepHours = Math.Max( day.TotalSleepTime.TotalHours, 1.0 );
 		
 		TotalApneaCount    = events.Count;
 		ApneaHypopneaIndex = TotalApneaCount / totalSleepHours;

@@ -13,6 +13,7 @@ using Avalonia.Media;
 using cpap_app.Events;
 using cpap_app.Styling;
 using cpap_app.ViewModels;
+using cpap_app.Views;
 
 using cpaplib;
 
@@ -93,6 +94,8 @@ public partial class HistoryGraphBase : UserControl
 	protected double               _selectionStartTime    = 0;
 	protected double               _selectionEndTime      = 0;
 	protected HSpan?               _selectionSpan         = null;
+	protected DateTime?            _hoveredDate           = null;
+	protected ContextMenu?         _contextMenu           = null;
 
 	#endregion 
 	
@@ -102,9 +105,9 @@ public partial class HistoryGraphBase : UserControl
 	public HistoryGraphBase()
 	{
 		InitializeComponent();
-		
-		Chart.ContextMenu = null;
-		
+
+		InitializeContextMenu();
+
 		PointerWheelChanged += OnPointerWheelChanged;
 		PointerEntered      += OnPointerEntered;
 		PointerExited       += OnPointerExited;
@@ -114,7 +117,7 @@ public partial class HistoryGraphBase : UserControl
 		GotFocus            += OnGotFocus;
 		LostFocus           += OnLostFocus;
 	}
-	
+
 	#endregion 
 	
 	#region Base class overrides 
@@ -329,7 +332,7 @@ public partial class HistoryGraphBase : UserControl
 		}
 	}
 
-	protected void OnPointerReleased( object? sender, PointerReleasedEventArgs e )
+	protected void OnPointerReleased( object? sender, PointerReleasedEventArgs eventArgs )
 	{
 		// Don't attempt to do anything if some of the necessary objects have not yet been created.
 		// This was added mostly to prevent exceptions from being thrown in the previewer in design mode.
@@ -342,16 +345,20 @@ public partial class HistoryGraphBase : UserControl
 		_selectionSpan.IsVisible = false;
 		//EventTooltip.IsVisible   = false;
 		
-		// ReSharper disable once SwitchStatementMissingSomeEnumCasesNoDefault
-		switch( _interactionMode )
+		var point = eventArgs.GetCurrentPoint( this );
+		if( point.Properties.IsLeftButtonPressed )
 		{
-			case GraphInteractionMode.Selecting:
-				EndSelectionMode();
-				break;
-			case GraphInteractionMode.Panning:
-				// The chart was rendered in low quality while panning, so re-render in high quality now that we're done 
-				//RenderGraph( true );
-				break;
+			// ReSharper disable once SwitchStatementMissingSomeEnumCasesNoDefault
+			switch( _interactionMode )
+			{
+				case GraphInteractionMode.Selecting:
+					EndSelectionMode();
+					break;
+				case GraphInteractionMode.Panning:
+					// The chart was rendered in low quality while panning, so re-render in high quality now that we're done 
+					//RenderGraph( true );
+					break;
+			}
 		}
 
 		_interactionMode = GraphInteractionMode.None;
@@ -396,7 +403,8 @@ public partial class HistoryGraphBase : UserControl
 				_selectionSpan!.X2       = _selectionStartTime;
 				_selectionSpan.IsVisible = true;
 
-				_interactionMode = GraphInteractionMode.Selecting;
+				_interactionMode     = GraphInteractionMode.Selecting;
+				_pointerDownPosition = point.Position;
 			
 				eventArgs.Handled = true;
 				break;
@@ -409,11 +417,12 @@ public partial class HistoryGraphBase : UserControl
 						Focus();
 					}
 			
-					Chart.Configuration.Quality = ScottPlot.Control.QualityMode.Low;
-
-					_pointerDownPosition   = point.Position;
-					_pointerDownAxisLimits = Chart.Plot.GetAxisLimits();
-					_interactionMode       = GraphInteractionMode.Panning;
+					_pointerDownPosition     = point.Position;
+					_pointerDownAxisLimits   = Chart.Plot.GetAxisLimits();
+					_interactionMode         = GraphInteractionMode.Panning;
+					_selectionSpan!.X1       = 0;
+					_selectionSpan!.X2       = 0;
+					_selectionSpan.IsVisible = false;
 				}
 				break;
 			}
@@ -433,6 +442,7 @@ public partial class HistoryGraphBase : UserControl
 	
 	protected void OnPointerEntered( object? sender, PointerEventArgs e )
 	{
+		Debug.WriteLine( "Pointer entered"  );
 	}
 	
 	protected void OnPointerWheelChanged( object? sender, PointerWheelEventArgs args )
@@ -519,6 +529,11 @@ public partial class HistoryGraphBase : UserControl
 		const int VERT_OFFSET = 12;
 
 		var day = _history.Days.FirstOrDefault( x => x.ReportDate.Date == hoveredDate );
+
+		_hoveredDate = hoveredDate;
+
+		// Enable/Disable the Context Menu according to whether there is a DailyReport available for that day. 
+		Chart.ContextMenu = (day != null) ? _contextMenu : null;
 		
 		var tooltip = ToolTip.GetTip( this ) as ToolTip;
 		Debug.Assert( tooltip != null, nameof( tooltip ) + " != null" );
@@ -616,6 +631,50 @@ public partial class HistoryGraphBase : UserControl
 
 	#region Private functions 
 	
+	private void InitializeContextMenu()
+	{
+		var menuItem = new MenuItem() { Header = "View" };
+		menuItem.Click += ( sender, args ) =>
+		{
+			if( _hoveredDate == null )
+			{
+				return;
+			}
+
+			RaiseEvent( new DateTimeRoutedEventArgs
+			{
+				RoutedEvent = MainView.LoadDateRequestedEvent,
+				DateTime    = _hoveredDate.Value,
+				Source      = this,
+			} );
+		};
+
+		_contextMenu = new ContextMenu()
+		{
+			Items = { menuItem }
+		};
+
+		_contextMenu.Opening += ( sender, args ) =>
+		{
+			CancelSelectionMode();
+
+			if( _hoveredDate == null ||!_history.Days.Any( x => x.ReportDate.Date == _hoveredDate ) )
+			{
+				menuItem.Header = "INVALID";
+				
+				// For some reason the CancelEventArgs isn't working, so we will also hide the menu item 
+				args.Cancel        = true;
+				menuItem.IsVisible = false;
+				_contextMenu.Close();
+				
+				return;
+			}
+
+			menuItem.Header    = $"View {_hoveredDate:d}";
+			menuItem.IsVisible = true;
+		};
+	}
+
 	protected void ShowNoDataAvailable()
 	{
 		Chart.Plot.Clear();

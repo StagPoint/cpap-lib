@@ -47,7 +47,7 @@
                         <Border Classes="SelectionRect" Tapped="lstSessions_Tapped"
                                 DoubleTapped="lstSessions_DoubleTapped" Tag="{Binding}">
                             <Border.ContextFlyout>
-                                <MenuFlyout Opened="ContextMenu_OnOpening">
+                                <MenuFlyout Opened="ContextMenu_OnOpening" Opening="ContextMenu_OnOpening">
                                     <MenuItem Header="View Details" Tag="{Binding}" Click="ViewDetails_OnTapped" />
                                     <MenuItem Header="Delete" Tag="{Binding}" Click="Delete_OnTapped" />
                                 </MenuFlyout>

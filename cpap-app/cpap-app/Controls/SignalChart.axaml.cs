@@ -1620,7 +1620,7 @@ public partial class SignalChart : UserControl
 			Chart.Plot.Clear();
 			
 			// Check to see if there are any sessions with the named Signal. If not, display the "No Data Available" message and eject.
-			_hasDataAvailable = day.HasSessionData && day.Sessions.FirstOrDefault( x => x.GetSignalByName( ChartConfiguration.SignalName ) != null ) != null;
+			_hasDataAvailable = day.HasDetailData && day.Sessions.FirstOrDefault( x => x.GetSignalByName( ChartConfiguration.SignalName ) != null ) != null;
 			if( !_hasDataAvailable )
 			{
 				_day = null;

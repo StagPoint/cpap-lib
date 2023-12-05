@@ -118,7 +118,9 @@ public partial class UserProfileList : UserControl
 			return;
 		}
 		
-		string message = @$"Are you ABSOLUTELY SURE that you want to delete the profile for {profile.UserName}?
+		string message = @$"Delete {profile.UserName}?
+
+Are you ABSOLUTELY SURE that you want to delete the profile for {profile.UserName}?
 Doing so will also erase all of the data associated with this profile.
 
 THIS OPERATION CANNOT BE UNDONE";

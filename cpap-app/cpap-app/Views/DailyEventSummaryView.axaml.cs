@@ -32,18 +32,27 @@ public partial class DailyEventSummaryView : UserControl
 				return;
 			case DailyReport day:
 			{
-				if( !day.HasSessionData )
-				{
-					IndicateNoDataAvailable();
-					return;
-				}
+				// if( !day.HasDetailData )
+				// {
+				// 	IndicateNoDataAvailable();
+				// 	return;
+				// }
 				
 				var viewModel = new EventSummaryViewModel( day );
-				viewModel.Indexes.Add( new EventGroupSummary( "Apnea/Hypopnea Index (AHI)", EventTypes.Apneas, day.TotalSleepTime, day.Events ) );
 
-				if( day.Events.Any( x => EventTypes.RespiratoryDisturbancesOnly.Contains( x.Type ) ) )
+				if( day.HasDetailData )
 				{
-					viewModel.Indexes.Add( new EventGroupSummary( "Respiratory Disturbance (RDI)", EventTypes.RespiratoryDisturbance, day.TotalSleepTime, day.Events ) );
+					viewModel.Indexes.Add( new EventGroupSummary( "Apnea/Hypopnea Index (AHI)", EventTypes.Apneas, day.TotalSleepTime, day.Events ) );
+
+					if( day.Events.Any( x => EventTypes.RespiratoryDisturbancesOnly.Contains( x.Type ) ) )
+					{
+						viewModel.Indexes.Add( new EventGroupSummary( "Respiratory Disturbance (RDI)", EventTypes.RespiratoryDisturbance, day.TotalSleepTime, day.Events ) );
+					}
+				}
+				else
+				{
+					// Only summary information is available, so create a simplified GroupSummary instead 
+					viewModel.Indexes.Add( new EventGroupSummary( "Apnea/Hypopnea Index (AHI)", day.TotalSleepTime, day.EventSummary.AHI ) );
 				}
 
 				Events.IsVisible   = true;

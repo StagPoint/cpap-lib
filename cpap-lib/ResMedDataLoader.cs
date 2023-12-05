@@ -379,7 +379,7 @@ namespace cpaplib
 			}
 
 			// Remove all sessions that are shorter than five minutes
-			day.Sessions.RemoveAll( x => x.Signals.Count == 0 || x.Duration.TotalMinutes < 5 );
+			day.Sessions.RemoveAll( x => x.Duration.TotalMinutes < 5 );
 			
 			// If the day no longer has any sessions, stop processing it
 			if( day.Sessions.Count == 0 )
@@ -429,7 +429,7 @@ namespace cpaplib
 			// we can update the StartTime and EndTime of the Sessions. These values were previously set by the 
 			// MaskOn/MaskOff values, which are convenience values used to match up session files and not accurate
 			// start and end times. 
-			if( day.HasSessionData )
+			if( day.HasDetailData )
 			{
 				foreach( var session in day.Sessions )
 				{
@@ -893,8 +893,9 @@ namespace cpaplib
 
 					var session = new Session()
 					{
-						StartTime = maskOn,
-						EndTime   = maskOff,
+						SourceType = SourceType.CPAP,
+						StartTime  = maskOn,
+						EndTime    = maskOff,
 					};
 
 					day.Sessions.Add( session );
@@ -931,6 +932,7 @@ namespace cpaplib
 				MachineInfo    = _machineInfo,
 				ReportDate     = new DateTime( 1970, 1, 1 ).AddDays( data[ "Date" ] ).AddHours( 12 ),
 				Settings       = ReadMachineSettings( data ),
+				EventSummary   = ReadEventsSummary( data ),
 				MaskEvents     = (int)(data[ "MaskEvents" ] / 2),
 				TotalSleepTime = TimeSpan.FromMinutes( data[ "Duration" ] ),
 				PatientHours   = getValue( "PatientHours" ),
@@ -957,6 +959,20 @@ namespace cpaplib
 			}
 
 			return day;
+		}
+
+		private static EventSummary ReadEventsSummary( Dictionary<string, double> data )
+		{
+			Debug.Assert( data.ContainsKey( "AHI" ) );
+			
+			var summary = new EventSummary
+			{
+				AHI              = data[ "AHI" ],
+				ApneaIndex       = data[ "AI" ],
+				HypopneaIndex    = data[ "HI" ],
+			};
+
+			return summary;
 		}
 
 		private static MachineSettings ReadMachineSettings( Dictionary<string, double> data )
@@ -1055,9 +1071,9 @@ namespace cpaplib
 			settings.CPAP.StartPressure = data["S.C.StartPress"];
 			settings.CPAP.Pressure      = data["S.C.Press"];
 
-			if( data.ContainsKey( "S.EPR.EPREnable" ) )
+			if( data.TryGetValue( "S.EPR.EPREnable", out double eprEnabledValue ) )
 			{
-				settings.EPR.EprEnabled = data[ "S.EPR.EPREnable" ] >= 0.5;
+				settings.EPR.EprEnabled = eprEnabledValue >= 0.5;
 				settings.EPR.Level      = (int)data[ "S.EPR.Level" ];
 				settings.EPR.Mode       = (EprType)(int)(data[ "S.EPR.EPRType" ] + 1);
 

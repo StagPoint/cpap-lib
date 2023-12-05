@@ -1,4 +1,5 @@
-﻿using Avalonia.Controls;
+﻿using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.VisualTree;
 
@@ -18,6 +19,16 @@ public partial class DailyDetailsView : UserControl
 	public DailyDetailsView()
 	{
 		InitializeComponent();
+	}
+
+	protected override void OnPropertyChanged( AvaloniaPropertyChangedEventArgs change )
+	{
+		base.OnPropertyChanged( change );
+
+		if( change.Property.Name == nameof( DataContext ) )
+		{
+			SummaryDataOnly.IsVisible = change.NewValue is null or DailyReport { HasDetailData: false };
+		}
 	}
 
 	private async void ReimportCurrentDate( object? sender, RoutedEventArgs e )

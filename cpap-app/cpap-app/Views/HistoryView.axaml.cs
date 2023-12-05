@@ -221,9 +221,10 @@ public partial class HistoryView : UserControl
 		var days = store.Query<DailyReport>( dayQuery, profileID, start, end );
 		foreach( var day in days )
 		{
-			day.Events     = store.SelectByForeignKey<ReportedEvent>( day.ID );
-			day.Statistics = store.SelectByForeignKey<SignalStatistics>( day.ID );
-			day.Sessions   = store.SelectByForeignKey<Session>( day.ID );
+			day.Events       = store.SelectByForeignKey<ReportedEvent>( day.ID );
+			day.EventSummary = store.SelectByForeignKey<EventSummary>( day.ID ).First();
+			day.Statistics   = store.SelectByForeignKey<SignalStatistics>( day.ID );
+			day.Sessions     = store.SelectByForeignKey<Session>( day.ID );
 
 			day.Events.Sort();
 			day.Sessions.Sort();

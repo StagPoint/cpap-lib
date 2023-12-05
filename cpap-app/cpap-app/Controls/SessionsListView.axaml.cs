@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Linq;
 
 using Avalonia;
@@ -82,6 +83,12 @@ public partial class SessionsListView : UserControl
 
 	private void lstSessions_Tapped( object? sender, TappedEventArgs e )
 	{
+		// Cannot select the Session when there is only summary data available (SD Card not in machine, etc)
+		if( DataContext is DailyReport { HasDetailData: false } )
+		{
+			return;
+		}
+		
 		if( sender is Border { Tag: Session session } )
 		{
 			SelectSession( session );
@@ -90,6 +97,12 @@ public partial class SessionsListView : UserControl
 	
 	private void lstSessions_DoubleTapped( object? sender, TappedEventArgs e )
 	{
+		// Cannot select the Session when there is only summary data available (SD Card not in machine, etc)
+		if( DataContext is DailyReport { HasDetailData: false } )
+		{
+			return;
+		}
+		
 		ViewDetails_OnTapped( sender, e );
 	}
 
@@ -192,6 +205,17 @@ public partial class SessionsListView : UserControl
 	{
 		if( sender is not MenuFlyout menu )
 		{
+			return;
+		}
+
+		// Don't allow the Context Menu to show when there is only summary data available (SD Card wasn't in machine, etc)
+		if( DataContext is DailyReport { HasDetailData: false } )
+		{
+			if( e is CancelEventArgs eventArgs )
+			{
+				eventArgs.Cancel = true;
+			}
+				
 			return;
 		}
 		

@@ -646,7 +646,7 @@ public partial class EventGraph : UserControl
 		Chart.Plot.Clear();
 
 		// If there are no Sessions (or no Signals), then indicate that there is no data available
-		if( !day.HasSessionData )
+		if( !day.HasDetailData )
 		{
 			_day = null;
 			IndicateNoDataAvailable();

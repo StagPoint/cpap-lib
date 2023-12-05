@@ -21,8 +21,9 @@ namespace cpap_db
 		public const string Signal           = "signal";
 		public const string FaultMapping     = "fault";
 		public const string ReportedEvent    = "event";
+		public const string EventSummary     = "event_summary";
 		public const string SignalStatistics = "signal_stats";
-		public const string Annotation      = "annotations";
+		public const string Annotation       = "annotations";
 		
 		public const string MachineSettings = "machine_settings";
 		public const string MachineInfo     = "machine_info";
@@ -64,6 +65,9 @@ namespace cpap_db
 			var faultInfoMapping = CreateMapping<FaultInfo>( TableNames.FaultMapping );
 			faultInfoMapping.PrimaryKey = new PrimaryKeyColumn( "id", typeof( int ), true );
 			faultInfoMapping.ForeignKey = new ForeignKeyColumn( dayMapping );
+
+			var eventSummaryMapping = CreateMapping<EventSummary>( TableNames.EventSummary );
+			eventSummaryMapping.ForeignKey = new ForeignKeyColumn( dayMapping );
 
 			var eventMapping = CreateMapping<ReportedEvent>( TableNames.ReportedEvent );
 			eventMapping.ForeignKey = new ForeignKeyColumn( dayMapping );
@@ -151,7 +155,7 @@ namespace cpap_db
 				var profileRecords = store.SelectAll<UserProfile>();
 				if( profileRecords.Count == 0 )
 				{
-					var defaultProfile = new UserProfile();
+					var defaultProfile = new UserProfile() { UserName = "DEFAULT USER" };
 					store.Insert( defaultProfile, primaryKeyValue: 0 );
 				}
 			}
@@ -212,6 +216,7 @@ namespace cpap_db
 			day.Fault            = SelectByForeignKey<FaultInfo>( dayID ).First();
 			day.Statistics       = SelectByForeignKey<SignalStatistics>( dayID );
 			day.Events           = SelectByForeignKey<ReportedEvent>( dayID );
+			day.EventSummary     = SelectByForeignKey<EventSummary>( dayID ).First();
 			day.Annotations      = SelectByForeignKey<Annotation>( dayID );
 			day.Settings         = SelectByForeignKey<MachineSettings>( dayID, out int settingsID );
 			day.Settings.AutoSet = SelectByForeignKey<AutoSetSettings>( settingsID ).First();
@@ -257,8 +262,9 @@ namespace cpap_db
 
 				int dayID = day.ID;
 
-				Insert( day.MachineInfo, foreignKeyValue: dayID );
-				Insert( day.Fault,       foreignKeyValue: dayID );
+				Insert( day.EventSummary, foreignKeyValue: dayID );
+				Insert( day.MachineInfo,  foreignKeyValue: dayID );
+				Insert( day.Fault,        foreignKeyValue: dayID );
 
 				int settingsID = Insert( day.Settings, foreignKeyValue: dayID );
 				Insert( day.Settings.AutoSet, foreignKeyValue: settingsID );

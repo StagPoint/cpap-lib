@@ -44,34 +44,6 @@
             </Grid>
 
             <Expander
-                IsVisible="{Binding !HasSessionData}"
-                ExpandDirection="Down"
-                IsExpanded="True"
-                VerticalAlignment="Top" 
-                Margin="0 10 0 0"
-                Padding="10"
-                >
-                <Expander.Header>
-                    <StackPanel Orientation="Horizontal">
-                        <fui:FontIcon Glyph="&#xEA1F;" FontSize="24" FontFamily="{DynamicResource SymbolThemeFontFamily}" FontWeight="Normal" FontStyle="Normal" Margin="0 0 10 0"/>
-                        <TextBlock Text="Missing Data" FontSize="16" Theme="{DynamicResource BodyStrongTextBlockStyle}"/>
-                    </StackPanel>
-                </Expander.Header>
-                <StackPanel Orientation="Vertical" Spacing="8">
-                    <TextBlock TextWrapping="Wrap">
-                        There is no detailed session data for this date. The most likely reasons for this are: 
-                    </TextBlock>
-                    <Grid ColumnDefinitions="Auto, 8, 300" RowDefinitions="Auto,Auto" HorizontalAlignment="Left" Margin="16 0">
-                        <TextBlock Grid.Column="0" Grid.Row="0" Text="•" />
-                        <TextBlock Grid.Column="0" Grid.Row="1" Text="•" />
-                        <TextBlock Grid.Column="2" Grid.Row="0" TextWrapping="Wrap">There was no SD Card in the machine while it was being used.</TextBlock>
-                        <TextBlock Grid.Column="2" Grid.Row="1" TextWrapping="Wrap">The SD Card was locked and could not be written to.</TextBlock>
-                    </Grid>
-                </StackPanel>
-            </Expander>
-
-            <Expander
-                IsVisible="{Binding HasSessionData}"
                 ExpandDirection="Down"
                 IsExpanded="True"
                 VerticalAlignment="Top" 
@@ -88,7 +60,35 @@
             </Expander>
 
             <Expander
-                IsVisible="{Binding HasSessionData}"
+                Name="SummaryDataOnly"
+                IsVisible="False"
+                ExpandDirection="Down"
+                IsExpanded="True"
+                VerticalAlignment="Top" 
+                Margin="0 10 0 0"
+                Padding="10"
+            >
+                <Expander.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <fui:FontIcon Glyph="&#xEA1F;" FontSize="24" FontFamily="{DynamicResource SymbolThemeFontFamily}" FontWeight="Normal" FontStyle="Normal" Margin="0 0 10 0"/>
+                        <TextBlock Text="Missing Data" FontSize="16" Theme="{DynamicResource BodyStrongTextBlockStyle}"/>
+                    </StackPanel>
+                </Expander.Header>
+                <StackPanel Orientation="Vertical" Spacing="8">
+                    <TextBlock TextWrapping="Wrap">
+                        There is no detailed data available for this date. The most likely reasons for this are: 
+                    </TextBlock>
+                    <Grid ColumnDefinitions="Auto, 8, 300" RowDefinitions="Auto,6,Auto" HorizontalAlignment="Left" Margin="16 0">
+                        <TextBlock Grid.Column="0" Grid.Row="0" Text="•" />
+                        <TextBlock Grid.Column="0" Grid.Row="2" Text="•" />
+                        <TextBlock Grid.Column="2" Grid.Row="0" TextWrapping="Wrap">There was no SD Card in the machine while it was being used.</TextBlock>
+                        <TextBlock Grid.Column="2" Grid.Row="2" TextWrapping="Wrap">The SD Card was locked and could not be written to.</TextBlock>
+                    </Grid>
+                </StackPanel>
+            </Expander>
+
+            <Expander
+                IsVisible="{Binding HasDetailData}"
                 ExpandDirection="Down"
                 IsExpanded="True"
                 VerticalAlignment="Top" 
@@ -119,7 +119,7 @@
             </Expander>
 
             <Expander
-                IsVisible="{Binding HasSessionData}"
+                IsVisible="{Binding Sessions.Count}"
                 ExpandDirection="Down"
                 IsExpanded="True"
                 VerticalAlignment="Top" 

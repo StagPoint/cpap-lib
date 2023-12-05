@@ -16,8 +16,8 @@ public class DailyStatisticsColumnVisibility : ReactiveObject
 	#region Private fields
 
 	private bool _minimum       = true;
-	private bool _average       = true;
-	private bool _median        = false;
+	private bool _average       = false;
+	private bool _median        = true;
 	private bool _percentile95  = true;
 	private bool _percentile995 = true;
 	private bool _maximum       = false;

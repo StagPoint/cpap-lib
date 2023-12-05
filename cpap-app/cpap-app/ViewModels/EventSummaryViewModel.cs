@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 
 using cpap_app.Helpers;
@@ -10,18 +11,39 @@ namespace cpap_app.ViewModels;
 
 public class EventSummaryViewModel
 {
-	public DailyReport Day        { get; set; }
-	public int         TotalCount { get; set; }
-	public TimeSpan    TotalTime  { get; set; }
-	public double      IndexValue { get; set; }
+	public DailyReport Day         { get; set; }
+	public int         TotalCount  { get; set; }
+	public TimeSpan    TotalTime   { get; set; }
+	public bool        SummaryOnly { get; set; }
 
 	public List<EventGroupSummary> Indexes    { get; set; } = new();
 	
 	public List<EventTypeSummary>  Items   { get; set; } = new();
-	
+
 	public EventSummaryViewModel( DailyReport day )
 	{
 		Day = day;
+
+		// If there is no detailed Event information available (SD Card wasn't in machine, etc) then 
+		// just summarize things as best we can. 
+		if( !day.HasDetailData )
+		{
+			TotalCount  = (int)Math.Ceiling( day.EventSummary.AHI * day.TotalSleepTime.TotalHours );
+			TotalTime   = day.TotalSleepTime;
+			SummaryOnly = true;
+
+			if( day.EventSummary.ApneaIndex > float.Epsilon )
+			{
+				Items.Add( new EventTypeSummary( EventType.UnclassifiedApnea, day.EventSummary.ApneaIndex, day.TotalSleepTime ) );
+			}
+
+			if( day.EventSummary.HypopneaIndex > float.Epsilon )
+			{
+				Items.Add( new EventTypeSummary( EventType.Hypopnea, day.EventSummary.HypopneaIndex, day.TotalSleepTime ) );
+			}
+
+			return;
+		}
 
 		// We want different sorting order than the default, so copy the list and sort it here
 		var events = new List<ReportedEvent>( day.Events );
@@ -44,9 +66,9 @@ public class EventSummaryViewModel
 			Items.Add( summary );
 		}
 
-		TotalCount = events.Count;
-		TotalTime  = TimeSpan.FromSeconds( events.Sum( x => x.Duration.TotalSeconds ) );
-		IndexValue = TotalCount / day.TotalSleepTime.TotalHours;
+		TotalCount  = events.Count;
+		TotalTime   = TimeSpan.FromSeconds( events.Sum( x => x.Duration.TotalSeconds ) );
+		SummaryOnly = false;
 	}
 
 	public EventSummaryViewModel( DailyReport day, Session session, EventType[]? eventTypeFilter = null )
@@ -87,7 +109,6 @@ public class EventSummaryViewModel
 
 		TotalCount = events.Count;
 		TotalTime  = TimeSpan.FromSeconds( events.Sum( x => x.Duration.TotalSeconds ) );
-		IndexValue = TotalCount / session.Duration.TotalHours;
 	}
 
 	public EventSummaryViewModel( DailyReport day, IReadOnlyList<ReportedEvent> events )
@@ -113,7 +134,6 @@ public class EventSummaryViewModel
 
 		TotalCount = events.Count;
 		TotalTime  = TimeSpan.FromSeconds( events.Sum( x => x.Duration.TotalSeconds ) );
-		IndexValue = TotalCount > 0 ? TotalCount / totalSleepTime[ events[ 0 ].SourceType ] : 0;
 	}
 
 	public EventSummaryViewModel( DailyReport day, params EventType[] filter )
@@ -139,7 +159,6 @@ public class EventSummaryViewModel
 
 		TotalCount = events.Count;
 		TotalTime  = TimeSpan.FromSeconds( events.Sum( x => x.Duration.TotalSeconds ) );
-		IndexValue = TotalCount > 0 ? TotalCount / totalSleepTime[ events[ 0 ].SourceType ] : 0;
 	}
 
 	public void AddGroupSummary( string name, EventType[] groupFilter, List<ReportedEvent> events )
@@ -161,7 +180,16 @@ public class EventGroupSummary
 	public double   PercentTime { get; set; }
 	public TimeSpan TotalTime    { get; set; }
 
-	public EventGroupSummary( string name, EventType[] groupFilter, TimeSpan dailyTotalTime, IEnumerable<ReportedEvent> events )
+	public EventGroupSummary( string name, TimeSpan totalSleepTime, double indexValue )
+	{
+		Name        = name;
+		IndexValue  = indexValue;
+		TotalTime   = TimeSpan.Zero;
+		TotalCount  = (int)Math.Ceiling( indexValue * totalSleepTime.TotalHours );
+		PercentTime = 0;
+	}
+
+	public EventGroupSummary( string name, EventType[] groupFilter, TimeSpan totalSleepTime, IEnumerable<ReportedEvent> events )
 	{
 		Name = name;
 
@@ -176,8 +204,8 @@ public class EventGroupSummary
 			}
 		}
 
-		PercentTime = TotalCount > 0 ? (totalSeconds / dailyTotalTime.TotalSeconds) : 0;
-		IndexValue  = TotalCount > 0 ? TotalCount / dailyTotalTime.TotalHours : 0;
+		PercentTime = TotalCount > 0 ? (totalSeconds / totalSleepTime.TotalSeconds) : 0;
+		IndexValue  = TotalCount > 0 ? TotalCount / totalSleepTime.TotalHours : 0;
 		TotalTime   = TimeSpan.FromSeconds( totalSeconds );
 	}
 
@@ -189,14 +217,25 @@ public class EventGroupSummary
 
 public class EventTypeSummary
 {
-	public EventType Type         { get; set; }
-	public int       TotalCount   { get; set; }
-	public double    IndexValue   { get; set; }
+	public EventType Type        { get; set; }
+	public int       TotalCount  { get; set; }
+	public double    IndexValue  { get; set; }
 	public double    PercentTime { get; set; }
-	public TimeSpan  TotalTime    { get; set; }
+	public TimeSpan  TotalTime   { get; set; }
+	public bool      SummaryOnly { get; set; }
 
 	public List<ReportedEvent> Events { get; } = new List<ReportedEvent>();
 
+	public EventTypeSummary( EventType type, double index, TimeSpan totalSleepTime )
+	{
+		Type        = type;
+		TotalCount  = (int)Math.Ceiling( index * totalSleepTime.TotalHours );
+		IndexValue  = index;
+		PercentTime = 0;
+		TotalTime   = TimeSpan.Zero;
+		SummaryOnly = true;
+	}
+	
 	public EventTypeSummary( EventType type, Dictionary<SourceType, double> totalSleepTime, IEnumerable<ReportedEvent> events )
 	{
 		Type = type;
@@ -219,6 +258,7 @@ public class EventTypeSummary
 		PercentTime = TotalCount > 0 ? totalSeconds / (dailyTotalTime * 3600) : 0;
 		IndexValue  = TotalCount > 0 ? TotalCount / dailyTotalTime : 0;
 		TotalTime   = TimeSpan.FromSeconds( totalSeconds );
+		SummaryOnly = false;
 	}
 
 	public override string ToString()
