@@ -68,7 +68,7 @@ namespace cpaplib
 				tasks[ i ] = Task.Run( () =>
 				{
 					// Loads all event and session data for the given day
-					LoadSessionsForDay( folderPath, day );
+					ImportSessionsAndEvents( folderPath, day );
 				} );
 			}
 
@@ -181,7 +181,7 @@ namespace cpaplib
 			}
 		}
 
-		private void LoadSessionsForDay( string rootFolder, DailyReport day )
+		private void ImportSessionsAndEvents( string rootFolder, DailyReport day )
 		{
 			var logFolder = Path.Combine( rootFolder, $@"DATALOG\{day.ReportDate:yyyyMMdd}" );
 			if( !Directory.Exists( logFolder ) )
@@ -368,6 +368,7 @@ namespace cpaplib
 			
 			foreach( var maskSession in day.Sessions )
 			{
+				// TODO: SpO2 and Pulse being invalid can actually be detected in the day's settings. Switch to that instead.
 				// Remove all signals whose values are all out of range. This is how the AirSense indicates that 
 				// there is no SpO2 or Pulse information when a pulse oximeter is not attached, and there may 
 				// be other similar situations I haven't encountered yet (and in any case such signals are not valid). 
@@ -385,7 +386,13 @@ namespace cpaplib
 			{
 				return;
 			}
-			
+
+			// Remove all events that do not occur within a Session's timeframe. It seems that my AirSense 10 Autoset
+			// will sometimes flag a Hypopnea *after* the session completes, and I don't know if that's an artifact
+			// from the machine or due to short sessions being removed, but in either case we don't want events that
+			// don't correspond to an existing Session.
+			day.Events.RemoveAll( evt => !day.Sessions.Any( sess => sess.StartTime <= evt.StartTime && sess.EndTime >= evt.StartTime ) );
+
 			// If there is SpO2 and Pulse data, split those signals off into separate sessions for more logical grouping
 			int sessionCount = day.Sessions.Count;
 			for( int i = 0; i < sessionCount; i++ )
@@ -462,10 +469,6 @@ namespace cpaplib
 			
 				// Generate events that are of interest which are not reported by the ResMed machine
 				GenerateEvents( day );
-			}
-			else
-			{
-				Debug.WriteLine( $"No session data: {day.ReportDate}" );
 			}
 		}
 		
@@ -920,11 +923,11 @@ namespace cpaplib
 		/// </summary>
 		private DailyReport ReadDailyReport( Dictionary<string, double> data )
 		{
+			// TODO: Retain all raw settings data on import
 			// I've tried my best to decode what all of the data means, and convert it to meaningful typed
 			// values exposed in a reasonable manner, but it's highly likely that there's something I didn't
 			// understand correctly, not to mention fields that are different for different models, so the
-			// raw data will be kept available for the consumer of this library to make use of if needs be.
-			//RawData = data;
+			// raw data should be kept available for the consumer of this library to make use of if needs be.
 
 			var day = new DailyReport
 			{
@@ -932,6 +935,7 @@ namespace cpaplib
 				ReportDate     = new DateTime( 1970, 1, 1 ).AddDays( data[ "Date" ] ).AddHours( 12 ),
 				Settings       = ReadMachineSettings( data ),
 				EventSummary   = ReadEventsSummary( data ),
+				StatsSummary   = ReadStatsSummary( data ),
 				MaskEvents     = (int)(data[ "MaskEvents" ] / 2),
 				TotalSleepTime = TimeSpan.FromMinutes( data[ "Duration" ] ),
 				PatientHours   = getValue( "PatientHours" ),
@@ -944,34 +948,84 @@ namespace cpaplib
 				},
 			};
 
-			double getValue( params string[] keys )
-			{
-				foreach( var key in keys )
-				{
-					if( data.TryGetValue( key, out double value ) )
-					{
-						return value;
-					}
-				}
-
-				return 0;
-			}
-
 			return day;
+			
+			double getValue( string key )
+			{
+				return data.TryGetValue( key, out double value ) ? value : 0.0;
+			}
 		}
 
 		private static EventSummary ReadEventsSummary( Dictionary<string, double> data )
 		{
 			Debug.Assert( data.ContainsKey( "AHI" ) );
-			
+
 			var summary = new EventSummary
 			{
-				AHI              = data[ "AHI" ],
-				ApneaIndex       = data[ "AI" ],
-				HypopneaIndex    = data[ "HI" ],
+				AHI                      = getValue( "AHI" ),
+				ApneaIndex               = getValue( "AI" ),
+				HypopneaIndex            = getValue( "HI" ),
+				ObstructiveApneaIndex    = getValue( "OAI" ),
+				CentralApneaIndex        = getValue( "CAI" ),
+				UnclassifiedApneaIndex   = getValue( "UAI" ),
+				RespiratoryArousalIndex  = getValue( "RIN" ),
+				CheynesStokesRespiration = getValue( "CSR" ),
 			};
 
 			return summary;
+
+			// Because different models (AirSense 10 vs. AirCurve 10 for instance) provide different
+			// summary data, we need to check each key to make sure it is available and return a
+			// default value if it is not. 
+			double getValue( string key )
+			{
+				return data.TryGetValue( key, out double value ) ? value : 0.0;
+			}
+		}
+
+		private static StatisticsSummary ReadStatsSummary( Dictionary<string, double> data )
+		{
+			Debug.Assert( data.ContainsKey( "Leak.95" ) );
+
+			var summary = new StatisticsSummary
+			{
+				Leak95     = getValue( "Leak.95" ),
+				LeakMedian = getValue( "Leak.50" ),
+
+				RespirationRateMax    = getValue( "RespRate.Max" ),
+				RespirationRate95     = getValue( "RespRate.95" ),
+				RespirationRateMedian = getValue( "RespRate.50" ),
+
+				MinuteVentilationMax    = getValue( "MinVent.Max" ),
+				MinuteVentilation95     = getValue( "MinVent.95" ),
+				MinuteVentilationMedian = getValue( "MinVent.50" ),
+
+				TidalVolumeMax    = getValue( "TidVol.Max" ) * 1000.0,
+				TidalVolume95     = getValue( "TidVol.95" ) * 1000.0,
+				TidalVolumeMedian = getValue( "TidVol.50" ) * 1000.0,
+
+				PressureMax    = getValue( "MaskPress.Max" ),
+				Pressure95     = getValue( "MaskPress.95" ),
+				PressureMedian = getValue( "MaskPress.50" ),
+
+				TargetIpapMax    = getValue( "TgtIPAP.50" ),
+				TargetIpap95     = getValue( "TgtIPAP.50" ),
+				TargetIpapMedian = getValue( "TgtIPAP.50" ),
+
+				TargetEpapMax    = getValue( "TgtEPAP.50" ),
+				TargetEpap95     = getValue( "TgtEPAP.50" ),
+				TargetEpapMedian = getValue( "TgtEPAP.50" ),
+			};
+
+			return summary;
+			
+			// Because different models (AirSense 10 vs. AirCurve 10 for instance) provide different
+			// summary data, we need to check each key to make sure it is available and return a
+			// default value if it is not. 
+			double getValue( string key )
+			{
+				return data.TryGetValue( key, out double value ) ? value : 0.0;
+			}
 		}
 
 		private static MachineSettings ReadMachineSettings( Dictionary<string, double> data )

@@ -16,14 +16,15 @@ namespace cpap_db
 {
 	public static class TableNames
 	{
-		public const string DailyReport      = "day";
-		public const string Session          = "session";
-		public const string Signal           = "signal";
-		public const string FaultMapping     = "fault";
-		public const string ReportedEvent    = "event";
-		public const string EventSummary     = "event_summary";
-		public const string SignalStatistics = "signal_stats";
-		public const string Annotation       = "annotations";
+		public const string DailyReport       = "day";
+		public const string Session           = "session";
+		public const string Signal            = "signal";
+		public const string FaultMapping      = "fault";
+		public const string ReportedEvent     = "event";
+		public const string EventSummary      = "event_summary";
+		public const string StatisticsSummary = "stats_summary";
+		public const string SignalStatistics  = "signal_stats";
+		public const string Annotation        = "annotations";
 		
 		public const string MachineSettings = "machine_settings";
 		public const string MachineInfo     = "machine_info";
@@ -68,6 +69,9 @@ namespace cpap_db
 
 			var eventSummaryMapping = CreateMapping<EventSummary>( TableNames.EventSummary );
 			eventSummaryMapping.ForeignKey = new ForeignKeyColumn( dayMapping );
+
+			var statsSummaryMapping = CreateMapping<StatisticsSummary>( TableNames.StatisticsSummary );
+			statsSummaryMapping.ForeignKey = new ForeignKeyColumn( dayMapping );
 
 			var eventMapping = CreateMapping<ReportedEvent>( TableNames.ReportedEvent );
 			eventMapping.ForeignKey = new ForeignKeyColumn( dayMapping );
@@ -216,7 +220,8 @@ namespace cpap_db
 			day.Fault            = SelectByForeignKey<FaultInfo>( dayID ).First();
 			day.Statistics       = SelectByForeignKey<SignalStatistics>( dayID );
 			day.Events           = SelectByForeignKey<ReportedEvent>( dayID );
-			day.EventSummary     = SelectByForeignKey<EventSummary>( dayID ).First();
+			day.EventSummary     = SelectByForeignKey<EventSummary>( dayID ).FirstOrDefault() ?? new EventSummary();
+			day.StatsSummary     = SelectByForeignKey<StatisticsSummary>( dayID ).FirstOrDefault() ?? new StatisticsSummary();
 			day.Annotations      = SelectByForeignKey<Annotation>( dayID );
 			day.Settings         = SelectByForeignKey<MachineSettings>( dayID, out int settingsID );
 			day.Settings.AutoSet = SelectByForeignKey<AutoSetSettings>( settingsID ).First();

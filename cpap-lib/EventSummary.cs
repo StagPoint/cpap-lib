@@ -8,8 +8,13 @@
 	/// </summary>
 	public class EventSummary
 	{
-		public double AHI              { get; set; }
-		public double ApneaIndex       { get; set; }
-		public double HypopneaIndex    { get; set; }
+		public double AHI                      { get; set; }
+		public double ApneaIndex               { get; set; }
+		public double HypopneaIndex            { get; set; }
+		public double ObstructiveApneaIndex    { get; set; }
+		public double CentralApneaIndex        { get; set; }
+		public double UnclassifiedApneaIndex   { get; set; }
+		public double RespiratoryArousalIndex  { get; set; }
+		public double CheynesStokesRespiration { get; set; }
 	}
 }

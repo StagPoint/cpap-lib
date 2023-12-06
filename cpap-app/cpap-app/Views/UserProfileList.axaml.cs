@@ -147,7 +147,7 @@ THIS OPERATION CANNOT BE UNDONE";
 			ShowProgressBar = true,
 			IconSource      = new SymbolIconSource { Symbol = Symbol.Delete },
 			SubHeader       = $"Deleting Profile: {profile.UserName}",
-			Content         = "Please wait while the profile data is deleted. This may take a while.",
+			Content         = "Please wait while the user's data is deleted. This may take a while.",
 			Buttons         = { },
 		};
 
