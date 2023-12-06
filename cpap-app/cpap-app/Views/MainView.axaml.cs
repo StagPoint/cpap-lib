@@ -862,7 +862,12 @@ public partial class MainView : UserControl
 		// NOTE: Changing to the Daily Report tab clears the DataContext, so this *must* be done first 
 		NavView.SelectedItem = navDailyReport;
 
-		var day       = LoadDailyReport( ActiveUserProfile.UserProfileID, e.DateTime );
+		var day = LoadDailyReport( ActiveUserProfile.UserProfileID, e.DateTime );
+		if( day == null )
+		{
+			throw new NullReferenceException( $"Date could not be retrieved: {e.DateTime}" );
+		}
+		
 		var viewModel = new DailyReportViewModel( ActiveUserProfile, day );
 
 		viewModel.ReloadRequired += ( _, args ) =>

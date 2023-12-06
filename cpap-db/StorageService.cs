@@ -261,7 +261,10 @@ namespace cpap_db
 				// not already exist, and there's no convenient way to update existing records with this 
 				// many nested dependencies, so just get rid of it if it already exists. 
 				var mapping = GetMapping<DailyReport>();
-				mapping.Delete( Connection, day.ID );
+				
+				//mapping.Delete( Connection, day.ID );
+				int numberOfRecordsDeleted = Connection.Execute( $"DELETE FROM [{mapping.TableName}] WHERE ReportDate = ?", day.ReportDate.Date );
+				Debug.WriteLine( $"DELETED {numberOfRecordsDeleted} records" );
 
 				Insert( day, foreignKeyValue: profileID );
 

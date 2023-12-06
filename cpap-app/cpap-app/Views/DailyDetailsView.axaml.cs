@@ -33,8 +33,6 @@ public partial class DailyDetailsView : UserControl
 
 	private async void ReimportCurrentDate( object? sender, RoutedEventArgs e )
 	{
-		// TODO: Implement "Re-import this date" functionality
-
 		if( DataContext is not DailyReportViewModel day )
 		{
 			return;
@@ -59,8 +57,8 @@ public partial class DailyDetailsView : UserControl
 		var args = new MainView.ImportRequestEventArgs( MainView.ImportCpapRequestedEvent )
 		{
 			Source           = this,
-			StartDate        = day.RecordingStartTime.Date,
-			EndDate          = day.RecordingEndTime.Date,
+			StartDate        = day.ReportDate.Date,
+			EndDate          = day.ReportDate.Date,
 			OnImportComplete = () => { day.Reload(); }
 		};
 

@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Collections.Generic;
 
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Interactivity;
@@ -41,6 +42,19 @@ public partial class HistoryView : UserControl
 	#endregion
 
 	#region Base class overrides
+
+	protected override void OnPropertyChanged( AvaloniaPropertyChangedEventArgs change )
+	{
+		base.OnPropertyChanged( change );
+
+		if( change.Property.Name == nameof( DataContext ) )
+		{
+			if( change.NewValue is not HistoryViewModel )
+			{
+				DataContext = BuildDataContext();
+			}
+		}
+	}
 
 	protected override void OnLoaded( RoutedEventArgs e )
 	{

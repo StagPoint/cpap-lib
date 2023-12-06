@@ -387,12 +387,6 @@ namespace cpaplib
 				return;
 			}
 
-			// Remove all events that do not occur within a Session's timeframe. It seems that my AirSense 10 Autoset
-			// will sometimes flag a Hypopnea *after* the session completes, and I don't know if that's an artifact
-			// from the machine or due to short sessions being removed, but in either case we don't want events that
-			// don't correspond to an existing Session.
-			day.Events.RemoveAll( evt => !day.Sessions.Any( sess => sess.StartTime <= evt.StartTime && sess.EndTime >= evt.StartTime ) );
-
 			// If there is SpO2 and Pulse data, split those signals off into separate sessions for more logical grouping
 			int sessionCount = day.Sessions.Count;
 			for( int i = 0; i < sessionCount; i++ )
@@ -466,9 +460,17 @@ namespace cpaplib
 
 				// Calculate statistics (min, avg, median, max, etc) for each Signal
 				CalculateSignalStatistics( day );
-			
+				
+				// Remove all events that do not occur within a Session's timeframe. It seems that my AirSense 10 AutoSet
+				// will sometimes flag a Hypopnea *immediately after* the session completes. Since the event does not occur
+				// within the times bounded by any of the Session's Signals, it is invalid and needs to be removed. 
+				if( 0 < day.Events.RemoveAll( evt => !day.Sessions.Any( sess => sess.StartTime <= evt.StartTime && sess.EndTime >= evt.StartTime ) ) )
+				{
+					day.UpdateEventSummary();
+				}
+
 				// Generate events that are of interest which are not reported by the ResMed machine
-				GenerateEvents( day );
+				CustomEventGenerator.GenerateEvents( day );
 			}
 		}
 		
@@ -478,234 +480,8 @@ namespace cpaplib
 			DerivedSignals.GenerateMissingRespirationSignals( day, session );
 		}
 		
-		private static void GenerateEvents( DailyReport day )
-		{
-			GenerateFlowReductionEvents( day );
-			GenerateLeakEvents( day );
-			GenerateFlowLimitEvents( day );
-		}
-
-		private static void GenerateFlowReductionEvents( DailyReport day )
-		{
-			const double MINIMUM_EVENT_DURATION   = 8.0; // Only flag flow reductions that last this number of seconds or more
-			const double FLOW_REDUCTION_THRESHOLD = 0.5; // Flag flow reductions of 50% or more
-			const int    WINDOW_LENGTH            = 120; // Two minutes, per 2007 AASM Manual
-
-			foreach( var session in day.Sessions )
-			{
-				var signal = session.GetSignalByName( SignalNames.FlowRate );
-				if( signal == null )
-				{
-					return;
-				}
-
-				var absFlow      = signal.Samples.Select( Math.Abs ).ToArray();
-				var filteredFlow = ButterworthFilter.Filter( absFlow, signal.FrequencyInHz, 1 );
-				var calc         = new MovingAverageCalculator( (int)(WINDOW_LENGTH * signal.FrequencyInHz) );
-
-				var interval   = 1.0 / signal.FrequencyInHz;
-				var state      = 0;
-				var startIndex = 0;
-				var threshold  = 0.0;
-
-				for( int i = 0; i < signal.Samples.Count; i++ )
-				{
-					var sample = filteredFlow[ i ];
-
-					calc.AddObservation( sample );
-
-					if( !calc.HasFullPeriod )
-					{
-						continue;
-					}
-
-					var rms = calc.Average + calc.StandardDeviation;
-
-					switch( state )
-					{
-						case 0:
-							threshold = rms * FLOW_REDUCTION_THRESHOLD;
-							if( sample <= threshold )
-							{
-								startIndex = i;
-								state      = 1;
-							}
-							break;
-
-						case 1:
-							if( sample >= threshold )
-							{
-								var duration = (i - startIndex) * interval;
-
-								if( duration >= MINIMUM_EVENT_DURATION )
-								{
-									// Note that all machine-generated events "start" at the end of the event.
-									// TODO: It might be better to rename ReportedEvent.StartTime to ReportedEvent.MarkerTime
-									var eventStart = signal.StartTime.AddSeconds( i * interval );
-
-									var newEvent = new ReportedEvent
-									{
-										Type      = EventType.FlowReduction,
-										StartTime = eventStart,
-										Duration  = TimeSpan.FromSeconds( duration ),
-									};
-
-									// Because this is an application-generated event, allow machine-generated events to take
-									// precedence by not generating any events that overlap in time. 
-									if( !day.Events.Any( x => ReportedEvent.TimesOverlap( x, newEvent ) ) )
-									{
-										day.Events.Add( newEvent );
-									}
-								}
-
-								state = 0;
-							}
-							break;
-					}
-				}
-			}
-		}
-
-		private static void GenerateFlowLimitEvents( DailyReport day )
-		{
-			// TODO: Flow Limitation event parameters need to be a configurable value 
-			const double FlowLimitRedline = 0.3;
-			const int    MinEventDuration = 3;
-
-			List<ReportedEvent> flowLimitEvents = new List<ReportedEvent>();
-			
-			foreach( var session in day.Sessions )
-			{
-				var signal = session.GetSignalByName( SignalNames.FlowLimit );
-				if( signal != null )
-				{
-					flowLimitEvents.AddRange( Annotate( EventType.FlowLimitation, signal, MinEventDuration, FlowLimitRedline, false ) );
-				}
-			}
-			
-			// HACK: Don't add any flow limitation events that coincide with a RERA event, since the two are related
-			// and we don't want to double-count the events when calculating the RDI
-			var eventTypeList = EventTypes.RespiratoryDisturbance;
-			foreach( var flowLimit in flowLimitEvents )
-			{
-				if( !day.Events.Any( x => eventTypeList.Contains( x.Type ) && ReportedEvent.TimesOverlap( x, flowLimit ) ) )
-				{
-					day.Events.Add( flowLimit );
-				}
-			}
-		}
-
-		private static void GenerateLeakEvents( DailyReport day )
-		{
-			// TODO: Leak Redline needs to be a configurable value 
-			const double LeakRedline = 24;
-			
-			foreach( var session in day.Sessions )
-			{
-				var signal = session.GetSignalByName( SignalNames.LeakRate );
-				if( signal != null )
-				{
-					day.Events.AddRange( Annotate( EventType.LargeLeak, signal, 5, LeakRedline, false ) );
-				}
-			}
-		}
-
-		private static List<ReportedEvent> Annotate( EventType eventType, Signal signal, double minDuration, double redLine, bool interpolateSamples = true )
-		{
-			List<ReportedEvent> events = new List<ReportedEvent>();
-			
-			int    state      = 0;
-			double eventStart = -1;
-
-			var sourceData     = signal.Samples;
-			var sampleInterval = 1.0 / signal.FrequencyInHz;
-			
-			for( int i = 1; i < sourceData.Count; i++ )
-			{
-				var sample = sourceData[ i ];
-				var time   = i * sampleInterval;
-
-				switch( state )
-				{
-					case 0:
-					{
-						if( sample > redLine )
-						{
-							var lastSample = sourceData[ i - 1 ];
-							var t          = interpolateSamples ? MathUtil.InverseLerp( lastSample, sample, redLine ) : 1.0;
-
-							eventStart = time - (1.0 - t) * sampleInterval;
-							state      = 1;
-						}
-						
-						break;
-					}
-
-					case 1:
-					{
-						// Find the specific time when the sample crossed the threshold, even if it 
-						// doesn't align directly on a sample's interval
-						var lastSample = sourceData[ i - 1 ];
-						var t          = interpolateSamples ? MathUtil.InverseLerp( lastSample, sample, redLine ) : 1.0;
-						var eventEnd   = time - (1.0 - t) * sampleInterval;
-						var duration   = eventEnd - eventStart;
-
-						if( sample <= redLine )
-						{
-							if( duration >= minDuration )
-							{
-								var annotation = new ReportedEvent
-								{
-									Type      = eventType,
-									StartTime = signal.StartTime.AddSeconds( eventStart ),
-									Duration  = TimeSpan.FromSeconds( duration ),
-								};
-
-								events.Add( annotation );
-							}
-
-							state = 0;
-						}
-						
-						break;
-					}
-				}
-			}
-
-			if( state == 1 )
-			{
-				var annotation = new ReportedEvent()
-				{
-					Type      = eventType,
-					StartTime = signal.StartTime.AddSeconds( eventStart ),
-					Duration  = TimeSpan.FromSeconds( sourceData.Count * sampleInterval - eventStart ),
-				};
-
-				events.Add( annotation );
-			}
-
-			return events;
-		}
-
 		private static void CalculateSignalStatistics( DailyReport day )
 		{
-			// Determine the maximum sort buffer size we'll need so that we only need to allocate and reuse one buffer.
-			var maxBufferSize = 0;
-
-			// Note that when this was written, every session was guaranteed to have the same number of signals,
-			// which appeared in the same order in each session. Since this is by design, that is not expected to
-			// ever change, but it is worth noting here.
-			for( int i = 0; i < day.Sessions[ 0 ].Signals.Count; i++ )
-			{
-				var signalSize = 0;
-				foreach( var session in day.Sessions )
-				{
-					signalSize += session.Signals[ i ].Samples.Count;
-				}
-
-				maxBufferSize = Math.Max( maxBufferSize, signalSize );
-			}
-
 			foreach( var signal in day.Sessions[ 0 ].Signals )
 			{
 				// Automatically calculate statistics for all Signals whose value range is zero or above

@@ -1,17 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
-using Avalonia.Media.TextFormatting;
 
 using cpap_app.Helpers;
 using cpap_app.ViewModels;
-using cpap_app.ViewModels.Tooltips;
 
 using cpaplib;
-
-using FluentAvalonia.Core;
 
 namespace cpap_app.Views;
 
@@ -27,6 +23,19 @@ public partial class StatisticsView : UserControl
 		base.OnLoaded( e );
 
 		DataContext = BuildStatisticsViewModel();
+	}
+
+	protected override void OnPropertyChanged( AvaloniaPropertyChangedEventArgs change )
+	{
+		base.OnPropertyChanged( change );
+
+		if( change.Property.Name == nameof( DataContext ) )
+		{
+			if( change.NewValue is not TherapyStatisticsViewModel )
+			{
+				DataContext = BuildStatisticsViewModel();
+			}
+		}
 	}
 
 	private TherapyStatisticsViewModel BuildStatisticsViewModel()
@@ -45,7 +54,7 @@ public partial class StatisticsView : UserControl
 			LastYearStart       = DateHelper.Max( history.End.AddYears( -1 ), history.Start ),
 		};
 
-		viewModel.Groups.Add( BuildCPAPUsageStats( history ) );
+		viewModel.Groups.Add(BuildCPAPUsageStats( history ) );
 		viewModel.Groups.Add( BuildEventsStats( history ) );
 
 		return viewModel;
@@ -112,7 +121,7 @@ public partial class StatisticsView : UserControl
 		return ( totalValue / numberOfDays );
 	}
 
-	private TherapyStatisticsGroupViewModel BuildCPAPUsageStats( HistoryViewModel history )
+	private static TherapyStatisticsGroupViewModel BuildCPAPUsageStats( HistoryViewModel history )
 	{
 		var group = new TherapyStatisticsGroupViewModel
 		{
@@ -145,7 +154,7 @@ public partial class StatisticsView : UserControl
 		return group;
 	}
 	
-	private double GetCompliancePercentage( HistoryViewModel history, int count, double complianceThreshold = 4 )
+	private static double GetCompliancePercentage( HistoryViewModel history, int count, double complianceThreshold = 4 )
 	{
 		var days      = history.Days;
 		var startDate = DateHelper.Max( history.Start, history.End.AddDays( -(count - 1) ) );
@@ -168,7 +177,7 @@ public partial class StatisticsView : UserControl
 		return ( numberOfCompliantDays / numberOfDays );
 	}
 
-	private TimeSpan GetAverageSleepTime( HistoryViewModel history, int count )
+	private static TimeSpan GetAverageSleepTime( HistoryViewModel history, int count )
 	{
 		var days = history.Days;
 		

@@ -113,6 +113,23 @@ namespace cpaplib
 		#region Public functions
 
 		/// <summary>
+		/// Recalculates the EventSummary values 
+		/// </summary>
+		public void UpdateEventSummary()
+		{
+			var tst = TotalSleepTime.TotalHours;
+			
+			EventSummary.AHI                      = Events.Count( x => EventTypes.Apneas.Contains( x.Type ) ) / tst;
+			EventSummary.ApneaIndex               = EventSummary.AHI;
+			EventSummary.HypopneaIndex            = Events.Count( x => x.Type == EventType.Hypopnea ) / tst;
+			EventSummary.ObstructiveApneaIndex    = Events.Count( x => x.Type == EventType.ObstructiveApnea ) / tst;
+			EventSummary.CentralApneaIndex        = Events.Count( x => x.Type == EventType.ClearAirway ) / tst;
+			EventSummary.UnclassifiedApneaIndex   = Events.Count( x => x.Type == EventType.UnclassifiedApnea ) / tst;
+			EventSummary.RespiratoryArousalIndex  = Events.Count( x => x.Type == EventType.RERA ) / tst;
+			EventSummary.CheynesStokesRespiration = Events.Count( x => x.Type == EventType.CSR ) / tst;
+		}
+
+		/// <summary>
 		/// Recalculates the statistics for the named Signal. Designed to be called after a data import to
 		/// update the statistics to account for the newly imported data. 
 		/// </summary>
@@ -135,18 +152,9 @@ namespace cpaplib
 		/// </summary>
 		public void RefreshTimeRange()
 		{
-			if( HasDetailData )
-			{
-				RecordingStartTime = Sessions.Min( x => x.StartTime );
-				RecordingEndTime   = Sessions.Max( x => x.EndTime );
-				TotalSleepTime     = CalculateTotalSleepTime();
-			}
-			// else
-			// {
-			// 	RecordingStartTime = ReportDate.Date.AddHours( 12 );
-			// 	RecordingEndTime   = RecordingStartTime;
-			// 	TotalSleepTime     = TimeSpan.Zero;
-			// }
+			RecordingStartTime = Sessions.Min( x => x.StartTime );
+			RecordingEndTime   = Sessions.Max( x => x.EndTime );
+			TotalSleepTime     = CalculateTotalSleepTime();
 		}
 
 		/// <summary>
@@ -183,7 +191,7 @@ namespace cpaplib
 				x.StartTime >= session.StartTime &&
 				x.StartTime <= session.EndTime
 			);
-
+			
 			foreach( var signal in session.Signals )
 			{
 				if( Statistics.Any( x => x.SignalName == signal.Name ) )
@@ -193,6 +201,7 @@ namespace cpaplib
 			}
 
 			RefreshTimeRange();
+			UpdateEventSummary();
 
 			return true;
 		}
