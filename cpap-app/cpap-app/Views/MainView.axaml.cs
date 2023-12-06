@@ -141,8 +141,7 @@ public partial class MainView : UserControl
 		{
 			if( change.NewValue is UserProfile profile )
 			{
-				profile.LastLogin = DateTime.Now;
-				UserProfileStore.Update( profile );
+				UserProfileStore.SetActive( profile );
 			}
 			
 			LoadProfileMenu();
@@ -1014,6 +1013,7 @@ public partial class MainView : UserControl
 						profile.MachineID       = importedDay.MachineInfo.SerialNumber;
 						profile.VentilatorModel = importedDay.MachineInfo.ProductName;
 						profile.TherapyMode     = importedDay.Settings.Mode;
+						
 						UserProfileStore.Update( profile );
 					}
 					else

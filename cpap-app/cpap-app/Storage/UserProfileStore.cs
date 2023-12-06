@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 using cpaplib;
@@ -13,6 +14,12 @@ public class UserProfileStore
 		using var store = StorageService.Connect();
 
 		return store.SelectAll<UserProfile>().OrderByDescending( x => x.LastLogin ).First();
+	}
+
+	public static void SetActive( UserProfile profile )
+	{
+		profile.LastLogin = DateTime.Now;
+		Update( profile );
 	}
 
 	public static List<UserProfile> SelectAll()

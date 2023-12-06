@@ -41,8 +41,7 @@ public partial class UserProfileList : UserControl
 			throw new InvalidOperationException();
 		}
 
-		profile.LastLogin = DateTime.Now;
-		UserProfileStore.Update( profile );
+		UserProfileStore.SetActive( profile );
 
 		RaiseEvent( new UserProfileEventArgs
 		{

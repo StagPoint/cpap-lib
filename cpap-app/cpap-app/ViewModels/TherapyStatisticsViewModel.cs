@@ -7,7 +7,7 @@ namespace cpap_app.ViewModels;
 
 public class TherapyStatisticsViewModel
 {
-	public List<TherapyStatisticsItemViewModel> Items { get; set; } = new();
+	public List<TherapyStatisticsGroupViewModel> Groups { get; set; } = new();
 
 	public DateTime MostRecentDate      { get; set; } = DateTime.Today;
 	public DateTime LastWeekStart       { get; set; } = DateTime.Today.AddDays( -7 );
@@ -16,12 +16,18 @@ public class TherapyStatisticsViewModel
 	public DateTime LastYearStart       { get; set; } = DateTime.Today.AddYears( -1 );
 }
 
+public class TherapyStatisticsGroupViewModel
+{
+	public string                               Name  { get; set; } = string.Empty;
+	public List<TherapyStatisticsItemViewModel> Items { get; set; } = new();
+}
+
 public class TherapyStatisticsItemViewModel
 {
 	public string Name                 { get; set; } = string.Empty;
-	public double MostRecentValue      { get; set; }
-	public double LastWeekAverage      { get; set; }
-	public double LastMonthAverage     { get; set; }
-	public double LastNinetyDayAverage { get; set; }
-	public double LastYearAverage      { get; set; }
+	public string MostRecentValue      { get; set; } = string.Empty;
+	public string LastWeekAverage      { get; set; } = string.Empty;
+	public string LastMonthAverage     { get; set; } = string.Empty;
+	public string LastNinetyDayAverage { get; set; } = string.Empty;
+	public string LastYearAverage      { get; set; } = string.Empty;
 }
