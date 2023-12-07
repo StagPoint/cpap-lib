@@ -7,6 +7,8 @@ using Avalonia.Interactivity;
 using cpap_app.Helpers;
 using cpap_app.ViewModels;
 
+using cpap_db;
+
 using cpaplib;
 
 namespace cpap_app.Views;
@@ -40,9 +42,9 @@ public partial class StatisticsView : UserControl
 
 	private TherapyStatisticsViewModel BuildStatisticsViewModel()
 	{
-		var start     = DateTime.Today.AddYears( -1 );
-		var end       = DateTime.Today;
 		var profileID = UserProfileStore.GetActiveUserProfile().UserProfileID;
+		var end       = StorageService.Connect().GetMostRecentStoredDate( profileID ); 
+		var start     = end.AddYears( -1 );
 		var history   = HistoryViewModel.GetHistory( profileID, start, end );
 
 		var viewModel = new TherapyStatisticsViewModel

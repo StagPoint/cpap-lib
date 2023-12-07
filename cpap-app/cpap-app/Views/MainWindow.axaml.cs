@@ -4,6 +4,7 @@ using Avalonia;
 using Avalonia.Styling;
 
 using cpap_app.Configuration;
+using cpap_app.Events;
 using cpap_app.ViewModels;
 
 using FluentAvalonia.UI.Windowing;
@@ -23,6 +24,11 @@ public partial class MainWindow : AppWindow
 		{
 			Application.Current!.RequestedThemeVariant = requestedTheme;
 		}
+
+		UserProfileStore.UserProfileActivated += ( sender, profile ) =>
+		{
+			Title = $"Open Source CPAP Viewer - {profile.UserName}";
+		};
 
 		#if DEBUG
 		this.AttachDevTools();

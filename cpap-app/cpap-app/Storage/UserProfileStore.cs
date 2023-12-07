@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 
+using cpap_app.Events;
+
 using cpaplib;
 using cpap_db;
 
@@ -9,17 +11,24 @@ namespace cpap_app.ViewModels;
 
 public class UserProfileStore
 {
+	public static event EventHandler<UserProfile>? UserProfileActivated;
+	
 	public static UserProfile GetActiveUserProfile()
 	{
 		using var store = StorageService.Connect();
 
-		return store.SelectAll<UserProfile>().OrderByDescending( x => x.LastLogin ).First();
+		var profile = store.SelectAll<UserProfile>().MaxBy( x => x.LastLogin ) ?? new UserProfile();
+		UserProfileActivated?.Invoke( null, profile );
+
+		return profile;
 	}
 
 	public static void SetActive( UserProfile profile )
 	{
 		profile.LastLogin = DateTime.Now;
 		Update( profile );
+
+		UserProfileActivated?.Invoke( null, profile );
 	}
 
 	public static List<UserProfile> SelectAll()

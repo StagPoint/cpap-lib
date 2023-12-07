@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 using Avalonia;
 using Avalonia.Controls;
@@ -11,7 +12,6 @@ using Avalonia.Threading;
 using cpap_app.Configuration;
 using cpap_app.Controls;
 using cpap_app.Events;
-using cpap_app.Helpers;
 using cpap_app.ViewModels;
 
 using cpap_db;
@@ -95,21 +95,23 @@ public partial class HistoryView : UserControl
 			}
 
 			var signalDefaults = signalNamesAndUnits.FirstOrDefault( x => x.Name == config.SignalName );
+			Debug.Assert( signalDefaults != null, nameof( signalDefaults ) + " != null" );
 
-			var units = signalDefaults?.UnitOfMeasurement ?? "";
+			var units = signalDefaults.UnitOfMeasurement ?? "";
 
 			double? minValue = config.AxisMinValue;
 			double? maxValue = config.AxisMaxValue;
 
-			if( config.ScalingMode == AxisScalingMode.Defaults )
+			switch( config.ScalingMode )
 			{
-				minValue = signalDefaults.MinValue;
-				maxValue = signalDefaults.MaxValue;
-			}
-			else if( config.ScalingMode == AxisScalingMode.AutoFit )
-			{
-				minValue = null;
-				maxValue = null;
+				case AxisScalingMode.Defaults:
+					minValue = signalDefaults.MinValue;
+					maxValue = signalDefaults.MaxValue;
+					break;
+				case AxisScalingMode.AutoFit:
+					minValue = null;
+					maxValue = null;
+					break;
 			}
 
 			var graph = new SignalStatisticGraph()
@@ -153,7 +155,12 @@ public partial class HistoryView : UserControl
 		{
 			using var store = StorageService.Connect();
 
-			var profileID         = UserProfileStore.GetActiveUserProfile()?.UserProfileID ?? 0;
+			var profileID = UserProfileStore.GetActiveUserProfile().UserProfileID;
+			if( profileID == -1 )
+			{
+				return;
+			}
+			
 			var lastAvailableDate = store.GetMostRecentStoredDate( profileID );
 
 			// If a set number of days is defined, show only that number of days (from the last available date)

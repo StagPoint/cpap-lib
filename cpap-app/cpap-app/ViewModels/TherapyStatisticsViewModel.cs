@@ -18,7 +18,8 @@ public class TherapyStatisticsViewModel
 
 public class TherapyStatisticsGroupViewModel
 {
-	public string                               Name  { get; set; } = string.Empty;
+	public string Name { get; set; } = string.Empty;
+
 	public List<TherapyStatisticsItemViewModel> Items { get; set; } = new();
 }
 
