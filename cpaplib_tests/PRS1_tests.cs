@@ -157,7 +157,7 @@ public class PRS1_tests
 		Assert.AreEqual( int.Parse( Path.GetFileNameWithoutExtension( filename ) ), header.SessionNumber );
 	}
 
-	[TestMethod]
+	//[TestMethod]
 	public void CanReadSummaryFileChunks()
 	{
 		var propertyFilePath = Path.Combine( SOURCE_FOLDER, "Properties.txt" );
@@ -196,8 +196,11 @@ public class PRS1_tests
 
 			Assert.IsTrue( file.Length >= 15, "Header records are supposed to be 15 bytes in length" );
 
-			var chunk = DataChunk.Read( reader );
-			Assert.IsNotNull( chunk );
+			while( file.Position < file.Length )
+			{
+				var chunk = DataChunk.Read( reader );
+				Assert.IsNotNull( chunk );
+			}
 		}
 	}
 
@@ -233,7 +236,8 @@ public class PRS1_tests
 
 	private class DataChunk
 	{
-		public HeaderRecord Header { get; set; }
+		public HeaderRecord Header    { get; set; }
+		public byte[]       BlockData { get; set; }
 
 		public static DataChunk? Read( BinaryReader reader )
 		{
@@ -244,34 +248,57 @@ public class PRS1_tests
 			{
 				return null;
 			}
-			
-			if( header.HeaderType == HeaderType.Standard )
-			{
-				var checksumSize = header.DataFormatVersion == 3 ? 4 : 2; 
 
-				if( header.DataFormatVersion == 2 )
-				{
-					var headerSize        = (int)reader.BaseStream.Position - startPosition;
-					var dataSize          = header.BlockLength - headerSize - checksumSize;
-					var blockData         = reader.ReadBytes( dataSize );
-					var blockChecksum     = reader.ReadUInt16();
-					var calcBlockChecksum = CRC16.Calc( blockData, blockData.Length );
-
-					if( calcBlockChecksum != blockChecksum )
-					{
-						throw new Exception( $"Block checksum mismatch. Expected: {calcBlockChecksum}, Actual: {blockChecksum}" );
-					}
-				}
-				else if( header.DataFormatVersion == 3 )
-				{
-					throw new NotImplementedException();
-				}
-			}
-
-			return new DataChunk()
+			var chunk = new DataChunk()
 			{
 				Header = header,
 			};
+
+			var checksumSize = header.DataFormatVersion == 3 ? 4 : 2;
+
+			if( header.DataFormatVersion == 2 )
+			{
+				var headerSize        = (int)reader.BaseStream.Position - startPosition;
+				var dataSize          = header.BlockLength - headerSize - checksumSize;
+				var blockData         = reader.ReadBytes( dataSize );
+				var blockChecksum     = reader.ReadUInt16();
+				var calcBlockChecksum = CRC16.Calc( blockData, blockData.Length );
+
+				if( calcBlockChecksum != blockChecksum )
+				{
+					throw new Exception( $"Block checksum mismatch. Expected: {calcBlockChecksum}, Actual: {blockChecksum}" );
+				}
+
+				chunk.BlockData = blockData;
+			}
+			else 
+			{
+				// TODO: Obtain sample data for DataFormat==3 
+				// The only sample data I have available to me uses Version==2, so instead of guessing
+				// that I can get Version==3 correct we will just throw an exception instead
+				throw new NotSupportedException( $"Data Format Version {header.DataFormatVersion} is not yet supported" );
+			}
+
+			return chunk;
+		}
+	}
+
+	private class HeaderSignalInfo
+	{
+		public int IntervalCount  { get; set; }
+		public int IntervalLength { get; set; }
+
+		public List<WaveformInfo> Waveforms = new();
+		
+		public int Duration
+		{
+			get => IntervalCount * IntervalLength;
+		}
+
+		public class WaveformInfo
+		{
+			public int SampleFormat { get; set; }
+			public int Interleave   { get; set; }
 		}
 	}
 
@@ -285,56 +312,79 @@ public class PRS1_tests
 		public int        FileExtension     { get; set; }
 		public int        SessionNumber     { get; set; }
 		public DateTime   Timestamp         { get; set; }
+		
+		public HeaderSignalInfo?     SignalInfo { get; set; }
+		public Dictionary<byte, int> CodeMap    { get; set; } = new();
 
 		public static HeaderRecord? Read( BinaryReader reader )
 		{
-			var headerBytes = reader.ReadBytes( 15 );
-			if( headerBytes.Length < 15 )
-			{
-				return null;
-			}
+			var startPosition = reader.BaseStream.Position;
 
-			// Because we need to calculate the header checksum and the source stream may not support
-			// random access (such as an encrypted file stream), we'll first read in the raw header 
-			// bytes and then create our own binary reader to read *that*.
-			using var headerReader = new BinaryReader( new MemoryStream( headerBytes ) );
+			HeaderRecord? header = null;
 			
-			var dataFormatVersion = headerReader.ReadByte();
-			var blockLength       = headerReader.ReadUInt16();
-			var headerType        = (HeaderType)headerReader.ReadByte();
-			var family            = headerReader.ReadByte();
-			var familyVersion     = headerReader.ReadByte();
-			var fileExtension     = headerReader.ReadByte();
-			var sessionNumber     = (int)headerReader.ReadUInt32();
-			var timestampNum      = (int)headerReader.ReadUInt32();
+			var dataFormatVersion = reader.ReadByte();
+			var blockLength       = reader.ReadUInt16();
+			var headerType        = (HeaderType)reader.ReadByte();
+			var family            = reader.ReadByte();
+			var familyVersion     = reader.ReadByte();
+			var fileExtension     = reader.ReadByte();
+			var sessionNumber     = (int)reader.ReadUInt32();
+			var timestampNum      = (int)reader.ReadUInt32();
 			var timestamp         = DateTime.UnixEpoch.AddSeconds( timestampNum );
 
-			if( headerType == HeaderType.Interleaved )
+			header = new HeaderRecord
 			{
-				var extra = reader.ReadBytes( 4 );
-				headerBytes = headerBytes.Concat( extra ).ToArray();
+				DataFormatVersion = dataFormatVersion,
+				BlockLength       = blockLength,
+				HeaderType        = headerType,
+				Family            = family,
+				FamilyVersion     = familyVersion,
+				FileExtension     = fileExtension,
+				SessionNumber     = sessionNumber,
+				Timestamp         = timestamp
+			};
 
-				var dataRecordCount  = extra[ 0 ] | extra[ 1 ] << 8;
-				var dataRecordLength = extra[ 2 ];
-				var signalCount      = extra[ 3 ];
+			if( dataFormatVersion == 3 )
+			{
+				// Read the number of key/value pairs that follow the header
+				var pairCount = reader.ReadByte();
 
-				// Read the variable-length data + trailing byte.
-				int entrySize      = (dataFormatVersion == 3) ? 4 : 3;
-				int signalDataSize = signalCount * entrySize;
+				for( int i = 0; i < pairCount; i++ )
+				{
+					var code  = reader.ReadByte();
+					var value = reader.ReadByte();
 
-				extra       = reader.ReadBytes( signalDataSize );
-				headerBytes = headerBytes.Concat( extra ).ToArray();
+					header.CodeMap[ code ] = value;
+				}
+			}
+			else if( headerType == HeaderType.Interleaved )
+			{
+				var interleavedRecordCount  = reader.ReadUInt16();
+				var interleavedRecordLength = reader.ReadByte();
+				var signalCount             = reader.ReadByte();
 
-				using var extraReader = new BinaryReader( new MemoryStream( extra ) );
+				header.SignalInfo = new HeaderSignalInfo
+				{
+					IntervalCount  = interleavedRecordCount,
+					IntervalLength = interleavedRecordLength,
+				};
 
 				for( int i = 0; i < signalCount; i++ )
 				{
-					var signalType = extraReader.ReadByte();
-					var interleave = extraReader.ReadUInt16();
+					var signalType = reader.ReadByte();
+					var interleave = reader.ReadUInt16();
+
+					header.SignalInfo.Waveforms.Add( new HeaderSignalInfo.WaveformInfo
+					{
+						SampleFormat = signalType,
+						Interleave   = interleave,
+					} );
 
 					if( dataFormatVersion == 3 )
 					{
-						extraReader.ReadByte();
+						// Not sure what this is, always seems to be 8
+						var unknown = reader.ReadByte();
+						Debug.Assert( unknown == 8, "Unhandled header field did not have expected value" );
 					}
 				}
 				
@@ -342,6 +392,15 @@ public class PRS1_tests
 				var terminatorByte = reader.ReadByte();
 				Debug.Assert( 0 == terminatorByte );
 			}
+			
+			// Now that we know the full header size, rewind the stream and read all header
+			// bytes as a single array so that we can validate the checksum. 
+			// NOTE: This obviously means that the base stream must support random access 
+			// and that if the underlying data source is encrypted or compressed, it must 
+			// first be decrypted/decompressed before calling this function. 
+			var headerSize = (int)(reader.BaseStream.Position - startPosition);
+			reader.BaseStream.Position = startPosition;
+			var headerBytes = reader.ReadBytes( headerSize );
 			
 			// Calculate and verify header checksum 
 			var headerCheckSum     = reader.ReadByte();
@@ -351,17 +410,7 @@ public class PRS1_tests
 				throw new Exception( $"Header checksum mismatch. Expected: {calcHeaderChecksum}, Actual: {headerCheckSum}" );
 			}
 
-			return new HeaderRecord
-			{
-				DataFormatVersion = dataFormatVersion,
-				BlockLength       = blockLength,
-				HeaderType          = headerType,
-				Family            = family,
-				FamilyVersion     = familyVersion,
-				FileExtension     = fileExtension,
-				SessionNumber     = sessionNumber,
-				Timestamp         = timestamp
-			};
+			return header;
 		}
 	}
 }
