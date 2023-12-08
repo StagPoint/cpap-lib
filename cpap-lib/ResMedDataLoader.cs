@@ -579,7 +579,16 @@ namespace cpaplib
 						// Try to convert the annotation text into an Enum for easier processing. 
 						var eventFlag = ReportedEvent.FromEdfAnnotation( day.RecordingStartTime, annotation );
 						
-						// TODO: The ResMed AirSense 10 reports RERA as "Arousal"? Can RERA be correlated with Flow Limit to differentiate from non-effort-related Arousal? A cursory investigation suggests yes.
+						// ResMed does not report a time for Hypopnea in Series 10 machines (although I've read
+						// that it does in S9 machines) but their own definition states that a minimum of ten
+						// seconds is part of the defining criteria, so if no time is reported we'll just set
+						// it to 10 seconds so that the time can be factored into the "Total Time in Apnea"
+						// calculations.
+						// ReSharper disable once ConvertIfStatementToSwitchStatement
+						if( eventFlag.Type == EventType.Hypopnea && eventFlag.Duration.TotalSeconds <= double.Epsilon )
+						{
+							eventFlag.Duration = TimeSpan.FromSeconds( 10 );
+						}
 						
 						// We don't need the "Recording Starts" annotations either 
 						if( eventFlag.Type == EventType.RecordingStarts )

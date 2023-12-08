@@ -20,6 +20,7 @@ using cpaplib;
 using ScottPlot;
 using ScottPlot.Avalonia;
 using ScottPlot.Control;
+using ScottPlot.MarkerShapes;
 using ScottPlot.Plottable;
 
 namespace cpap_app.Controls;
@@ -91,6 +92,7 @@ public partial class HistoryGraphBase : UserControl
 	protected bool                 _hasInputFocus   = false;
 	protected Point                _pointerDownPosition;
 	protected AxisLimits           _pointerDownAxisLimits = AxisLimits.NoLimits;
+	protected MouseButton          _pointerDownButton     = MouseButton.None;
 	protected double               _selectionStartTime    = 0;
 	protected double               _selectionEndTime      = 0;
 	protected HSpan?               _selectionSpan         = null;
@@ -345,8 +347,7 @@ public partial class HistoryGraphBase : UserControl
 		_selectionSpan.IsVisible = false;
 		//EventTooltip.IsVisible   = false;
 		
-		var point = eventArgs.GetCurrentPoint( this );
-		if( point.Properties.IsLeftButtonPressed )
+		if( _pointerDownButton == MouseButton.Left )
 		{
 			// ReSharper disable once SwitchStatementMissingSomeEnumCasesNoDefault
 			switch( _interactionMode )
@@ -360,8 +361,17 @@ public partial class HistoryGraphBase : UserControl
 					break;
 			}
 		}
+		else
+		{
+			_pointerDownPosition     = new Point( 0, 0 );
+			_pointerDownAxisLimits   = Chart.Plot.GetAxisLimits();
+			_selectionSpan!.X1       = 0;
+			_selectionSpan!.X2       = 0;
+			_selectionSpan.IsVisible = false;
+		}
 
-		_interactionMode = GraphInteractionMode.None;
+		_interactionMode   = GraphInteractionMode.None;
+		_pointerDownButton = MouseButton.None;
 	}
 
 	protected void OnPointerPressed( object? sender, PointerPressedEventArgs eventArgs )
@@ -405,6 +415,7 @@ public partial class HistoryGraphBase : UserControl
 
 				_interactionMode     = GraphInteractionMode.Selecting;
 				_pointerDownPosition = point.Position;
+				_pointerDownButton   = MouseButton.Left;
 			
 				eventArgs.Handled = true;
 				break;
@@ -419,6 +430,7 @@ public partial class HistoryGraphBase : UserControl
 			
 					_pointerDownPosition     = point.Position;
 					_pointerDownAxisLimits   = Chart.Plot.GetAxisLimits();
+					_pointerDownButton       = MouseButton.Right;
 					_interactionMode         = GraphInteractionMode.Panning;
 					_selectionSpan!.X1       = 0;
 					_selectionSpan!.X2       = 0;
@@ -432,6 +444,8 @@ public partial class HistoryGraphBase : UserControl
 	protected void OnPointerExited( object? sender, PointerEventArgs e )
 	{
 		ToolTip.SetIsOpen( this, false );
+		
+		CancelSelectionMode();
 
 		if( _selectionSpan != null )
 		{
@@ -775,6 +789,7 @@ public partial class HistoryGraphBase : UserControl
 		_selectionStartTime       = 0;
 		_selectionEndTime         = 0;
 		_selectionSpan!.IsVisible = false;
+		_pointerDownButton        = MouseButton.None;
 
 		ToolTip.SetIsOpen( this, false );
 
