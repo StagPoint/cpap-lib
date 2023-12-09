@@ -288,28 +288,64 @@ public class PRS1_tests
 		
 		public void ReadSummary()
 		{
-			using var reader = new BinaryReader( new MemoryStream( BlockData ) );
+			int timestamp = 0;
+			
+			using var reader    = new BinaryReader( new MemoryStream( BlockData ) );
 			while( reader.BaseStream.Position < reader.BaseStream.Length )
 			{
 				var code = reader.ReadByte();
+				
+				var blockStartPosition = reader.BaseStream.Position;
+				
 				switch( code )
 				{
 					case 0:
 						// Equipment On
 						ReadSettings( reader );
+						Debug.Assert( reader.BaseStream.Position - blockStartPosition == 24 );
 						break;
 					case 1:
 						// Equipment Off
+						timestamp += reader.ReadUInt16();
+						reader.Advance( 5 );
+						Debug.Assert( reader.BaseStream.Position - blockStartPosition == 7 );
 						break;
 					case 2:
 						// Mask On
+						timestamp += reader.ReadUInt16();
+						reader.Advance( 3 );
+						ReadHumidifierSettings( reader );
+						Debug.Assert( reader.BaseStream.Position - blockStartPosition == 7 );
 						break;
 					case 3:
 						// Mask Off
+						timestamp += reader.ReadUInt16();
+						reader.Advance( 34 );
+						Debug.Assert( reader.BaseStream.Position - blockStartPosition == 36 );
+						break;
+					case 4:
+						// Time elapsed?
+						timestamp += reader.ReadUInt16();
+						Debug.Assert( reader.BaseStream.Position - blockStartPosition == 2 );
+						break;
+					case 5:
+					case 6:
+						// Nothing to do here? Not encountered in sample data.
 						break;
 					case 7:
-						// Humidifier setting change
+						// Humidifier settings changed between one Session and another? Not seen in sample data. 
+						timestamp += reader.ReadUInt16();
+						ReadHumidifierSettings( reader );
+						Debug.Assert( reader.BaseStream.Position - blockStartPosition == 4 );
 						break;
+					case 8:
+						// Related to Cpap-Check mode? Not seen in sample data. 
+						timestamp += reader.ReadUInt16();
+						reader.Advance( 9 );
+						Debug.Assert( reader.BaseStream.Position - blockStartPosition == 11 );
+						break;
+					default:
+						throw new NotSupportedException( $"Unexpected code reading chunk data: {code}" );
 				}
 			}
 		}
@@ -352,11 +388,8 @@ public class PRS1_tests
 
 			var autoTrialDuration = reader.ReadByte();
 
-			for( int i = 0; i < 7; i++ )
-			{
-				var dummy = reader.ReadByte();
-				Debug.Assert( dummy == 0 );
-			}
+			var reservedBytes = reader.ReadBytes( 7 );
+			Debug.Assert( !reservedBytes.Any( x => x != 0 ) );
 		}
 		
 		private HumidifierSettings ReadHumidifierSettings( BinaryReader reader )
@@ -643,4 +676,17 @@ public class PRS1_tests
 		ST_AVAPS,
 		PC_AVAPS,
 	};
+}
+
+public static class BinaryReaderExtensions
+{
+	public static void Advance( this BinaryReader reader, int count )
+	{
+		if( reader.BaseStream.Position + count > reader.BaseStream.Length )
+		{
+			throw new EndOfStreamException();
+		}
+			
+		reader.BaseStream.Position += count;
+	}
 }
