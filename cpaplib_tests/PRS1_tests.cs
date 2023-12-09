@@ -162,36 +162,49 @@ public class PRS1_tests
 	[TestMethod]
 	public void CanReadSummaryFileChunks()
 	{
-		var propertyFilePath = Path.Combine( SOURCE_FOLDER, "Properties.txt" );
-		Assert.IsTrue( File.Exists( propertyFilePath ) );
+		var dataFiles = Directory.GetFiles( SOURCE_FOLDER, "*.001", SearchOption.AllDirectories );
 
-		var fields            = ReadKeyValueFile( propertyFilePath );
-		var patientFolderPath = Path.Combine( SOURCE_FOLDER, $"p{fields[ "PatientFolderNum" ]}" );
-		var dataFiles         = Directory.GetFiles( patientFolderPath, "*.00?" );
-
-		foreach( var filename in dataFiles.Where( x => x.EndsWith( ".001" ) ) )
+		foreach( var filename in dataFiles )
 		{
 			using var file   = File.Open( filename, FileMode.Open );
 			using var reader = new BinaryReader( file, Encoding.ASCII );
 
-			var chunk = DataChunk.Read( reader );
-			Assert.IsNotNull( chunk );
+			while( file.Position < file.Length )
+			{
+				var chunk = DataChunk.Read( reader );
+				Assert.IsNotNull( chunk );
 
-			chunk.ReadSummary();
+				chunk.ReadSummary();
+			}
+		}
+	}
+
+	[TestMethod]
+	public void CanReadEventFileChunks()
+	{
+		var dataFiles = Directory.GetFiles( SOURCE_FOLDER, "*.002", SearchOption.AllDirectories );
+
+		foreach( var filename in dataFiles )
+		{
+			using var file   = File.Open( filename, FileMode.Open );
+			using var reader = new BinaryReader( file, Encoding.ASCII );
+
+			while( file.Position < file.Length )
+			{
+				var chunk = DataChunk.Read( reader );
+				Assert.IsNotNull( chunk );
+
+				chunk.ReadEvents();
+			}
 		}
 	}
 
 	[TestMethod]
 	public void CanReadWaveformFileChunks()
 	{
-		var propertyFilePath = Path.Combine( SOURCE_FOLDER, "Properties.txt" );
-		Assert.IsTrue( File.Exists( propertyFilePath ) );
+		var dataFiles = Directory.GetFiles( SOURCE_FOLDER, "*.005", SearchOption.AllDirectories );
 
-		var fields            = ReadKeyValueFile( propertyFilePath );
-		var patientFolderPath = Path.Combine( SOURCE_FOLDER, $"p{fields[ "PatientFolderNum" ]}" );
-		var dataFiles         = Directory.GetFiles( patientFolderPath, "*.00?" );
-
-		foreach( var filename in dataFiles.Where( x => x.EndsWith( ".005" ) ) )
+		foreach( var filename in dataFiles )
 		{
 			using var file   = File.Open( filename, FileMode.Open );
 			using var reader = new BinaryReader( file, Encoding.ASCII );
@@ -285,12 +298,136 @@ public class PRS1_tests
 
 			return chunk;
 		}
+
+		public void ReadEvents()
+		{
+			int timestamp = 0;
+
+			using var reader = new BinaryReader( new MemoryStream( BlockData ) );
+
+			while( reader.BaseStream.Position < reader.BaseStream.Length )
+			{
+				var code = reader.ReadByte();
+
+				timestamp += reader.ReadUInt16();
+
+				switch( code )
+				{
+					case 0x01:
+						{
+							// Pressure set
+							var pressure = reader.ReadByte() * 0.1;
+						}
+						break;
+					case 0x02:
+						// Pressure set (bilevel)
+						var ipap = reader.ReadByte() * 0.1;
+						var epap = reader.ReadByte() * 0.1;
+						break;
+					case 0x03:
+						// Change to Opti-Start pressure
+						var newPressure = reader.ReadByte();
+						break;
+					case 0x04:
+						// Pressure pulse
+						var pressurePulseParam = reader.ReadByte();
+						break;
+					case 0x05:
+						{
+							// RERA
+							var elapsed   = reader.ReadByte();
+							var startTime = timestamp - elapsed;
+						}
+						break;
+					case 0x06:
+						{
+							// Obstructive Apnea
+							var elapsed   = reader.ReadByte();
+							var startTime = timestamp - elapsed;
+						}
+						break;
+					case 0x07:
+						{
+							// Central Apnea
+							var elapsed   = reader.ReadByte();
+							var startTime = timestamp - elapsed;
+						}
+						break;
+					case 0x0A:
+						{
+							// Hypopnea Type 1
+							var elapsed          = reader.ReadByte();
+							var startTime        = timestamp - elapsed;
+						}
+						break;
+					case 0x0B:
+						{
+							// Hypopnea Type 2
+							var unknownParameter = reader.ReadByte();
+							var elapsed          = reader.ReadByte();
+							var startTime        = timestamp - elapsed;
+						}
+						break;
+					case 0x0C:
+						{
+							// Flow Limitation
+							var elapsed   = reader.ReadByte();
+							var startTime = timestamp - elapsed;
+						}
+						break;
+					case 0x0D:
+						// Vibratory Snore
+						break;
+					case 0x0E:
+						{
+							// // Variable Breathing
+							// var duration  = reader.ReadUInt16() * 2;
+							// var elapsed   = reader.ReadByte();
+							// var startTime = timestamp - elapsed - duration;
+							reader.Advance( 3 );
+						}
+						break;
+					case 0x0F:
+						{
+							// // Periodic Breathing
+							// var duration  = reader.ReadUInt16() * 2;
+							// var startTime = timestamp - duration;
+							reader.Advance( 3 );
+						}
+						break;
+					case 0x10:
+						{
+							// Large Leak
+							var duration  = reader.ReadUInt16() * 2;
+							var elapsed   = reader.ReadByte();
+							var startTime = timestamp - elapsed - duration;
+						}
+						break;
+					case 0x11:
+						{
+							// Statistics 
+							var totalLeak  = reader.ReadByte() * 0.1;
+							var snoreLevel = reader.ReadByte();
+							var pressure   = reader.ReadByte() * 0.1;
+						}
+						break;
+					case 0x12:
+						{
+							reader.Advance( 2 );
+						}
+						break;
+					default:
+						throw new NotSupportedException( $"Unknown event code {code}" );
+				}
+			}
+		}
 		
 		public void ReadSummary()
 		{
 			int timestamp = 0;
+
+			using var reader = new BinaryReader( new MemoryStream( BlockData ) );
 			
-			using var reader    = new BinaryReader( new MemoryStream( BlockData ) );
 			while( reader.BaseStream.Position < reader.BaseStream.Length )
 			{
 				var code = reader.ReadByte();
@@ -300,8 +437,8 @@ public class PRS1_tests
 				switch( code )
 				{
 					case 0:
-						// Equipment On
-						ReadSettings( reader );
+                        // Equipment On
+                        ReadSettings( reader );
 						Debug.Assert( reader.BaseStream.Position - blockStartPosition == 24 );
 						break;
 					case 1:
@@ -314,7 +451,7 @@ public class PRS1_tests
 						// Mask On
 						timestamp += reader.ReadUInt16();
 						reader.Advance( 3 );
-						ReadHumidifierSettings( reader );
+                        ReadHumidifierSettings( reader );
 						Debug.Assert( reader.BaseStream.Position - blockStartPosition == 7 );
 						break;
 					case 3:
@@ -324,7 +461,7 @@ public class PRS1_tests
 						Debug.Assert( reader.BaseStream.Position - blockStartPosition == 36 );
 						break;
 					case 4:
-						// Time elapsed?
+						// Time elapsed? Not encountered in sample data
 						timestamp += reader.ReadUInt16();
 						Debug.Assert( reader.BaseStream.Position - blockStartPosition == 2 );
 						break;
@@ -335,7 +472,7 @@ public class PRS1_tests
 					case 7:
 						// Humidifier settings changed between one Session and another? Not seen in sample data. 
 						timestamp += reader.ReadUInt16();
-						ReadHumidifierSettings( reader );
+                        ReadHumidifierSettings( reader );
 						Debug.Assert( reader.BaseStream.Position - blockStartPosition == 4 );
 						break;
 					case 8:
@@ -350,7 +487,7 @@ public class PRS1_tests
 			}
 		}
 		
-		private void ReadSettings( BinaryReader reader )
+		private static void ReadSettings( BinaryReader reader )
 		{
 			// Unknown meaning for this byte
 			reader.ReadByte();
@@ -392,7 +529,7 @@ public class PRS1_tests
 			Debug.Assert( !reservedBytes.Any( x => x != 0 ) );
 		}
 		
-		private HumidifierSettings ReadHumidifierSettings( BinaryReader reader )
+		private static HumidifierSettings ReadHumidifierSettings( BinaryReader reader )
 		{
 			var flags1 = reader.ReadByte();
 			var flags2 = reader.ReadByte();
