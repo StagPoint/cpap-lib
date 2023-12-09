@@ -1,5 +1,7 @@
-﻿using System.Diagnostics;
+﻿using System.Data;
+using System.Diagnostics;
 using System.Text;
+using System.Xml;
 
 using cpaplib;
 
@@ -157,7 +159,7 @@ public class PRS1_tests
 		Assert.AreEqual( int.Parse( Path.GetFileNameWithoutExtension( filename ) ), header.SessionNumber );
 	}
 
-	//[TestMethod]
+	[TestMethod]
 	public void CanReadSummaryFileChunks()
 	{
 		var propertyFilePath = Path.Combine( SOURCE_FOLDER, "Properties.txt" );
@@ -172,10 +174,10 @@ public class PRS1_tests
 			using var file   = File.Open( filename, FileMode.Open );
 			using var reader = new BinaryReader( file, Encoding.ASCII );
 
-			Assert.IsTrue( file.Length >= 15, "Header records are supposed to be 15 bytes in length" );
-
 			var chunk = DataChunk.Read( reader );
 			Assert.IsNotNull( chunk );
+
+			chunk.ReadSummary();
 		}
 	}
 
@@ -236,8 +238,10 @@ public class PRS1_tests
 
 	private class DataChunk
 	{
-		public HeaderRecord Header    { get; set; }
-		public byte[]       BlockData { get; set; }
+		private const double SCALE = 0.1;
+		
+		public        HeaderRecord Header    { get; set; }
+		public        byte[]       BlockData { get; set; }
 
 		public static DataChunk? Read( BinaryReader reader )
 		{
@@ -280,6 +284,178 @@ public class PRS1_tests
 			}
 
 			return chunk;
+		}
+		
+		public void ReadSummary()
+		{
+			using var reader = new BinaryReader( new MemoryStream( BlockData ) );
+			while( reader.BaseStream.Position < reader.BaseStream.Length )
+			{
+				var code = reader.ReadByte();
+				switch( code )
+				{
+					case 0:
+						// Equipment On
+						ReadSettings( reader );
+						break;
+					case 1:
+						// Equipment Off
+						break;
+					case 2:
+						// Mask On
+						break;
+					case 3:
+						// Mask Off
+						break;
+					case 7:
+						// Humidifier setting change
+						break;
+				}
+			}
+		}
+		
+		private void ReadSettings( BinaryReader reader )
+		{
+			// Unknown meaning for this byte
+			reader.ReadByte();
+			
+			var mode               = ReadOperatingMode( reader );
+			var minPressure        = reader.ReadByte() * SCALE;
+			var maxPressure        = reader.ReadByte() * SCALE;
+			var minPS              = reader.ReadByte() * SCALE;
+			var maxPS              = reader.ReadByte() * SCALE;
+			var startupMode        = reader.ReadByte();
+			var rampTime           = reader.ReadByte();
+			var rampPressure       = reader.ReadByte() * SCALE;
+			var flexMode           = ReadFlexInfo( reader, mode );
+			var humidifierSettings = ReadHumidifierSettings( reader );
+			
+			// TODO: Which criteria is used to determine whether to proceed past this point?
+
+			var resistanceFlags     = reader.ReadByte();
+			var maskResistanceLevel = (resistanceFlags >> 3) & 0x07;
+			var maskResistanceLock  = (resistanceFlags & 0x40) != 0;
+			var hoseDiameter        = (resistanceFlags & 0x01) != 0 ? 15 : 22;
+			var tubingLock          = (resistanceFlags & 0x02) != 0;
+
+			var unknown1 = reader.ReadByte();
+			Debug.Assert( unknown1 == 1 );
+
+			var generalFlags     = reader.ReadByte();
+			var autoOnEnabled    = (generalFlags & 0x40) != 0;
+			var autoOffEnabled   = (generalFlags & 0x10) != 0;
+			var maskAlertEnabled = (generalFlags & 0x04) != 0;
+			var showAHIEnabled   = (generalFlags & 0x02) != 0;
+
+			var unknown2 = reader.ReadByte();
+			Debug.Assert( unknown2 == 0 );
+
+			var autoTrialDuration = reader.ReadByte();
+
+			for( int i = 0; i < 7; i++ )
+			{
+				var dummy = reader.ReadByte();
+				Debug.Assert( dummy == 0 );
+			}
+		}
+		
+		private HumidifierSettings ReadHumidifierSettings( BinaryReader reader )
+		{
+			var flags1 = reader.ReadByte();
+			var flags2 = reader.ReadByte();
+
+			var  humidityLevel     = flags1 & 0x07;
+			var  tubeHumidityLevel = (flags1 >> 4) & 0x07;
+			var  tubeTemp          = (flags1 >> 7) | ((flags2 & 3) << 1);
+			bool noData            = (flags2 & 0x10) != 0;
+			bool isAdaptive        = (flags2 & 0x04) != 0;
+			bool heatedTubeEnabled = (flags2 & 0x08) != 0 && !isAdaptive;
+			var  humidifierMode    = heatedTubeEnabled ? HumidifierMode.HeatedTube : HumidifierMode.Fixed;
+
+			humidifierMode = isAdaptive ? HumidifierMode.Adaptive : humidifierMode;
+
+			return new HumidifierSettings
+			{
+				HumidifierPresent = !noData,
+				Mode              = humidifierMode,
+				HumidityLevel     = humidifierMode == HumidifierMode.HeatedTube ? tubeHumidityLevel : humidityLevel,
+				TubeTemperature   = tubeTemp,
+			};
+		}
+
+		private static FlexSettings ReadFlexInfo( BinaryReader reader, OperatingMode operatingMode )
+		{
+			var flexFlags = reader.ReadByte();
+			
+			// Extract the mode flags 
+			bool enabled    = (flexFlags & 0x80) != 0;
+			bool locked     = (flexFlags & 0x40) != 0;
+			bool plain_flex = (flexFlags & 0x20) != 0;
+			bool risetime   = (flexFlags & 0x10) != 0;
+			bool plusmode   = (flexFlags & 0x08) != 0;
+			int  flexlevel  = flexFlags & 0x03;
+
+			if( !enabled )
+			{
+				return new FlexSettings() { Mode = FlexMode.None };
+			}
+			
+			FlexMode flexMode = FlexMode.Unknown;
+
+			if( risetime )
+			{
+				flexMode = FlexMode.RiseTime;
+			}
+			else if( plain_flex )
+			{
+				flexMode = FlexMode.Flex;
+			}
+			else if( plusmode )
+			{
+				flexMode = operatingMode switch
+				{
+					OperatingMode.CPAP       => FlexMode.CFlexPlus,
+					OperatingMode.CPAP_Check => FlexMode.CFlexPlus,
+					OperatingMode.AutoCPAP   => FlexMode.AFlex,
+					OperatingMode.AutoTrial  => FlexMode.AFlex,
+					_                        => throw new NotSupportedException( $"Unexpected Flex mode {flexFlags}" )
+				};
+			}
+			else
+			{
+				flexMode = operatingMode switch
+				{
+					OperatingMode.CPAP_Check  => FlexMode.CFlex,
+					OperatingMode.CPAP        => FlexMode.CFlex,
+					OperatingMode.AutoCPAP    => FlexMode.CFlex,
+					OperatingMode.AutoTrial   => FlexMode.CFlex,
+					OperatingMode.Bilevel     => FlexMode.BiFlex,
+					OperatingMode.AutoBilevel => FlexMode.BiFlex,
+					_                         => throw new ArgumentOutOfRangeException( nameof( operatingMode ), operatingMode, null )
+				};
+			}
+
+			return new FlexSettings()
+			{
+				Mode   = flexMode,
+				Locked = locked,
+				Level  = flexlevel,
+			};
+		}
+
+		private static OperatingMode ReadOperatingMode( BinaryReader reader )
+		{
+			var mode = reader.ReadByte();
+			return mode switch
+			{
+				0x00 => OperatingMode.CPAP,
+				0x20 => OperatingMode.Bilevel,
+				0x40 => OperatingMode.AutoCPAP,
+				0x60 => OperatingMode.AutoBilevel,
+				0x80 => OperatingMode.AutoTrial,
+				0xA0 => OperatingMode.CPAP_Check,
+				_    => throw new NotSupportedException( $"Uknown Operating Mode value: {mode}" )
+			};
 		}
 	}
 
@@ -413,4 +589,58 @@ public class PRS1_tests
 			return header;
 		}
 	}
+
+	private class HumidifierSettings
+	{
+		public bool           HumidifierPresent { get; set; }
+		public HumidifierMode Mode              { get; set; }
+		public int            HumidityLevel     { get; set; }
+		public double         TubeTemperature   { get; set; }
+	}
+
+	private enum HumidifierMode
+	{
+		Fixed, 
+		Adaptive, 
+		HeatedTube, 
+		Passover, 
+		Error,
+	}
+
+	private class FlexSettings
+	{
+		public FlexMode Mode   { get; set; }
+		public bool     Locked { get; set; }
+		public int      Level  { get; set; }
+	}
+
+	private enum FlexMode
+	{
+		Unknown = -1,
+		None, 
+		CFlex,
+		CFlexPlus,
+		AFlex,
+		RiseTime, 
+		BiFlex,
+		PFlex, 
+		Flex, 
+	};
+
+	private enum OperatingMode
+	{
+		UNKNOWN    = -1,
+		CPAP_Check = 0,
+		CPAP,
+		AutoCPAP,
+		AutoTrial,
+		Bilevel,
+		AutoBilevel,
+		ASV,
+		S,
+		ST,
+		PC,
+		ST_AVAPS,
+		PC_AVAPS,
+	};
 }
