@@ -154,7 +154,7 @@ public class PRS1_tests
 		Assert.AreEqual( int.Parse( fields[ "Family" ] ),                           header.Family );
 		Assert.AreEqual( int.Parse( fields[ "FamilyVersion" ] ),                    header.FamilyVersion );
 		Assert.AreEqual( int.Parse( fields[ "DataFormatVersion" ] ),                header.DataFormatVersion );
-		Assert.AreEqual( new DateTime( 2015, 4, 13 ),                               header.Timestamp.Date );
+		Assert.AreEqual( new DateTime( 2015, 4, 12 ),                               header.Timestamp.Date );
 		Assert.AreEqual( 1,                                                         header.FileExtension );
 		Assert.AreEqual( int.Parse( Path.GetFileNameWithoutExtension( filename ) ), header.SessionNumber );
 	}
@@ -174,7 +174,7 @@ public class PRS1_tests
 				var chunk = DataChunk.Read( reader );
 				Assert.IsNotNull( chunk );
 
-				chunk.ReadSummary();
+				chunk.ReadSummary( chunk.Header );
 			}
 		}
 	}
@@ -194,7 +194,7 @@ public class PRS1_tests
 				var chunk = DataChunk.Read( reader );
 				Assert.IsNotNull( chunk );
 
-				chunk.ReadEvents();
+				chunk.ReadEvents( chunk.Header );
 			}
 		}
 	}
@@ -215,6 +215,8 @@ public class PRS1_tests
 			{
 				var chunk = DataChunk.Read( reader );
 				Assert.IsNotNull( chunk );
+				
+				chunk.ReadSignals( chunk.Header );
 			}
 		}
 	}
@@ -293,13 +295,25 @@ public class PRS1_tests
 				// TODO: Obtain sample data for DataFormat==3 
 				// The only sample data I have available to me uses Version==2, so instead of guessing
 				// that I can get Version==3 correct we will just throw an exception instead
-				throw new NotSupportedException( $"Data Format Version {header.DataFormatVersion} is not yet supported" );
+				throw new NotSupportedException( $"Data Format Version {header.DataFormatVersion} in session {header.SessionNumber} is not yet supported" );
 			}
 
 			return chunk;
 		}
 
-		public void ReadEvents()
+		public void ReadSignals( HeaderRecord header )
+		{
+			int timestamp = 0;
+
+			using var reader = new BinaryReader( new MemoryStream( BlockData ) );
+
+			while( reader.BaseStream.Position < reader.BaseStream.Length )
+			{
+				throw new NotImplementedException();
+			}
+		}
+
+		public void ReadEvents( HeaderRecord header )
 		{
 			int timestamp = 0;
 
@@ -355,17 +369,19 @@ public class PRS1_tests
 						break;
 					case 0x0A:
 						{
-							// Hypopnea Type 1
-							var elapsed          = reader.ReadByte();
-							var startTime        = timestamp - elapsed;
+							// Hypopnea Type 1?
+							var elapsed   = reader.ReadByte();
+							var startTime = timestamp - elapsed;
 						}
 						break;
 					case 0x0B:
 						{
-							// Hypopnea Type 2
+							// Hypopnea Type 2?
+							// TODO: Looks like these can be safely ignored? They don't seem particularly informative, as they are usually followed by the other so-called "Hypopnea"
 							var unknownParameter = reader.ReadByte();
 							var elapsed          = reader.ReadByte();
 							var startTime        = timestamp - elapsed;
+							var start            = header.Timestamp.AddSeconds( startTime );
 						}
 						break;
 					case 0x0C:
@@ -417,12 +433,12 @@ public class PRS1_tests
 						}
 						break;
 					default:
-						throw new NotSupportedException( $"Unknown event code {code}" );
+						throw new NotSupportedException( $"Unknown event code {code} in session {header.SessionNumber}" );
 				}
 			}
 		}
 		
-		public void ReadSummary()
+		public void ReadSummary( HeaderRecord header )
 		{
 			int timestamp = 0;
 
@@ -482,7 +498,7 @@ public class PRS1_tests
 						Debug.Assert( reader.BaseStream.Position - blockStartPosition == 11 );
 						break;
 					default:
-						throw new NotSupportedException( $"Unexpected code reading chunk data: {code}" );
+						throw new NotSupportedException( $"Unexpected code ({code:x}) reading chunk data in session {header.SessionNumber}" );
 				}
 			}
 		}
@@ -660,14 +676,13 @@ public class PRS1_tests
 		public DateTime   Timestamp         { get; set; }
 		
 		public HeaderSignalInfo?     SignalInfo { get; set; }
-		public Dictionary<byte, int> CodeMap    { get; set; } = new();
 
 		public static HeaderRecord? Read( BinaryReader reader )
 		{
 			var startPosition = reader.BaseStream.Position;
 
 			HeaderRecord? header = null;
-			
+
 			var dataFormatVersion = reader.ReadByte();
 			var blockLength       = reader.ReadUInt16();
 			var headerType        = (HeaderType)reader.ReadByte();
@@ -676,7 +691,12 @@ public class PRS1_tests
 			var fileExtension     = reader.ReadByte();
 			var sessionNumber     = (int)reader.ReadUInt32();
 			var timestampNum      = (int)reader.ReadUInt32();
-			var timestamp         = DateTime.UnixEpoch.AddSeconds( timestampNum );
+			var timestamp         = DateTime.UnixEpoch.AddSeconds( timestampNum ).ToLocalTime();
+
+			if( family != 0 || familyVersion != 4 )
+			{
+				throw new NotSupportedException( $"This data format is not yet supported: Family {family} Version {familyVersion}" );
+			}
 
 			header = new HeaderRecord
 			{
@@ -690,20 +710,14 @@ public class PRS1_tests
 				Timestamp         = timestamp
 			};
 
-			if( dataFormatVersion == 3 )
+			Console.WriteLine( $"Data format version: {dataFormatVersion}" );
+
+			if( dataFormatVersion != 0x02 )
 			{
-				// Read the number of key/value pairs that follow the header
-				var pairCount = reader.ReadByte();
-
-				for( int i = 0; i < pairCount; i++ )
-				{
-					var code  = reader.ReadByte();
-					var value = reader.ReadByte();
-
-					header.CodeMap[ code ] = value;
-				}
+				throw new NotSupportedException( $"Data format version {dataFormatVersion} in session {sessionNumber} is not yet supported." );
 			}
-			else if( headerType == HeaderType.Interleaved )
+			
+			if( headerType == HeaderType.Interleaved )
 			{
 				var interleavedRecordCount  = reader.ReadUInt16();
 				var interleavedRecordLength = reader.ReadByte();
@@ -725,13 +739,6 @@ public class PRS1_tests
 						SampleFormat = signalType,
 						Interleave   = interleave,
 					} );
-
-					if( dataFormatVersion == 3 )
-					{
-						// Not sure what this is, always seems to be 8
-						var unknown = reader.ReadByte();
-						Debug.Assert( unknown == 8, "Unhandled header field did not have expected value" );
-					}
 				}
 				
 				// Read terminator byte
@@ -743,7 +750,7 @@ public class PRS1_tests
 			// bytes as a single array so that we can validate the checksum. 
 			// NOTE: This obviously means that the base stream must support random access 
 			// and that if the underlying data source is encrypted or compressed, it must 
-			// first be decrypted/decompressed before calling this function. 
+			// first be fully decrypted/decompressed before calling this function. 
 			var headerSize = (int)(reader.BaseStream.Position - startPosition);
 			reader.BaseStream.Position = startPosition;
 			var headerBytes = reader.ReadBytes( headerSize );
