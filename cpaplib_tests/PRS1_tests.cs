@@ -480,7 +480,14 @@ public class PRS1_tests
 		
 		public void ReadSummary( HeaderRecord header )
 		{
-			int timestamp = 0;
+			var timestamp = header.Timestamp;
+
+			var settings = new Dictionary<string, double>();
+			var sessions = new List<Session>();
+
+			DateTime? lastMaskOn = null;
+			var       startTime  = timestamp;
+			var       endTime    = timestamp;
 
 			using var reader = new BinaryReader( new MemoryStream( BlockData ) );
 			
@@ -492,48 +499,56 @@ public class PRS1_tests
 				
 				switch( code )
 				{
-					case 0:
+					case 0x00:
                         // Equipment On
-                        ReadSettings( reader );
+                        ReadSettings( reader, settings );
 						Debug.Assert( reader.BaseStream.Position - blockStartPosition == 24 );
 						break;
-					case 1:
+					case 0x01:
 						// Equipment Off
-						timestamp += reader.ReadUInt16();
+						timestamp += TimeSpan.FromSeconds( reader.ReadUInt16() );
+						endTime   =  timestamp;
 						reader.Advance( 5 );
 						Debug.Assert( reader.BaseStream.Position - blockStartPosition == 7 );
 						break;
-					case 2:
+					case 0x02:
 						// Mask On
-						timestamp += reader.ReadUInt16();
+						Debug.Assert( lastMaskOn == null, "Mismatched MaskOn/MaskOff" );
+						timestamp  += TimeSpan.FromSeconds( reader.ReadUInt16() );
+						lastMaskOn =  timestamp;
 						reader.Advance( 3 );
-                        ReadHumidifierSettings( reader );
+                        ReadHumidifierSettings( reader, settings );
 						Debug.Assert( reader.BaseStream.Position - blockStartPosition == 7 );
 						break;
-					case 3:
+					case 0x03:
 						// Mask Off
-						timestamp += reader.ReadUInt16();
+						Debug.Assert( lastMaskOn != null, "Mismatched MaskOn/MaskOff" );
+						timestamp  += TimeSpan.FromSeconds( reader.ReadUInt16() );
+						sessions.Add( new Session() { StartTime = lastMaskOn.Value, EndTime = timestamp, SourceType = SourceType.CPAP } );
+						lastMaskOn =  null;
 						reader.Advance( 34 );
 						Debug.Assert( reader.BaseStream.Position - blockStartPosition == 36 );
 						break;
-					case 4:
-						// Time elapsed? Not encountered in sample data
-						timestamp += reader.ReadUInt16();
+					case 0x04:
+						// Time elapsed? Time correction? Not sure. Not encountered in sample data
+						timestamp += TimeSpan.FromSeconds( reader.ReadUInt16() );
 						Debug.Assert( reader.BaseStream.Position - blockStartPosition == 2 );
 						break;
-					case 5:
-					case 6:
+					case 0x05:
+					case 0x06:
 						// Nothing to do here? Not encountered in sample data.
 						break;
-					case 7:
-						// Humidifier settings changed between one Session and another? Not seen in sample data. 
-						timestamp += reader.ReadUInt16();
-                        ReadHumidifierSettings( reader );
+					case 0x07:
+						// Humidifier settings changed between one Session and another? Or in any
+						// case they are stored/retrieved again only after a Session has started. 
+						Debug.Assert( lastMaskOn != null );
+						timestamp += TimeSpan.FromSeconds( reader.ReadUInt16() );
+                        ReadHumidifierSettings( reader, settings );
 						Debug.Assert( reader.BaseStream.Position - blockStartPosition == 4 );
 						break;
-					case 8:
+					case 0x08:
 						// Related to Cpap-Check mode? Not seen in sample data. 
-						timestamp += reader.ReadUInt16();
+						timestamp += TimeSpan.FromSeconds( reader.ReadUInt16() );
 						reader.Advance( 9 );
 						Debug.Assert( reader.BaseStream.Position - blockStartPosition == 11 );
 						break;
@@ -541,46 +556,98 @@ public class PRS1_tests
 						throw new NotSupportedException( $"Unexpected code ({code:x}) reading chunk data in session {header.SessionNumber}" );
 				}
 			}
+
+			// In the sample data that I have there may be one or two Sessions per file, but never zero.
+			Assert.IsTrue( sessions.Count > 0, "No Sessions found" );
+			Assert.AreEqual( startTime, sessions[ 0 ].StartTime );
+			
+			// It's not very common, but the Equipment Off and final Mask Off times are not always equal.
+			// Equipment Off is however still always equal to or later than final Mask Off. 
+			Assert.IsTrue( endTime >= sessions[ ^1 ].EndTime );
 		}
 		
-		private static void ReadSettings( BinaryReader reader )
+		private static void ReadSettings( BinaryReader reader, Dictionary<string,double> settings )
 		{
 			// Unknown meaning for this byte
 			reader.ReadByte();
 			
-			var mode               = ReadOperatingMode( reader );
-			var minPressure        = reader.ReadByte() * SCALE;
-			var maxPressure        = reader.ReadByte() * SCALE;
-			var minPS              = reader.ReadByte() * SCALE;
-			var maxPS              = reader.ReadByte() * SCALE;
-			var startupMode        = reader.ReadByte();
-			var rampTime           = reader.ReadByte();
-			var rampPressure       = reader.ReadByte() * SCALE;
-			var flexMode           = ReadFlexInfo( reader, mode );
-			var humidifierSettings = ReadHumidifierSettings( reader );
-			
+			var mode                = ReadOperatingMode( reader );
+			var minPressure         = reader.ReadByte() * SCALE;
+			var maxPressure         = reader.ReadByte() * SCALE;
+			var pressure            = (minPressure > 0) ? minPressure : maxPressure; // Only valid for the CPAP modes
+			var minPS               = reader.ReadByte() * SCALE;
+			var maxPS               = reader.ReadByte() * SCALE;
+			var startupMode         = reader.ReadByte();
+			var rampTime            = reader.ReadByte();
+			var rampPressure        = reader.ReadByte() * SCALE;
+			var flexMode            = ReadFlexInfo( reader, mode );
+			var humidifierSettings  = ReadHumidifierSettings( reader );
 			var resistanceFlags     = reader.ReadByte();
 			var maskResistanceLevel = (resistanceFlags >> 3) & 0x07;
 			var maskResistanceLock  = (resistanceFlags & 0x40) != 0;
 			var hoseDiameter        = (resistanceFlags & 0x01) != 0 ? 15 : 22;
-			var tubingLock          = (resistanceFlags & 0x02) != 0;
+			var tubeTempLock        = (resistanceFlags & 0x02) != 0;
+			var unknown1            = reader.ReadByte();
+			var generalFlags        = reader.ReadByte();
+			var autoOnEnabled       = (generalFlags & 0x40) != 0;
+			var autoOffEnabled      = (generalFlags & 0x10) != 0;
+			var maskAlertEnabled    = (generalFlags & 0x04) != 0;
+			var showAHIEnabled      = (generalFlags & 0x02) != 0;
+			var unknown2            = reader.ReadByte();
+			var autoTrialDuration   = reader.ReadByte();
 
-			var unknown1 = reader.ReadByte();
+			settings[ SettingNames.Mode ]               = (int)mode;
+			settings[ SettingNames.MinPressure ]        = minPressure;
+			settings[ SettingNames.MaxPressure ]        = maxPressure;
+			settings[ SettingNames.Pressure ]           = pressure;
+			settings[ SettingNames.MinPressureSupport ] = minPS;
+			settings[ SettingNames.MaxPressureSupport ] = maxPS;
+			settings[ SettingNames.RampTime ]           = rampTime;
+			settings[ SettingNames.RampPressure ]       = rampPressure;
+			settings[ SettingNames.FlexMode ]           = (int)flexMode.Mode;
+			settings[ SettingNames.FlexLock ]           = flexMode.Locked ? 1 : 0;
+			settings[ SettingNames.FlexLevel ]          = flexMode.Level;
+			settings[ SettingNames.Humidifier ]         = humidifierSettings.HumidifierPresent ? 1 : 0;
+			settings[ SettingNames.HumidifierMode ]     = (int)humidifierSettings.Mode;
+			settings[ SettingNames.HumidityLevel ]      = humidifierSettings.HumidityLevel;
+			settings[ SettingNames.MaskResist ]         = maskResistanceLevel;
+			settings[ SettingNames.MaskResistLock ]     = maskResistanceLock ? 1 : 0;
+			settings[ SettingNames.AutoOn ]             = autoOnEnabled ? 1 : 0;
+			settings[ SettingNames.AutoOff ]            = autoOffEnabled ? 1 : 0;
+			settings[ SettingNames.AlertMask ]          = maskAlertEnabled ? 1 : 0;
+			settings[ SettingNames.ShowAHI ]            = showAHIEnabled ? 1 : 0;
+			settings[ SettingNames.HoseDiameter ]       = hoseDiameter;
+
+			if( mode == OperatingMode.AutoTrial )
+			{
+				settings[ SettingNames.AutoTrialDuration ] = autoTrialDuration;
+			}
+
+			if( humidifierSettings.Mode == HumidifierMode.HeatedTube )
+			{
+				settings[ SettingNames.TubeTemperature ] = humidifierSettings.TubeTemperature;
+				settings[ SettingNames.TubeTempLocked ]      = tubeTempLock ? 1 : 0;
+			}
+
 			Debug.Assert( unknown1 == 1 );
-
-			var generalFlags     = reader.ReadByte();
-			var autoOnEnabled    = (generalFlags & 0x40) != 0;
-			var autoOffEnabled   = (generalFlags & 0x10) != 0;
-			var maskAlertEnabled = (generalFlags & 0x04) != 0;
-			var showAHIEnabled   = (generalFlags & 0x02) != 0;
-
-			var unknown2 = reader.ReadByte();
 			Debug.Assert( unknown2 == 0 );
-
-			var autoTrialDuration = reader.ReadByte();
 
 			var reservedBytes = reader.ReadBytes( 7 );
 			Debug.Assert( !reservedBytes.Any( x => x != 0 ) );
+		}
+
+		private static void ReadHumidifierSettings( BinaryReader reader, Dictionary<string, double> settings )
+		{
+			var humidifierSettings = ReadHumidifierSettings( reader );
+			
+			settings[ SettingNames.Humidifier ]     = humidifierSettings.HumidifierPresent ? 1 : 0;
+			settings[ SettingNames.HumidifierMode ] = (int)humidifierSettings.Mode;
+			settings[ SettingNames.HumidityLevel ]  = humidifierSettings.HumidityLevel;
+			
+			if( humidifierSettings.Mode == HumidifierMode.HeatedTube )
+			{
+				settings[ SettingNames.TubeTemperature ] = humidifierSettings.TubeTemperature;
+			}
 		}
 		
 		private static HumidifierSettings ReadHumidifierSettings( BinaryReader reader )
@@ -590,7 +657,7 @@ public class PRS1_tests
 
 			var  humidityLevel     = flags1 & 0x07;
 			var  tubeHumidityLevel = (flags1 >> 4) & 0x07;
-			var  tubeTemp          = (flags1 >> 7) | ((flags2 & 3) << 1);
+			var  tubeTemp          = (flags1 >> 7) | ((flags2 & 0x03) << 1);
 			bool noData            = (flags2 & 0x10) != 0;
 			bool isAdaptive        = (flags2 & 0x04) != 0;
 			bool heatedTubeEnabled = (flags2 & 0x08) != 0 && !isAdaptive;
@@ -606,7 +673,7 @@ public class PRS1_tests
 				TubeTemperature   = tubeTemp,
 			};
 		}
-
+		
 		private static FlexSettings ReadFlexInfo( BinaryReader reader, OperatingMode operatingMode )
 		{
 			var flexFlags = reader.ReadByte();

@@ -311,7 +311,7 @@ namespace cpap_db
 					Connection.Commit();
 				}
 			}
-			catch( Exception )
+			catch( Exception err )
 			{
 				if( !wasInTransaction )
 				{
