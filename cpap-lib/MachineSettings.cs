@@ -41,7 +41,7 @@ namespace cpaplib
 
 		public EssentialsMode Essentials { get; set; }
 		public bool AntibacterialFilter { get; set; }
-		public MaskType Mask { get; set; }
+		public MaskType MaskType { get; set; }
 		public double Tube { get; set; }
 		public ClimateControlType ClimateControl { get; set; }
 		public OnOffType HumidifierStatus { get; set; }
@@ -49,7 +49,6 @@ namespace cpaplib
 		public bool TemperatureEnabled { get; set; }
 		public double Temperature { get; set; }
 		public OnOffType SmartStart { get; set; }
-		public double PtAccess { get; set; }
 
 		public AutoSetSettings AutoSet { get; set; } = new AutoSetSettings();
 		

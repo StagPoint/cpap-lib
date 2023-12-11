@@ -74,7 +74,7 @@ public partial class DailySettingsView : UserControl
 
 		items.Add( new MachineSettingsItemViewModel( "Antibacterial Filter", settings.AntibacterialFilter ? "Yes" : "No" ) );
 		items.Add( new MachineSettingsItemViewModel( "Smart Start", settings.SmartStart ) );
-		items.Add( new MachineSettingsItemViewModel( "Mask Type",   NiceNames.Format( settings.Mask.ToString() ) ) );
+		items.Add( new MachineSettingsItemViewModel( "Mask Type",   NiceNames.Format( settings.MaskType.ToString() ) ) );
 
 		items.Add( new MachineSettingsItemViewModel( "Climate Control",   settings.ClimateControl ) );
 		items.Add( new MachineSettingsItemViewModel( "Humidifier Status", settings.HumidifierStatus ) );

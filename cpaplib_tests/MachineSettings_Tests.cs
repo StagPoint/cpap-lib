@@ -32,7 +32,7 @@ public class MachineSettings_Tests
 
 			Debug.WriteLine( $@"
 	Mode					{day.Settings.Mode}
-	Mask					{day.Settings.Mask}
+	Mask					{day.Settings.MaskType}
 	Antibacterial Filter	{(day.Settings.AntibacterialFilter ? "Yes" : "No")}
 
 	Essentials				{day.Settings.Essentials}

@@ -631,6 +631,8 @@ namespace cpaplib
 				// Read in and process the settings for a single day
 				var day = ReadDailyReport( lookup );
 
+				// A DailyReport instance will not always be returned (such as when there is no 
+				// data stored for a given day), but if one is then add it to the list. 
 				if( day != null )
 				{
 					day.MachineInfo        =  _machineInfo;
@@ -959,11 +961,9 @@ namespace cpaplib
 			settings.TemperatureEnabled = data["S.TempEnable"] > 0.5;
 			settings.Temperature        = data["S.Temp"] * 1.8 + 32; // Converted from Celsius to Fahrenheit
 
-			settings.Mask = (MaskType)(int)data["S.Mask"];
+			settings.MaskType = (MaskType)(int)data["S.Mask"];
 
 			settings.Essentials = data["S.PtAccess"] > 0.5 ? EssentialsMode.On : EssentialsMode.Plus;
-
-			settings.PtAccess = data["S.PtAccess"];
 
 			return settings;
 		}
