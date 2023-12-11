@@ -25,11 +25,11 @@ public class EnumListBlobConverter<T> : IBlobTypeConverter where T : struct, Enu
 		return result;
 	}
 	
-	public object ConvertFromBlob( byte[] value )
+	public object ConvertFromBlob( byte[] data )
 	{
-		var result = new List<T>( value.Length );
+		var result = new List<T>( data.Length );
 		
-		result.AddRange( from t in value select (T)Convert.ChangeType( t, typeof( int ) ) );
+		result.AddRange( from t in data select (T)Convert.ChangeType( t, typeof( int ) ) );
 
 		return result;
 	}

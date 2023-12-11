@@ -18,13 +18,13 @@ public class ColorBlobConverter : IBlobTypeConverter
 		return new byte[] { color.A, color.R, color.G, color.B };
 	}
 
-	public object ConvertFromBlob( byte[] value )
+	public object ConvertFromBlob( byte[] data )
 	{
-		if( value.Length != 4 )
+		if( data.Length != 4 )
 		{
-			throw new IndexOutOfRangeException( $"Argument {nameof( value )} is not the correct length" );
+			throw new IndexOutOfRangeException( $"Argument {nameof( data )} is not the correct length" );
 		}
 		
-		return Color.FromArgb( value[ 0 ], value[ 1 ], value[ 2 ], value[ 3 ] );
+		return Color.FromArgb( data[ 0 ], data[ 1 ], data[ 2 ], data[ 3 ] );
 	}
 }

@@ -22,14 +22,14 @@ public class DoubleListBlobConverter : IBlobTypeConverter
 		return byteBuffer;
 	}
 	
-	public object ConvertFromBlob( byte[] blob )
+	public object ConvertFromBlob( byte[] data )
 	{
-		using var stream = new MemoryStream( blob, true );
+		using var stream = new MemoryStream( data, true );
 		using var reader = new BinaryReader( stream );
 
 		var result = new List<double>();
 
-		while( reader.BaseStream.Position < blob.Length )
+		while( reader.BaseStream.Position < data.Length )
 		{
 			result.Add( reader.ReadDouble() );
 		}

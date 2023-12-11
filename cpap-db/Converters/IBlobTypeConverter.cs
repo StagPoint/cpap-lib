@@ -3,5 +3,5 @@
 public interface IBlobTypeConverter
 {
 	byte[] ConvertToBlob( object   value );
-	object ConvertFromBlob( byte[] value );
+	object ConvertFromBlob( byte[] data );
 }
