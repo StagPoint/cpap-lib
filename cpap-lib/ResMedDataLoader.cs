@@ -621,20 +621,23 @@ namespace cpaplib
 			// each available day. 
 			for( int i = 0; i < file.Signals[ 0 ].Samples.Count; i++ )
 			{
-				// Gather a hash table of settings for a single day from across the signals 
+				// Convert the vertical table into a hashtable for easy lookup
 				var lookup = new Dictionary<string, double>();
 				for( int j = 0; j < file.Signals.Count; j++ )
 				{
-					var signalName = SignalNames.GetStandardName( file.Signals[ j ].Label );
-					lookup[ signalName ] = file.Signals[ j ].Samples[ i ];
+					lookup[ file.Signals[ j ].Label ] = file.Signals[ j ].Samples[ i ];
 				}
 
 				// Read in and process the settings for a single day
 				var day = ReadDailyReport( lookup );
-				day.MachineInfo        =  _machineInfo;
-				day.RecordingStartTime += _timeAdjustment;
 
-				days.Add( day );
+				if( day != null )
+				{
+					day.MachineInfo        =  _machineInfo;
+					day.RecordingStartTime += _timeAdjustment;
+
+					days.Add( day );
+				}
 			}
 
 			// Mask On and Mask Off times are stored as the number of seconds since the day started.
@@ -714,11 +717,21 @@ namespace cpaplib
 			// understand correctly, not to mention fields that are different for different models, so the
 			// raw data should be kept available for the consumer of this library to make use of if needs be.
 
+			var settings = ReadMachineSettings( data );
+			
+			// ReadMachineSettings() will return NULL in the special situation that the stored settings are 
+			// all invalid (all negative numbers), which is indicative of a special case where ResMed has 
+			// written the STR.edf file for a day that has not yet had any recorded data added to it. 
+			if( settings == null )
+			{
+				return null;
+			}
+			
 			var day = new DailyReport
 			{
 				MachineInfo    = _machineInfo,
 				ReportDate     = new DateTime( 1970, 1, 1 ).AddDays( data[ "Date" ] ).AddHours( 12 ),
-				Settings       = ReadMachineSettings( data ),
+				Settings       = settings,
 				EventSummary   = ReadEventsSummary( data ),
 				StatsSummary   = ReadStatsSummary( data ),
 				MaskEvents     = (int)(data[ "MaskEvents" ] / 2),
@@ -734,7 +747,7 @@ namespace cpaplib
 			};
 
 			return day;
-			
+
 			double getValue( string key )
 			{
 				return data.TryGetValue( key, out double value ) ? value : 0.0;
@@ -841,66 +854,78 @@ namespace cpaplib
 				{
 					settings.Mode = mappedMode;
 				}
+				if( mode == -1 )
+				{
+					return null;
+				}
 				else
 				{
 					settings.Mode = (OperatingMode)mode;
 				}
 			}
 			
-			if(settings.Mode == OperatingMode.ASV )
+			switch( settings.Mode )
 			{
-				settings.ASV = new AsvSettings
+				case OperatingMode.CPAP:
+				case OperatingMode.APAP:
+					// These are the default modes, and no further action needs to be taken
+					break;
+				case OperatingMode.ASV:
+					settings.ASV = new AsvSettings
+					{
+						StartPressure      = data[ "S.AV.StartPress" ],
+						MinPressureSupport = data[ "S.AV.MinPS" ],
+						MaxPressureSupport = data[ "S.AV.MaxPS" ],
+						EPAP               = data[ "S.AV.EPAP" ],
+						EpapMin            = data[ "S.AA.MinEPAP" ],
+						EpapMax            = data[ "S.AA.MaxEPAP" ],
+						IpapMin            = data[ "S.AV.EPAP" ] + data[ "S.AV.MinPS" ],
+						IpapMax            = data[ "S.AV.EPAP" ] + data[ "S.AV.MaxPS" ],
+					};
+					break;
+				case OperatingMode.ASV_VARIABLE_EPAP:
+					settings.ASV = new AsvSettings
+					{
+						StartPressure      = data[ "S.AA.StartPress" ],
+						MinPressureSupport = data[ "S.AA.MinPS" ],
+						MaxPressureSupport = data[ "S.AA.MaxPS" ],
+						EPAP               = data[ "S.AA.MinEPAP" ],
+						EpapMin            = data[ "S.AA.MinEPAP" ],
+						EpapMax            = data[ "S.AA.MaxEPAP" ],
+					};
+					break;
+				case OperatingMode.AVAPS:
 				{
-					StartPressure = data[ "S.AV.StartPress" ],
-					MinPressureSupport   = data[ "S.AV.MinPS" ],
-					MaxPressureSupport   = data[ "S.AV.MaxPS" ],
-					EPAP          = data[ "S.AV.EPAP" ],
-					EpapMin       = data[ "S.AA.MinEPAP" ],
-					EpapMax       = data[ "S.AA.MaxEPAP" ],
-					IpapMin       = data[ "S.AV.EPAP" ] + data[ "S.AV.MinPS" ],
-					IpapMax       = data[ "S.AV.EPAP" ] + data[ "S.AV.MaxPS" ],
-				};
-			}
-			else if( settings.Mode == OperatingMode.ASV_VARIABLE_EPAP )
-			{
-				settings.ASV = new AsvSettings
-				{
-					StartPressure = data[ "S.AA.StartPress" ],
-					MinPressureSupport   = data[ "S.AA.MinPS" ],
-					MaxPressureSupport   = data[ "S.AA.MaxPS" ],
-					EPAP          = data[ "S.AA.MinEPAP" ],
-					EpapMin       = data[ "S.AA.MinEPAP" ],
-					EpapMax       = data[ "S.AA.MaxEPAP" ],
-				};
-			}
-			else if( settings.Mode == OperatingMode.AVAPS )
-			{
-				settings.Avap = new AvapSettings
-				{
-					StartPressure = data[ "S.i.StartPress" ],
-					MinPressure   = data[ "S.i.MinPS" ],
-					MaxPressure   = data[ "S.i.MaxPS" ],
-					EpapAuto      = data[ "S.i.EPAPAuto" ] > 0.5,
-					EPAP          = data[ "S.i.EPAP" ],
-					EpapMin       = data[ "S.i.EPAP" ],
-					EpapMax       = data[ "S.i.EPAP" ],
-				};
+					settings.Avap = new AvapSettings
+					{
+						StartPressure = data[ "S.i.StartPress" ],
+						MinPressure   = data[ "S.i.MinPS" ],
+						MaxPressure   = data[ "S.i.MaxPS" ],
+						EpapAuto      = data[ "S.i.EPAPAuto" ] > 0.5,
+						EPAP          = data[ "S.i.EPAP" ],
+						EpapMin       = data[ "S.i.EPAP" ],
+						EpapMax       = data[ "S.i.EPAP" ],
+					};
 
-				if( settings.Avap.EpapAuto )
-				{
-					settings.Avap.EpapMin = data[ "S.i.MinEPAP" ];
-					settings.Avap.EpapMax = data[ "S.i.MaxEPAP" ];
+					if( settings.Avap.EpapAuto )
+					{
+						settings.Avap.EpapMin = data[ "S.i.MinEPAP" ];
+						settings.Avap.EpapMax = data[ "S.i.MaxEPAP" ];
 					
-					settings.Avap.IPAP    = settings.Avap.EpapMin + settings.Avap.MinPressure;
-					settings.Avap.IpapMin = settings.Avap.EpapMin + settings.Avap.MinPressure;
-					settings.Avap.IpapMax = settings.Avap.EpapMax + settings.Avap.MaxPressure;
+						settings.Avap.IPAP    = settings.Avap.EpapMin + settings.Avap.MinPressure;
+						settings.Avap.IpapMin = settings.Avap.EpapMin + settings.Avap.MinPressure;
+						settings.Avap.IpapMax = settings.Avap.EpapMax + settings.Avap.MaxPressure;
+					}
+					else 
+					{
+						settings.Avap.IPAP    = settings. Avap.EPAP + settings.Avap.MinPressure;
+						settings.Avap.IpapMin = settings.Avap.EPAP + settings.Avap.MinPressure;
+						settings.Avap.IpapMax = settings.Avap.EPAP + settings.Avap.MaxPressure;
+					}
+					break;
 				}
-				else 
-				{
-					settings.Avap.IPAP    = settings. Avap.EPAP + settings.Avap.MinPressure;
-					settings.Avap.IpapMin = settings.Avap.EPAP + settings.Avap.MinPressure;
-					settings.Avap.IpapMax = settings.Avap.EPAP + settings.Avap.MaxPressure;
-				}
+				default:
+					throw new NotSupportedException( $"Operating Mode {settings.Mode} is not yet supported" );
 			}
 
 			settings.HeatedTube = data["HeatedTube"] > 0.5;

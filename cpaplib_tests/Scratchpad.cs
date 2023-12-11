@@ -129,7 +129,7 @@ public class Scratchpad
 		Assert.AreEqual( 1,     stats.Minimum ); // "Minimum" for the stats calculator means "minimum value above zero"
 		Assert.AreEqual( COUNT - 1, stats.Maximum );
 		Assert.AreEqual( COUNT * 0.95, stats.Percentile95 );
-		Assert.AreEqual( COUNT * 0.99, stats.Percentile995 );
+		Assert.AreEqual( COUNT * 0.995, stats.Percentile995 );
 	}
 
 	// [TestMethod]

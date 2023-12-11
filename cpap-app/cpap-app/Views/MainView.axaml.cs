@@ -420,6 +420,14 @@ public partial class MainView : UserControl
 		}
 		else
 		{
+			var dialog = MessageBoxManager.GetMessageBoxStandard(
+				$"Import from Google Fit",
+				$"Import Completed.\nMost recent date availagle: {mostRecentAvailableDate:D}",
+				ButtonEnum.Ok,
+				Icon.Warning );
+
+			await dialog.ShowWindowDialogAsync( this.FindAncestorOfType<Window>() );
+
 			var profileID = ActiveUserProfile.UserProfileID;
 
 			switch( NavFrame.Content )

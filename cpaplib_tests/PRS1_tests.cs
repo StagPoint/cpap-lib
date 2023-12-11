@@ -211,13 +211,65 @@ public class PRS1_tests
 
 			Assert.IsTrue( file.Length >= 15, "Header records are supposed to be 15 bytes in length" );
 
+			DataChunk? lastChunk = null;
+
+			var duration = TimeSpan.Zero;
+			var chunks   = new List<DataChunk>();
+			var samples  = new List<byte>();
+			
 			while( file.Position < file.Length )
 			{
 				var chunk = DataChunk.Read( reader );
 				Assert.IsNotNull( chunk );
+
+				Assert.IsNotNull( chunk.Header.SignalInfo );
+				Assert.IsTrue( chunk.Header.SignalInfo.IntervalCount > 0 );
 				
-				chunk.ReadSignals( chunk.Header );
+				duration += chunk.Header.SignalInfo.Duration;
+
+				if( lastChunk != null )
+				{
+					Assert.AreEqual( lastChunk.Header.HeaderType,                  chunk.Header.HeaderType );
+					Assert.AreEqual( lastChunk.Header.SessionNumber,               chunk.Header.SessionNumber );
+					Assert.AreEqual( lastChunk.Header.Family,                      chunk.Header.Family );
+					Assert.AreEqual( lastChunk.Header.FamilyVersion,               chunk.Header.FamilyVersion );
+					Assert.AreEqual( lastChunk.Header.DataFormatVersion,           chunk.Header.DataFormatVersion );
+					Assert.AreEqual( lastChunk.Header.SignalInfo!.Waveforms.Count, chunk.Header.SignalInfo.Waveforms.Count );
+
+					// Normally all chunks would have timestamps that were in chronological order, but the first chunk
+					// of Session 551 in the test data has a timestamp that is *wildly* incorrect, and doesn't correspond
+					// to the Session in any way. Looking at the Signal data for that Chunk it does appear to perfectly 
+					// match up to the following Chunk, so maybe the timestamp of the first chunk in a Session can be safely
+					// replaced with the timestamp of the Session in order to simplify handling this once-off situation?
+					//
+					if( chunk.Header.SessionNumber != 551 )
+					{
+						Assert.IsTrue( chunk.Header.Timestamp > lastChunk.Header.Timestamp, "Chunks are not chronologically ordered" );
+					}
+
+					// There can be a gap between chunks, which seems to always be flagged with a "Breathing Not Detected" event 
+					//
+					// var lastChunkEnd = lastChunk.Header.Timestamp + lastChunk.Header.SignalInfo.Duration;
+					// var gap          = (chunk.Header.Timestamp - lastChunkEnd);
+					// Assert.IsTrue( gap.TotalSeconds <= 1.0 );
+				}
+				
+				lastChunk = chunk;
+
+				chunks.Add( chunk );
+				samples.Add( chunk.BlockData );
 			}
+
+			// Calculate the sample rate. Note that the sample rate for this machine is extremely low compared to ResMed machines. 
+			var sampleRate = duration.TotalSeconds / samples.Count;
+			Assert.AreEqual( 0.2, sampleRate, 0.001 );
+
+			// NOTE:
+			// There are apparently two possibilities: Either there is a single Signal, in which case it will be 
+			// (effectively) non-interleaved and will be the Flow Rate signal, or there will be two interleaved
+			// Signals: Flow Rate and Mask Pressure.
+			// The sample data I have only contains a single Signal per Session, but the code exists to de-interleave
+			// the Signal data. 
 		}
 	}
 
@@ -247,7 +299,7 @@ public class PRS1_tests
 	private enum HeaderType
 	{
 		Standard = 0,
-		Interleaved = 1,
+		Signal = 1,
 		MAX_VALUE = 1,
 	}
 
@@ -299,18 +351,6 @@ public class PRS1_tests
 			}
 
 			return chunk;
-		}
-
-		public void ReadSignals( HeaderRecord header )
-		{
-			int timestamp = 0;
-
-			using var reader = new BinaryReader( new MemoryStream( BlockData ) );
-
-			while( reader.BaseStream.Position < reader.BaseStream.Length )
-			{
-				throw new NotImplementedException();
-			}
 		}
 
 		public void ReadEvents( HeaderRecord header )
@@ -519,8 +559,6 @@ public class PRS1_tests
 			var flexMode           = ReadFlexInfo( reader, mode );
 			var humidifierSettings = ReadHumidifierSettings( reader );
 			
-			// TODO: Which criteria is used to determine whether to proceed past this point?
-
 			var resistanceFlags     = reader.ReadByte();
 			var maskResistanceLevel = (resistanceFlags >> 3) & 0x07;
 			var maskResistanceLock  = (resistanceFlags & 0x40) != 0;
@@ -652,9 +690,9 @@ public class PRS1_tests
 
 		public List<WaveformInfo> Waveforms = new();
 		
-		public int Duration
+		public TimeSpan Duration
 		{
-			get => IntervalCount * IntervalLength;
+			get => TimeSpan.FromSeconds( IntervalCount * IntervalLength );
 		}
 
 		public class WaveformInfo
@@ -666,16 +704,31 @@ public class PRS1_tests
 
 	private class HeaderRecord
 	{
+		public HeaderType HeaderType        { get; set; }
 		public int        DataFormatVersion { get; set; }
 		public int        BlockLength       { get; set; }
-		public HeaderType HeaderType        { get; set; }
 		public int        Family            { get; set; }
 		public int        FamilyVersion     { get; set; }
 		public int        FileExtension     { get; set; }
 		public int        SessionNumber     { get; set; }
 		public DateTime   Timestamp         { get; set; }
+
+		public HeaderSignalInfo? SignalInfo { get; set; }
+
+		public DateTime EndTimestamp { get => Timestamp + Duration; } 
 		
-		public HeaderSignalInfo?     SignalInfo { get; set; }
+		public TimeSpan Duration
+		{
+			get
+			{
+				if( HeaderType == HeaderType.Signal && SignalInfo != null )
+				{
+					return SignalInfo.Duration;
+				}
+				
+				return TimeSpan.Zero;
+			}
+		}
 
 		public static HeaderRecord? Read( BinaryReader reader )
 		{
@@ -710,14 +763,12 @@ public class PRS1_tests
 				Timestamp         = timestamp
 			};
 
-			Console.WriteLine( $"Data format version: {dataFormatVersion}" );
-
 			if( dataFormatVersion != 0x02 )
 			{
 				throw new NotSupportedException( $"Data format version {dataFormatVersion} in session {sessionNumber} is not yet supported." );
 			}
 			
-			if( headerType == HeaderType.Interleaved )
+			if( headerType == HeaderType.Signal )
 			{
 				var interleavedRecordCount  = reader.ReadUInt16();
 				var interleavedRecordLength = reader.ReadByte();

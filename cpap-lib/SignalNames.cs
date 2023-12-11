@@ -79,15 +79,7 @@ namespace cpaplib
 
 		public static string GetStandardName( string key )
 		{
-			if( _standardNames.TryGetValue( key, out string result ) )
-			{
-				return result;
-			}
-
-			// _standardNames[ key ] = key;
-			// Debug.WriteLine( $@"{{ ""{key}"", """"}}," );
-
-			return key;
+			return _standardNames.TryGetValue( key, out string standardized ) ? standardized : key;
 		}
 	}
 }
