@@ -807,10 +807,10 @@ public partial class SignalChart : UserControl
 
 		if( ChartConfiguration.SignalName == SignalNames.FlowRate )
 		{
-			btnSettings.Visualizations.Add( new SignalMenuItem( "Root Mean Squares", VisualizeRMS ) );
-			btnSettings.Visualizations.Add( new SignalMenuItem( "Show Baseline",     VisualizeBaseline ) );
-			btnSettings.Visualizations.Add( new SignalMenuItem( "Mark Respirations", VisualizeRespirations ) );
-			btnSettings.Visualizations.Add( new SignalMenuItem( "Noise Filter",      VisualizeNoiseFilter ) );
+			btnSettings.Visualizations.Add( new SignalMenuItem( "Sliding Window Baseline", VisualizeRMS ) );
+			btnSettings.Visualizations.Add( new SignalMenuItem( "Highlight Centerline",    VisualizeCenterline ) );
+			btnSettings.Visualizations.Add( new SignalMenuItem( "Mark Respirations",       VisualizeRespirations ) );
+			btnSettings.Visualizations.Add( new SignalMenuItem( "Noise Filter",            VisualizeNoiseFilter ) );
 		}
 		else
 		{
@@ -825,7 +825,7 @@ public partial class SignalChart : UserControl
 	{
 		var windowLengthInSeconds = await InputDialog.InputInteger(
 			TopLevel.GetTopLevel( this )!,
-			"Visualize Root Mean Squares",
+			"Visualize Sliding Window Baseline",
 			"Enter the length of the window, in seconds",
 			120,
 			2,
@@ -992,7 +992,7 @@ public partial class SignalChart : UserControl
 		}
 	}
 
-	private void VisualizeBaseline()
+	private void VisualizeCenterline()
 	{
 		Debug.Assert( _day != null,               nameof( _day ) + " != null" );
 		Debug.Assert( ChartConfiguration != null, nameof( ChartConfiguration ) + " != null" );
