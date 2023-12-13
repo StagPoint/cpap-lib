@@ -44,19 +44,20 @@ namespace cpaplib
 		{
 			Debug.Assert( flowSignal.Name == SignalNames.FlowRate, $"Expected a signal named {SignalNames.FlowRate}" );
 			
-			// The size of the window used to calculate the baseline (10 seconds times the number of samples per second) 
-			int baselineWindowSize = (int)(10 * flowSignal.FrequencyInHz); 
-				
 			var results = new List<BreathRecord>();
 
 			var filtered = ButterworthFilter.Filter( flowSignal.Samples.ToArray(), flowSignal.FrequencyInHz, filterCutoff );
 			
 			// There's a good argument to be made for using a variable baseline instead of just assuming a zero baseline,
 			// but for now this has been disabled in order to generate results that are as close as possible to other 
-			// reference implementations that use a static baseline. 
-			//var slidingMean = new MovingAverageCalculator( baselineWindowSize );
+			// reference implementations that use a static baseline.
+			//
+			// // The size of the window used to calculate the baseline (10 seconds times the number of samples per second) 
+			// int baselineWindowSize = (int)(10 * flowSignal.FrequencyInHz); 
+			// var slidingMean = new MovingAverageCalculator( baselineWindowSize );
 
-			// Always start on an inspiration. This happens by default on ResMed machines as far as I can tell, but better to be certain.  
+			// Always start on an inspiration. This happens by default on ResMed machines as far as I can tell but not on
+			// Philips Respironics machines, so better to be certain.  
 			int startIndex = 0;
 			while( filtered[ startIndex ] <= 0 )
 			{

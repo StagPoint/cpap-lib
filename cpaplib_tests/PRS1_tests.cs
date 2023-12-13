@@ -1,11 +1,10 @@
-﻿using System.Data;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Text;
-using System.Xml;
+
+using cpap_app.Converters;
 
 using cpaplib;
-
-using DynamicData;
+// ReSharper disable UseIndexFromEndExpression
 
 // ReSharper disable ReplaceSubstringWithRangeIndexer
 // ReSharper disable StringLiteralTypo
@@ -15,6 +14,7 @@ namespace cpaplib_tests;
 [TestClass]
 public class PRS1_tests
 {
+	private const string SD_CARD_ROOT = @"D:\Data Files\CPAP Sample Data\REMStar Auto\P-Series\";
 	private const string SOURCE_FOLDER = @"D:\Data Files\CPAP Sample Data\REMStar Auto\P-Series\P1192913945CE";
 
 	private static Dictionary<string, string?> _modelToProductName = new Dictionary<string, string?>()
@@ -106,6 +106,12 @@ public class PRS1_tests
 
 		Assert.IsTrue( _modelToProductName.TryGetValue( fields[ "ModelNumber" ], out string? productName ) );
 		Assert.AreEqual( "REMstar Auto (System One 60 Series)", productName );
+
+		var machineInfo = PRS1DataLoader.LoadMachineIdentificationInfo( SD_CARD_ROOT );
+		Assert.IsNotNull( machineInfo );
+		Assert.IsFalse( string.IsNullOrEmpty( machineInfo.ProductName ) );
+		Assert.IsFalse( string.IsNullOrEmpty( machineInfo.ModelNumber ) );
+		Assert.IsFalse( string.IsNullOrEmpty( machineInfo.SerialNumber ) );
 	}
 
 	[TestMethod]
@@ -174,7 +180,52 @@ public class PRS1_tests
 				var chunk = DataChunk.Read( reader );
 				Assert.IsNotNull( chunk );
 
-				chunk.ReadSummary( chunk.Header );
+				var settings = chunk.ReadSummary( chunk.Header );
+			}
+		}
+	}
+
+	[TestMethod]
+	public void CanSerializeAndDeserializeSettings()
+	{
+		var dataFiles = Directory.GetFiles( SOURCE_FOLDER, "*.001", SearchOption.AllDirectories );
+
+		foreach( var filename in dataFiles )
+		{
+			using var file   = File.Open( filename, FileMode.Open );
+			using var reader = new BinaryReader( file, Encoding.ASCII );
+
+			while( file.Position < file.Length )
+			{
+				var chunk = DataChunk.Read( reader );
+				Assert.IsNotNull( chunk );
+
+				var settings = chunk.ReadSummary( chunk.Header );
+
+				var blob = new SettingDictionaryBlobConverter().ConvertToBlob( settings );
+				Assert.IsNotNull( blob );
+				Assert.IsInstanceOfType<byte[]>( blob );
+				Assert.IsTrue( blob.Length > 0 );
+				
+				var deserialized = new SettingDictionaryBlobConverter().ConvertFromBlob( blob ) as Dictionary<string, object>;
+				Assert.IsNotNull( deserialized );
+				Assert.AreEqual( settings.Count, deserialized.Count );
+
+				foreach( var pair in settings )
+				{
+					// There's no good way to serialize/deserialize an enum without converting it to a string that
+					// specifies the fully qualified name of the enumeration, and that's pretty inefficient in 
+					// multiple ways, so they are simply serialized as integers. This isn't a concern for the 
+					// ParsedSettings class, which will have typed generic functions for retrieval of values.
+					if( settings[ pair.Key ] is Enum )
+					{
+						Assert.AreEqual( (int)settings[ pair.Key ], deserialized[ pair.Key ] );
+					}
+					else
+					{
+						Assert.AreEqual( settings[ pair.Key ], deserialized[ pair.Key ] );
+					}
+				}
 			}
 		}
 	}
@@ -194,7 +245,16 @@ public class PRS1_tests
 				var chunk = DataChunk.Read( reader );
 				Assert.IsNotNull( chunk );
 
-				chunk.ReadEvents( chunk.Header );
+				var data = chunk.ReadEvents( chunk.Header );
+				
+				Assert.IsNotNull( data );
+				Assert.IsNotNull( data.Events );
+				Assert.IsNotNull( data.Stats );
+				
+				Assert.IsTrue( data.Stats.Count > 0 );
+				Assert.IsTrue( data.Stats.Any( x => x.Name == SignalNames.Pressure ) );
+				Assert.IsTrue( data.Stats.Any( x => x.Name == SignalNames.LeakRate ) );
+				Assert.IsTrue( data.Stats.Any( x => x.Name == SignalNames.Snore ) );
 			}
 		}
 	}
@@ -213,9 +273,7 @@ public class PRS1_tests
 
 			DataChunk? lastChunk = null;
 
-			var duration = TimeSpan.Zero;
 			var chunks   = new List<DataChunk>();
-			var samples  = new List<byte>();
 			
 			while( file.Position < file.Length )
 			{
@@ -225,8 +283,6 @@ public class PRS1_tests
 				Assert.IsNotNull( chunk.Header.SignalInfo );
 				Assert.IsTrue( chunk.Header.SignalInfo.IntervalCount > 0 );
 				
-				duration += chunk.Header.SignalInfo.Duration;
-
 				if( lastChunk != null )
 				{
 					Assert.AreEqual( lastChunk.Header.HeaderType,                  chunk.Header.HeaderType );
@@ -257,20 +313,56 @@ public class PRS1_tests
 				lastChunk = chunk;
 
 				chunks.Add( chunk );
-				samples.Add( chunk.BlockData );
 			}
-
-			// Calculate the sample rate. Note that the sample rate for this machine is extremely low compared to ResMed machines. 
-			var sampleRate = duration.TotalSeconds / samples.Count;
-			Assert.AreEqual( 0.2, sampleRate, 0.001 );
-
-			// NOTE:
-			// There are apparently two possibilities: Either there is a single Signal, in which case it will be 
-			// (effectively) non-interleaved and will be the Flow Rate signal, or there will be two interleaved
-			// Signals: Flow Rate and Mask Pressure.
-			// The sample data I have only contains a single Signal per Session, but the code exists to de-interleave
-			// the Signal data. 
+			
+			// NOTE: The sample data I have only contains a single Signal per Session, so that is all the code is 
+			// currently designed to handle. The PRS1 data format is rather opaque and appears to be entirely 
+			// undocumented, so it's doubtful at this point that this library will be extended to cover other
+			// Philips Respironics models. 
+			var signals = ReadSignals( chunks );
+			Assert.IsNotNull( signals );
+			Assert.IsTrue( signals.Count > 0 );
 		}
+	}
+
+	public List<Signal> ReadSignals( List<DataChunk> chunks )
+	{
+		if( chunks.Count == 0 )
+		{
+			return new List<Signal>();
+		}
+
+		var firstChunk = chunks[ 0 ];
+		var lastChunk = chunks[ chunks.Count - 1 ];
+		
+		var numSignals = firstChunk.Header.SignalInfo!.Waveforms.Count;
+		Debug.Assert( numSignals == 1, "Unexpected number of signals" );
+
+		var samples = new List<byte>();
+		foreach( var dataChunk in chunks )
+		{
+			samples.AddRange( dataChunk.BlockData );
+		}
+
+		// Calculate the sample rate. Note that the sample rate for this machine is extremely low compared to ResMed machines. 
+		var duration   = lastChunk.Header.EndTimestamp - firstChunk.Header.Timestamp;
+		var sampleRate = duration.TotalSeconds / samples.Count;
+		Assert.AreEqual( 0.2, sampleRate, 0.001 );
+		
+		var signal = new Signal
+		{
+			Name              = SignalNames.FlowRate,
+			FrequencyInHz     = sampleRate,
+			MinValue          = -120,
+			MaxValue          = 150,
+			UnitOfMeasurement = "L/min",
+			StartTime         = firstChunk.Header.Timestamp,
+			EndTime           = lastChunk.Header.EndTimestamp,
+		};
+
+		signal.Samples.AddRange( samples.Select( x => (double)(sbyte)x ) );
+		
+		return new List<Signal> { signal };
 	}
 
 	private static Dictionary<string, string> ReadKeyValueFile( string path, string separator = "=" )
@@ -296,14 +388,14 @@ public class PRS1_tests
 		return fields;
 	}
 
-	private enum HeaderType
+	public enum HeaderType
 	{
 		Standard = 0,
 		Signal = 1,
 		MAX_VALUE = 1,
 	}
 
-	private class DataChunk
+	public class DataChunk
 	{
 		private const double SCALE = 0.1;
 		
@@ -352,137 +444,258 @@ public class PRS1_tests
 
 			return chunk;
 		}
-
-		public void ReadEvents( HeaderRecord header )
+		
+		public EventImportData ReadEvents( HeaderRecord header )
 		{
-			int timestamp = 0;
+			var events     = new List<ReportedEvent>();
+			var statistics = new List<ValueAtTime>();
+			
+			var timestamp = header.Timestamp;
 
 			using var reader = new BinaryReader( new MemoryStream( BlockData ) );
 
 			while( reader.BaseStream.Position < reader.BaseStream.Length )
 			{
-				var code = reader.ReadByte();
+				var eventCode = reader.ReadByte();
 
-				timestamp += reader.ReadUInt16();
+				timestamp += TimeSpan.FromSeconds( reader.ReadUInt16() );
 
-				switch( code )
+				switch( eventCode )
 				{
 					case 0x01:
 						{
 							// Pressure set
-							var pressure = reader.ReadByte() * 0.1;
+							statistics.Add( new ValueAtTime
+							{
+								Timestamp = timestamp,
+								Name      = SignalNames.Pressure,
+								Value     = reader.ReadByte() * 0.1,
+							} );
 						}
 						break;
 					case 0x02:
-						// Pressure set (bilevel)
-						var ipap = reader.ReadByte() * 0.1;
-						var epap = reader.ReadByte() * 0.1;
+						{
+							// Pressure set (bilevel)
+							statistics.Add( new ValueAtTime
+							{
+								Timestamp = timestamp,
+								Name      = SignalNames.Pressure,
+								Value     = reader.ReadByte() * 0.1,
+							} );
+							statistics.Add( new ValueAtTime
+							{
+								Timestamp = timestamp,
+								Name      = SignalNames.EPAP,
+								Value     = reader.ReadByte() * 0.1,
+							} );
+						}
 						break;
 					case 0x03:
-						// Change to Opti-Start pressure
-						var newPressure = reader.ReadByte();
+						// Change to Opti-Start pressure? Not imported
+						reader.ReadByte();
 						break;
 					case 0x04:
-						// Pressure pulse
-						var pressurePulseParam = reader.ReadByte();
+						// Pressure pulse. Not imported.
+						reader.ReadByte();
 						break;
 					case 0x05:
 						{
 							// RERA
-							var elapsed   = reader.ReadByte();
+							var elapsed   = TimeSpan.FromSeconds( reader.ReadByte() );
 							var startTime = timestamp - elapsed;
+							
+							events.Add( new ReportedEvent
+							{
+								Type       = EventType.RERA,
+								SourceType = SourceType.CPAP,
+								StartTime  = startTime,
+								Duration   = TimeSpan.Zero,
+							} );
 						}
 						break;
 					case 0x06:
 						{
 							// Obstructive Apnea
-							var elapsed   = reader.ReadByte();
+							var elapsed   = TimeSpan.FromSeconds( reader.ReadByte() );
 							var startTime = timestamp - elapsed;
+							
+							events.Add( new ReportedEvent
+							{
+								Type       = EventType.ObstructiveApnea,
+								SourceType = SourceType.CPAP,
+								StartTime  = startTime,
+								Duration   = TimeSpan.Zero,
+							} );
 						}
 						break;
 					case 0x07:
 						{
 							// Central Apnea
-							var elapsed   = reader.ReadByte();
+							var elapsed   = TimeSpan.FromSeconds( reader.ReadByte() );
 							var startTime = timestamp - elapsed;
+							
+							events.Add( new ReportedEvent
+							{
+								Type       = EventType.ClearAirway,
+								SourceType = SourceType.CPAP,
+								StartTime  = startTime,
+								Duration   = TimeSpan.Zero,
+							} );
 						}
 						break;
 					case 0x0A:
 						{
 							// Hypopnea Type 1?
-							var elapsed   = reader.ReadByte();
+							var elapsed   = TimeSpan.FromSeconds( reader.ReadByte() );
 							var startTime = timestamp - elapsed;
+							
+							events.Add( new ReportedEvent
+							{
+								Type       = EventType.Hypopnea,
+								SourceType = SourceType.CPAP,
+								StartTime  = startTime,
+								Duration   = TimeSpan.Zero,
+							} );
 						}
 						break;
 					case 0x0B:
 						{
-							// Hypopnea Type 2?
-							// TODO: Looks like these can be safely ignored? They don't seem particularly informative, as they are usually followed by the other so-called "Hypopnea"
-							var unknownParameter = reader.ReadByte();
-							var elapsed          = reader.ReadByte();
-							var startTime        = timestamp - elapsed;
-							var start            = header.Timestamp.AddSeconds( startTime );
+							// Hypopnea Type 2? Maybe "Hypopnea, with duration?"
+							// Not convinced that the first parameter is a duration, but will graph it and see if it lines up.
+							// TODO: Looks like these "Hypopnea type 2" events frequently (if not always) overlap with the other type of Hypopnea event. Find out what that means. 
+							var duration  = TimeSpan.FromSeconds( reader.ReadByte() );
+							var elapsed   = TimeSpan.FromSeconds( reader.ReadByte() );
+							var startTime = timestamp - elapsed;
+							
+							events.Add( new ReportedEvent
+							{
+								Type       = EventType.Hypopnea,
+								SourceType = SourceType.CPAP,
+								StartTime  = startTime,
+								Duration   = duration,
+							} );
 						}
 						break;
 					case 0x0C:
 						{
 							// Flow Limitation
-							var elapsed   = reader.ReadByte();
+							var elapsed   = TimeSpan.FromSeconds( reader.ReadByte() );
 							var startTime = timestamp - elapsed;
+													
+							events.Add( new ReportedEvent
+							{
+								Type       = EventType.FlowLimitation,
+								SourceType = SourceType.CPAP,
+								StartTime  = startTime,
+								Duration   = TimeSpan.Zero,
+							} );
 						}
 						break;
 					case 0x0D:
 						// Vibratory Snore
+						events.Add( new ReportedEvent
+						{
+							Type       = EventType.VibratorySnore,
+							SourceType = SourceType.CPAP,
+							StartTime  = timestamp,
+							Duration   = TimeSpan.Zero,
+						} );
 						break;
 					case 0x0E:
 						{
-							// // Variable Breathing
-							// var duration  = reader.ReadUInt16() * 2;
-							// var elapsed   = reader.ReadByte();
-							// var startTime = timestamp - elapsed - duration;
-							reader.Advance( 3 );
+							// Variable Breathing
+							var duration  = TimeSpan.FromSeconds( reader.ReadUInt16() * 2 );
+							var elapsed   = TimeSpan.FromSeconds( reader.ReadByte() );
+							var startTime = timestamp - elapsed - duration;
+														
+							events.Add( new ReportedEvent
+							{
+								Type       = EventType.VariableBreathing,
+								SourceType = SourceType.CPAP,
+								StartTime  = startTime,
+								Duration   = duration,
+							} );
 						}
 						break;
 					case 0x0F:
 						{
-							// // Periodic Breathing
-							// var duration  = reader.ReadUInt16() * 2;
-							// var startTime = timestamp - duration;
-							reader.Advance( 3 );
+							// Periodic Breathing
+							var duration  = TimeSpan.FromSeconds( reader.ReadUInt16() * 2 );
+							var elapsed   = TimeSpan.FromSeconds( reader.ReadByte() );
+							var startTime = timestamp - elapsed - duration;
+														
+							events.Add( new ReportedEvent
+							{
+								Type       = EventType.PeriodicBreathing,
+								SourceType = SourceType.CPAP,
+								StartTime  = startTime,
+								Duration   = duration,
+							} );
 						}
 						break;
 					case 0x10:
 						{
 							// Large Leak
-							var duration  = reader.ReadUInt16() * 2;
-							var elapsed   = reader.ReadByte();
+							var duration  = TimeSpan.FromSeconds( reader.ReadUInt16() * 2 );
+							var elapsed   = TimeSpan.FromSeconds( reader.ReadByte() );
 							var startTime = timestamp - elapsed - duration;
+																		
+							events.Add( new ReportedEvent
+							{
+								Type       = EventType.LargeLeak,
+								SourceType = SourceType.CPAP,
+								StartTime  = startTime,
+								Duration   = duration,
+							} );
 						}
 						break;
 					case 0x11:
 						{
 							// Statistics 
-							var totalLeak  = reader.ReadByte() * 0.1;
-							var snoreLevel = reader.ReadByte();
-							var pressure   = reader.ReadByte() * 0.1;
+							statistics.Add( new ValueAtTime
+							{
+								Timestamp = timestamp,
+								Name      = SignalNames.LeakRate,
+								Value     = reader.ReadByte() * 0.1,
+							} );
+							statistics.Add( new ValueAtTime
+							{
+								Timestamp = timestamp,
+								Name      = SignalNames.Snore,
+								Value     = reader.ReadByte(),
+							} );
+							statistics.Add( new ValueAtTime
+							{
+								Timestamp = timestamp,
+								Name      = SignalNames.Pressure,
+								Value     = reader.ReadByte() * 0.1,
+							} );
 						}
 						break;
 					case 0x12:
 						{
-							reader.Advance( 2 );
+							// Appears to be related to snore statistics, but also doesn't appear
+							// to be relevant to anything I care about. Not imported.
+							reader.ReadUInt16();
 						}
 						break;
 					default:
-						throw new NotSupportedException( $"Unknown event code {code} in session {header.SessionNumber}" );
+						throw new NotSupportedException( $"Unknown event code {eventCode} in session {header.SessionNumber}" );
 				}
 			}
+
+			return new EventImportData()
+			{
+				Events = events,
+				Stats = statistics,
+			};
 		}
 		
-		public void ReadSummary( HeaderRecord header )
+		public ParsedSettings ReadSummary( HeaderRecord header )
 		{
 			var timestamp = header.Timestamp;
 
-			var settings = new Dictionary<string, double>();
+			var settings = new ParsedSettings();
 			var sessions = new List<Session>();
 
 			DateTime? lastMaskOn = null;
@@ -564,9 +777,11 @@ public class PRS1_tests
 			// It's not very common, but the Equipment Off and final Mask Off times are not always equal.
 			// Equipment Off is however still always equal to or later than final Mask Off. 
 			Assert.IsTrue( endTime >= sessions[ ^1 ].EndTime );
+
+			return settings;
 		}
 		
-		private static void ReadSettings( BinaryReader reader, Dictionary<string,double> settings )
+		private static void ReadSettings( BinaryReader reader, ParsedSettings settings )
 		{
 			// Unknown meaning for this byte
 			reader.ReadByte();
@@ -596,7 +811,7 @@ public class PRS1_tests
 			var unknown2            = reader.ReadByte();
 			var autoTrialDuration   = reader.ReadByte();
 
-			settings[ SettingNames.Mode ]               = (int)mode;
+			settings[ SettingNames.Mode ]               = mode;
 			settings[ SettingNames.MinPressure ]        = minPressure;
 			settings[ SettingNames.MaxPressure ]        = maxPressure;
 			settings[ SettingNames.Pressure ]           = pressure;
@@ -604,18 +819,18 @@ public class PRS1_tests
 			settings[ SettingNames.MaxPressureSupport ] = maxPS;
 			settings[ SettingNames.RampTime ]           = rampTime;
 			settings[ SettingNames.RampPressure ]       = rampPressure;
-			settings[ SettingNames.FlexMode ]           = (int)flexMode.Mode;
-			settings[ SettingNames.FlexLock ]           = flexMode.Locked ? 1 : 0;
+			settings[ SettingNames.FlexMode ]           = flexMode.Mode;
+			settings[ SettingNames.FlexLock ]           = flexMode.Locked;
 			settings[ SettingNames.FlexLevel ]          = flexMode.Level;
-			settings[ SettingNames.Humidifier ]         = humidifierSettings.HumidifierPresent ? 1 : 0;
-			settings[ SettingNames.HumidifierMode ]     = (int)humidifierSettings.Mode;
+			settings[ SettingNames.Humidifier ]         = humidifierSettings.HumidifierPresent;
+			settings[ SettingNames.HumidifierMode ]     = humidifierSettings.Mode;
 			settings[ SettingNames.HumidityLevel ]      = humidifierSettings.HumidityLevel;
 			settings[ SettingNames.MaskResist ]         = maskResistanceLevel;
-			settings[ SettingNames.MaskResistLock ]     = maskResistanceLock ? 1 : 0;
-			settings[ SettingNames.AutoOn ]             = autoOnEnabled ? 1 : 0;
-			settings[ SettingNames.AutoOff ]            = autoOffEnabled ? 1 : 0;
-			settings[ SettingNames.AlertMask ]          = maskAlertEnabled ? 1 : 0;
-			settings[ SettingNames.ShowAHI ]            = showAHIEnabled ? 1 : 0;
+			settings[ SettingNames.MaskResistLock ]     = maskResistanceLock;
+			settings[ SettingNames.AutoOn ]             = autoOnEnabled;
+			settings[ SettingNames.AutoOff ]            = autoOffEnabled;
+			settings[ SettingNames.AlertMask ]          = maskAlertEnabled;
+			settings[ SettingNames.ShowAHI ]            = showAHIEnabled;
 			settings[ SettingNames.HoseDiameter ]       = hoseDiameter;
 
 			if( mode == OperatingMode.AutoTrial )
@@ -626,7 +841,7 @@ public class PRS1_tests
 			if( humidifierSettings.Mode == HumidifierMode.HeatedTube )
 			{
 				settings[ SettingNames.TubeTemperature ] = humidifierSettings.TubeTemperature;
-				settings[ SettingNames.TubeTempLocked ]      = tubeTempLock ? 1 : 0;
+				settings[ SettingNames.TubeTempLocked ]  = tubeTempLock;
 			}
 
 			Debug.Assert( unknown1 == 1 );
@@ -636,12 +851,12 @@ public class PRS1_tests
 			Debug.Assert( !reservedBytes.Any( x => x != 0 ) );
 		}
 
-		private static void ReadHumidifierSettings( BinaryReader reader, Dictionary<string, double> settings )
+		private static void ReadHumidifierSettings( BinaryReader reader, ParsedSettings settings )
 		{
 			var humidifierSettings = ReadHumidifierSettings( reader );
 			
-			settings[ SettingNames.Humidifier ]     = humidifierSettings.HumidifierPresent ? 1 : 0;
-			settings[ SettingNames.HumidifierMode ] = (int)humidifierSettings.Mode;
+			settings[ SettingNames.Humidifier ]     = humidifierSettings.HumidifierPresent;
+			settings[ SettingNames.HumidifierMode ] = humidifierSettings.Mode;
 			settings[ SettingNames.HumidityLevel ]  = humidifierSettings.HumidityLevel;
 			
 			if( humidifierSettings.Mode == HumidifierMode.HeatedTube )
@@ -750,7 +965,7 @@ public class PRS1_tests
 		}
 	}
 
-	private class HeaderSignalInfo
+	public class HeaderSignalInfo
 	{
 		public int IntervalCount  { get; set; }
 		public int IntervalLength { get; set; }
@@ -769,7 +984,7 @@ public class PRS1_tests
 		}
 	}
 
-	private class HeaderRecord
+	public class HeaderRecord
 	{
 		public HeaderType HeaderType        { get; set; }
 		public int        DataFormatVersion { get; set; }
@@ -885,6 +1100,11 @@ public class PRS1_tests
 		}
 	}
 
+	public class ParsedSettings : Dictionary<string, object>
+	{
+		
+	}
+
 	private class HumidifierSettings
 	{
 		public bool           HumidifierPresent { get; set; }
@@ -938,6 +1158,24 @@ public class PRS1_tests
 		ST_AVAPS,
 		PC_AVAPS,
 	};
+
+	public class ValueAtTime
+	{
+		public DateTime Timestamp { get; set; }
+		public string   Name      { get; set; }
+		public double   Value     { get; set; }
+
+		public override string ToString()
+		{
+			return $"{Name} = {Value:F2}    {Timestamp}";
+		}
+	}
+
+	public class EventImportData
+	{
+		public List<ReportedEvent> Events { get; init; } = new List<ReportedEvent>();
+		public List<ValueAtTime>   Stats  { get; init; } = new List<ValueAtTime>();
+	}
 }
 
 public static class BinaryReaderExtensions

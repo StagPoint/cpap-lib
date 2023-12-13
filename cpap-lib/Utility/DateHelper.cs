@@ -5,6 +5,8 @@ namespace cpaplib
 {
 	internal static class DateHelper
 	{
+		public static readonly DateTime UnixEpoch = new DateTime( 1970, 1, 1 );
+		
 		[MethodImpl( MethodImplOptions.AggressiveInlining )]
 		public static DateTime Min( DateTime a, DateTime b )
 		{

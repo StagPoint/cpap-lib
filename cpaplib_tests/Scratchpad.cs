@@ -49,10 +49,10 @@ public class Scratchpad
 			dict[ settingNames[ i ] ] = settingNames[ i ];
 		}
 
-		var serialized = new StringDictionaryBlobConverter().ConvertToBlob( dict );
+		var serialized = new SettingDictionaryBlobConverter().ConvertToBlob( dict );
 		Assert.IsNotNull( serialized );
 
-		var deserialized = new StringDictionaryBlobConverter().ConvertFromBlob( serialized ) as Dictionary<string, string>;
+		var deserialized = new SettingDictionaryBlobConverter().ConvertFromBlob( serialized ) as Dictionary<string, string>;
 		Assert.IsNotNull( deserialized );
 
 		for( int i = 0; i < deserialized.Count; i++ )

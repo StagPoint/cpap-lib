@@ -114,34 +114,21 @@ namespace cpaplib
 			switch( eventType )
 			{
 				case EventType.UnclassifiedApnea:
-					markerPosition = EventMarkerPosition.AfterDuration;
-					break;
 				case EventType.ObstructiveApnea:
-					markerPosition = EventMarkerPosition.AfterDuration;
-					break;
 				case EventType.Hypopnea:
-					markerPosition = EventMarkerPosition.AfterDuration;
-					break;
 				case EventType.ClearAirway:
-					markerPosition = EventMarkerPosition.AfterDuration;
-					break;
 				case EventType.Arousal:
-					markerPosition = EventMarkerPosition.AfterDuration;
-					break;
 				case EventType.RERA:
-					markerPosition = EventMarkerPosition.AfterDuration;
-					break;
 				case EventType.CSR:
+				case EventType.FlowReduction:
 					markerPosition = EventMarkerPosition.AfterDuration;
 					break;
 				case EventType.VibratorySnore:
-					markerPosition = EventMarkerPosition.AfterDuration;
-					break;
 				case EventType.FlowLimitation:
+				case EventType.PeriodicBreathing:
+				case EventType.VariableBreathing:
+				case EventType.LargeLeak:
 					markerPosition = EventMarkerPosition.BeforeDuration;
-					break;
-				case EventType.FlowReduction:
-					markerPosition = EventMarkerPosition.AfterDuration;
 					break;
 				default:
 					markerPosition = EventMarkerPosition.BeforeDuration;

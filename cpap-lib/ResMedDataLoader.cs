@@ -14,6 +14,8 @@ namespace cpaplib
 {
 	public class ResMedDataLoader
 	{
+		#region Private fields 
+		
 		private static string[] expectedFiles = new[]
 		{
 			"STR.edf",
@@ -43,6 +45,10 @@ namespace cpaplib
 
 		private MachineIdentification _machineInfo    = new MachineIdentification();
 		private TimeSpan              _timeAdjustment = TimeSpan.Zero;
+		
+		#endregion 
+		
+		#region Public API 
 
 		public List<DailyReport> LoadFromFolder( string folderPath, DateTime? minDate = null, DateTime? maxDate = null, TimeSpan? timeAdjustment = null )
 		{
@@ -102,6 +108,29 @@ namespace cpaplib
 			return days;
 		}
 
+		public static bool HasCorrectFolderStructure( string rootFolder )
+		{
+			foreach( var folder in expectedFolders )
+			{
+				var directoryPath = Path.Combine( rootFolder, folder );
+				if( !Directory.Exists( directoryPath ) )
+				{
+					return false;
+				}
+			}
+
+			foreach( var filename in expectedFiles )
+			{
+				var filePath = Path.Combine( rootFolder, filename );
+				if( !File.Exists( filePath ) )
+				{
+					return false;
+				}
+			}
+
+			return true;
+		}
+		
 		public static MachineIdentification LoadMachineIdentificationInfo( string rootFolder )
 		{
 			var filename    = Path.Combine( rootFolder, "Identification.tgt" );
@@ -137,28 +166,9 @@ namespace cpaplib
 			return machineInfo;
 		}
 
-		public static bool HasCorrectFolderStructure( string rootFolder )
-		{
-			foreach( var folder in expectedFolders )
-			{
-				var directoryPath = Path.Combine( rootFolder, folder );
-				if( !Directory.Exists( directoryPath ) )
-				{
-					return false;
-				}
-			}
-
-			foreach( var filename in expectedFiles )
-			{
-				var filePath = Path.Combine( rootFolder, filename );
-				if( !File.Exists( filePath ) )
-				{
-					return false;
-				}
-			}
-
-			return true;
-		}
+		#endregion 
+		
+		#region Private functions 
 
 		private void EnsureCorrectFolderStructure( string rootFolder )
 		{
@@ -1034,5 +1044,7 @@ namespace cpaplib
 
 			session.Signals.Add( signal );
 		}
+		
+		#endregion
 	}
 }
