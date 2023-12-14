@@ -1,5 +1,7 @@
 ﻿using System.Diagnostics;
 
+using cpap_app.Helpers;
+
 using cpaplib;
 
 // ReSharper disable StringLiteralTypo
@@ -140,8 +142,10 @@ public class PRS1DataLoader
 		minDate ??= DateTime.MinValue.Date;
 		maxDate ??= DateTime.Today;
 		
-		// Instantiate the list of DailyReports that will be returned to the caller 
-		var days = new List<DailyReport>();
+		// Instantiate a list of "meta sessions" that will be used to group the imported sessions 
+		// so that they can be assigned to the correct days. 
+		var          metaSessions       = new List<MetaSession>();
+		MetaSession? currentMetaSession = null;
 		
 		// Find all of the summary files and scan each one to determine whether it should be included in the import
 		var summaryFiles = Directory.GetFiles( rootFolder, "*.001", SearchOption.AllDirectories );
@@ -169,18 +173,29 @@ public class PRS1DataLoader
 			}
 			
 			var summary = chunk.ReadSummary( header );
-			summary.Machine = machineInfo;
+			summary.Machine        = machineInfo;
+			summary.Session.Source = machineInfo.ProductName;
 
-			// Make sure that the Session Source value is properly set. 
-			foreach( var session in summary.Sessions )
+			// Discard Sessions that are too short 
+			if( summary.Session.Duration.TotalMinutes < 5 )
 			{
-				session.Source = machineInfo.ProductName;
+				continue;
 			}
-			
+
 			var importData = ImportSessions( summary, Path.GetDirectoryName( filename ) );
+			
+			if( currentMetaSession == null || !currentMetaSession.CanAdd( importData ) )
+			{
+				currentMetaSession = new MetaSession();
+				metaSessions.Add( currentMetaSession );
+			}
+				
+			currentMetaSession.AddSession( importData );
 		}
 
-		return days;
+		Console.WriteLine( $"MetaSession Count: {metaSessions.Count}" );
+
+		return null;
 	}
 
 	#endregion
@@ -192,52 +207,49 @@ public class PRS1DataLoader
 		var sessionData = new ImportSession
 		{
 			Settings = summary.Settings,
-			Sessions = summary.Sessions,
+			Session = summary.Session,
 		};
 
-		foreach( var session in summary.Sessions )
+		// Sample Events file name: 0000000003.002
+		var eventFilename = Path.Combine( folder, $"{summary.Session.ID:0000000000}.002" );
+		if( File.Exists( eventFilename ) )
 		{
-			// Sample Events file name: 0000000003.002
-			var eventFilename = Path.Combine( folder, $"{session.ID:0000000000}.002" );
-			if( File.Exists( eventFilename ) )
-			{
-				Console.WriteLine( $"Importing Event file: {eventFilename}" );
-				
-				using var eventFile   = File.OpenRead( eventFilename );
-				using var eventReader = new BinaryReader( eventFile );
-
-				while( eventFile.Position < eventFile.Length )
-				{
-					var eventChunk = DataChunk.Read( eventReader );
-					var events     = eventChunk.ReadEvents( eventChunk.Header );
-
-					sessionData.Events.AddRange( events.Events );
-					sessionData.Stats.AddRange( events.Stats );
-				}
-			}
+			Console.WriteLine( $"Importing Event file: {eventFilename}" );
 			
-			// Sample Waveform file name: 0000000003.005
-			var waveFormFilename = Path.Combine( folder, $"{session.ID:0000000000}.005" );
-			if( File.Exists( waveFormFilename ) )
+			using var eventFile   = File.OpenRead( eventFilename );
+			using var eventReader = new BinaryReader( eventFile );
+
+			while( eventFile.Position < eventFile.Length )
 			{
-				Console.WriteLine( $"Importing Waveform file: {waveFormFilename}" );
-				
-				using var waveformFile   = File.OpenRead( waveFormFilename );
-				using var waveformReader = new BinaryReader( waveformFile );
+				var eventChunk = DataChunk.Read( eventReader );
+				var events     = eventChunk.ReadEvents( eventChunk.Header );
 
-				var chunks = new List<DataChunk>();
+				sessionData.Events.AddRange( events.Events );
+				sessionData.Stats.AddRange( events.Stats );
+			}
+		}
+		
+		// Sample Waveform file name: 0000000003.005
+		var waveFormFilename = Path.Combine( folder, $"{summary.Session.ID:0000000000}.005" );
+		if( File.Exists( waveFormFilename ) )
+		{
+			Console.WriteLine( $"Importing Waveform file: {waveFormFilename}" );
+			
+			using var waveformFile   = File.OpenRead( waveFormFilename );
+			using var waveformReader = new BinaryReader( waveformFile );
 
-				while( waveformFile.Position < waveformFile.Length )
-				{
-					var chunk = DataChunk.Read( waveformReader );
-					chunks.Add( chunk );
-				}
+			var chunks = new List<DataChunk>();
 
-				var signals = ReadSignals( chunks );
-				for( int i = 0; i < signals.Count; i++ )
-				{
-					sessionData.Sessions[ i ].AddSignal( signals[ i ] );
-				}
+			while( waveformFile.Position < waveformFile.Length )
+			{
+				var chunk = DataChunk.Read( waveformReader );
+				chunks.Add( chunk );
+			}
+
+			var signals = ReadSignals( chunks );
+			for( int i = 0; i < signals.Count; i++ )
+			{
+				sessionData.Session.AddSignal( signals[ i ] );
 			}
 		}
 
@@ -391,12 +403,45 @@ public class PRS1DataLoader
 	
 	#region Nested types
 
+	private class MetaSession
+	{
+		public List<ImportSession> Sessions  { get; set; } = new List<ImportSession>();
+		public DateTime            StartTime { get; set; } = DateTime.MaxValue;
+		public DateTime            EndTime   { get; set; } = DateTime.MinValue;
+
+		public void AddSession( ImportSession session )
+		{
+			Sessions.Add( session );
+			
+			StartTime = DateHelper.Min( StartTime, session.StartTime );
+			EndTime   = DateHelper.Max( EndTime, session.EndTime );
+		}
+
+		public bool CanAdd( ImportSession session )
+		{
+			return session.StartTime <= EndTime.AddHours( 4 ) && (session.StartTime - StartTime).TotalHours < 24;
+		}
+
+		public override string ToString()
+		{
+			return $"Sessions: {Sessions.Count},  Start: {StartTime:g},   End: {EndTime:g},   Duration: {EndTime - StartTime}";
+		}
+	}
+
 	private class ImportSession
 	{
 		public ParsedSettings      Settings { get; set; }
-		public List<Session>       Sessions { get; set; }  = new List<Session>();
+		public Session             Session  { get; set; }
 		public List<ReportedEvent> Events   { get; init; } = new List<ReportedEvent>();
 		public List<ValueAtTime>   Stats    { get; init; } = new List<ValueAtTime>();
+		
+		public DateTime StartTime { get { return Session.StartTime; } }
+		public DateTime EndTime   { get { return Session.EndTime; } }
+
+		public override string ToString()
+		{
+			return $"ID: {Session.ID},  Start: {StartTime:g},  End: {EndTime:g},  Duration: {EndTime - StartTime}";
+		}
 	}
 	
 	private enum HeaderType
@@ -742,7 +787,7 @@ public class PRS1DataLoader
 						Debug.Assert( lastMaskOn == null, "Mismatched MaskOn/MaskOff" );
 						timestamp  += TimeSpan.FromSeconds( reader.ReadUInt16() );
 						lastMaskOn =  timestamp;
-						reader.Advance( 3 );
+						var maskOnParams = reader.ReadBytes( 3 );
                         ReadHumidifierSettings( reader, settings );
 						Debug.Assert( reader.BaseStream.Position - blockStartPosition == 7 );
 						break;
@@ -797,10 +842,16 @@ public class PRS1DataLoader
 			// Equipment Off is however still always equal to or later than final Mask Off. 
 			Assert.IsTrue( endTime >= sessions[ ^1 ].EndTime );
 
+			// Merge the Sessions, because a Summary File only contains multiple sessions when a single Session
+			// has been split (such as when a "No Breathing Detected" event occurs), and this is additionally 
+			// handled when imported Signal data which will be similarly merged.
+			var session = sessions[ 0 ];
+			session.EndTime = sessions[ sessions.Count - 1 ].EndTime;
+
 			return new ImportSummary
 			{
 				Settings = settings,
-				Sessions = sessions,
+				Session = session,
 			};
 		}
 		
@@ -1140,7 +1191,7 @@ public class PRS1DataLoader
 	{
 		public MachineIdentification Machine  { get; set; }
 		public ParsedSettings        Settings { get; set; }
-		public List<Session>         Sessions { get; set; }
+		public Session               Session  { get; set; }
 	}
 
 	private class HumidifierSettings
