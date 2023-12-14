@@ -50,6 +50,65 @@ namespace cpaplib
 		
 		#region Public API 
 
+		public bool HasCorrectFolderStructure( string rootFolder )
+		{
+			foreach( var folder in expectedFolders )
+			{
+				var directoryPath = Path.Combine( rootFolder, folder );
+				if( !Directory.Exists( directoryPath ) )
+				{
+					return false;
+				}
+			}
+
+			foreach( var filename in expectedFiles )
+			{
+				var filePath = Path.Combine( rootFolder, filename );
+				if( !File.Exists( filePath ) )
+				{
+					return false;
+				}
+			}
+
+			return true;
+		}
+		
+		public MachineIdentification LoadMachineIdentificationInfo( string rootFolder )
+		{
+			var filename    = Path.Combine( rootFolder, "Identification.tgt" );
+			var machineInfo = new MachineIdentification();
+			var fields      = new Dictionary<string, string>();
+
+			using( var file = File.OpenRead( filename ) )
+			{
+				using( var reader = new StreamReader( file ) )
+				{
+					while( !reader.EndOfStream )
+					{
+						var line = reader.ReadLine()?.Trim();
+						if( string.IsNullOrEmpty( line ) || !line.StartsWith( "#", StringComparison.Ordinal ) )
+						{
+							continue;
+						}
+
+						int spaceIndex = line.IndexOf( " ", StringComparison.Ordinal );
+						Debug.Assert( spaceIndex != -1 );
+
+						var key   = line.Substring( 1, spaceIndex - 1 );
+						var value = line.Substring( spaceIndex + 1 ).Trim().Replace( '_', ' ' );
+
+						fields[ key ] = value;
+					}
+
+					machineInfo.ProductName  = fields[ "PNA" ];
+					machineInfo.SerialNumber = fields[ "SRN" ];
+					machineInfo.ModelNumber  = fields[ "PCD" ];
+				}
+			}
+
+			return machineInfo;
+		}
+
 		public List<DailyReport> LoadFromFolder( string rootFolder, DateTime? minDate = null, DateTime? maxDate = null, TimeSpan? timeAdjustment = null )
 		{
 			if( timeAdjustment.HasValue )
@@ -106,64 +165,6 @@ namespace cpaplib
 			}
 
 			return days;
-		}
-
-		public static bool HasCorrectFolderStructure( string rootFolder )
-		{
-			foreach( var folder in expectedFolders )
-			{
-				var directoryPath = Path.Combine( rootFolder, folder );
-				if( !Directory.Exists( directoryPath ) )
-				{
-					return false;
-				}
-			}
-
-			foreach( var filename in expectedFiles )
-			{
-				var filePath = Path.Combine( rootFolder, filename );
-				if( !File.Exists( filePath ) )
-				{
-					return false;
-				}
-			}
-
-			return true;
-		}
-		
-		public static MachineIdentification LoadMachineIdentificationInfo( string rootFolder )
-		{
-			var filename    = Path.Combine( rootFolder, "Identification.tgt" );
-			var machineInfo = new MachineIdentification();
-
-			using( var file = File.OpenRead( filename ) )
-			{
-				using( var reader = new StreamReader( file ) )
-				{
-					while( !reader.EndOfStream )
-					{
-						var line = reader.ReadLine()?.Trim();
-						if( string.IsNullOrEmpty( line ) || !line.StartsWith( "#", StringComparison.Ordinal ) )
-						{
-							continue;
-						}
-
-						int spaceIndex = line.IndexOf( " ", StringComparison.Ordinal );
-						Debug.Assert( spaceIndex != -1 );
-
-						var key   = line.Substring( 1, spaceIndex - 1 );
-						var value = line.Substring( spaceIndex + 1 ).Trim().Replace( '_', ' ' );
-
-						machineInfo.Fields[ key ] = value;
-					}
-
-					machineInfo.ProductName  = machineInfo.Fields[ "PNA" ];
-					machineInfo.SerialNumber = machineInfo.Fields[ "SRN" ];
-					machineInfo.ModelNumber  = machineInfo.Fields[ "PCD" ];
-				}
-			}
-
-			return machineInfo;
 		}
 
 		#endregion 

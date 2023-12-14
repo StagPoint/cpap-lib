@@ -46,11 +46,6 @@ namespace cpaplib
 		/// </summary>
 		public string ModelNumber { get; set; } = "UNKNOWN";
 
-		/// <summary>
-		/// Contains all of the other fields provided by the machine but not standardized into properties 
-		/// </summary>
-		public Dictionary<string, string> Fields { get; } = new Dictionary<string, string>();
-
 		#endregion
 
 		#region Base class overrides

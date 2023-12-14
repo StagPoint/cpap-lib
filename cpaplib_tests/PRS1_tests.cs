@@ -99,7 +99,11 @@ public class PRS1_tests
 	[TestMethod]
 	public void CanImportFromRootFolder()
 	{
-		var days = new PRS1DataLoader().LoadFromFolder( SD_CARD_ROOT );
+		var loader = new PRS1DataLoader();
+		Assert.IsTrue( loader.HasCorrectFolderStructure( SD_CARD_ROOT ) );
+		Assert.IsNotNull( loader.LoadMachineIdentificationInfo( SD_CARD_ROOT ) );
+		
+		var days = loader.LoadFromFolder( SD_CARD_ROOT );
 		Assert.IsNotNull( days );
 		Assert.IsTrue( days.Count > 0 );
 	}
@@ -107,6 +111,10 @@ public class PRS1_tests
 	[TestMethod]
 	public void CanImportDateRangeOnly()
 	{
+		var loader = new PRS1DataLoader();
+		Assert.IsTrue( loader.HasCorrectFolderStructure( SD_CARD_ROOT ) );
+		Assert.IsNotNull( loader.LoadMachineIdentificationInfo( SD_CARD_ROOT ) );
+
 		var propertyFilePath = Path.Combine( SOURCE_FOLDER, "Properties.txt" );
 		Assert.IsTrue( File.Exists( propertyFilePath ) );
 
@@ -118,7 +126,7 @@ public class PRS1_tests
 		var firstDateOfSet = firstDate.AddDays( totalRange.TotalDays / 2 ).Date;
 		var lastDateOfSet  = DateHelper.Max( firstDate, lastDate.AddDays( -7 ) );
 
-		var days = new PRS1DataLoader().LoadFromFolder( SD_CARD_ROOT, firstDateOfSet, lastDateOfSet );
+		var days = loader.LoadFromFolder( SD_CARD_ROOT, firstDateOfSet, lastDateOfSet );
 		Assert.IsNotNull( days );
 		Assert.IsTrue( days.Count > 0 );
 		Assert.IsTrue( days[ 0 ].ReportDate >= firstDateOfSet );
@@ -144,7 +152,7 @@ public class PRS1_tests
 		Assert.IsTrue( _modelToProductName.TryGetValue( fields[ "ModelNumber" ], out string? productName ) );
 		Assert.AreEqual( "REMstar Auto (System One 60 Series)", productName );
 
-		var machineInfo = PRS1DataLoader.LoadMachineIdentificationInfo( SD_CARD_ROOT );
+		var machineInfo = new PRS1DataLoader().LoadMachineIdentificationInfo( SD_CARD_ROOT );
 		Assert.IsNotNull( machineInfo );
 		Assert.IsFalse( string.IsNullOrEmpty( machineInfo.ProductName ) );
 		Assert.IsFalse( string.IsNullOrEmpty( machineInfo.ModelNumber ) );

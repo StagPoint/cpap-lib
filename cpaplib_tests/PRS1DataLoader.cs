@@ -89,12 +89,12 @@ public class PRS1DataLoader
 
 	#region Public API
 
-	public static bool HasCorrectFolderStructure( string rootFolder )
+	public bool HasCorrectFolderStructure( string rootFolder )
 	{
 		return TryFindPropertiesFile( rootFolder, out _ );
 	}
 
-	public static MachineIdentification LoadMachineIdentificationInfo( string rootFolder )
+	public MachineIdentification LoadMachineIdentificationInfo( string rootFolder )
 	{
 		if( !TryFindPropertiesFile( rootFolder, out string propertyFilePath ) )
 		{

@@ -899,6 +899,8 @@ public partial class MainView : UserControl
 	{
 		string importPath = string.Empty;
 
+		var resmedLoader = new ResMedDataLoader();
+
 		var drives = DriveInfo.GetDrives();
 		foreach( var drive in drives )
 		{
@@ -907,9 +909,9 @@ public partial class MainView : UserControl
 				continue;
 			}
 
-			if( ResMedDataLoader.HasCorrectFolderStructure( drive.RootDirectory.FullName ) )
+			if( resmedLoader.HasCorrectFolderStructure( drive.RootDirectory.FullName ) )
 			{
-				var machineID = ResMedDataLoader.LoadMachineIdentificationInfo( drive.RootDirectory.FullName );
+				var machineID = resmedLoader.LoadMachineIdentificationInfo( drive.RootDirectory.FullName );
 
 				var dialog = MessageBoxManager.GetMessageBoxStandard(
 					$"Import from {drive.RootDirectory}?",
@@ -960,7 +962,7 @@ public partial class MainView : UserControl
 			return;
 		}
 
-		if( !ResMedDataLoader.HasCorrectFolderStructure( importPath ) )
+		if( !resmedLoader.HasCorrectFolderStructure( importPath ) )
 		{
 			var dialog = MessageBoxManager.GetMessageBoxStandard(
 				$"Import from folder",

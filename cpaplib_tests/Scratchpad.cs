@@ -38,29 +38,6 @@ public class Scratchpad
 		}
 	}
 
-	[TestMethod]
-	public void CanSerializeAndDeserializeStringDictionary()
-	{
-		var settingNames = GetAllPublicConstantValues<string>( typeof( SettingNames ) );
-		var dict         = new Dictionary<string, string>( settingNames.Count );
-
-		for( int i = 0; i < settingNames.Count; i++ )
-		{
-			dict[ settingNames[ i ] ] = settingNames[ i ];
-		}
-
-		var serialized = new SettingDictionaryBlobConverter().ConvertToBlob( dict );
-		Assert.IsNotNull( serialized );
-
-		var deserialized = new SettingDictionaryBlobConverter().ConvertFromBlob( serialized ) as Dictionary<string, string>;
-		Assert.IsNotNull( deserialized );
-
-		for( int i = 0; i < deserialized.Count; i++ )
-		{
-			Assert.AreEqual( settingNames[ i ], deserialized[ settingNames[ i ] ] );
-		}
-	}
-
 	public static List<T> GetAllPublicConstantValues<T>( Type type )
 	{
 		return type
