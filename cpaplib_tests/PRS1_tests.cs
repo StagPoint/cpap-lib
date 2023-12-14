@@ -2,6 +2,7 @@
 using System.Text;
 
 using cpap_app.Converters;
+using cpap_app.Helpers;
 
 using cpaplib;
 
@@ -100,6 +101,28 @@ public class PRS1_tests
 	{
 		var days = new PRS1DataLoader().LoadFromFolder( SD_CARD_ROOT );
 		Assert.IsNotNull( days );
+		Assert.IsTrue( days.Count > 0 );
+	}
+
+	[TestMethod]
+	public void CanImportDateRangeOnly()
+	{
+		var propertyFilePath = Path.Combine( SOURCE_FOLDER, "Properties.txt" );
+		Assert.IsTrue( File.Exists( propertyFilePath ) );
+
+		var fields     = ReadKeyValueFile( propertyFilePath );
+		var firstDate  = DateTime.UnixEpoch.AddSeconds( int.Parse( fields[ "FirstDate" ] ) ).ToLocalTime();
+		var lastDate   = DateTime.UnixEpoch.AddSeconds( int.Parse( fields[ "LastDate" ] ) ).ToLocalTime();
+		var totalRange = lastDate - firstDate;
+		
+		var firstDateOfSet = firstDate.AddDays( totalRange.TotalDays / 2 ).Date;
+		var lastDateOfSet  = DateHelper.Max( firstDate, lastDate.AddDays( -7 ) );
+
+		var days = new PRS1DataLoader().LoadFromFolder( SD_CARD_ROOT, firstDateOfSet, lastDateOfSet );
+		Assert.IsNotNull( days );
+		Assert.IsTrue( days.Count > 0 );
+		Assert.IsTrue( days[ 0 ].ReportDate >= firstDateOfSet );
+		Assert.IsTrue( days[ days.Count - 1 ].ReportDate <= lastDateOfSet );
 	}
 
 	[TestMethod]

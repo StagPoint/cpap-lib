@@ -748,14 +748,6 @@ namespace cpaplib
 				StatsSummary   = ReadStatsSummary( data ),
 				MaskEvents     = (int)(data[ "MaskEvents" ] / 2),
 				TotalSleepTime = TimeSpan.FromMinutes( data[ "Duration" ] ),
-				PatientHours   = getValue( "PatientHours" ),
-				Fault =
-				{
-					Device     = getValue( "Fault.Device" ),
-					Alarm      = getValue( "Fault.Alarm" ),
-					Humidifier = getValue( "Fault.Humidifier" ),
-					HeatedTube = getValue( "Fault.HeatedTube" ),
-				},
 			};
 
 			return day;

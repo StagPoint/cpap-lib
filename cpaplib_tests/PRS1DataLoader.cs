@@ -137,16 +137,75 @@ public class PRS1DataLoader
 		{
 			return null;
 		}
+
+		var startTime = Environment.TickCount;
 		
-		// Set default import dates if none was passed in 
-		minDate ??= DateTime.MinValue.Date;
-		maxDate ??= DateTime.Today;
+		var metaSessions = ImportMetaSessions( 
+			rootFolder, 
+			minDate ?? DateTime.MinValue.Date,
+			maxDate ?? DateTime.Today,
+			timeAdjustment ?? TimeSpan.Zero,
+			machineInfo 
+		);
+
+		var days = ProcessMetaSessions( metaSessions, machineInfo );
+
+		var elapsed = Environment.TickCount - startTime;
+		Console.WriteLine( $"Import took {elapsed / 1000.0:F2} seconds" );
+
+		return days;
+	}
+	
+	#endregion
+
+	#region Private functions
+
+	private static List<DailyReport> ProcessMetaSessions( List<MetaSession> metaSessions, MachineIdentification machineInfo )
+	{
+		List<DailyReport> days = new List<DailyReport>( metaSessions.Count );
+
+		DailyReport? currentDay = null;
+
+		foreach( var meta in metaSessions )
+		{
+			if( currentDay == null || currentDay.ReportDate != meta.StartTime.Date )
+			{
+				currentDay = new DailyReport
+				{
+					ReportDate         = meta.StartTime.Date,
+					RecordingStartTime = meta.StartTime,
+					RecordingEndTime   = meta.EndTime,
+					MachineInfo        = machineInfo,
+				};
+
+				days.Add( currentDay );
+			}
+
+			foreach( var sesh in meta.Sessions )
+			{
+				currentDay.AddSession( sesh.Session );
+				currentDay.Events.AddRange( sesh.Events );
+			}
+		}
 		
+		// Some of the events are apparently out of order on import. Although not seen, this could conceivably apply
+		// to other timestamped collections as well, so we'll just sort them all to be certain. 
+		foreach( var day in days )
+		{
+			day.Sessions.Sort();
+			day.Events.Sort();
+		}
+
+		return days;
+	}
+
+	private static List<MetaSession> ImportMetaSessions( string rootFolder, DateTime minDate, DateTime maxDate, TimeSpan timeAdjustment, MachineIdentification machineInfo )
+	{
 		// Instantiate a list of "meta sessions" that will be used to group the imported sessions 
 		// so that they can be assigned to the correct days. 
 		var          metaSessions       = new List<MetaSession>();
 		MetaSession? currentMetaSession = null;
-		
+
 		// Find all of the summary files and scan each one to determine whether it should be included in the import
 		var summaryFiles = Directory.GetFiles( rootFolder, "*.001", SearchOption.AllDirectories );
 		foreach( var filename in summaryFiles )
@@ -165,44 +224,35 @@ public class PRS1DataLoader
 			{
 				continue;
 			}
-			
+
 			// Since all timestamps are based off of the header, we only need to adjust import times in one place
-			if( timeAdjustment != null )
-			{
-				header.Timestamp += timeAdjustment.Value;
-			}
-			
+			header.Timestamp += timeAdjustment;
+
 			var summary = chunk.ReadSummary( header );
 			summary.Machine        = machineInfo;
 			summary.Session.Source = machineInfo.ProductName;
 
-			// Discard Sessions that are too short 
+			// Discard Sessions that are too short to be meaningful. 
 			if( summary.Session.Duration.TotalMinutes < 5 )
 			{
 				continue;
 			}
 
-			var importData = ImportSessions( summary, Path.GetDirectoryName( filename ) );
-			
+			var importData = ImportTherapySession( summary, Path.GetDirectoryName( filename ) );
+
 			if( currentMetaSession == null || !currentMetaSession.CanAdd( importData ) )
 			{
 				currentMetaSession = new MetaSession();
 				metaSessions.Add( currentMetaSession );
 			}
-				
+
 			currentMetaSession.AddSession( importData );
 		}
 
-		Console.WriteLine( $"MetaSession Count: {metaSessions.Count}" );
-
-		return null;
+		return metaSessions;
 	}
 
-	#endregion
-
-	#region Private functions
-
-	private static ImportSession ImportSessions( ImportSummary summary, string folder )
+	private static ImportSession ImportTherapySession( ImportSummary summary, string folder )
 	{
 		var sessionData = new ImportSession
 		{
@@ -214,8 +264,6 @@ public class PRS1DataLoader
 		var eventFilename = Path.Combine( folder, $"{summary.Session.ID:0000000000}.002" );
 		if( File.Exists( eventFilename ) )
 		{
-			Console.WriteLine( $"Importing Event file: {eventFilename}" );
-			
 			using var eventFile   = File.OpenRead( eventFilename );
 			using var eventReader = new BinaryReader( eventFile );
 
@@ -233,8 +281,6 @@ public class PRS1DataLoader
 		var waveFormFilename = Path.Combine( folder, $"{summary.Session.ID:0000000000}.005" );
 		if( File.Exists( waveFormFilename ) )
 		{
-			Console.WriteLine( $"Importing Waveform file: {waveFormFilename}" );
-			
 			using var waveformFile   = File.OpenRead( waveFormFilename );
 			using var waveformReader = new BinaryReader( waveformFile );
 
@@ -297,8 +343,6 @@ public class PRS1DataLoader
 
 					// Recalculate the Session duration to match the new timestamps 
 					duration = lastChunk.Header.EndTimestamp - firstChunk.Header.Timestamp;
-					
-					Console.WriteLine( $"Unexpected chunk overlap found in Session {chunk.Header.SessionNumber}" );
 				}
 				else if( gapLength < 0 )
 				{

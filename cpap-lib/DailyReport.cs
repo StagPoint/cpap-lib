@@ -50,21 +50,10 @@ namespace cpaplib
 		public TimeSpan TotalSleepTime { get; set; }
 
 		/// <summary>
-		/// Returns the total number of hours the patient has used the CPAP machine since the last factory reset.
-		/// Supported on ResMed AirSense machines, not sure about others. 
-		/// </summary>
-		public double PatientHours { get; set; }
-
-		/// <summary>
 		/// Identifies the machine that was used to record this report 
 		/// </summary>
 		public MachineIdentification MachineInfo { get; set; } = new MachineIdentification();
 		
-		/// <summary>
-		/// Fault information reported by the CPAP machine
-		/// </summary>
-		public FaultInfo Fault { get; set; } = new FaultInfo();
-
 		/// <summary>
 		/// The settings (pressure, EPR, response type, etc.) used on this day
 		/// </summary>
@@ -169,7 +158,8 @@ namespace cpaplib
 			RecordingStartTime = DateUtil.Min( RecordingStartTime, session.StartTime );
 			RecordingEndTime   = DateUtil.Max( RecordingEndTime, session.EndTime );
 
-			TotalSleepTime = CalculateTotalSleepTime();
+			TotalSleepTime =  CalculateTotalSleepTime();
+			HasDetailData  |= session.Signals.Count > 0;
 
 			Sessions.Sort();
 		}
