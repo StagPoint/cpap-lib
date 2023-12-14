@@ -50,18 +50,18 @@ namespace cpaplib
 		
 		#region Public API 
 
-		public List<DailyReport> LoadFromFolder( string folderPath, DateTime? minDate = null, DateTime? maxDate = null, TimeSpan? timeAdjustment = null )
+		public List<DailyReport> LoadFromFolder( string rootFolder, DateTime? minDate = null, DateTime? maxDate = null, TimeSpan? timeAdjustment = null )
 		{
 			if( timeAdjustment.HasValue )
 			{
 				_timeAdjustment = (TimeSpan)timeAdjustment;
 			}
 			
-			EnsureCorrectFolderStructure( folderPath );
+			EnsureCorrectFolderStructure( rootFolder );
 
-			_machineInfo = LoadMachineIdentificationInfo( folderPath );
+			_machineInfo = LoadMachineIdentificationInfo( rootFolder );
 
-			var indexFilename = Path.Combine( folderPath, "STR.edf" );
+			var indexFilename = Path.Combine( rootFolder, "STR.edf" );
 			var days          = LoadIndexAndSettings( indexFilename, minDate ?? DateTime.MinValue, maxDate ?? DateTime.MaxValue );
 			
 #if IMPORT_ASYNC
@@ -74,7 +74,7 @@ namespace cpaplib
 				tasks[ i ] = Task.Run( () =>
 				{
 					// Loads all event and session data for the given day
-					ImportSessionsAndEvents( folderPath, day );
+					ImportSessionsAndEvents( rootFolder, day );
 				} );
 			}
 

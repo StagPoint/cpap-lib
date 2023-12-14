@@ -4,6 +4,9 @@ using System.Text;
 using cpap_app.Converters;
 
 using cpaplib;
+
+using ScottPlot.Ticks.DateTimeTickUnits;
+
 // ReSharper disable UseIndexFromEndExpression
 
 // ReSharper disable ReplaceSubstringWithRangeIndexer
@@ -14,8 +17,10 @@ namespace cpaplib_tests;
 [TestClass]
 public class PRS1_tests
 {
-	private const string SD_CARD_ROOT = @"D:\Data Files\CPAP Sample Data\REMStar Auto\P-Series\";
-	private const string SOURCE_FOLDER = @"D:\Data Files\CPAP Sample Data\REMStar Auto\P-Series\P1192913945CE";
+	#region Private fields 
+	
+	private const  string SD_CARD_ROOT  = @"D:\Data Files\CPAP Sample Data\REMStar Auto\P-Series\";
+	private static string SOURCE_FOLDER = Path.Combine( SD_CARD_ROOT, "P1192913945CE" );
 
 	private static Dictionary<string, string?> _modelToProductName = new Dictionary<string, string?>()
 	{
@@ -87,6 +92,15 @@ public class PRS1_tests
 		{ "451P", "REMstar Pro (System One)" },
 		{ "452P", "REMstar Pro (System One)" },
 	};
+	
+	#endregion
+
+	[TestMethod]
+	public void CanImportFromRootFolder()
+	{
+		var days = new PRS1DataLoader().LoadFromFolder( SD_CARD_ROOT );
+		Assert.IsNotNull( days );
+	}
 
 	[TestMethod]
 	public void PropertiesFileExistsAndCanBeParsed()
@@ -181,6 +195,8 @@ public class PRS1_tests
 				Assert.IsNotNull( chunk );
 
 				var settings = chunk.ReadSummary( chunk.Header );
+				Assert.IsNotNull( settings );
+				Assert.IsTrue( settings.Count > 0 );
 			}
 		}
 	}
@@ -273,13 +289,13 @@ public class PRS1_tests
 
 			DataChunk? lastChunk = null;
 
-			var chunks   = new List<DataChunk>();
+			var chunks = new List<DataChunk>();
 			
 			while( file.Position < file.Length )
 			{
 				var chunk = DataChunk.Read( reader );
 				Assert.IsNotNull( chunk );
-
+				Assert.IsTrue( chunk.Header.Duration.TotalSeconds > 0 );
 				Assert.IsNotNull( chunk.Header.SignalInfo );
 				Assert.IsTrue( chunk.Header.SignalInfo.IntervalCount > 0 );
 				
@@ -327,27 +343,63 @@ public class PRS1_tests
 
 	public List<Signal> ReadSignals( List<DataChunk> chunks )
 	{
+		const double SAMPLE_FREQUENCY = 0.2;
+		
 		if( chunks.Count == 0 )
 		{
 			return new List<Signal>();
 		}
 
+		var samples    = new List<byte>();
 		var firstChunk = chunks[ 0 ];
-		var lastChunk = chunks[ chunks.Count - 1 ];
-		
+		var lastChunk  = chunks[ chunks.Count - 1 ];
+		var duration   = lastChunk.Header.EndTimestamp - firstChunk.Header.Timestamp;
 		var numSignals = firstChunk.Header.SignalInfo!.Waveforms.Count;
-		Debug.Assert( numSignals == 1, "Unexpected number of signals" );
 
-		var samples = new List<byte>();
-		foreach( var dataChunk in chunks )
+		Debug.Assert( numSignals == 1, "Unexpected number of signals" );
+		
+		DataChunk previousChunk = null;
+		foreach( var chunk in chunks )
 		{
-			samples.AddRange( dataChunk.BlockData );
+			// If there is a gap between chunks, then we need to fill it
+			if( previousChunk != null )
+			{
+				var gapLength = (chunk.Header.Timestamp - previousChunk.Header.EndTimestamp).TotalSeconds;
+				if( gapLength > SAMPLE_FREQUENCY )
+				{
+					for( int i = 0; i < gapLength / SAMPLE_FREQUENCY; i++ )
+					{
+						samples.Add( 0 );
+					}
+				}
+				else if( gapLength < -1 )
+				{
+					// There is an extremely rare but annoying issue in Session 551 of the sample data where the 
+					// timestamp of the first chunk is *wildly* incorrect. On the assumption that if it happened
+					// once it can happen again, we'll try to work around it.
+					// It might be better to just throw away this Session, though.  
+					previousChunk.Header.Timestamp = chunk.Header.Timestamp - previousChunk.Header.Duration;
+
+					// Recalculate the Session duration to match the new timestamps 
+					duration = lastChunk.Header.EndTimestamp - firstChunk.Header.Timestamp;
+					
+					Console.WriteLine( $"Unexpected chunk overlap found in Session {chunk.Header.SessionNumber}" );
+				}
+				else if( gapLength < 0 )
+				{
+					// Assuming that a single second overlap can be safely ignored seems to be born out when 
+					// looking at the Signal data and how it still seamlessly matches up between Chunks. 
+					duration += TimeSpan.FromSeconds( -gapLength );
+				}
+			}
+
+			samples.AddRange( chunk.BlockData );
+			previousChunk = chunk;
 		}
 
 		// Calculate the sample rate. Note that the sample rate for this machine is extremely low compared to ResMed machines. 
-		var duration   = lastChunk.Header.EndTimestamp - firstChunk.Header.Timestamp;
 		var sampleRate = duration.TotalSeconds / samples.Count;
-		Assert.AreEqual( 0.2, sampleRate, 0.001 );
+		Assert.AreEqual( SAMPLE_FREQUENCY, sampleRate, 0.001 );
 		
 		var signal = new Signal
 		{
@@ -357,9 +409,9 @@ public class PRS1_tests
 			MaxValue          = 150,
 			UnitOfMeasurement = "L/min",
 			StartTime         = firstChunk.Header.Timestamp,
-			EndTime           = lastChunk.Header.EndTimestamp,
+			EndTime           = previousChunk.Header.EndTimestamp,
 		};
-
+		
 		signal.Samples.AddRange( samples.Select( x => (double)(sbyte)x ) );
 		
 		return new List<Signal> { signal };
@@ -399,8 +451,9 @@ public class PRS1_tests
 	{
 		private const double SCALE = 0.1;
 		
-		public        HeaderRecord Header    { get; set; }
-		public        byte[]       BlockData { get; set; }
+		public HeaderRecord Header    { get; set; }
+		public byte[]       BlockData { get; set; }
+		public ushort       Checksum  { get; set; }
 
 		public static DataChunk? Read( BinaryReader reader )
 		{
@@ -433,6 +486,7 @@ public class PRS1_tests
 				}
 
 				chunk.BlockData = blockData;
+				chunk.Checksum  = blockChecksum;
 			}
 			else 
 			{
