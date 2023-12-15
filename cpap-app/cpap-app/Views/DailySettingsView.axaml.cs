@@ -27,8 +27,13 @@ public partial class DailySettingsView : UserControl
 			}
 		}
 	}
-
+	
 	private MachineSettingsViewModel CreateMachineSettingsViewModel( DailyReport day )
+	{
+		return CreateResMedViewModel( day );
+	}
+
+	private MachineSettingsViewModel CreateResMedViewModel( DailyReport day )
 	{
 		var settings  = day.Settings;
 		var viewModel = new MachineSettingsViewModel();
@@ -69,8 +74,8 @@ public partial class DailySettingsView : UserControl
 		items.Add( new MachineSettingsItemViewModel( "Ramp Mode", rampMode ) );
 		if( rampMode != RampModeType.Off )
 		{
-			items.Add( new MachineSettingsItemViewModel( "Ramp Pressure", settings[ SettingNames.RampPressure ], "cmH20" ) );
-			items.Add( new MachineSettingsItemViewModel( "Ramp Time",     settings[ SettingNames.RampTime ],     "Minutes" ) );
+			items.Add( new MachineSettingsItemViewModel( "Ramp Pressure", $"{settings[ SettingNames.RampPressure ]:F2}", "cmH20" ) );
+			items.Add( new MachineSettingsItemViewModel( "Ramp Time",     settings[ SettingNames.RampTime ],             "Minutes" ) );
 		}
 
 		// TODO: Create a helper function to indicate which modes/models EPR is relevant for

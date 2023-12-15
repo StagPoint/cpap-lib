@@ -139,15 +139,19 @@ public class PRS1DataLoader
 		}
 
 		var startTime = Environment.TickCount;
+
+		// Ensure that the minimum and maximum dates are never NULL
+		minDate ??= DateTime.UnixEpoch;
+		maxDate ??= DateTime.Today;
 		
 		var metaSessions = ImportMetaSessions( 
 			rootFolder, 
-			minDate ?? DateTime.MinValue.Date,
-			maxDate ?? DateTime.Today,
+			minDate.Value.Date,
+			maxDate.Value.Date,
 			timeAdjustment ?? TimeSpan.Zero,
 			machineInfo 
 		);
-
+		
 		var days = ProcessMetaSessions( metaSessions, machineInfo );
 
 		var elapsed = Environment.TickCount - startTime;
@@ -185,6 +189,9 @@ public class PRS1DataLoader
 			{
 				currentDay.AddSession( sesh.Session );
 				currentDay.Events.AddRange( sesh.Events );
+
+				// Each DailyReport only retains the settings of the last Session.
+				MergeSettings( currentDay, sesh.Settings );
 			}
 		}
 		
@@ -200,6 +207,14 @@ public class PRS1DataLoader
 
 		return days;
 	}
+	
+	private static void MergeSettings( DailyReport currentDay, ParsedSettings sessionSettings )
+	{
+		foreach( var setting in sessionSettings )
+		{
+			currentDay.Settings[ setting.Key ] = setting.Value;
+		}
+	}
 
 	private static List<MetaSession> ImportMetaSessions( string rootFolder, DateTime minDate, DateTime maxDate, TimeSpan timeAdjustment, MachineIdentification machineInfo )
 	{
@@ -208,10 +223,21 @@ public class PRS1DataLoader
 		var          metaSessions       = new List<MetaSession>();
 		MetaSession? currentMetaSession = null;
 
+		// We need a day's worth of padding in either direction to ensure that we import all Sessions for the 
+		// first and last day of the set. 
+		var paddedMinDate = minDate > DateTime.MinValue ? minDate.Date.AddDays( -1 ) : minDate;
+		var paddedMaxDate = maxDate.Date.AddDays( 1 );
+
 		// Find all of the summary files and scan each one to determine whether it should be included in the import
 		var summaryFiles = Directory.GetFiles( rootFolder, "*.001", SearchOption.AllDirectories );
 		foreach( var filename in summaryFiles )
 		{
+			var lastModified = File.GetLastWriteTime( filename );
+			if( lastModified.Date < paddedMinDate || lastModified.Date > paddedMaxDate )
+			{
+				continue;
+			}
+			
 			using var file   = File.OpenRead( filename );
 			using var reader = new BinaryReader( file );
 
@@ -222,7 +248,7 @@ public class PRS1DataLoader
 			}
 
 			var header = chunk.Header;
-			if( header.Timestamp.Date < minDate || header.Timestamp.Date > maxDate )
+			if( header.Timestamp.Date < paddedMinDate || header.Timestamp.Date > paddedMaxDate )
 			{
 				continue;
 			}
@@ -250,6 +276,8 @@ public class PRS1DataLoader
 
 			currentMetaSession.AddSession( importData );
 		}
+
+		metaSessions.RemoveAll( x => x.StartTime < minDate || x.StartTime > maxDate );
 
 		return metaSessions;
 	}
@@ -943,7 +971,7 @@ public class PRS1DataLoader
 			settings[ SettingNames.FlexMode ]           = flexMode.Mode;
 			settings[ SettingNames.FlexLock ]           = flexMode.Locked;
 			settings[ SettingNames.FlexLevel ]          = flexMode.Level;
-			settings[ SettingNames.HumidifierAttached ]         = humidifierSettings.HumidifierPresent;
+			settings[ SettingNames.HumidifierAttached ] = humidifierSettings.HumidifierPresent;
 			settings[ SettingNames.HumidifierMode ]     = humidifierSettings.Mode;
 			settings[ SettingNames.HumidityLevel ]      = humidifierSettings.HumidityLevel;
 			settings[ SettingNames.MaskResist ]         = maskResistanceLevel;
@@ -1231,7 +1259,6 @@ public class PRS1DataLoader
 
 	private class ParsedSettings : Dictionary<string, object>
 	{
-		
 	}
 
 	private class ImportSummary

@@ -63,12 +63,12 @@ namespace cpaplib
 		/// The list of sessions  for this day
 		/// </summary>
 		public List<Session> Sessions { get; set; } = new List<Session>();
-		
+
 		/// <summary>
 		/// A summary of event indices (like Apnea/Hypopnea Index) reported by the machine.
 		/// This summary is generated during import and is never updated. 
 		/// </summary>
-		public EventSummary EventSummary { get; set; }
+		public EventSummary EventSummary { get; set; } = new EventSummary();
 		
 		/// <summary>
 		/// A summary of the statistics such as Tidal Volume, Minute Ventilation, Pressure, etc.

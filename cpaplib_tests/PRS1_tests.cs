@@ -117,12 +117,11 @@ public class PRS1_tests
 		Assert.IsTrue( File.Exists( propertyFilePath ) );
 
 		var fields     = ReadKeyValueFile( propertyFilePath );
-		var firstDate  = DateTime.UnixEpoch.AddSeconds( int.Parse( fields[ "FirstDate" ] ) ).ToLocalTime();
-		var lastDate   = DateTime.UnixEpoch.AddSeconds( int.Parse( fields[ "LastDate" ] ) ).ToLocalTime();
-		var totalRange = lastDate - firstDate;
+		var firstDate  = DateTime.UnixEpoch.AddSeconds( int.Parse( fields[ "FirstDate" ] ) ).ToLocalTime().Date;
+		var lastDate   = DateTime.UnixEpoch.AddSeconds( int.Parse( fields[ "LastDate" ] ) ).ToLocalTime().Date;
 		
-		var firstDateOfSet = firstDate.AddDays( totalRange.TotalDays / 2 ).Date;
 		var lastDateOfSet  = DateHelper.Max( firstDate, lastDate.AddDays( -7 ) );
+		var firstDateOfSet = lastDateOfSet.AddDays( -30 );
 
 		var days = loader.LoadFromFolder( SD_CARD_ROOT, firstDateOfSet, lastDateOfSet );
 		Assert.IsNotNull( days );
