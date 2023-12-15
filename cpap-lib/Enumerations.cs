@@ -30,7 +30,7 @@
 		/// </summary>
 		ASV,
 		/// <summary>
-		/// Adaptive Servo Ventilation (ASV) with variable Expiratory Positive Airway Pressure (EPAP)
+		/// Adaptive Servo Ventilation (ASV) with variable Expiratory Positive Airway Pressure (EPAP). Also known as ASV Auto.
 		/// </summary>
 		ASV_VARIABLE_EPAP,
 		/// <summary>

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -14,8 +15,8 @@ namespace cpaplib
 {
 	public class ResMedDataLoader
 	{
-		#region Private fields 
-		
+		#region Private fields
+
 		private static string[] expectedFiles = new[]
 		{
 			"STR.edf",
@@ -27,7 +28,7 @@ namespace cpaplib
 			// "SETTINGS",
 			"DATALOG",
 		};
-		
+
 		private static Dictionary<int, OperatingMode> s_modeMapping = new Dictionary<int, OperatingMode>()
 		{
 			{ 11, OperatingMode.APAP }, // "For Her" model, which is just AutoCPAP with custom algorithms
@@ -45,10 +46,10 @@ namespace cpaplib
 
 		private MachineIdentification _machineInfo    = new MachineIdentification();
 		private TimeSpan              _timeAdjustment = TimeSpan.Zero;
-		
-		#endregion 
-		
-		#region Public API 
+
+		#endregion
+
+		#region Public API
 
 		public bool HasCorrectFolderStructure( string rootFolder )
 		{
@@ -72,7 +73,7 @@ namespace cpaplib
 
 			return true;
 		}
-		
+
 		public MachineIdentification LoadMachineIdentificationInfo( string rootFolder )
 		{
 			var filename    = Path.Combine( rootFolder, "Identification.tgt" );
@@ -115,14 +116,14 @@ namespace cpaplib
 			{
 				_timeAdjustment = (TimeSpan)timeAdjustment;
 			}
-			
+
 			EnsureCorrectFolderStructure( rootFolder );
 
 			_machineInfo = LoadMachineIdentificationInfo( rootFolder );
 
 			var indexFilename = Path.Combine( rootFolder, "STR.edf" );
 			var days          = LoadIndexAndSettings( indexFilename, minDate ?? DateTime.MinValue, maxDate ?? DateTime.MaxValue );
-			
+
 #if IMPORT_ASYNC
 			var tasks = new Task[ days.Count ];
 
@@ -145,7 +146,7 @@ namespace cpaplib
 				LoadSessionsForDay( folderPath, day );
 			}
 #endif
-			
+
 			// Make sure that each Session has its Source set. Sessions may be created by other processes, such as
 			// pulse oximeter import, etc., and this will help to differentiate them. 
 			foreach( var day in days )
@@ -155,7 +156,7 @@ namespace cpaplib
 					session.Source = _machineInfo.ProductName;
 				}
 			}
-			
+
 			// Fix up the ReportDate field to eliminate the stupid 12 hour time offset added by the ResMed machine. 
 			// It was important (or at least conveniently useful) to retain it during some phases of the import process,
 			// but now import is done and we don't need that offset anymore.
@@ -167,9 +168,9 @@ namespace cpaplib
 			return days;
 		}
 
-		#endregion 
-		
-		#region Private functions 
+		#endregion
+
+		#region Private functions
 
 		private void EnsureCorrectFolderStructure( string rootFolder )
 		{
@@ -198,16 +199,16 @@ namespace cpaplib
 			if( !Directory.Exists( logFolder ) )
 			{
 				// TODO: How to better handle dates where the SD Card wasn't inserted?
-				
+
 				// The only reason I've seen so far for the session directory to not exist for a given day is when
 				// the user has forgotten to put the SD Card back into the machine. On such days, you will still 
 				// have summary information available (such as settings, AHI, mask times, etc), but no graph data
 				// will be found. 
 				// 
 				// For now, these dates are not even imported. This needs to get fixed. 
-				
+
 				Debug.WriteLine( $"Could not find the session directory for {logFolder}. Likely missing SD Card storage for this day." );
-				
+
 				return;
 			}
 
@@ -215,12 +216,12 @@ namespace cpaplib
 			LoadCheyneStokesEvents( logFolder, day );
 
 			var filenames = Directory.GetFiles( logFolder, "*.edf" );
-			
+
 			// I believe the filenames are already sorted, but since it's important that they are sorted by date
 			// and time, we'll explicitly sort them. Note that this coincidentally sorts the high-resolution 
 			// signals before the low-resolution signals, which is a nice bonus.
 			Array.Sort( filenames );
-			
+
 			foreach( var filename in filenames )
 			{
 				var baseFilename = Path.GetFileNameWithoutExtension( filename );
@@ -243,8 +244,8 @@ namespace cpaplib
 				int sessionIndex = 0;
 				while( sessionIndex < day.Sessions.Count )
 				{
-					var session = day.Sessions[ sessionIndex++];
-					
+					var session = day.Sessions[ sessionIndex++ ];
+
 					// If the file's extracted date does not intersect with the session, then it's not relevant to that session 
 					if( session.StartTime > fileDate || session.EndTime < fileDate )
 					{
@@ -259,7 +260,7 @@ namespace cpaplib
 						{
 							break;
 						}
-						
+
 						// Now rewind the file, because there's currently no way to "continue reading the file from here"
 						file.Position = 0;
 
@@ -270,7 +271,7 @@ namespace cpaplib
 						foreach( var signal in edf.Signals )
 						{
 							var signalName = SignalNames.GetStandardName( signal.Label.Value );
-							
+
 							// We don't need to keep the CRC checksum signals 
 							if( signalName.StartsWith( "crc", StringComparison.InvariantCultureIgnoreCase ) )
 							{
@@ -288,7 +289,7 @@ namespace cpaplib
 								// Otherwise, rename the low-resolution mask pressure data for consistency 
 								signalName = signal.Label.Value = SignalNames.MaskPressure;
 							}
-							
+
 							// Some signals should be scaled to match the other signals
 							var scaleToLitersPerMinute = signalName.Equals( SignalNames.FlowRate, StringComparison.Ordinal ) ||
 							                             signalName.Equals( SignalNames.LeakRate, StringComparison.Ordinal );
@@ -298,7 +299,7 @@ namespace cpaplib
 								signal.PhysicalDimension.Value =  "L/min";
 								signal.PhysicalMaximum.Value   *= 60;
 								signal.PhysicalMinimum.Value   *= 60;
-								
+
 								for( int i = 0; i < signal.Samples.Count; i++ )
 								{
 									signal.Samples[ i ] *= 60;
@@ -310,7 +311,7 @@ namespace cpaplib
 								signal.PhysicalDimension.Value =  "ml";
 								signal.PhysicalMaximum.Value   *= 1000;
 								signal.PhysicalMinimum.Value   *= 1000;
-								
+
 								for( int i = 0; i < signal.Samples.Count; i++ )
 								{
 									signal.Samples[ i ] *= 1000;
@@ -321,14 +322,14 @@ namespace cpaplib
 							// because of differences in sampling rate, so we keep track of the start time and end
 							// time of each Signal separately. Note the addition of a time adjustment, which allows
 							// the user to calibrate for "drift" of the ResMed machine's internal clock.  
-							var startTime  = header.StartTime.Value + _timeAdjustment;
-							var endTime    = startTime.AddSeconds( header.NumberOfDataRecords * header.DurationOfDataRecord );
+							var startTime = header.StartTime.Value + _timeAdjustment;
+							var endTime   = startTime.AddSeconds( header.NumberOfDataRecords * header.DurationOfDataRecord );
 
 							// We need to see if the session already contains a signal by this name, so we know what to do with it. 
 							if( session.GetSignalByName( signalName ) == null )
 							{
-                                // Add the signal to the current session
-                                AddSignalToSession( session, startTime, endTime, signal );
+								// Add the signal to the current session
+								AddSignalToSession( session, startTime, endTime, signal );
 							}
 							else
 							{
@@ -342,14 +343,14 @@ namespace cpaplib
 								// the session by creating another one with the same start and end times and adding the signal to
 								// that session instead. We don't need to worry about the overlapping times because those will
 								// be trimmed to match the stored signals below.
-								
+
 								// Check to see if there is an in-progress session that does not yet have this signal.
 								var splitSession = day.Sessions.FirstOrDefault( x => session.StartTime <= fileDate && session.EndTime >= fileDate && x.GetSignalByName( signalName ) == null );
-								
+
 								// If there is, add it. 
 								if( splitSession != null )
 								{
-                                    AddSignalToSession( splitSession, startTime, endTime, signal );
+									AddSignalToSession( splitSession, startTime, endTime, signal );
 								}
 								else
 								{
@@ -360,9 +361,9 @@ namespace cpaplib
 										StartTime = session.StartTime,
 										EndTime   = session.EndTime,
 									};
-									
-                                    AddSignalToSession( newSession, startTime, endTime, signal );
-									
+
+									AddSignalToSession( newSession, startTime, endTime, signal );
+
 									// Add the session to the DailyReport. We'll need to sort sessions afterward because of this. 
 									day.Sessions.Add( newSession );
 								}
@@ -376,7 +377,7 @@ namespace cpaplib
 
 			// Indicate whether the day has any detail data 
 			day.HasDetailData = day.Sessions.Any( x => x.Signals.Count > 0 );
-			
+
 			foreach( var maskSession in day.Sessions )
 			{
 				// TODO: SpO2 and Pulse being invalid can actually be detected in the day's settings. Switch to that instead.
@@ -384,14 +385,14 @@ namespace cpaplib
 				// there is no SpO2 or Pulse information when a pulse oximeter is not attached, and there may 
 				// be other similar situations I haven't encountered yet (and in any case such signals are not valid). 
 				maskSession.Signals.RemoveAll( x =>
-					(x.Name == SignalNames.SpO2 || x.Name == SignalNames.Pulse) &&
-					!x.Samples.Any( value => value >= x.MinValue )
+					                               (x.Name == SignalNames.SpO2 || x.Name == SignalNames.Pulse) &&
+					                               !x.Samples.Any( value => value >= x.MinValue )
 				);
 			}
 
 			// Remove all sessions that are shorter than five minutes
 			day.Sessions.RemoveAll( x => x.Duration.TotalMinutes < 5 );
-			
+
 			// If the day no longer has any sessions, stop processing it
 			if( day.Sessions.Count == 0 )
 			{
@@ -404,7 +405,7 @@ namespace cpaplib
 			{
 				var session   = day.Sessions[ i ];
 				var oxySignal = session.GetSignalByName( SignalNames.SpO2 );
-				
+
 				if( oxySignal != null )
 				{
 					var newSession = new Session
@@ -414,7 +415,7 @@ namespace cpaplib
 						Source     = session.Source,
 						SourceType = SourceType.PulseOximetry,
 					};
-					
+
 					newSession.AddSignal( oxySignal );
 					session.Signals.Remove( oxySignal );
 
@@ -424,18 +425,18 @@ namespace cpaplib
 						newSession.AddSignal( pulseSignal );
 						session.Signals.Remove( pulseSignal );
 					}
-					
+
 					day.AddSession( newSession );
 				}
 			}
-			
+
 			// Sort the sessions by start time. This is only actually needed when we split a session above during
 			// signal matching, but doesn't hurt anything when no sessions are split. 
 			day.Sessions.Sort();
-			
+
 			var firstRecordedTime = DateTime.MaxValue;
 			var lastRecordedTime  = DateTime.MinValue;
-			
+
 			// Now that each Session has all of its Signals added, each with correct StartTime and EndTime values, 
 			// we can update the StartTime and EndTime of the Sessions. These values were previously set by the 
 			// MaskOn/MaskOff values, which are convenience values used to match up session files and not accurate
@@ -461,7 +462,7 @@ namespace cpaplib
 					lastRecordedTime  = DateUtil.Max( lastRecordedTime, session.EndTime );
 					firstRecordedTime = DateUtil.Min( firstRecordedTime, session.StartTime );
 				}
-				
+
 				// There is probably *some* value in keeping the "reported" start times and durations, but if so I cannot
 				// think of what it is and doing so makes working with and displaying the data a lot more frustrating, so
 				// we'll use the *actual* recorded session times instead. 
@@ -471,7 +472,7 @@ namespace cpaplib
 
 				// Calculate statistics (min, avg, median, max, etc) for each Signal
 				CalculateSignalStatistics( day );
-				
+
 				// Remove all events that do not occur within a Session's timeframe. It seems that my AirSense 10 AutoSet
 				// will sometimes flag a Hypopnea *immediately after* the session completes. Since the event does not occur
 				// within the times bounded by any of the Session's Signals, it is invalid and needs to be removed. 
@@ -484,13 +485,13 @@ namespace cpaplib
 				CustomEventGenerator.GenerateEvents( day );
 			}
 		}
-		
+
 		private static void GenerateCalculatedSignals( DailyReport day, Session session )
 		{
 			DerivedSignals.GenerateApneaIndexSignal( day, session );
 			DerivedSignals.GenerateMissingRespirationSignals( day, session );
 		}
-		
+
 		private static void CalculateSignalStatistics( DailyReport day )
 		{
 			foreach( var signal in day.Sessions[ 0 ].Signals )
@@ -503,7 +504,7 @@ namespace cpaplib
 					{
 						continue;
 					}
-					
+
 					var calculator = new SignalStatCalculator();
 					day.Statistics.Add( calculator.CalculateStats( signal.Name, day.Sessions ) );
 				}
@@ -517,11 +518,11 @@ namespace cpaplib
 			{
 				var file = EdfFile.Open( filename );
 				day.RecordingStartTime = file.Header.StartTime.Value + _timeAdjustment;
-				
+
 				foreach( var annotationSignal in file.AnnotationSignals )
 				{
 					double csrStartTime = double.MinValue;
-					
+
 					foreach( var annotation in annotationSignal.Annotations )
 					{
 						// Discard all timekeeping annotations, those aren't relevant to anything. 
@@ -532,7 +533,7 @@ namespace cpaplib
 
 						// Try to convert the annotation text into an Enum for easier processing. 
 						var eventFlag = ReportedEvent.FromEdfAnnotation( day.RecordingStartTime, annotation );
-						
+
 						// We don't need the "Recording Starts" annotations either 
 						if( eventFlag.Type == EventType.RecordingStarts )
 						{
@@ -547,12 +548,12 @@ namespace cpaplib
 						{
 							// We're trusting the CPAP machine not to have overlapping CSR events
 							Debug.Assert( csrStartTime >= 0, "CSR Start/End pair mismatch found" );
-							
+
 							var newEvent = new ReportedEvent
 							{
-								StartTime   = day.RecordingStartTime.AddSeconds( csrStartTime ),
-								Duration    = TimeSpan.FromSeconds( annotation.Onset - csrStartTime ),
-								Type        = EventType.CSR,
+								StartTime = day.RecordingStartTime.AddSeconds( csrStartTime ),
+								Duration  = TimeSpan.FromSeconds( annotation.Onset - csrStartTime ),
+								Type      = EventType.CSR,
 							};
 
 							day.Events.Add( newEvent );
@@ -568,7 +569,7 @@ namespace cpaplib
 				}
 			}
 		}
-		
+
 		private void LoadEventsAndAnnotations( string logFolder, DailyReport day )
 		{
 			var filenames = Directory.GetFiles( logFolder, "*_EVE.edf" );
@@ -576,7 +577,7 @@ namespace cpaplib
 			{
 				var file = EdfFile.Open( filename );
 				day.RecordingStartTime = file.Header.StartTime.Value + _timeAdjustment;
-				
+
 				foreach( var annotationSignal in file.AnnotationSignals )
 				{
 					foreach( var annotation in annotationSignal.Annotations )
@@ -589,7 +590,7 @@ namespace cpaplib
 
 						// Try to convert the annotation text into an Enum for easier processing. 
 						var eventFlag = ReportedEvent.FromEdfAnnotation( day.RecordingStartTime, annotation );
-						
+
 						// ResMed does not report a time for Hypopnea in Series 10 machines (although I've read
 						// that it does in S9 machines) but their own definition states that a minimum of ten
 						// seconds is part of the defining criteria, so if no time is reported we'll just set
@@ -600,7 +601,7 @@ namespace cpaplib
 						{
 							eventFlag.Duration = TimeSpan.FromSeconds( 10 );
 						}
-						
+
 						// We don't need the "Recording Starts" annotations either 
 						if( eventFlag.Type == EventType.RecordingStarts )
 						{
@@ -612,14 +613,14 @@ namespace cpaplib
 					}
 				}
 			}
-			
+
 			day.Events.Sort();
 		}
 
 		private List<DailyReport> LoadIndexAndSettings( string filename, DateTime minDate, DateTime maxDate )
 		{
 			var days = new List<DailyReport>();
-			
+
 			var file = EdfFile.Open( filename );
 
 			if( file.Signals.Count == 0 )
@@ -685,8 +686,8 @@ namespace cpaplib
 
 					// Mask times are stored as the number of seconds since the "day" started. Remember that
 					// the ResMed "day" starts at 12pm (noon) and continues until the next calendar day at 12pm.
-					var maskOn   = day.ReportDate.AddMinutes( maskOnSignal.Samples[ sampleIndex ] );
-					var maskOff  = day.ReportDate.AddMinutes( maskOffSignal.Samples[ sampleIndex ] );
+					var maskOn  = day.ReportDate.AddMinutes( maskOnSignal.Samples[ sampleIndex ] );
+					var maskOff = day.ReportDate.AddMinutes( maskOffSignal.Samples[ sampleIndex ] );
 
 					// Discard empty sessions
 					if( maskOff.Subtract( maskOn ).TotalMinutes < 1 )
@@ -707,14 +708,14 @@ namespace cpaplib
 				day.RecordingStartTime = day.Sessions.Min( x => x.StartTime );
 				day.RecordingEndTime   = day.Sessions.Max( x => x.EndTime );
 			}
-			
-            // Remove all days that are too short to be valid or are otherwise invalid
-            RemoveInvalidDays( days );
-            
-            // Remove days that don't match the provided range. It's less efficient to do this after we've already 
-            // gathered the basic day information, but it keeps the code much cleaner and more readable, and this 
-            // isn't exactly a performance-critical section of code ;)
-            FilterDaysByDate( days, minDate, maxDate );
+
+			// Remove all days that are too short to be valid or are otherwise invalid
+			RemoveInvalidDays( days );
+
+			// Remove days that don't match the provided range. It's less efficient to do this after we've already 
+			// gathered the basic day information, but it keeps the code much cleaner and more readable, and this 
+			// isn't exactly a performance-critical section of code ;)
+			FilterDaysByDate( days, minDate, maxDate );
 
 			return days;
 		}
@@ -731,7 +732,7 @@ namespace cpaplib
 			// raw data should be kept available for the consumer of this library to make use of if needs be.
 
 			var settings = ReadMachineSettings( data );
-			
+
 			// ReadMachineSettings() will return NULL in the special situation that the stored settings are 
 			// all invalid (all negative numbers), which is indicative of a special case where ResMed has 
 			// written the STR.edf file for a day that has not yet had any recorded data added to it. 
@@ -739,7 +740,7 @@ namespace cpaplib
 			{
 				return null;
 			}
-			
+
 			var day = new DailyReport
 			{
 				MachineInfo    = _machineInfo,
@@ -821,7 +822,7 @@ namespace cpaplib
 			};
 
 			return summary;
-			
+
 			// Because different models (AirSense 10 vs. AirCurve 10 for instance) provide different
 			// summary data, we need to check each key to make sure it is available and return a
 			// default value if it is not. 
@@ -833,21 +834,25 @@ namespace cpaplib
 
 		private static MachineSettings ReadMachineSettings( Dictionary<string, double> data )
 		{
-			var settings = new MachineSettings();
+			var date     = new DateTime( 1970, 1, 1 ).AddDays( data[ "Date" ] ).ToLocalTime();
 			
+			var settings = new MachineSettings();
+
+			OperatingMode operatingMode = OperatingMode.UNKNOWN;
+
 			if( data.TryGetValue( "CPAP_MODE", out double legacyMode ) )
 			{
 				switch( (int)legacyMode )
 				{
 					case 1:
 					case 2:
-						settings.Mode = OperatingMode.APAP;
+						operatingMode = OperatingMode.APAP;
 						break;
 					case 3:
-						settings.Mode = OperatingMode.CPAP;
+						operatingMode = OperatingMode.CPAP;
 						break;
 					default:
-						settings.Mode = OperatingMode.UNKNOWN;
+						operatingMode = OperatingMode.UNKNOWN;
 						break;
 				}
 			}
@@ -857,25 +862,21 @@ namespace cpaplib
 
 				if( s_modeMapping.TryGetValue( mode, out OperatingMode mappedMode ) )
 				{
-					settings.Mode = mappedMode;
-				}
-				if( mode == -1 )
-				{
-					return null;
+					operatingMode = mappedMode;
 				}
 				else
 				{
-					settings.Mode = (OperatingMode)mode;
+					operatingMode = OperatingMode.CPAP;
 				}
 			}
 
-			settings[ SettingNames.Mode ] = settings.Mode;
-			
-			switch( settings.Mode )
+			settings[ SettingNames.Mode ] = operatingMode;
+
+			switch( operatingMode )
 			{
 				case OperatingMode.CPAP:
 				case OperatingMode.APAP:
-					// These are the default modes, and no further action needs to be taken
+					// These are the default modes, and no specific action like that below needs to be taken
 					break;
 				case OperatingMode.ASV:
 					settings[ SettingNames.RampPressure ]       = data[ "S.AV.StartPress" ];
@@ -894,6 +895,8 @@ namespace cpaplib
 					settings[ SettingNames.EPAP ]               = data[ "S.AA.MinEPAP" ];
 					settings[ SettingNames.EpapMin ]            = data[ "S.AA.MinEPAP" ];
 					settings[ SettingNames.EpapMax ]            = data[ "S.AA.MaxEPAP" ];
+					settings[ SettingNames.IpapMin ]            = data[ "S.AV.EPAP" ] + data[ "S.AA.MinPS" ];
+					settings[ SettingNames.IpapMax ]            = data[ "S.AV.EPAP" ] + data[ "S.AA.MaxPS" ];
 					break;
 				case OperatingMode.AVAPS:
 				{
@@ -905,61 +908,62 @@ namespace cpaplib
 					settings[ SettingNames.EpapMin ]            = data[ "S.i.EPAP" ];
 					settings[ SettingNames.EpapMax ]            = data[ "S.i.EPAP" ];
 
-					if( settings.Avap.EpapAuto )
+					if( settings.GetValue<bool>( SettingNames.EpapAuto ) )
 					{
 						settings[ SettingNames.EpapMin ] = data[ "S.i.MinEPAP" ];
 						settings[ SettingNames.EpapMax ] = data[ "S.i.MaxEPAP" ];
-					
-						settings[ SettingNames.IPAP   ]  = data[ "S.i.MinEPAP" ] + data[ "S.i.MinPS" ];
+
+						settings[ SettingNames.IPAP ]    = data[ "S.i.MinEPAP" ] + data[ "S.i.MinPS" ];
 						settings[ SettingNames.IpapMin ] = data[ "S.i.MinEPAP" ] + data[ "S.i.MinPS" ];
 						settings[ SettingNames.IpapMax ] = data[ "S.i.MaxEPAP" ] + data[ "S.i.MaxPS" ];
 					}
-					else 
+					else
 					{
-						settings[ SettingNames.IPAP     ] = data[ "S.i.EPAP" ] + data[ "S.i.MinPS" ];
-						settings[ SettingNames.IpapMin  ] = data[ "S.i.EPAP" ] + data[ "S.i.MinPS" ];
-						settings[ SettingNames.IpapMax ]  = data[ "S.i.EPAP" ] + data[ "S.i.MaxPS" ];
+						settings[ SettingNames.IPAP ]    = data[ "S.i.EPAP" ] + data[ "S.i.MinPS" ];
+						settings[ SettingNames.IpapMin ] = data[ "S.i.EPAP" ] + data[ "S.i.MinPS" ];
+						settings[ SettingNames.IpapMax ] = data[ "S.i.EPAP" ] + data[ "S.i.MaxPS" ];
 					}
 					break;
 				}
 				default:
-					throw new NotSupportedException( $"Operating Mode {settings.Mode} is not yet supported" );
+					throw new NotSupportedException( $"Operating Mode {operatingMode} is not yet supported" );
 			}
-
-			settings.HeatedTube = data["HeatedTube"] > 0.5;
-			settings.Humidifier = data["Humidifier"] > 0.5;
-
-			settings.CPAP.StartPressure = data["S.C.StartPress"];
-			settings.CPAP.Pressure      = data["S.C.Press"];
 
 			if( data.TryGetValue( "S.EPR.EPREnable", out double eprEnabledValue ) )
 			{
-				settings.EPR.EprEnabled = eprEnabledValue >= 0.5;
-				settings.EPR.Level      = (int)data[ "S.EPR.Level" ];
-				settings.EPR.Mode       = (EprType)(int)(data[ "S.EPR.EPRType" ] + 1);
-
-				settings.AutoSet.ResponseType  = (AutoSetResponseType)(int)data[ "S.AS.Comfort" ];
-				settings.AutoSet.StartPressure = data[ "S.AS.StartPress" ];
-				settings.AutoSet.MaxPressure   = data[ "S.AS.MaxPress" ];
-				settings.AutoSet.MinPressure   = data[ "S.AS.MinPress" ];
+				settings[ SettingNames.EprEnabled ]   = eprEnabledValue >= 0.5;
+				settings[ SettingNames.EprLevel ]     = (int)data[ "S.EPR.Level" ];
+				settings[ SettingNames.EprMode ]      = (EprType)(int)(data[ "S.EPR.EPRType" ] + 1);
+				settings[ SettingNames.ResponseType ] = (AutoSetResponseType)(int)data[ "S.AS.Comfort" ];
+				
+				// settings[ SettingNames.RampPressure ] = data[ "S.AS.StartPress" ];
+				// settings[ SettingNames.MaxPressure ]  = data[ "S.AS.MaxPress" ];
+				// settings[ SettingNames.MinPressure ]  = data[ "S.AS.MinPress" ];
+			}
+			else
+			{
+				settings[ SettingNames.EprEnabled ] = false;
 			}
 
-			settings.RampMode = (RampModeType)(int)data["S.RampEnable"];
-			settings.RampTime = data["S.RampTime"];
+			settings[ SettingNames.Pressure ]     = data[ "S.C.Press" ];
+			settings[ SettingNames.RampMode ]     = (RampModeType)(int)data[ "S.RampEnable" ];
+			settings[ SettingNames.RampPressure ] = data[ "S.C.StartPress" ];
+			settings[ SettingNames.RampTime ]     = data[ "S.RampTime" ];
 
-			settings.SmartStart          = data["S.SmartStart"] > 0.5 ? OnOffType.On : OnOffType.Off;
-			settings.AntibacterialFilter = data["S.ABFilter"] >= 0.5;
+			settings[ SettingNames.SmartStart         ]  = data[ "S.SmartStart" ] > 0.5 ? OnOffType.On : OnOffType.Off;
+			settings[ SettingNames.AntibacterialFilter ] = data[ "S.ABFilter" ] >= 0.5;
 
-			settings.ClimateControl     = (ClimateControlType)(int)data["S.ClimateControl"];
-			settings.Tube               = data["S.Tube"];
-			settings.HumidifierStatus   = data["S.HumEnable"] > 0.5 ? OnOffType.On : OnOffType.Off;
-			settings.HumidityLevel      = data["S.HumLevel"];
-			settings.TemperatureEnabled = data["S.TempEnable"] > 0.5;
-			settings.Temperature        = data["S.Temp"] * 1.8 + 32; // Converted from Celsius to Fahrenheit
+			settings[ SettingNames.HeatedTubePresent ]  = data[ "HeatedTube" ] > 0.5;
+			settings[ SettingNames.HumidifierAttached ] = data[ "Humidifier" ] > 0.5;
+			settings[ SettingNames.ClimateControl   ]   = (ClimateControlType)(int)data[ "S.ClimateControl" ];
+			settings[ SettingNames.HumidifierMode  ]    = data[ "Humidifier" ] > 0.5 && data[ "S.HumEnable" ] > 0.5 ? OnOffType.On : OnOffType.Off;
+			settings[ SettingNames.HumidityLevel     ]  = data[ "S.HumLevel" ];
+			settings[ SettingNames.HeatedTubeEnabled ]  = data[ "S.TempEnable" ] > 0.5;
+			settings[ SettingNames.TubeTemperature ]    = data[ "S.Temp" ] * 1.8 + 32; // Converted from Celsius to Fahrenheit
 
-			settings.MaskType = (MaskType)(int)data["S.Mask"];
+			settings[ SettingNames.MaskType ] = (MaskType)(int)data[ "S.Mask" ];
 
-			settings.Essentials = data["S.PtAccess"] > 0.5 ? EssentialsMode.On : EssentialsMode.Plus;
+			settings[ SettingNames.EssentialsMode ] = data[ "S.PtAccess" ] > 0.5 ? EssentialsMode.On : EssentialsMode.Plus;
 
 			return settings;
 		}
@@ -1001,7 +1005,7 @@ namespace cpaplib
 				dayIndex += 1;
 			}
 		}
-		
+
 		private static void AddSignalToSession( Session session, DateTime startTime, DateTime endTime, EdfStandardSignal fileSignal )
 		{
 			// Rename signals to their "standard" names. Among other things, this lets us standardize the 
@@ -1014,7 +1018,7 @@ namespace cpaplib
 			{
 				throw new Exception( $"The session starting at {session.StartTime:g} already contains a Signal named '{signalName}'" );
 			}
-			
+
 			signal = new Signal
 			{
 				Name              = signalName,
@@ -1030,7 +1034,7 @@ namespace cpaplib
 
 			session.Signals.Add( signal );
 		}
-		
+
 		#endregion
 	}
 }

@@ -227,11 +227,6 @@ namespace cpap_db
 			day.StatsSummary     = SelectByForeignKey<StatisticsSummary>( dayID ).FirstOrDefault() ?? new StatisticsSummary();
 			day.Annotations      = SelectByForeignKey<Annotation>( dayID );
 			day.Settings         = SelectByForeignKey<MachineSettings>( dayID, out int settingsID );
-			day.Settings.AutoSet = SelectByForeignKey<AutoSetSettings>( settingsID ).First();
-			day.Settings.CPAP    = SelectByForeignKey<CpapSettings>( settingsID ).First();
-			day.Settings.Avap    = SelectByForeignKey<AvapSettings>( settingsID ).First();
-			day.Settings.ASV     = SelectByForeignKey<AsvSettings>( settingsID ).First();
-			day.Settings.EPR     = SelectByForeignKey<EprSettings>( settingsID ).First();
 
 			var sessionKeys = new List<int>();
 			day.Sessions = SelectByForeignKey<Session, int>( dayID, sessionKeys );
@@ -277,11 +272,6 @@ namespace cpap_db
 				Insert( day.MachineInfo,  foreignKeyValue: dayID );
 
 				int settingsID = Insert( day.Settings, foreignKeyValue: dayID );
-				Insert( day.Settings.AutoSet, foreignKeyValue: settingsID );
-				Insert( day.Settings.ASV,     foreignKeyValue: settingsID );
-				Insert( day.Settings.CPAP,    foreignKeyValue: settingsID );
-				Insert( day.Settings.EPR,     foreignKeyValue: settingsID );
-				Insert( day.Settings.Avap,    foreignKeyValue: settingsID );
 
 				foreach( var evt in day.Events )
 				{

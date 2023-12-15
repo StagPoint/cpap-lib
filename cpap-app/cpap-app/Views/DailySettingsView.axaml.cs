@@ -34,58 +34,88 @@ public partial class DailySettingsView : UserControl
 		var viewModel = new MachineSettingsViewModel();
 		var items     = viewModel.Settings;
 
-		items.Add( new MachineSettingsItemViewModel( "Mode", GetModeString( settings.Mode ) ) );
+		var mode = settings.GetValue<OperatingMode>( SettingNames.Mode );
 
-		switch( settings.Mode )
+		items.Add( new MachineSettingsItemViewModel( "Mode", GetModeString( mode ) ) );
+
+		switch( mode )
 		{
 			case OperatingMode.CPAP:
-				items.Add( new MachineSettingsItemViewModel( "Pressure", settings.CPAP.Pressure, "cmH20" ) );
+				items.Add( new MachineSettingsItemViewModel( "Pressure", $"{settings[ SettingNames.Pressure ]:F2}", "cmH20" ) );
 				break;
 			case OperatingMode.APAP:
-				items.Add( new MachineSettingsItemViewModel( "Min Pressure",  settings.AutoSet.MinPressure, "cmH20" ) );
-				items.Add( new MachineSettingsItemViewModel( "Max Pressure",  settings.AutoSet.MaxPressure, "cmH20" ) );
-				items.Add( new MachineSettingsItemViewModel( "Response Type", settings.AutoSet.ResponseType ) );
+				items.Add( new MachineSettingsItemViewModel( "Min Pressure",  $"{settings[ SettingNames.MinPressure ]:F2}", "cmH20" ) );
+				items.Add( new MachineSettingsItemViewModel( "Max Pressure",  $"{settings[ SettingNames.MaxPressure ]:F2}", "cmH20" ) );
+				items.Add( new MachineSettingsItemViewModel( "Response Type", (AutoSetResponseType)settings[ SettingNames.ResponseType ] ) );
 				break;
 			case OperatingMode.ASV:
-				items.Add( new MachineSettingsItemViewModel( "EPAP",     settings.ASV.EPAP,                       "cmH20" ) );
-				items.Add( new MachineSettingsItemViewModel( "Max IPAP", $"{settings.ASV.IpapMax:F2}",            "cmH20" ) );
-				items.Add( new MachineSettingsItemViewModel( "PS Min",   $"{settings.ASV.MinPressureSupport:F2}", "cmH20" ) );
-				items.Add( new MachineSettingsItemViewModel( "PS Max",   $"{settings.ASV.MaxPressureSupport:F2}", "cmH20" ) );
+				items.Add( new MachineSettingsItemViewModel( "EPAP",     $"{settings[ SettingNames.EPAP ]:F2}",               "cmH20" ) );
+				items.Add( new MachineSettingsItemViewModel( "Max IPAP", $"{settings[ SettingNames.IpapMax ]:F2}",            "cmH20" ) );
+				items.Add( new MachineSettingsItemViewModel( "PS Min",   $"{settings[ SettingNames.MinPressureSupport ]:F2}", "cmH20" ) );
+				items.Add( new MachineSettingsItemViewModel( "PS Max",   $"{settings[ SettingNames.MaxPressureSupport ]:F2}", "cmH20" ) );
+				break;
+			case OperatingMode.ASV_VARIABLE_EPAP:
+				items.Add( new MachineSettingsItemViewModel( "Min EPAP", $"{settings[ SettingNames.EpapMin ]:F2}",            "cmH20" ) );
+				items.Add( new MachineSettingsItemViewModel( "Max EPAP", $"{settings[ SettingNames.EpapMax ]:F2}",            "cmH20" ) );
+				items.Add( new MachineSettingsItemViewModel( "Min IPAP", $"{settings[ SettingNames.IpapMin ]:F2}",            "cmH20" ) );
+				items.Add( new MachineSettingsItemViewModel( "Max IPAP", $"{settings[ SettingNames.IpapMax ]:F2}",            "cmH20" ) );
+				items.Add( new MachineSettingsItemViewModel( "PS Min",   $"{settings[ SettingNames.MinPressureSupport ]:F2}", "cmH20" ) );
+				items.Add( new MachineSettingsItemViewModel( "PS Max",   $"{settings[ SettingNames.MaxPressureSupport ]:F2}", "cmH20" ) );
 				break;
 		}
 
-		items.Add( new MachineSettingsItemViewModel( "Ramp Mode", settings.RampMode ) );
-		if( settings.RampMode != RampModeType.Off )
+		var rampMode = settings.GetValue<RampModeType>( SettingNames.RampMode );
+
+		items.Add( new MachineSettingsItemViewModel( "Ramp Mode", rampMode ) );
+		if( rampMode != RampModeType.Off )
 		{
-			items.Add( new MachineSettingsItemViewModel( "Ramp Pressure", settings.RampStartingPressure, "cmH20" ) );
-			items.Add( new MachineSettingsItemViewModel( "Ramp Time",     settings.RampTime,             "Minutes" ) );
+			items.Add( new MachineSettingsItemViewModel( "Ramp Pressure", settings[ SettingNames.RampPressure ], "cmH20" ) );
+			items.Add( new MachineSettingsItemViewModel( "Ramp Time",     settings[ SettingNames.RampTime ],     "Minutes" ) );
 		}
 
 		// TODO: Create a helper function to indicate which modes/models EPR is relevant for
-		if( settings.Mode == OperatingMode.APAP || settings.Mode == OperatingMode.CPAP )
+		if( mode is OperatingMode.APAP or OperatingMode.CPAP )
 		{
-			items.Add( new MachineSettingsItemViewModel( "EPR Enabled", settings.EPR.EprEnabled ) );
-			if( settings.EPR.EprEnabled )
+			if( settings.TryGetValue( SettingNames.EprEnabled, out bool eprEnabled ) )
 			{
-				items.Add( new MachineSettingsItemViewModel( "EPR Mode",  NiceNames.Format( settings.EPR.Mode.ToString() ) ) );
-				items.Add( new MachineSettingsItemViewModel( "EPR Level", settings.EPR.Level ) );
+				items.Add( new MachineSettingsItemViewModel( "EPR Enabled", eprEnabled ) );
+				if( eprEnabled )
+				{
+					var eprMode = settings.GetValue<EprType>( SettingNames.EprMode );
+
+					items.Add( new MachineSettingsItemViewModel( "EPR Mode",  NiceNames.Format( eprMode.ToString() ) ) );
+					items.Add( new MachineSettingsItemViewModel( "EPR Level", settings[ SettingNames.EprLevel ] ) );
+				}
 			}
 		}
 
-		items.Add( new MachineSettingsItemViewModel( "Antibacterial Filter", settings.AntibacterialFilter ? "Yes" : "No" ) );
-		items.Add( new MachineSettingsItemViewModel( "Smart Start", settings.SmartStart ) );
-		items.Add( new MachineSettingsItemViewModel( "Mask Type",   NiceNames.Format( settings.MaskType.ToString() ) ) );
+		var maskType         = settings.GetValue<MaskType>( SettingNames.MaskType );
+		var humidifierStatus = (OnOffType)settings[ SettingNames.HumidifierMode ];
 
-		items.Add( new MachineSettingsItemViewModel( "Climate Control",   settings.ClimateControl ) );
-		items.Add( new MachineSettingsItemViewModel( "Humidifier Status", settings.HumidifierStatus ) );
-		items.Add( new MachineSettingsItemViewModel( "Humidity Level",    settings.HumidityLevel ) );
+		items.Add( new MachineSettingsItemViewModel( "Antibacterial Filter", (bool)settings[ SettingNames.AntibacterialFilter ] ? "Yes" : "No" ) );
+		items.Add( new MachineSettingsItemViewModel( "Smart Start",          (OnOffType)settings[ SettingNames.SmartStart ] ) );
+		items.Add( new MachineSettingsItemViewModel( "Mask Type",            NiceNames.Format( maskType.ToString() ) ) );
 
-		items.Add( new MachineSettingsItemViewModel( "Heating Enabled", settings.TemperatureEnabled ) );
-		items.Add( new MachineSettingsItemViewModel( "Temperature",     $"{settings.Temperature:F1}", "\u00b0F" ) );
+		items.Add( new MachineSettingsItemViewModel( "Climate Control",   (ClimateControlType)settings[ SettingNames.ClimateControl ] ) );
+		items.Add( new MachineSettingsItemViewModel( "Humidifier Status", humidifierStatus ) );
+
+		if( humidifierStatus == OnOffType.On )
+		{
+			items.Add( new MachineSettingsItemViewModel( "Humidity Level", settings[ SettingNames.HumidityLevel ] ) );
+		}
+
+		var heatedTubeEnabled = (bool)settings[ SettingNames.HeatedTubeEnabled ];
+		
+		items.Add( new MachineSettingsItemViewModel( "Heated Tube Enabled", heatedTubeEnabled ) );
+		
+		if( heatedTubeEnabled )
+		{
+			items.Add( new MachineSettingsItemViewModel( "Tube Temperature", $"{settings[ SettingNames.TubeTemperature ]:F1}", "\u00b0F" ) );
+		}
 
 		return viewModel;
 	}
-	
+
 	private static string GetModeString( OperatingMode mode )
 	{
 		// TODO: Should probably refer to the raw Mode setting to differentiate modes, which would entail making the raw settings data available 

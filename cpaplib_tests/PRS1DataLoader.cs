@@ -194,6 +194,8 @@ public class PRS1DataLoader
 		{
 			day.Sessions.Sort();
 			day.Events.Sort();
+			
+			day.UpdateEventSummary();
 		}
 
 		return days;
@@ -941,7 +943,7 @@ public class PRS1DataLoader
 			settings[ SettingNames.FlexMode ]           = flexMode.Mode;
 			settings[ SettingNames.FlexLock ]           = flexMode.Locked;
 			settings[ SettingNames.FlexLevel ]          = flexMode.Level;
-			settings[ SettingNames.Humidifier ]         = humidifierSettings.HumidifierPresent;
+			settings[ SettingNames.HumidifierAttached ]         = humidifierSettings.HumidifierPresent;
 			settings[ SettingNames.HumidifierMode ]     = humidifierSettings.Mode;
 			settings[ SettingNames.HumidityLevel ]      = humidifierSettings.HumidityLevel;
 			settings[ SettingNames.MaskResist ]         = maskResistanceLevel;
@@ -974,7 +976,7 @@ public class PRS1DataLoader
 		{
 			var humidifierSettings = ReadHumidifierSettings( reader );
 			
-			settings[ SettingNames.Humidifier ]     = humidifierSettings.HumidifierPresent;
+			settings[ SettingNames.HumidifierAttached ]     = humidifierSettings.HumidifierPresent;
 			settings[ SettingNames.HumidifierMode ] = humidifierSettings.Mode;
 			settings[ SettingNames.HumidityLevel ]  = humidifierSettings.HumidityLevel;
 			

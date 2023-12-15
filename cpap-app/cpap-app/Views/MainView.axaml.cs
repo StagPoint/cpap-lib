@@ -1027,7 +1027,7 @@ public partial class MainView : UserControl
 						profile.LastImport      = DateTime.Now;
 						profile.MachineID       = importedDay.MachineInfo.SerialNumber;
 						profile.VentilatorModel = importedDay.MachineInfo.ProductName;
-						profile.TherapyMode     = importedDay.Settings.Mode;
+						profile.TherapyMode     = (OperatingMode)importedDay.Settings[ SettingNames.Mode ];
 						
 						UserProfileStore.Update( profile );
 					}
