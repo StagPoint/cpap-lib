@@ -4,6 +4,8 @@ using System.Drawing;
 using System.Reflection;
 using System.Text;
 
+using cpap_app.Converters;
+
 using cpap_db.Converters;
 
 using cpaplib;
@@ -63,10 +65,6 @@ namespace cpap_db
 			var machineInfoMapping = CreateMapping<MachineIdentification>( TableNames.MachineInfo );
 			machineInfoMapping.ForeignKey = new ForeignKeyColumn( dayMapping );
 
-			var faultInfoMapping = CreateMapping<FaultInfo>( TableNames.FaultMapping );
-			faultInfoMapping.PrimaryKey = new PrimaryKeyColumn( "id", typeof( int ), true );
-			faultInfoMapping.ForeignKey = new ForeignKeyColumn( dayMapping );
-
 			var eventSummaryMapping = CreateMapping<EventSummary>( TableNames.EventSummary );
 			eventSummaryMapping.ForeignKey = new ForeignKeyColumn( dayMapping );
 
@@ -82,14 +80,14 @@ namespace cpap_db
 			var sessionMapping = CreateMapping<Session>( TableNames.Session );
 			sessionMapping.ForeignKey = new ForeignKeyColumn( dayMapping );
 
-			var blobColumnMapping = new ColumnMapping( "samples", "Samples", typeof( Signal ) )
+			var samplesBlobMapping = new ColumnMapping( "samples", "Samples", typeof( Signal ) )
 			{
 				Converter = new DoubleListBlobConverter(),
 			};
 
 			var signalMapping = CreateMapping<Signal>( TableNames.Signal );
 			signalMapping.ForeignKey = new ForeignKeyColumn( sessionMapping );
-			signalMapping.Columns.Add( blobColumnMapping );
+			signalMapping.Columns.Add( samplesBlobMapping );
 
 			var signalStatisticsMapping = CreateMapping<SignalStatistics>( TableNames.SignalStatistics );
 			signalStatisticsMapping.ForeignKey = new ForeignKeyColumn( dayMapping );
@@ -97,9 +95,15 @@ namespace cpap_db
 			var eventsMapping = CreateMapping<ReportedEvent>( TableNames.ReportedEvent );
 			eventsMapping.ForeignKey = new ForeignKeyColumn( dayMapping );
 
+			var settingsValuesBlobMapping = new ColumnMapping( "values", nameof( MachineSettings.Values ), typeof( MachineSettings ) )
+			{
+				Converter = new SettingDictionaryBlobConverter(),
+			};
+
 			var machineSettingsMapping = CreateMapping<MachineSettings>( TableNames.MachineSettings );
 			machineSettingsMapping.PrimaryKey = new PrimaryKeyColumn( "id", typeof( int ), true );
 			machineSettingsMapping.ForeignKey = new ForeignKeyColumn( dayMapping );
+			machineSettingsMapping.Columns.Add( settingsValuesBlobMapping );
 
 			var eprMapping = CreateMapping<EprSettings>( TableNames.EprSettings );
 			eprMapping.ForeignKey = new ForeignKeyColumn( machineSettingsMapping );
@@ -344,7 +348,7 @@ namespace cpap_db
 		{
 			var day = LoadDailyReport( profileID, date );
 
-			var signalNames = new string[] { SignalNames.SpO2, SignalNames.Pulse, SignalNames.Movement };
+			var signalNames = new[] { SignalNames.SpO2, SignalNames.Pulse, SignalNames.Movement };
 
 			day.Events.RemoveAll( x => x.SourceType == SourceType.PulseOximetry );
 			day.Sessions.RemoveAll( x => x.SourceType == SourceType.PulseOximetry );

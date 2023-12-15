@@ -1,10 +1,8 @@
-﻿using System.Text;
+﻿namespace cpap_app.Converters;
 
-using cpap_app.Helpers;
+using System.Text;
 
 using cpap_db.Converters;
-
-namespace cpap_app.Converters;
 
 public class SettingDictionaryBlobConverter : IBlobTypeConverter
 {
@@ -31,6 +29,12 @@ public class SettingDictionaryBlobConverter : IBlobTypeConverter
 
 	public object ConvertFromBlob( byte[] data )
 	{
+		// TODO: This workaround was only intended to get me through data conversion, and needs to be removed
+		if( data == null )
+		{
+			return new Dictionary<string, object>();
+		}
+		
 		var buffer = new MemoryStream( data );
 		var reader = new BinaryReader( buffer, Encoding.Default );
 
@@ -58,13 +62,13 @@ public class SettingDictionaryBlobConverter : IBlobTypeConverter
 		{
 			case SerializedTypeCode.Byte:
 				return reader.ReadByte();
-			case SerializedTypeCode.Integer:
+			case SerializedTypeCode.Int32:
 				return reader.ReadInt32();
 			case SerializedTypeCode.Boolean:
 				return reader.ReadByte() != 0;
 			case SerializedTypeCode.Enumeration:
 				return reader.ReadInt32();
-			case SerializedTypeCode.Float:
+			case SerializedTypeCode.Single:
 				return reader.ReadSingle();
 			case SerializedTypeCode.Double:
 				return reader.ReadDouble();
@@ -73,7 +77,7 @@ public class SettingDictionaryBlobConverter : IBlobTypeConverter
 			case SerializedTypeCode.Timespan:
 				return TimeSpan.FromMilliseconds( reader.ReadDouble() );
 			case SerializedTypeCode.DateTime:
-				return DateHelper.UnixEpoch.AddMilliseconds( reader.ReadDouble() ).ToLocalTime();
+				return DateTime.UnixEpoch.AddMilliseconds( reader.ReadDouble() ).ToLocalTime();
 			case SerializedTypeCode.Null:
 				return null;
 			default:
@@ -93,7 +97,7 @@ public class SettingDictionaryBlobConverter : IBlobTypeConverter
 				writer.Write( byteValue );
 				break;
 			case int intValue:
-				writer.Write( (byte)SerializedTypeCode.Integer );
+				writer.Write( (byte)SerializedTypeCode.Int32 );
 				writer.Write( intValue );
 				break;
 			case bool boolValue:
@@ -105,7 +109,7 @@ public class SettingDictionaryBlobConverter : IBlobTypeConverter
 				writer.Write( (int)value );
 				break;
 			case float floatValue:
-				writer.Write( (byte)SerializedTypeCode.Float );
+				writer.Write( (byte)SerializedTypeCode.Single );
 				writer.Write( floatValue );
 				break;
 			case double doubleValue:
@@ -136,17 +140,26 @@ public class SettingDictionaryBlobConverter : IBlobTypeConverter
 	private enum SerializedTypeCode
 	{
 		INVALID,
-		Byte,
-		Integer,
-		Boolean,
-		Enumeration,
-		Float,
-		Double,
-		String,
-		Timespan,
-		DateTime,
-		Null,
+		Empty       = 0,  // Null reference
+		Null        = 2,  // Null value
+		Boolean     = 3,  // Boolean
+		Char        = 4,  // Unicode character
+		SByte       = 5,  // Signed 8-bit integer
+		Byte        = 6,  // Unsigned 8-bit integer
+		Int16       = 7,  // Signed 16-bit integer
+		UInt16      = 8,  // Unsigned 16-bit integer
+		Int32       = 9,  // Signed 32-bit integer
+		UInt32      = 10, // Unsigned 32-bit integer
+		Int64       = 11, // Signed 64-bit integer
+		UInt64      = 12, // Unsigned 64-bit integer
+		Single      = 13, // IEEE 32-bit float
+		Double      = 14, // IEEE 64-bit double
+		Decimal     = 15, // Decimal
+		DateTime    = 16, // DateTime stored as the number of milliseconds since Jan 1, 1970 (Unix Epoch)
+		String      = 18, // Unicode character string
+		Enumeration = 19, // Enumeration value stored as integer
+		Timespan    = 20, // Timespan stored as an IEEE 64-bit double
 	}
-	
+
 	#endregion 
 }

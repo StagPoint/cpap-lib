@@ -326,6 +326,10 @@ public class PRS1DataLoader
 			if( previousChunk != null )
 			{
 				var gapLength = (chunk.Header.Timestamp - previousChunk.Header.EndTimestamp).TotalSeconds;
+				
+				// The only reason I've found (so far) for a gap between chunks is when the machine has flagged
+				// a period of "No Breathing Detected", so we'll just fill the gap in the Signal data with zeros
+				// to match. 
 				if( gapLength > SAMPLE_FREQUENCY )
 				{
 					for( int i = 0; i < gapLength / SAMPLE_FREQUENCY; i++ )
@@ -336,13 +340,10 @@ public class PRS1DataLoader
 				else if( gapLength < -1 )
 				{
 					// There is an extremely rare but annoying issue in Session 551 of the sample data where the 
-					// timestamp of the first chunk is *wildly* incorrect. On the assumption that if it happened
-					// once it can happen again, we'll try to work around it.
-					// It might be better to just throw away this Session, though.  
-					previousChunk.Header.Timestamp = chunk.Header.Timestamp - previousChunk.Header.Duration;
-
-					// Recalculate the Session duration to match the new timestamps 
-					duration = lastChunk.Header.EndTimestamp - firstChunk.Header.Timestamp;
+					// timestamp of the first chunk is *wildly* incorrect. Previously a workaround was implemented
+					// to patch up the data, but I was never comfortable with it so have decided the best thing
+					// to do is simply discard the entire session.
+					return new List<Signal>();
 				}
 				else if( gapLength < 0 )
 				{

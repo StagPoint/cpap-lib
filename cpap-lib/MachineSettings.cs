@@ -8,6 +8,12 @@ namespace cpaplib
 	{
 		#region Public properties
 
+		public Dictionary<string, object> Values { get; set; } = new Dictionary<string, object>();
+		
+		#endregion 
+		
+		#region Obsolete properties 
+
 		/// <summary>
 		/// The mode (CPAP, AutoSet, BiLevel, etc.) used on the reported day
 		/// </summary>
@@ -62,5 +68,36 @@ namespace cpaplib
 		public EprSettings EPR { get; set; } = new EprSettings();
 
 		#endregion
+		
+		#region Indexer properties
+
+		public object this[ string key ]
+		{
+			get { return Values[ key ]; }
+			set { Values[ key ] = value; }
+		}
+		
+		#endregion 
+		
+		#region Public functions
+
+		public bool TryGetValue<T>( string key, out T value )
+		{
+			if( !Values.TryGetValue( key, out object storedValue ) )
+			{
+				value = default( T );
+				return false;
+			}
+
+			value = (T)storedValue;
+			return true;
+		}
+
+		public T GetValue<T>( string key )
+		{
+			return (T)Values[ key ];
+		}
+		
+		#endregion 
 	}
 }

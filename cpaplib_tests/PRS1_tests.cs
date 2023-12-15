@@ -6,8 +6,6 @@ using cpap_app.Helpers;
 
 using cpaplib;
 
-using ScottPlot.Ticks.DateTimeTickUnits;
-
 // ReSharper disable UseIndexFromEndExpression
 
 // ReSharper disable ReplaceSubstringWithRangeIndexer

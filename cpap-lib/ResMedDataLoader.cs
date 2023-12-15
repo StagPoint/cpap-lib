@@ -868,6 +868,8 @@ namespace cpaplib
 					settings.Mode = (OperatingMode)mode;
 				}
 			}
+
+			settings[ SettingNames.Mode ] = settings.Mode;
 			
 			switch( settings.Mode )
 			{
@@ -876,56 +878,47 @@ namespace cpaplib
 					// These are the default modes, and no further action needs to be taken
 					break;
 				case OperatingMode.ASV:
-					settings.ASV = new AsvSettings
-					{
-						StartPressure      = data[ "S.AV.StartPress" ],
-						MinPressureSupport = data[ "S.AV.MinPS" ],
-						MaxPressureSupport = data[ "S.AV.MaxPS" ],
-						EPAP               = data[ "S.AV.EPAP" ],
-						EpapMin            = data[ "S.AA.MinEPAP" ],
-						EpapMax            = data[ "S.AA.MaxEPAP" ],
-						IpapMin            = data[ "S.AV.EPAP" ] + data[ "S.AV.MinPS" ],
-						IpapMax            = data[ "S.AV.EPAP" ] + data[ "S.AV.MaxPS" ],
-					};
+					settings[ SettingNames.RampPressure ]       = data[ "S.AV.StartPress" ];
+					settings[ SettingNames.MinPressureSupport ] = data[ "S.AV.MinPS" ];
+					settings[ SettingNames.MaxPressureSupport ] = data[ "S.AV.MaxPS" ];
+					settings[ SettingNames.EPAP ]               = data[ "S.AV.EPAP" ];
+					settings[ SettingNames.EpapMin ]            = data[ "S.AA.MinEPAP" ];
+					settings[ SettingNames.EpapMax ]            = data[ "S.AA.MaxEPAP" ];
+					settings[ SettingNames.IpapMin ]            = data[ "S.AV.EPAP" ] + data[ "S.AV.MinPS" ];
+					settings[ SettingNames.IpapMax ]            = data[ "S.AV.EPAP" ] + data[ "S.AV.MaxPS" ];
 					break;
 				case OperatingMode.ASV_VARIABLE_EPAP:
-					settings.ASV = new AsvSettings
-					{
-						StartPressure      = data[ "S.AA.StartPress" ],
-						MinPressureSupport = data[ "S.AA.MinPS" ],
-						MaxPressureSupport = data[ "S.AA.MaxPS" ],
-						EPAP               = data[ "S.AA.MinEPAP" ],
-						EpapMin            = data[ "S.AA.MinEPAP" ],
-						EpapMax            = data[ "S.AA.MaxEPAP" ],
-					};
+					settings[ SettingNames.RampPressure ]       = data[ "S.AA.StartPress" ];
+					settings[ SettingNames.MinPressureSupport ] = data[ "S.AA.MinPS" ];
+					settings[ SettingNames.MaxPressureSupport ] = data[ "S.AA.MaxPS" ];
+					settings[ SettingNames.EPAP ]               = data[ "S.AA.MinEPAP" ];
+					settings[ SettingNames.EpapMin ]            = data[ "S.AA.MinEPAP" ];
+					settings[ SettingNames.EpapMax ]            = data[ "S.AA.MaxEPAP" ];
 					break;
 				case OperatingMode.AVAPS:
 				{
-					settings.Avap = new AvapSettings
-					{
-						StartPressure = data[ "S.i.StartPress" ],
-						MinPressure   = data[ "S.i.MinPS" ],
-						MaxPressure   = data[ "S.i.MaxPS" ],
-						EpapAuto      = data[ "S.i.EPAPAuto" ] > 0.5,
-						EPAP          = data[ "S.i.EPAP" ],
-						EpapMin       = data[ "S.i.EPAP" ],
-						EpapMax       = data[ "S.i.EPAP" ],
-					};
+					settings[ SettingNames.RampPressure ]       = data[ "S.i.StartPress" ];
+					settings[ SettingNames.MinPressureSupport ] = data[ "S.i.MinPS" ];
+					settings[ SettingNames.MaxPressureSupport ] = data[ "S.i.MaxPS" ];
+					settings[ SettingNames.EpapAuto ]           = data[ "S.i.EPAPAuto" ] > 0.5;
+					settings[ SettingNames.EPAP ]               = data[ "S.i.EPAP" ];
+					settings[ SettingNames.EpapMin ]            = data[ "S.i.EPAP" ];
+					settings[ SettingNames.EpapMax ]            = data[ "S.i.EPAP" ];
 
 					if( settings.Avap.EpapAuto )
 					{
-						settings.Avap.EpapMin = data[ "S.i.MinEPAP" ];
-						settings.Avap.EpapMax = data[ "S.i.MaxEPAP" ];
+						settings[ SettingNames.EpapMin ] = data[ "S.i.MinEPAP" ];
+						settings[ SettingNames.EpapMax ] = data[ "S.i.MaxEPAP" ];
 					
-						settings.Avap.IPAP    = settings.Avap.EpapMin + settings.Avap.MinPressure;
-						settings.Avap.IpapMin = settings.Avap.EpapMin + settings.Avap.MinPressure;
-						settings.Avap.IpapMax = settings.Avap.EpapMax + settings.Avap.MaxPressure;
+						settings[ SettingNames.IPAP   ]  = data[ "S.i.MinEPAP" ] + data[ "S.i.MinPS" ];
+						settings[ SettingNames.IpapMin ] = data[ "S.i.MinEPAP" ] + data[ "S.i.MinPS" ];
+						settings[ SettingNames.IpapMax ] = data[ "S.i.MaxEPAP" ] + data[ "S.i.MaxPS" ];
 					}
 					else 
 					{
-						settings.Avap.IPAP    = settings. Avap.EPAP + settings.Avap.MinPressure;
-						settings.Avap.IpapMin = settings.Avap.EPAP + settings.Avap.MinPressure;
-						settings.Avap.IpapMax = settings.Avap.EPAP + settings.Avap.MaxPressure;
+						settings[ SettingNames.IPAP     ] = data[ "S.i.EPAP" ] + data[ "S.i.MinPS" ];
+						settings[ SettingNames.IpapMin  ] = data[ "S.i.EPAP" ] + data[ "S.i.MinPS" ];
+						settings[ SettingNames.IpapMax ]  = data[ "S.i.EPAP" ] + data[ "S.i.MaxPS" ];
 					}
 					break;
 				}
