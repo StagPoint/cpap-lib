@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 
 using cpaplib;
-// ReSharper disable BadChildStatementIndent
 
+// ReSharper disable BadChildStatementIndent
+// ReSharper disable ConvertToUsingDeclaration
 // ReSharper disable StringLiteralTypo
 
 public class PRS1DataLoader : ICpapDataLoader
@@ -217,7 +219,7 @@ public class PRS1DataLoader : ICpapDataLoader
 
 		// We need a day's worth of padding in either direction to ensure that we import all Sessions for the 
 		// first and last day of the set. 
-		var paddedMinDate = minDate > DateTime.MinValue ? minDate.Date.AddDays( -1 ) : minDate;
+		var paddedMinDate = minDate > DateHelper.UnixEpoch ? minDate.Date.AddDays( -1 ) : minDate;
 		var paddedMaxDate = maxDate.Date.AddDays( 1 );
 
 		// Find all of the summary files and scan each one to determine whether it should be included in the import
@@ -270,6 +272,8 @@ public class PRS1DataLoader : ICpapDataLoader
 			}
 		}
 
+		// Since we padded the date range in order to ensure that all relevant Sessions were imported, 
+		// we can now more correctly eliminate any MetaSession that starts outside of that date range. 
 		metaSessions.RemoveAll( x => x.StartTime < minDate || x.StartTime > maxDate );
 
 		return metaSessions;
@@ -331,7 +335,7 @@ public class PRS1DataLoader : ICpapDataLoader
 	{
 		const double SAMPLE_FREQUENCY = 0.2;
 		
-		if( chunks.Count == 0 )
+		if( chunks == null || chunks.Count == 0 )
 		{
 			return new List<Signal>();
 		}
@@ -385,11 +389,13 @@ public class PRS1DataLoader : ICpapDataLoader
 		// Calculate the sample rate. Note that the sample rate for this machine is extremely low compared to ResMed machines. 
 		var sampleRate = duration.TotalSeconds / samples.Count;
 		Debug.Assert( Math.Abs( SAMPLE_FREQUENCY - sampleRate ) < 0.001 );
+
+		Debug.Assert( previousChunk != null, nameof( previousChunk ) + " != null" );
 		
 		var signal = new Signal
 		{
 			Name              = SignalNames.FlowRate,
-			FrequencyInHz     = sampleRate,
+			FrequencyInHz     = 1.0 / sampleRate,
 			MinValue          = -127,
 			MaxValue          = 127,
 			UnitOfMeasurement = "L/min",
@@ -828,8 +834,6 @@ public class PRS1DataLoader : ICpapDataLoader
 			var sessions = new List<Session>();
 
 			DateTime? lastMaskOn = null;
-			var       startTime  = timestamp;
-			var       endTime    = timestamp;
 
 			using( var reader = new BinaryReader( new MemoryStream( BlockData ) ) )
 			while( reader.BaseStream.Position < reader.BaseStream.Length )
@@ -848,7 +852,6 @@ public class PRS1DataLoader : ICpapDataLoader
 					case 0x01:
 						// Equipment Off
 						timestamp += TimeSpan.FromSeconds( reader.ReadUInt16() );
-						endTime   =  timestamp;
 						reader.ReadBytes( 5 );
 						Debug.Assert( reader.BaseStream.Position - blockStartPosition == 7 );
 						break;
@@ -857,7 +860,7 @@ public class PRS1DataLoader : ICpapDataLoader
 						Debug.Assert( lastMaskOn == null, "Mismatched MaskOn/MaskOff" );
 						timestamp  += TimeSpan.FromSeconds( reader.ReadUInt16() );
 						lastMaskOn =  timestamp;
-						var maskOnParams = reader.ReadBytes( 3 );
+						reader.ReadBytes( 3 );
                         ReadHumidifierSettings( reader, settings );
 						Debug.Assert( reader.BaseStream.Position - blockStartPosition == 7 );
 						break;
@@ -917,6 +920,7 @@ public class PRS1DataLoader : ICpapDataLoader
 			};
 		}
 		
+		[SuppressMessage( "ReSharper", "UnusedVariable" )]
 		private static void ReadSettings( BinaryReader reader, ParsedSettings settings )
 		{
 			// Unknown meaning for this byte
@@ -986,9 +990,9 @@ public class PRS1DataLoader : ICpapDataLoader
 		{
 			var humidifierSettings = ReadHumidifierSettings( reader );
 			
-			settings[ SettingNames.HumidifierAttached ]     = humidifierSettings.HumidifierPresent;
-			settings[ SettingNames.HumidifierMode ] = humidifierSettings.Mode;
-			settings[ SettingNames.HumidityLevel ]  = humidifierSettings.HumidityLevel;
+			settings[ SettingNames.HumidifierAttached ] = humidifierSettings.HumidifierPresent;
+			settings[ SettingNames.HumidifierMode ]     = humidifierSettings.Mode;
+			settings[ SettingNames.HumidityLevel ]      = humidifierSettings.HumidityLevel;
 			
 			if( humidifierSettings.Mode == HumidifierMode.HeatedTube )
 			{
@@ -1131,20 +1135,20 @@ public class PRS1DataLoader : ICpapDataLoader
 
 	private class HeaderRecord
 	{
-		public HeaderType HeaderType        { get; set; }
-		public int        DataFormatVersion { get; set; }
-		public int        BlockLength       { get; set; }
-		public int        Family            { get; set; }
-		public int        FamilyVersion     { get; set; }
-		public int        FileExtension     { get; set; }
-		public int        SessionNumber     { get; set; }
-		public DateTime   Timestamp         { get; set; }
+		private HeaderType HeaderType        { get; set; }
+		public  int        DataFormatVersion { get; set; }
+		public  int        BlockLength       { get; set; }
+		public  int        Family            { get; set; }
+		public  int        FamilyVersion     { get; set; }
+		public  int        FileExtension     { get; set; }
+		public  int        SessionNumber     { get; set; }
+		public  DateTime   Timestamp         { get; set; }
 
 		public HeaderSignalInfo SignalInfo { get; set; }
 
-		public DateTime EndTimestamp { get => Timestamp + Duration; } 
-		
-		public TimeSpan Duration
+		public DateTime EndTimestamp { get => Timestamp + Duration; }
+
+		private TimeSpan Duration
 		{
 			get
 			{
@@ -1187,6 +1191,11 @@ public class PRS1DataLoader : ICpapDataLoader
 				throw new NotSupportedException( $"This data format is not yet supported: Family {family} Version {familyVersion}" );
 			}
 
+			if( dataFormatVersion != 0x02 )
+			{
+				throw new NotSupportedException( $"Data format version {dataFormatVersion} in session {sessionNumber} is not supported." );
+			}
+			
 			header = new HeaderRecord
 			{
 				DataFormatVersion = dataFormatVersion,
@@ -1199,11 +1208,6 @@ public class PRS1DataLoader : ICpapDataLoader
 				Timestamp         = timestamp
 			};
 
-			if( dataFormatVersion != 0x02 )
-			{
-				throw new NotSupportedException( $"Data format version {dataFormatVersion} in session {sessionNumber} is not yet supported." );
-			}
-			
 			if( headerType == HeaderType.Signal )
 			{
 				var interleavedRecordCount  = reader.ReadUInt16();
@@ -1247,7 +1251,7 @@ public class PRS1DataLoader : ICpapDataLoader
 			var calcHeaderChecksum = Checksum8.Calc( headerBytes );
 			if( calcHeaderChecksum != headerCheckSum )
 			{
-				throw new Exception( $"Header checksum mismatch. Expected: {calcHeaderChecksum}, Actual: {headerCheckSum}" );
+				throw new Exception( $"Header checksum mismatch for Session {sessionNumber}" );
 			}
 
 			return header;

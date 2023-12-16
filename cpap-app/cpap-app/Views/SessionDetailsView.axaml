@@ -14,7 +14,7 @@
              events:SignalSelection.SignalSelected="Signal_OnSelected"
              events:EventSelection.EventTypeSelected="EventType_OnSelected">
     <StackPanel Orientation="Vertical">
-        <Grid Margin="8 10" ColumnDefinitions="Auto,20,Auto,*" RowDefinitions="Auto,Auto,Auto,Auto">
+        <Grid Margin="8 10" ColumnDefinitions="Auto,20,Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto">
             <TextBlock Grid.Column="0" Grid.Row="0" Text="Date:"
                        Theme="{DynamicResource BodyStrongTextBlockStyle}" />
             <TextBlock Grid.Column="2" Grid.Row="0"
@@ -31,6 +31,10 @@
                        Theme="{DynamicResource BodyStrongTextBlockStyle}" />
             <TextBlock Grid.Column="2" Grid.Row="3"
                        Text="{Binding Session.Duration, Mode=OneWay, StringFormat={}{0:T}}" />
+            <TextBlock Grid.Column="0" Grid.Row="4" Text="Source:"
+                       Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+            <TextBlock Grid.Column="2" Grid.Row="4"
+                       Text="{Binding Session.Source, Mode=OneWay}" />
         </Grid>
         <TabControl>
             <TabControl.Styles>

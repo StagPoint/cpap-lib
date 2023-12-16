@@ -1817,11 +1817,6 @@ public partial class SignalChart : UserControl
 					throw new ArgumentOutOfRangeException( $"Value {ChartConfiguration.ScalingMode} is not handled" );
 			}
 
-			// TODO: This is probably not the best place (or way) to be doing this, but the data is conveniently available...
-			// Ensure that the configuration's Min and Max values are not NULL, which causes issues with data-bound controls. 
-			ChartConfiguration.AxisMinValue ??= signalMinValue;
-			ChartConfiguration.AxisMaxValue ??= signalMaxValue;
-
 			if( ChartConfiguration.InvertAxisY )
 			{
 				(minValue, maxValue) = (-maxValue, -minValue);

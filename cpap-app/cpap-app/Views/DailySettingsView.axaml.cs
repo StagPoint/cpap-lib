@@ -30,7 +30,12 @@ public partial class DailySettingsView : UserControl
 	
 	private MachineSettingsViewModel CreateMachineSettingsViewModel( DailyReport day )
 	{
-		return CreateResMedViewModel( day );
+		if( day.MachineInfo.Manufacturer == MachineManufacturer.ResMed )
+		{
+			return CreateResMedViewModel( day );
+		}
+
+		return new MachineSettingsViewModel();
 	}
 
 	private MachineSettingsViewModel CreateResMedViewModel( DailyReport day )

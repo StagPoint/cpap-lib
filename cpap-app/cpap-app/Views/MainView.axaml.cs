@@ -897,86 +897,18 @@ public partial class MainView : UserControl
 	
 	private async void HandleImportRequestCPAP( object? sender, ImportRequestEventArgs e )
 	{
-		string importPath = string.Empty;
-
-		var resmedLoader = new ResMedDataLoader();
-
-		var drives = DriveInfo.GetDrives();
-		foreach( var drive in drives )
+		var owner = this.FindAncestorOfType<Window>();
+		Debug.Assert( owner != null, nameof( owner ) + " != null" );
+		
+		var import = await CpapImportHelper.GetImportFolder( owner );
+		if( import == null || string.IsNullOrEmpty( import.Folder ) )
 		{
-			if( !drive.IsReady )
-			{
-				continue;
-			}
-
-			if( resmedLoader.HasCorrectFolderStructure( drive.RootDirectory.FullName ) )
-			{
-				var machineID = resmedLoader.LoadMachineIdentificationInfo( drive.RootDirectory.FullName );
-
-				var dialog = MessageBoxManager.GetMessageBoxStandard(
-					$"Import from {drive.RootDirectory}?",
-					$"There appears to be a CPAP data folder structure on Drive {drive.Name}\nMachine: {machineID.ProductName}, Serial #: {machineID.SerialNumber}\n\nDo you want to import this data from {drive.Name}?",
-					ButtonEnum.YesNoCancel,
-					Icon.Database );
-
-				var result = await dialog.ShowWindowDialogAsync( this.FindAncestorOfType<Window>() );
-
-				if( result == ButtonResult.Cancel )
-				{
-					return;
-				}
-
-				if( result == ButtonResult.Yes )
-				{
-					importPath = drive.RootDirectory.FullName;
-					break;
-				}
-			}
-		}
-
-		if( string.IsNullOrEmpty( importPath ) )
-		{
-			var sp = TopLevel.GetTopLevel( this )?.StorageProvider;
-			if( sp == null )
-			{
-				throw new Exception( $"Failed to get a reference to a {nameof( IStorageProvider )} instance." );
-			}
-
-			var folder = await sp.OpenFolderPickerAsync( new FolderPickerOpenOptions
-			{
-				Title                  = "CPAP Data Import - Select the folder containing your CPAP data",
-				SuggestedStartLocation = null,
-				AllowMultiple          = false
-			} );
-
-			if( folder.Count == 0 )
-			{
-				return;
-			}
-
-			importPath = folder[ 0 ].Path.LocalPath;
-		}
-
-		if( !Directory.Exists( importPath ) )
-		{
-			return;
-		}
-
-		if( !resmedLoader.HasCorrectFolderStructure( importPath ) )
-		{
-			var dialog = MessageBoxManager.GetMessageBoxStandard(
-				$"Import from folder",
-				$"Folder {importPath} does not appear to contain CPAP data",
-				ButtonEnum.Ok,
-				Icon.Database );
-
-			await dialog.ShowWindowDialogAsync( this.FindAncestorOfType<Window>() );
 			return;
 		}
 
 		var td = new TaskDialog
 		{
-			XamlRoot        = this.FindAncestorOfType<Window>(),
+			XamlRoot        = owner,
 			Title           = "Import CPAP Data",
 			ShowProgressBar = true,
 			IconSource      = new SymbolIconSource { Symbol = Symbol.Upload },
@@ -988,7 +920,7 @@ public partial class MainView : UserControl
 			}
 		};
 
-		var appWindow = TopLevel.GetTopLevel( this ) as AppWindow;
+		var appWindow = owner as AppWindow;
 		appWindow?.PlatformFeatures.SetTaskBarProgressBarState( TaskBarProgressBarState.Indeterminate );
 
 		td.Opened += async ( _, _ ) =>
@@ -1000,7 +932,7 @@ public partial class MainView : UserControl
 		
 			await Task.Run( async () =>
 			{
-				var mostRecentDay = ImportFrom( importPath, e.StartDate, e.EndDate );
+				var mostRecentDay = ImportFrom( import.Loader, import.Folder, e.StartDate, e.EndDate );
 		
 				// Sounds cheesy, but showing a progress bar for even a second serves to show 
 				// the user that the work was performed. It's otherwise often too fast for them 
@@ -1043,7 +975,6 @@ public partial class MainView : UserControl
 			} );
 		};
 
-		td.XamlRoot = (Visual)VisualRoot!;
 		await td.ShowAsync();
 
 		e.OnImportComplete?.Invoke();
@@ -1200,7 +1131,7 @@ public partial class MainView : UserControl
 		}, DispatcherPriority.Background );
 	}
 
-	private DateTime? ImportFrom( string folder, DateTime? startDate, DateTime? endDate )
+	private DateTime? ImportFrom( ICpapDataLoader loader, string folder, DateTime? startDate, DateTime? endDate )
 	{
 		using var storage = StorageService.Connect();
 		storage.Connection.BeginTransaction();
@@ -1214,8 +1145,7 @@ public partial class MainView : UserControl
 			var firstDay = startDate ?? storage.GetMostRecentStoredDate( profileID ).AddHours( 12 );
 			var lastDay  = endDate ?? DateTime.Today.AddDays( 1 );
 
-			var loader = new ResMedDataLoader();
-			var days   = loader.LoadFromFolder( folder, firstDay, lastDay );
+			var days = loader.LoadFromFolder( folder, firstDay, lastDay, TimeSpan.Zero );
 
 			if( days == null || days.Count == 0 )
 			{
@@ -1241,6 +1171,6 @@ public partial class MainView : UserControl
 			throw;
 		}
 	}
-	
+
 	#endregion
 }
