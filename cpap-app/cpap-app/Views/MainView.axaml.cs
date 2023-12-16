@@ -422,7 +422,7 @@ public partial class MainView : UserControl
 		{
 			var dialog = MessageBoxManager.GetMessageBoxStandard(
 				$"Import from Google Fit",
-				$"Import Completed.\nMost recent date availagle: {mostRecentAvailableDate:D}",
+				$"Import Completed.\nMost recent date available: {mostRecentAvailableDate:D}",
 				ButtonEnum.Ok,
 				Icon.Warning );
 

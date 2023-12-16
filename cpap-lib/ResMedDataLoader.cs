@@ -875,8 +875,10 @@ namespace cpaplib
 			switch( operatingMode )
 			{
 				case OperatingMode.CPAP:
+					break;
 				case OperatingMode.APAP:
-					// These are the default modes, and no specific action like that below needs to be taken
+					settings[ SettingNames.MinPressure ] = data[ "S.AS.MaxPress" ];
+					settings[ SettingNames.MaxPressure ] = data[ "S.AS.MinPress" ];
 					break;
 				case OperatingMode.ASV:
 					settings[ SettingNames.RampPressure ]       = data[ "S.AV.StartPress" ];

@@ -107,7 +107,7 @@ public class PRS1DataLoader
 			return null;
 		}
 
-		return MachineIdenficationFromProperties( properties );
+		return MachineIdentificationFromProperties( properties );
 	}
 	
 	public List<DailyReport> LoadFromFolder( string rootFolder, DateTime? minDate = null, DateTime? maxDate = null, TimeSpan? timeAdjustment = null )
@@ -132,7 +132,7 @@ public class PRS1DataLoader
 			throw new NotSupportedException( $"Unsupported data format version: Family {family}, FamilyVersion {familyVersion}, Data Format Version {dataFormatVersion}" );
 		}
 		
-		var machineInfo = MachineIdenficationFromProperties( properties );
+		var machineInfo = MachineIdentificationFromProperties( properties );
 		if( machineInfo == null )
 		{
 			return null;
@@ -153,9 +153,6 @@ public class PRS1DataLoader
 		);
 		
 		var days = ProcessMetaSessions( metaSessions, machineInfo );
-
-		var elapsed = Environment.TickCount - startTime;
-		Console.WriteLine( $"Import took {elapsed / 1000.0:F2} seconds" );
 
 		return days;
 	}
@@ -407,7 +404,7 @@ public class PRS1DataLoader
 		return new List<Signal> { signal };
 	}
 
-	private static MachineIdentification MachineIdenficationFromProperties( Dictionary<string, string> properties )
+	private static MachineIdentification MachineIdentificationFromProperties( Dictionary<string, string> properties )
 	{
 		var modelNumber = properties[ "ModelNumber" ];
 
@@ -477,6 +474,45 @@ public class PRS1DataLoader
 	#endregion
 	
 	#region Nested types
+
+	private enum OperatingMode
+	{
+		UNKNOWN    = -1,
+		CPAP = 0x00,
+		Bilevel = 0x20,
+		AutoCPAP = 0x40,
+		AutoBilevel = 0x60,
+		AutoTrial = 0x80,
+		CPAP_Check = 0xA0,
+		ASV,
+		S,
+		ST,
+		PC,
+		ST_AVAPS,
+		PC_AVAPS,
+	};
+
+	private enum FlexMode
+	{
+		Unknown = -1,
+		None, 
+		CFlex,
+		CFlexPlus,
+		AFlex,
+		RiseTime, 
+		BiFlex,
+		PFlex, 
+		Flex, 
+	};
+
+	private enum HumidifierMode
+	{
+		Fixed, 
+		Adaptive, 
+		HeatedTube, 
+		Passover, 
+		Error,
+	}
 
 	private class MetaSession
 	{
@@ -1276,51 +1312,12 @@ public class PRS1DataLoader
 		public double         TubeTemperature   { get; set; }
 	}
 
-	private enum HumidifierMode
-	{
-		Fixed, 
-		Adaptive, 
-		HeatedTube, 
-		Passover, 
-		Error,
-	}
-
 	private class FlexSettings
 	{
 		public FlexMode Mode   { get; set; }
 		public bool     Locked { get; set; }
 		public int      Level  { get; set; }
 	}
-
-	private enum FlexMode
-	{
-		Unknown = -1,
-		None, 
-		CFlex,
-		CFlexPlus,
-		AFlex,
-		RiseTime, 
-		BiFlex,
-		PFlex, 
-		Flex, 
-	};
-
-	private enum OperatingMode
-	{
-		UNKNOWN    = -1,
-		CPAP_Check = 0,
-		CPAP,
-		AutoCPAP,
-		AutoTrial,
-		Bilevel,
-		AutoBilevel,
-		ASV,
-		S,
-		ST,
-		PC,
-		ST_AVAPS,
-		PC_AVAPS,
-	};
 
 	private class ValueAtTime
 	{
