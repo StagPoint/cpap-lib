@@ -1,20 +1,21 @@
-﻿using System.Diagnostics;
-
-using cpap_app.Helpers;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
 
 using cpaplib;
+// ReSharper disable BadChildStatementIndent
 
 // ReSharper disable StringLiteralTypo
 
-namespace cpaplib_tests;
-
-public class PRS1DataLoader
+public class PRS1DataLoader : ICpapDataLoader
 {
 	#region Private fields
 
 	private const string DATA_ROOT = "P-Series";
 
-	private static Dictionary<string, string?> _modelToProductName = new Dictionary<string, string?>()
+	private static Dictionary<string, string> _modelToProductName = new Dictionary<string, string>()
 	{
 		{ "760P", "BiPAP Auto (System One 60 Series)" },
 		{ "761P", "BiPAP Auto (System One 60 Series)" },
@@ -138,16 +139,10 @@ public class PRS1DataLoader
 			return null;
 		}
 
-		var startTime = Environment.TickCount;
-
-		// Ensure that the minimum and maximum dates are never NULL
-		minDate ??= DateTime.UnixEpoch;
-		maxDate ??= DateTime.Today;
-		
 		var metaSessions = ImportMetaSessions( 
 			rootFolder, 
-			minDate.Value.Date,
-			maxDate.Value.Date,
+			minDate ?? DateHelper.UnixEpoch,
+			maxDate ?? DateTime.Today,
 			timeAdjustment ?? TimeSpan.Zero,
 			machineInfo 
 		);
@@ -165,7 +160,7 @@ public class PRS1DataLoader
 	{
 		List<DailyReport> days = new List<DailyReport>( metaSessions.Count );
 
-		DailyReport? currentDay = null;
+		DailyReport currentDay = null;
 
 		foreach( var meta in metaSessions )
 		{
@@ -217,8 +212,8 @@ public class PRS1DataLoader
 	{
 		// Instantiate a list of "meta sessions" that will be used to group the imported sessions 
 		// so that they can be assigned to the correct days. 
-		var          metaSessions       = new List<MetaSession>();
-		MetaSession? currentMetaSession = null;
+		var         metaSessions       = new List<MetaSession>();
+		MetaSession currentMetaSession = null;
 
 		// We need a day's worth of padding in either direction to ensure that we import all Sessions for the 
 		// first and last day of the set. 
@@ -234,44 +229,45 @@ public class PRS1DataLoader
 			{
 				continue;
 			}
-			
-			using var file   = File.OpenRead( filename );
-			using var reader = new BinaryReader( file );
 
-			var chunk = DataChunk.Read( reader );
-			if( chunk == null )
+			using( var file = File.OpenRead( filename ) )
+			using( var reader = new BinaryReader( file ) )
 			{
-				continue;
+				var chunk = DataChunk.Read( reader );
+				if( chunk == null )
+				{
+					continue;
+				}
+
+				var header = chunk.Header;
+				if( header.Timestamp.Date < paddedMinDate || header.Timestamp.Date > paddedMaxDate )
+				{
+					continue;
+				}
+
+				// Since all timestamps are based off of the header, we only need to adjust import times in one place
+				header.Timestamp += timeAdjustment;
+
+				var summary = chunk.ReadSummary( header );
+				summary.Machine        = machineInfo;
+				summary.Session.Source = machineInfo.ProductName;
+
+				// Discard Sessions that are too short to be meaningful. 
+				if( summary.Session.Duration.TotalMinutes < 5 )
+				{
+					continue;
+				}
+
+				var importData = ImportTherapySession( summary, Path.GetDirectoryName( filename ) );
+
+				if( currentMetaSession == null || !currentMetaSession.CanAdd( importData ) )
+				{
+					currentMetaSession = new MetaSession();
+					metaSessions.Add( currentMetaSession );
+				}
+
+				currentMetaSession.AddSession( importData );
 			}
-
-			var header = chunk.Header;
-			if( header.Timestamp.Date < paddedMinDate || header.Timestamp.Date > paddedMaxDate )
-			{
-				continue;
-			}
-
-			// Since all timestamps are based off of the header, we only need to adjust import times in one place
-			header.Timestamp += timeAdjustment;
-
-			var summary = chunk.ReadSummary( header );
-			summary.Machine        = machineInfo;
-			summary.Session.Source = machineInfo.ProductName;
-
-			// Discard Sessions that are too short to be meaningful. 
-			if( summary.Session.Duration.TotalMinutes < 5 )
-			{
-				continue;
-			}
-
-			var importData = ImportTherapySession( summary, Path.GetDirectoryName( filename ) );
-
-			if( currentMetaSession == null || !currentMetaSession.CanAdd( importData ) )
-			{
-				currentMetaSession = new MetaSession();
-				metaSessions.Add( currentMetaSession );
-			}
-
-			currentMetaSession.AddSession( importData );
 		}
 
 		metaSessions.RemoveAll( x => x.StartTime < minDate || x.StartTime > maxDate );
@@ -291,16 +287,17 @@ public class PRS1DataLoader
 		var eventFilename = Path.Combine( folder, $"{summary.Session.ID:0000000000}.002" );
 		if( File.Exists( eventFilename ) )
 		{
-			using var eventFile   = File.OpenRead( eventFilename );
-			using var eventReader = new BinaryReader( eventFile );
-
-			while( eventFile.Position < eventFile.Length )
+			using( var eventFile = File.OpenRead( eventFilename ) )
+			using( var eventReader = new BinaryReader( eventFile ) )
 			{
-				var eventChunk = DataChunk.Read( eventReader );
-				var events     = eventChunk.ReadEvents( eventChunk.Header );
+				while( eventFile.Position < eventFile.Length )
+				{
+					var eventChunk = DataChunk.Read( eventReader );
+					var events     = eventChunk.ReadEvents( eventChunk.Header );
 
-				sessionData.Events.AddRange( events.Events );
-				sessionData.Stats.AddRange( events.Stats );
+					sessionData.Events.AddRange( events.Events );
+					sessionData.Stats.AddRange( events.Stats );
+				}
 			}
 		}
 		
@@ -308,21 +305,22 @@ public class PRS1DataLoader
 		var waveFormFilename = Path.Combine( folder, $"{summary.Session.ID:0000000000}.005" );
 		if( File.Exists( waveFormFilename ) )
 		{
-			using var waveformFile   = File.OpenRead( waveFormFilename );
-			using var waveformReader = new BinaryReader( waveformFile );
-
-			var chunks = new List<DataChunk>();
-
-			while( waveformFile.Position < waveformFile.Length )
+			using( var waveformFile   = File.OpenRead( waveFormFilename ) )
+			using( var waveformReader = new BinaryReader( waveformFile ) )
 			{
-				var chunk = DataChunk.Read( waveformReader );
-				chunks.Add( chunk );
-			}
+				var chunks = new List<DataChunk>();
 
-			var signals = ReadSignals( chunks );
-			for( int i = 0; i < signals.Count; i++ )
-			{
-				sessionData.Session.AddSignal( signals[ i ] );
+				while( waveformFile.Position < waveformFile.Length )
+				{
+					var chunk = DataChunk.Read( waveformReader );
+					chunks.Add( chunk );
+				}
+
+				var signals = ReadSignals( chunks );
+				for( int i = 0; i < signals.Count; i++ )
+				{
+					sessionData.Session.AddSignal( signals[ i ] );
+				}
 			}
 		}
 
@@ -342,7 +340,7 @@ public class PRS1DataLoader
 		var firstChunk = chunks[ 0 ];
 		var lastChunk  = chunks[ chunks.Count - 1 ];
 		var duration   = lastChunk.Header.EndTimestamp - firstChunk.Header.Timestamp;
-		var numSignals = firstChunk.Header.SignalInfo!.Waveforms.Count;
+		var numSignals = firstChunk.Header.SignalInfo.Waveforms.Count;
 
 		Debug.Assert( numSignals == 1, "Unexpected number of signals" );
 		
@@ -386,7 +384,7 @@ public class PRS1DataLoader
 
 		// Calculate the sample rate. Note that the sample rate for this machine is extremely low compared to ResMed machines. 
 		var sampleRate = duration.TotalSeconds / samples.Count;
-		Assert.AreEqual( SAMPLE_FREQUENCY, sampleRate, 0.001 );
+		Debug.Assert( Math.Abs( SAMPLE_FREQUENCY - sampleRate ) < 0.001 );
 		
 		var signal = new Signal
 		{
@@ -408,13 +406,14 @@ public class PRS1DataLoader
 	{
 		var modelNumber = properties[ "ModelNumber" ];
 
-		if( !_modelToProductName.TryGetValue( modelNumber, out string? productName ) )
+		if( !_modelToProductName.TryGetValue( modelNumber, out string productName ) )
 		{
 			return null;
 		}
 
 		return new MachineIdentification
 		{
+			Manufacturer = MachineManufacturer.PhilipsRespironics,
 			ProductName  = productName,
 			SerialNumber = properties[ "SerialNumber" ],
 			ModelNumber  = modelNumber
@@ -448,24 +447,25 @@ public class PRS1DataLoader
 		return true;
 	}
 
-	private static Dictionary<string, string> ReadKeyValueFile( string path, string separator = "=" )
+	private static Dictionary<string, string> ReadKeyValueFile( string path )
 	{
 		var fields = new Dictionary<string, string>();
 
-		using var input = File.OpenText( path );
-
-		while( !input.EndOfStream )
+		using( var input = File.OpenText( path ) )
 		{
-			var line = input.ReadLine();
-			if( string.IsNullOrEmpty( line ) )
+			while( !input.EndOfStream )
 			{
-				break;
+				var line = input.ReadLine();
+				if( string.IsNullOrEmpty( line ) )
+				{
+					break;
+				}
+
+				var parts = line.Split( '=' );
+				Debug.Assert( 2 == parts.Length );
+
+				fields[ parts[ 0 ] ] = parts[ 1 ];
 			}
-
-			var parts = line.Split( separator );
-			Assert.AreEqual( 2, parts.Length );
-
-			fields[ parts[ 0 ] ] = parts[ 1 ];
 		}
 
 		return fields;
@@ -474,45 +474,6 @@ public class PRS1DataLoader
 	#endregion
 	
 	#region Nested types
-
-	private enum OperatingMode
-	{
-		UNKNOWN    = -1,
-		CPAP = 0x00,
-		Bilevel = 0x20,
-		AutoCPAP = 0x40,
-		AutoBilevel = 0x60,
-		AutoTrial = 0x80,
-		CPAP_Check = 0xA0,
-		ASV,
-		S,
-		ST,
-		PC,
-		ST_AVAPS,
-		PC_AVAPS,
-	};
-
-	private enum FlexMode
-	{
-		Unknown = -1,
-		None, 
-		CFlex,
-		CFlexPlus,
-		AFlex,
-		RiseTime, 
-		BiFlex,
-		PFlex, 
-		Flex, 
-	};
-
-	private enum HumidifierMode
-	{
-		Fixed, 
-		Adaptive, 
-		HeatedTube, 
-		Passover, 
-		Error,
-	}
 
 	private class MetaSession
 	{
@@ -543,8 +504,8 @@ public class PRS1DataLoader
 	{
 		public ParsedSettings      Settings { get; set; }
 		public Session             Session  { get; set; }
-		public List<ReportedEvent> Events   { get; init; } = new List<ReportedEvent>();
-		public List<ValueAtTime>   Stats    { get; init; } = new List<ValueAtTime>();
+		public List<ReportedEvent> Events   { get; set; } = new List<ReportedEvent>();
+		public List<ValueAtTime>   Stats    { get; set; } = new List<ValueAtTime>();
 		
 		public DateTime StartTime { get { return Session.StartTime; } }
 		public DateTime EndTime   { get { return Session.EndTime; } }
@@ -570,7 +531,7 @@ public class PRS1DataLoader
 		public byte[]       BlockData { get; set; }
 		public ushort       Checksum  { get; set; }
 
-		public static DataChunk? Read( BinaryReader reader )
+		public static DataChunk Read( BinaryReader reader )
 		{
 			var startPosition = (int)reader.BaseStream.Position;
 
@@ -621,8 +582,7 @@ public class PRS1DataLoader
 			
 			var timestamp = header.Timestamp;
 
-			using var reader = new BinaryReader( new MemoryStream( BlockData ) );
-
+			using( var reader = new BinaryReader( new MemoryStream( BlockData ) ) )
 			while( reader.BaseStream.Position < reader.BaseStream.Length )
 			{
 				var eventCode = reader.ReadByte();
@@ -871,8 +831,7 @@ public class PRS1DataLoader
 			var       startTime  = timestamp;
 			var       endTime    = timestamp;
 
-			using var reader = new BinaryReader( new MemoryStream( BlockData ) );
-			
+			using( var reader = new BinaryReader( new MemoryStream( BlockData ) ) )
 			while( reader.BaseStream.Position < reader.BaseStream.Length )
 			{
 				var code = reader.ReadByte();
@@ -890,7 +849,7 @@ public class PRS1DataLoader
 						// Equipment Off
 						timestamp += TimeSpan.FromSeconds( reader.ReadUInt16() );
 						endTime   =  timestamp;
-						reader.Advance( 5 );
+						reader.ReadBytes( 5 );
 						Debug.Assert( reader.BaseStream.Position - blockStartPosition == 7 );
 						break;
 					case 0x02:
@@ -914,7 +873,7 @@ public class PRS1DataLoader
 							SourceType = SourceType.CPAP,
 						} );
 						lastMaskOn =  null;
-						reader.Advance( 34 );
+						reader.ReadBytes( 34 );
 						Debug.Assert( reader.BaseStream.Position - blockStartPosition == 36 );
 						break;
 					case 0x04:
@@ -937,21 +896,13 @@ public class PRS1DataLoader
 					case 0x08:
 						// Related to Cpap-Check mode? Not seen in sample data. 
 						timestamp += TimeSpan.FromSeconds( reader.ReadUInt16() );
-						reader.Advance( 9 );
+						reader.ReadBytes( 9 );
 						Debug.Assert( reader.BaseStream.Position - blockStartPosition == 11 );
 						break;
 					default:
 						throw new NotSupportedException( $"Unexpected code ({code:x}) reading chunk data in session {header.SessionNumber}" );
 				}
 			}
-
-			// In the sample data that I have there may be one or two Sessions per file, but never zero.
-			Assert.IsTrue( sessions.Count > 0, "No Sessions found" );
-			Assert.AreEqual( startTime, sessions[ 0 ].StartTime );
-			
-			// It's not very common, but the Equipment Off and final Mask Off times are not always equal.
-			// Equipment Off is however still always equal to or later than final Mask Off. 
-			Assert.IsTrue( endTime >= sessions[ ^1 ].EndTime );
 
 			// Merge the Sessions, because a Summary File only contains multiple sessions when a single Session
 			// has been split (such as when a "No Breathing Detected" event occurs), and this is additionally 
@@ -1017,11 +968,6 @@ public class PRS1DataLoader
 			settings[ SettingNames.AlertMask ]          = maskAlertEnabled;
 			settings[ SettingNames.ShowAHI ]            = showAHIEnabled;
 			settings[ SettingNames.HoseDiameter ]       = hoseDiameter;
-
-			if( mode == OperatingMode.AutoTrial )
-			{
-				settings[ SettingNames.AutoTrialDuration ] = autoTrialDuration;
-			}
 
 			if( humidifierSettings.Mode == HumidifierMode.HeatedTube )
 			{
@@ -1103,27 +1049,34 @@ public class PRS1DataLoader
 			}
 			else if( plusmode )
 			{
-				flexMode = operatingMode switch
+				switch( operatingMode )
 				{
-					OperatingMode.CPAP       => FlexMode.CFlexPlus,
-					OperatingMode.CPAP_Check => FlexMode.CFlexPlus,
-					OperatingMode.AutoCPAP   => FlexMode.AFlex,
-					OperatingMode.AutoTrial  => FlexMode.AFlex,
-					_                        => throw new NotSupportedException( $"Unexpected Flex mode {flexFlags}" )
-				};
+					case OperatingMode.Cpap:
+						flexMode = FlexMode.CFlexPlus;
+						break;
+					case OperatingMode.Apap:
+						flexMode = FlexMode.AFlex;
+						break;
+					default:
+						throw new NotSupportedException( $"Unexpected Flex mode {flexFlags}" );
+				}
 			}
 			else
 			{
-				flexMode = operatingMode switch
+				switch( operatingMode )
 				{
-					OperatingMode.CPAP_Check  => FlexMode.CFlex,
-					OperatingMode.CPAP        => FlexMode.CFlex,
-					OperatingMode.AutoCPAP    => FlexMode.CFlex,
-					OperatingMode.AutoTrial   => FlexMode.CFlex,
-					OperatingMode.Bilevel     => FlexMode.BiFlex,
-					OperatingMode.AutoBilevel => FlexMode.BiFlex,
-					_                         => throw new ArgumentOutOfRangeException( nameof( operatingMode ), operatingMode, null )
-				};
+					case OperatingMode.Cpap:
+					case OperatingMode.Apap:
+						flexMode = FlexMode.CFlex;
+						break;
+					case OperatingMode.BilevelFixed:
+					case OperatingMode.BilevelAutoFixedPS:
+					case OperatingMode.BilevelAutoVariablePS:
+						flexMode = FlexMode.BiFlex;
+						break;
+					default:
+						throw new ArgumentOutOfRangeException( nameof( operatingMode ), operatingMode, null );
+				}
 			}
 
 			return new FlexSettings()
@@ -1137,16 +1090,23 @@ public class PRS1DataLoader
 		private static OperatingMode ReadOperatingMode( BinaryReader reader )
 		{
 			var mode = reader.ReadByte();
-			return mode switch
+			switch( mode )
 			{
-				0x00 => OperatingMode.CPAP,
-				0x20 => OperatingMode.Bilevel,
-				0x40 => OperatingMode.AutoCPAP,
-				0x60 => OperatingMode.AutoBilevel,
-				0x80 => OperatingMode.AutoTrial,
-				0xA0 => OperatingMode.CPAP_Check,
-				_    => throw new NotSupportedException( $"Uknown Operating Mode value: {mode}" )
-			};
+				case 0x00:
+					return OperatingMode.Cpap;
+				case 0x20:
+					return OperatingMode.BilevelFixed;
+				case 0x40:
+					return OperatingMode.Apap;
+				case 0x60:
+					return OperatingMode.BilevelAutoVariablePS;
+				case 0x80:
+					return OperatingMode.Apap;
+				case 0xA0:
+					return OperatingMode.Cpap;
+				default:
+					throw new NotSupportedException( $"Uknown Operating Mode value: {mode}" );
+			}
 		}
 	}
 
@@ -1155,7 +1115,7 @@ public class PRS1DataLoader
 		public int IntervalCount  { get; set; }
 		public int IntervalLength { get; set; }
 
-		public List<WaveformInfo> Waveforms = new();
+		public List<WaveformInfo> Waveforms = new List<WaveformInfo>();
 		
 		public TimeSpan Duration
 		{
@@ -1180,7 +1140,7 @@ public class PRS1DataLoader
 		public int        SessionNumber     { get; set; }
 		public DateTime   Timestamp         { get; set; }
 
-		public HeaderSignalInfo? SignalInfo { get; set; }
+		public HeaderSignalInfo SignalInfo { get; set; }
 
 		public DateTime EndTimestamp { get => Timestamp + Duration; } 
 		
@@ -1197,19 +1157,20 @@ public class PRS1DataLoader
 			}
 		}
 
-		public static HeaderRecord? Read( string filename )
+		public static HeaderRecord Read( string filename )
 		{
-			using var file   = File.OpenRead( filename );
-			using var reader = new BinaryReader( file );
-
-			return Read( reader );
+			using( var file   = File.OpenRead( filename ) )
+			using( var reader = new BinaryReader( file ) )
+			{
+				return Read( reader );
+			}
 		}
 
-		public static HeaderRecord? Read( BinaryReader reader )
+		public static HeaderRecord Read( BinaryReader reader )
 		{
 			var startPosition = reader.BaseStream.Position;
 
-			HeaderRecord? header = null;
+			HeaderRecord header = null;
 
 			var dataFormatVersion = reader.ReadByte();
 			var blockLength       = reader.ReadUInt16();
@@ -1219,7 +1180,7 @@ public class PRS1DataLoader
 			var fileExtension     = reader.ReadByte();
 			var sessionNumber     = (int)reader.ReadUInt32();
 			var timestampNum      = (int)reader.ReadUInt32();
-			var timestamp         = DateTime.UnixEpoch.AddSeconds( timestampNum ).ToLocalTime();
+			var timestamp         = DateHelper.UnixEpoch.AddSeconds( timestampNum ).ToLocalTime();
 
 			if( family != 0 || familyVersion != 4 )
 			{
@@ -1333,8 +1294,8 @@ public class PRS1DataLoader
 
 	private class EventImportData
 	{
-		public List<ReportedEvent> Events { get; init; } = new List<ReportedEvent>();
-		public List<ValueAtTime>   Stats  { get; init; } = new List<ValueAtTime>();
+		public List<ReportedEvent> Events { get; set; } = new List<ReportedEvent>();
+		public List<ValueAtTime>   Stats  { get; set; } = new List<ValueAtTime>();
 		
 		public void Concatenate( EventImportData other )
 		{

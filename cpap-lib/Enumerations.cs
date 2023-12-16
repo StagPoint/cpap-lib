@@ -1,43 +1,49 @@
 ﻿namespace cpaplib
 {
+	public enum MachineManufacturer
+	{
+		ResMed,
+		PhilipsRespironics,
+	}
+	
 	public enum OperatingMode
 	{
 		UNKNOWN = -1,
 		/// <summary>
 		/// Constant Positive Air Pressure
 		/// </summary>
-		CPAP,
+		Cpap,
 		/// <summary>
 		/// Auto-titrating Positive Air Pressure
 		/// </summary>
-		APAP,
+		Apap,
 		/// <summary>
 		/// Fixed Inspiratory Positive Airway Pressure (IPAP) and Expiratory Positive Airway Pressure (EPAP)
 		/// </summary>
-		BILEVEL_FIXED,
+		BilevelFixed,
 		/// <summary>
 		/// Auto-titrated Inspiratory Positive Airway Pressure (IPAP) and Expiratory Positive Airway Pressure (EPAP)
 		/// with fixed Pressure Support
 		/// </summary>
-		BILEVEL_AUTO_FIXED_PS,
+		BilevelAutoFixedPS,
 		/// <summary>
 		/// Auto-titrated Inspiratory Positive Airway Pressure (IPAP) and Expiratory Positive Airway Pressure (EPAP)
 		/// with variable Pressure Support
 		/// </summary>
-		BILEVEL_AUTO_VARIABLE_PS,
+		BilevelAutoVariablePS,
 		/// <summary>
 		/// Adaptive Servo Ventilation
 		/// </summary>
-		ASV,
+		Asv,
 		/// <summary>
 		/// Adaptive Servo Ventilation (ASV) with variable Expiratory Positive Airway Pressure (EPAP). Also known as ASV Auto.
 		/// </summary>
-		ASV_VARIABLE_EPAP,
+		AsvVariableEpap,
 		/// <summary>
 		/// Average Volume-Assured Pressure Support
 		/// </summary>
-		AVAPS,
-		MAX_VALUE = AVAPS + 1
+		Avaps,
+		MAX_VALUE = Avaps + 1
 	};
 
 	public enum OnOffType
@@ -61,12 +67,19 @@
 		Unknown
 	}
 
+	/// <summary>
+	/// On ResMed devices, describes what menu options are shown to the user on the menu screen.
+	/// When Essentials Mode is set to Plus, there are more options available to the user.
+	/// </summary>
 	public enum EssentialsMode
 	{
 		Plus,
 		On
 	}
 
+	/// <summary>
+	/// On ResMed devices, describes how the humidifier and heated tubing (if present) are controlled.
+	/// </summary>
 	public enum ClimateControlType
 	{
 		/// <summary>
@@ -80,7 +93,8 @@
 	}
 
 	/// <summary>
-	/// Expiratory Pressure Relief (EPR) reduces the delivered mask pressure during exhalation.
+	/// On ResMed AutoSense devices, Expiratory Pressure Relief (EPR) is described as a comfort feature that
+	/// reduces the delivered mask pressure during exhalation.
 	/// </summary>
 	public enum EprType
 	{
@@ -99,7 +113,7 @@
 	}
 
 	/// <summary>
-	/// Indicates the speed at which pressure increases during AutoSet mode operation 
+	/// On ResMed AutoSense devices, indicates the speed at which pressure increases during AutoSet mode operation 
 	/// </summary>
 	public enum AutoSetResponseType
 	{
@@ -111,5 +125,33 @@
 		/// Pressure rises slower and more gently than it does in Standard mode.
 		/// </summary>
 		Soft = 1
+	}
+	
+	/// <summary>
+	/// On Philips Respironics System One devices, specifies the Flex Mode in use for a given Session
+	/// </summary>
+	public enum FlexMode
+	{
+		Unknown = -1,
+		None, 
+		CFlex,
+		CFlexPlus,
+		AFlex,
+		RiseTime, 
+		BiFlex,
+		PFlex, 
+		Flex, 
+	};
+
+	/// <summary>
+	/// On Philips Respironics System One devices, specifies the Humidifier Mode in use for a given Session
+	/// </summary>
+	public enum HumidifierMode
+	{
+		Fixed, 
+		Adaptive, 
+		HeatedTube, 
+		Passover, 
+		Error,
 	}
 }

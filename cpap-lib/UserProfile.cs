@@ -18,7 +18,7 @@ namespace cpaplib
 		public int        HeightInCentimeters { get; set; } = 178;
 		public double     WeightInKilograms   { get; set; } = 80;
 
-		public OperatingMode TherapyMode             { get; set; } = OperatingMode.APAP;
+		public OperatingMode TherapyMode             { get; set; } = OperatingMode.Apap;
 		public DateTime      DateOfDiagnosis         { get; set; } = DateTime.Today.AddYears( -1 );
 		public double        UntreatedAHI            { get; set; } = 12;
 		public double        PrescriptionPressureMin { get; set; } = 8;

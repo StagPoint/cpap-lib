@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -13,9 +12,27 @@ using StagPoint.EDF.Net;
 
 namespace cpaplib
 {
-	public class ResMedDataLoader
+	public class ResMedDataLoader : ICpapDataLoader
 	{
 		#region Private fields
+
+		/// <summary>
+		/// The list of known Model Numbers for the ResMed CPAP Line from 10 and up
+		/// </summary>
+		private static Dictionary<string, string> ModelNumbers = new Dictionary<string, string>()
+		{
+			{ "37201", "ResMed AirStart 10" },
+			{ "37202", "ResMed AirStart 10" },
+			{ "37203", "ResMed AirSense 10" },
+			{ "37028", "ResMed AirSense 10 AutoSet" },
+			{ "37209", "ResMed AirSense 10 AutoSet For Her" },
+			{ "37382", "ResMed AirSense 10 AutoSet (Card to Cloud)" },
+			{ "37205", "ResMed AirSense 10 Elite" },
+			{ "37213", "ResMed AirCurve 10 S BiLevel" },
+			{ "37211", "ResMed AirCurve 10 VAuto BiLevel" },
+			{ "37383", "ResMed AirCurve 10 VAuto BiLevel (Card to Cloud)" },
+			{ "39000", "ResMed AirSense 11 AutoSet" },
+		};
 
 		private static string[] expectedFiles = new[]
 		{
@@ -31,17 +48,17 @@ namespace cpaplib
 
 		private static Dictionary<int, OperatingMode> s_modeMapping = new Dictionary<int, OperatingMode>()
 		{
-			{ 11, OperatingMode.APAP }, // "For Her" model, which is just AutoCPAP with custom algorithms
-			{ 9, OperatingMode.AVAPS },
-			{ 8, OperatingMode.ASV_VARIABLE_EPAP },
-			{ 7, OperatingMode.ASV },
-			{ 6, OperatingMode.BILEVEL_AUTO_FIXED_PS },
-			{ 5, OperatingMode.BILEVEL_FIXED },
-			{ 4, OperatingMode.BILEVEL_FIXED },
-			{ 3, OperatingMode.BILEVEL_FIXED },
-			{ 2, OperatingMode.BILEVEL_FIXED },
-			{ 1, OperatingMode.APAP },
-			{ 0, OperatingMode.CPAP },
+			{ 11, OperatingMode.Apap }, // "For Her" model, which is just AutoCPAP with custom algorithms
+			{ 9, OperatingMode.Avaps },
+			{ 8, OperatingMode.AsvVariableEpap },
+			{ 7, OperatingMode.Asv },
+			{ 6, OperatingMode.BilevelAutoFixedPS },
+			{ 5, OperatingMode.BilevelFixed },
+			{ 4, OperatingMode.BilevelFixed },
+			{ 3, OperatingMode.BilevelFixed },
+			{ 2, OperatingMode.BilevelFixed },
+			{ 1, OperatingMode.Apap },
+			{ 0, OperatingMode.Cpap },
 		};
 
 		private MachineIdentification _machineInfo    = new MachineIdentification();
@@ -101,6 +118,7 @@ namespace cpaplib
 						fields[ key ] = value;
 					}
 
+					machineInfo.Manufacturer = MachineManufacturer.ResMed;
 					machineInfo.ProductName  = fields[ "PNA" ];
 					machineInfo.SerialNumber = fields[ "SRN" ];
 					machineInfo.ModelNumber  = fields[ "PCD" ];
@@ -753,11 +771,6 @@ namespace cpaplib
 			};
 
 			return day;
-
-			double getValue( string key )
-			{
-				return data.TryGetValue( key, out double value ) ? value : 0.0;
-			}
 		}
 
 		private static EventSummary ReadEventsSummary( Dictionary<string, double> data )
@@ -834,8 +847,6 @@ namespace cpaplib
 
 		private static MachineSettings ReadMachineSettings( Dictionary<string, double> data )
 		{
-			var date     = new DateTime( 1970, 1, 1 ).AddDays( data[ "Date" ] ).ToLocalTime();
-			
 			var settings = new MachineSettings();
 
 			OperatingMode operatingMode = OperatingMode.UNKNOWN;
@@ -846,10 +857,10 @@ namespace cpaplib
 				{
 					case 1:
 					case 2:
-						operatingMode = OperatingMode.APAP;
+						operatingMode = OperatingMode.Apap;
 						break;
 					case 3:
-						operatingMode = OperatingMode.CPAP;
+						operatingMode = OperatingMode.Cpap;
 						break;
 					default:
 						operatingMode = OperatingMode.UNKNOWN;
@@ -866,7 +877,7 @@ namespace cpaplib
 				}
 				else
 				{
-					operatingMode = OperatingMode.CPAP;
+					operatingMode = OperatingMode.Cpap;
 				}
 			}
 
@@ -874,13 +885,13 @@ namespace cpaplib
 
 			switch( operatingMode )
 			{
-				case OperatingMode.CPAP:
+				case OperatingMode.Cpap:
 					break;
-				case OperatingMode.APAP:
+				case OperatingMode.Apap:
 					settings[ SettingNames.MinPressure ] = data[ "S.AS.MaxPress" ];
 					settings[ SettingNames.MaxPressure ] = data[ "S.AS.MinPress" ];
 					break;
-				case OperatingMode.ASV:
+				case OperatingMode.Asv:
 					settings[ SettingNames.RampPressure ]       = data[ "S.AV.StartPress" ];
 					settings[ SettingNames.MinPressureSupport ] = data[ "S.AV.MinPS" ];
 					settings[ SettingNames.MaxPressureSupport ] = data[ "S.AV.MaxPS" ];
@@ -890,7 +901,7 @@ namespace cpaplib
 					settings[ SettingNames.IpapMin ]            = data[ "S.AV.EPAP" ] + data[ "S.AV.MinPS" ];
 					settings[ SettingNames.IpapMax ]            = data[ "S.AV.EPAP" ] + data[ "S.AV.MaxPS" ];
 					break;
-				case OperatingMode.ASV_VARIABLE_EPAP:
+				case OperatingMode.AsvVariableEpap:
 					settings[ SettingNames.RampPressure ]       = data[ "S.AA.StartPress" ];
 					settings[ SettingNames.MinPressureSupport ] = data[ "S.AA.MinPS" ];
 					settings[ SettingNames.MaxPressureSupport ] = data[ "S.AA.MaxPS" ];
@@ -900,7 +911,7 @@ namespace cpaplib
 					settings[ SettingNames.IpapMin ]            = data[ "S.AV.EPAP" ] + data[ "S.AA.MinPS" ];
 					settings[ SettingNames.IpapMax ]            = data[ "S.AV.EPAP" ] + data[ "S.AA.MaxPS" ];
 					break;
-				case OperatingMode.AVAPS:
+				case OperatingMode.Avaps:
 				{
 					settings[ SettingNames.RampPressure ]       = data[ "S.i.StartPress" ];
 					settings[ SettingNames.MinPressureSupport ] = data[ "S.i.MinPS" ];

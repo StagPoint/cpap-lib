@@ -45,21 +45,21 @@ public partial class DailySettingsView : UserControl
 
 		switch( mode )
 		{
-			case OperatingMode.CPAP:
+			case OperatingMode.Cpap:
 				items.Add( new MachineSettingsItemViewModel( "Pressure", $"{settings[ SettingNames.Pressure ]:F2}", "cmH20" ) );
 				break;
-			case OperatingMode.APAP:
+			case OperatingMode.Apap:
 				items.Add( new MachineSettingsItemViewModel( "Min Pressure",  $"{settings[ SettingNames.MinPressure ]:F2}", "cmH20" ) );
 				items.Add( new MachineSettingsItemViewModel( "Max Pressure",  $"{settings[ SettingNames.MaxPressure ]:F2}", "cmH20" ) );
 				items.Add( new MachineSettingsItemViewModel( "Response Type", (AutoSetResponseType)settings[ SettingNames.ResponseType ] ) );
 				break;
-			case OperatingMode.ASV:
+			case OperatingMode.Asv:
 				items.Add( new MachineSettingsItemViewModel( "EPAP",     $"{settings[ SettingNames.EPAP ]:F2}",               "cmH20" ) );
 				items.Add( new MachineSettingsItemViewModel( "Max IPAP", $"{settings[ SettingNames.IpapMax ]:F2}",            "cmH20" ) );
 				items.Add( new MachineSettingsItemViewModel( "PS Min",   $"{settings[ SettingNames.MinPressureSupport ]:F2}", "cmH20" ) );
 				items.Add( new MachineSettingsItemViewModel( "PS Max",   $"{settings[ SettingNames.MaxPressureSupport ]:F2}", "cmH20" ) );
 				break;
-			case OperatingMode.ASV_VARIABLE_EPAP:
+			case OperatingMode.AsvVariableEpap:
 				items.Add( new MachineSettingsItemViewModel( "Min EPAP", $"{settings[ SettingNames.EpapMin ]:F2}",            "cmH20" ) );
 				items.Add( new MachineSettingsItemViewModel( "Max EPAP", $"{settings[ SettingNames.EpapMax ]:F2}",            "cmH20" ) );
 				items.Add( new MachineSettingsItemViewModel( "Min IPAP", $"{settings[ SettingNames.IpapMin ]:F2}",            "cmH20" ) );
@@ -79,7 +79,7 @@ public partial class DailySettingsView : UserControl
 		}
 
 		// TODO: Create a helper function to indicate which modes/models EPR is relevant for
-		if( mode is OperatingMode.APAP or OperatingMode.CPAP )
+		if( mode is OperatingMode.Apap or OperatingMode.Cpap )
 		{
 			if( settings.TryGetValue( SettingNames.EprEnabled, out bool eprEnabled ) )
 			{
@@ -126,10 +126,10 @@ public partial class DailySettingsView : UserControl
 		// TODO: Should probably refer to the raw Mode setting to differentiate modes, which would entail making the raw settings data available 
 		return mode switch
 		{
-			OperatingMode.CPAP              => "CPAP",
-			OperatingMode.APAP              => "Auto",
-			OperatingMode.ASV               => "ASV",
-			OperatingMode.ASV_VARIABLE_EPAP => "ASV Auto",
+			OperatingMode.Cpap              => "CPAP",
+			OperatingMode.Apap              => "Auto",
+			OperatingMode.Asv               => "ASV",
+			OperatingMode.AsvVariableEpap => "ASV Auto",
 			_                               => mode.ToString()
 		};
 	}
