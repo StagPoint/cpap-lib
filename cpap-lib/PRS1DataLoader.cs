@@ -181,6 +181,9 @@ public class PRS1DataLoader : ICpapDataLoader
 
 			foreach( var sesh in meta.Sessions )
 			{
+				DerivedSignals.GenerateMissingRespirationSignals( currentDay, sesh.Session );
+				DerivedSignals.GenerateApneaIndexSignal( currentDay, sesh.Session );
+
 				currentDay.AddSession( sesh.Session );
 				currentDay.Events.AddRange( sesh.Events );
 
@@ -391,21 +394,52 @@ public class PRS1DataLoader : ICpapDataLoader
 		Debug.Assert( Math.Abs( SAMPLE_FREQUENCY - sampleRate ) < 0.001 );
 
 		Debug.Assert( previousChunk != null, nameof( previousChunk ) + " != null" );
+
+		// Build a Signal from the sample data that matches the expected sample frequency and value ranges 
+		var signal = BuildFlowSignal( samples, firstChunk.Header.Timestamp, previousChunk.Header.EndTimestamp );
 		
+		return new List<Signal> { signal };
+	}
+
+	private static Signal BuildFlowSignal( List<byte> samples, DateTime startTime, DateTime endTime )
+	{
 		var signal = new Signal
 		{
 			Name              = SignalNames.FlowRate,
-			FrequencyInHz     = 1.0 / sampleRate,
+			FrequencyInHz     = 25,
 			MinValue          = -127,
 			MaxValue          = 127,
 			UnitOfMeasurement = "L/min",
-			StartTime         = firstChunk.Header.Timestamp,
-			EndTime           = previousChunk.Header.EndTimestamp,
+			StartTime         = startTime,
+			EndTime           = endTime,
 		};
-		
-		signal.Samples.AddRange( samples.Select( x => (double)(sbyte)x ) );
-		
-		return new List<Signal> { signal };
+
+		var outputSamples = signal.Samples;
+		var lastSample    = 0.0;
+
+		for( int i = 0; i < samples.Count; i++ )
+		{
+			var sample = (double)(sbyte)samples[ i ];
+			
+			if( i == 0 )
+			{
+				outputSamples.Add( sample );
+				lastSample = sample;
+				
+				continue;
+			}
+
+			for( int j = 0; j < 4; j++ )
+			{
+				var lerp = MathUtil.Lerp( lastSample, sample, (j + 1) * 0.2 );
+				outputSamples.Add( lerp );
+			}
+
+			outputSamples.Add( sample );
+			lastSample = sample;
+		}
+
+		return signal;
 	}
 
 	private static MachineIdentification MachineIdentificationFromProperties( Dictionary<string, string> properties )

@@ -161,7 +161,7 @@ namespace cpaplib
 			foreach( var day in days )
 			{
 				// Loads all event and session data for the given day
-				LoadSessionsForDay( folderPath, day );
+				ImportSessionsAndEvents( rootFolder, day );
 			}
 #endif
 

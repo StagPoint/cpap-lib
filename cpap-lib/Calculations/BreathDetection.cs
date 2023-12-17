@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+// ReSharper disable UseIndexFromEndExpression
 
 namespace cpaplib
 {
@@ -16,6 +17,11 @@ namespace cpaplib
 		public double MinValue         { get; set; }
 		public double MaxValue         { get; set; }
 		public double TotalFlow        { get; set; }
+
+		public double Range
+		{
+			get => MaxValue - MinValue;
+		}
 
 		public double InspirationToExpirationRatio
 		{
@@ -36,6 +42,14 @@ namespace cpaplib
 		{
 			get => (EndTime - StartInspiration).TotalSeconds;
 		}
+
+		public void Append( BreathRecord other )
+		{
+			EndTime   =  other.EndTime;
+			TotalFlow += other.TotalFlow;
+			MinValue  =  Math.Min( MinValue, other.MinValue );
+			MaxValue  =  Math.Max( MaxValue, other.MaxValue );
+		}
 	}
 
 	public static class BreathDetection
@@ -48,10 +62,10 @@ namespace cpaplib
 
 			var filtered = ButterworthFilter.Filter( flowSignal.Samples.ToArray(), flowSignal.FrequencyInHz, filterCutoff );
 			
-			// There's a good argument to be made for using a variable baseline instead of just assuming a zero baseline,
-			// but for now this has been disabled in order to generate results that are as close as possible to other 
-			// reference implementations that use a static baseline.
-			//
+			// // There's a good argument to be made for using a variable baseline instead of just assuming a zero baseline,
+			// // but for now this has been disabled in order to generate results that are as close as possible to other 
+			// // reference implementations that use a static baseline.
+			// //
 			// // The size of the window used to calculate the baseline (10 seconds times the number of samples per second) 
 			// int baselineWindowSize = (int)(10 * flowSignal.FrequencyInHz); 
 			// var slidingMean = new MovingAverageCalculator( baselineWindowSize );
@@ -74,6 +88,7 @@ namespace cpaplib
 			var minValue  = 0.0;
 			var maxValue  = 0.0;
 			var totalFlow = 0.0;
+			var sign      = 1;
 
 			for( int i = startIndex; i < filtered.Length; i++ )
 			{
@@ -99,7 +114,8 @@ namespace cpaplib
 				// slidingMean.AddObservation( sample );
 				// sample -= slidingMean.Average;
 				
-				var sign = (sample > 0) ? 1 : -1;
+				// Calculate which side of the baseline the sample is on (with a little built-in hysteresis)
+				sign = (sign < 0) ? (sample > 0.5 ? 1 : -1) : (sample < -0.5 ? -1 : 1);
 
 				// If the signal has not crossed the zero line, keep searching 
 				if( sign == lastSign )
@@ -122,14 +138,8 @@ namespace cpaplib
 						TotalFlow             = totalFlow,
 					};
 
-					if( breath.InspirationLength < 0.1 && results.Count > 1 )
-					{
-						results[ results.Count - 1 ].EndTime = breath.EndTime;
-					}
-					else
-					{
-						results.Add( breath );
-					}
+					// Add the new breath to the list 
+					results.Add( breath );
 
 					lastStartIndex       = i;
 					peakInspirationIndex = i;
@@ -144,11 +154,23 @@ namespace cpaplib
 				lastSignFlipIndex = i;
 			}
 
-			// Extend the time of the last breath to match the length of the signal
-			if( results.Count > 0 )
+			results.Add( new BreathRecord
 			{
-				results[ results.Count - 1 ].EndTime = timeAtIndex( filtered.Length - 1 );
-			}
+				StartInspiration      = timeAtIndex( lastStartIndex ),
+				StartExpiration       = timeAtIndex( lastSignFlipIndex ),
+				EndTime               = flowSignal.EndTime,
+				TimeOfPeakInspiration = timeAtIndex( peakInspirationIndex ),
+				TimeOfPeakExpiration  = timeAtIndex( peakExpirationIndex ),
+				MinValue              = minValue,
+				MaxValue              = maxValue,
+				TotalFlow             = totalFlow,
+			} );
+
+			// // Extend the time of the last breath to match the length of the signal
+			// if( lastBreath != null )
+			// {
+			// 	lastBreath.EndTime = flowSignal.EndTime;
+			// }
 
 			return results;
 

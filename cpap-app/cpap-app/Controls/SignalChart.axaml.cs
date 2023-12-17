@@ -167,7 +167,7 @@ public partial class SignalChart : UserControl
 		GotFocus            += OnGotFocus;
 		LostFocus           += OnLostFocus;
 		
-		Chart.AxesChanged     += OnAxesChanged;
+		Chart.AxesChanged += OnAxesChanged;
 
 		// TODO: Replace the default ScottPlot context menu with a bespoke version 
 		//Chart.ContextMenu = null;
@@ -803,6 +803,9 @@ public partial class SignalChart : UserControl
 			new SignalMenuItem( "Average (Entire series)",      VisualizeAverage ),
 			new SignalMenuItem( "Median (Entire series)",       VisualizeMedian ),
 			new SignalMenuItem( "95th Percentile",              VisualizePercentile95 ),
+			new SignalMenuItem( "-",                            () => { } ),
+			new SignalMenuItem( "Respiration Rate",             VisualizeRespirationRate ),
+			new SignalMenuItem( "Tidal Volume",                 VisualizeTidalVolume ),
 		};
 
 		if( ChartConfiguration.SignalName == SignalNames.FlowRate )
@@ -821,6 +824,69 @@ public partial class SignalChart : UserControl
 		btnSettings.Visualizations.Add( new SignalMenuItem( "Clear Visualizations", ClearVisualizations ) );
 	}
 	
+	private void VisualizeRespirationRate()
+	{
+		foreach( var session in _day.Sessions )
+		{
+			var flowSignal = session.GetSignalByName( SignalNames.FlowRate );
+			if( flowSignal == null )
+			{
+				return;
+			}
+
+			var breaths         = BreathDetection.DetectBreaths( flowSignal );
+			var respirationRate = DerivedSignals.GenerateRespirationRateSignal( breaths );
+
+			var graph = Chart.Plot.AddSignal(
+				respirationRate.Samples.ToArray(),
+				respirationRate.FrequencyInHz,
+				Color.Magenta,
+				null
+			);
+
+			graph.OffsetX    = (flowSignal.StartTime - _day.RecordingStartTime).TotalSeconds;
+			graph.LineStyle  = LineStyle.Solid;
+			graph.MarkerSize = 0;
+
+			_visualizations.Add( graph );
+		}
+
+		RenderGraph( true );
+	}
+
+	private void VisualizeTidalVolume()
+	{
+		foreach( var session in _day.Sessions )
+		{
+			var flowSignal = session.GetSignalByName( SignalNames.FlowRate );
+			if( flowSignal == null )
+			{
+				return;
+			}
+
+			var breaths           = BreathDetection.DetectBreaths( flowSignal );
+			var respirationRate   = DerivedSignals.GenerateRespirationRateSignal( breaths );
+			var tidalVolumeSignal = DerivedSignals.GenerateTidalVolumeSignal( flowSignal, respirationRate );
+
+			var graph = Chart.Plot.AddSignal(
+				tidalVolumeSignal.Samples.ToArray(),
+				tidalVolumeSignal.FrequencyInHz,
+				Color.Red,
+				null
+			);
+
+			graph.OffsetX    = (flowSignal.StartTime - _day.RecordingStartTime).TotalSeconds;
+			graph.LineStyle  = LineStyle.Solid;
+			graph.MarkerSize = 0;
+
+			Chart.RenderRequest();
+
+			_visualizations.Add( graph );
+		}
+
+		RenderGraph( true );
+	}
+
 	private async void VisualizeRMS()
 	{
 		var windowLengthInSeconds = await InputDialog.InputInteger(

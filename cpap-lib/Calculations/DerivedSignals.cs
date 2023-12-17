@@ -228,6 +228,8 @@ namespace cpaplib
 
 		public static Signal GenerateTidalVolumeSignal( Signal flowRate, Signal respirationRate )
 		{
+			// TODO: For reasons that are not entirely clear to me, this function is extremely sensitive to the FlowRate sample frequency, and is apparently tuned to a frequency of 25Hz
+			
 			const int HISTORY_WINDOW_SIZE = 15;
 			
 			double rrSampleFrequency   = respirationRate.FrequencyInHz;
@@ -244,8 +246,8 @@ namespace cpaplib
 				MaxValue          = 4000.0,
 				UnitOfMeasurement = "ml",
 				Samples           = tidalVolumeSamples,
-				StartTime         = flowRate.StartTime,
-				EndTime           = flowRate.EndTime,
+				StartTime         = respirationRate.StartTime,
+				EndTime           = respirationRate.EndTime,
 			};
 
 			int flowWindowSize = (int)(HISTORY_WINDOW_SIZE * flowSampleFrequency);
@@ -292,7 +294,7 @@ namespace cpaplib
 				}
 
 				var averageInspiratoryFlow = inspiratoryFlow / HISTORY_WINDOW_SIZE;
-				var respirationIndex       = (int)(currentTime / rrSampleInterval);
+				var respirationIndex       = Math.Min( (int)(currentTime / rrSampleInterval), respirationRate.Samples.Count - 1 );
 				var inspirationRatio       = inspiratoryTime / flowWindowSize;
 
 				var rr = respirationRate[ respirationIndex ];
@@ -318,7 +320,6 @@ namespace cpaplib
 		private static Signal GenerateMinuteVentilationSignal( Signal tidalVolume, Signal respirationRate )
 		{
 			Debug.Assert( tidalVolume.StartTime == respirationRate.StartTime, "Tidal Volume and Respiration Rate signals do not start at the same time" );
-			
 			Debug.Assert( Math.Abs( tidalVolume.FrequencyInHz - respirationRate.FrequencyInHz ) < float.Epsilon, "Tidal Volume and Respiration Rate signals do not have the same frequency" );
 			
 			var minuteVentilationSamples = new List<double>( tidalVolume.Samples.Count );
@@ -336,13 +337,14 @@ namespace cpaplib
 
 			for( int i = 0; i < tidalVolume.Samples.Count; i++ )
 			{
-				minuteVentilationSamples.Add( tidalVolume[ i ] * respirationRate[ i ] / 1000.0 );
+				var rrIndex = Math.Min( i, respirationRate.Samples.Count - 1 );
+				minuteVentilationSamples.Add( tidalVolume[ i ] * respirationRate[ rrIndex ] / 1000.0 );
 			}
 
 			return minuteVentilationSignal;
 		}
 
-		private static Signal GenerateRespirationRateSignal( List<BreathRecord> breaths )
+		public static Signal GenerateRespirationRateSignal( List<BreathRecord> breaths )
 		{
 			const double FREQUENCY = 0.5;
 			const double INTERVAL  = 1.0 / FREQUENCY;
@@ -471,6 +473,8 @@ namespace cpaplib
 						nextBreath.StartInspiration.ToFileTimeUtc(),
 						currentTime.ToFileTimeUtc()
 					);
+
+					t = MathUtil.Clamp( t, 0.0, 1.0 );
 
 					inspirationLength = MathUtil.Lerp( currentBreath.InspirationLength, nextBreath.InspirationLength, t );
 					expirationLength  = MathUtil.Lerp( currentBreath.ExpirationLength,  nextBreath.ExpirationLength,  t );
