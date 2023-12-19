@@ -157,7 +157,7 @@ namespace cpaplib
 						lastBreath.Append( breath );
 					}
 					// If the breath was too shallow to really qualify as a full breath, append it to the previous breath. 
-					else if( breath.Range < 10 && lastBreath != null && lastBreath.TotalCycleTime < 10.0 )
+					else if( breath.Range <= 5 && lastBreath != null && lastBreath.TotalCycleTime < 10.0 )
 					{
 						lastBreath.Append( breath );
 					}

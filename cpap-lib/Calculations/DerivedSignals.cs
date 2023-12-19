@@ -272,7 +272,7 @@ namespace cpaplib
 				var averageFlowOverBreathCycle = currentBreath.TotalFlow / currentBreath.TotalCycleTime;
 				flowSmoother.AddObservation( averageFlowOverBreathCycle );
 
-				var respirationRate = respirationSmoother.Average;
+				var respirationRate = (respirationSmoother.Average + respirationSmoother.StandardDeviation);
 				var tidalVolume     = (flowSmoother.Average + flowSmoother.StandardDeviation) / respirationRate / 60 * 1000;
 
 				var outputValue = respirationRate > 0 ? tidalVolume : 0;
@@ -283,98 +283,6 @@ namespace cpaplib
 			}
 			
 			return outputSignal;
-		}
-
-		public static Signal GenerateTidalVolumeSignal( Signal flowRate, Signal respirationRate )
-		{
-			// TODO: For reasons that are not entirely clear to me, this function is extremely sensitive to the FlowRate sample frequency, and is apparently tuned to a frequency of 25Hz
-			
-			const int HISTORY_WINDOW_DURATION = 15;
-			
-			double rrSampleFrequency   = respirationRate.FrequencyInHz;
-			double rrSampleInterval    = 1.0 / rrSampleFrequency;
-			double flowSampleFrequency = flowRate.FrequencyInHz;
-			double flowSampleInterval  = 1.0 / flowSampleFrequency;
-			
-			var tidalVolumeSamples = new List<double>( respirationRate.Samples.Count );
-			var tidalVolumeSignal = new Signal
-			{
-				Name              = SignalNames.TidalVolume,
-				FrequencyInHz     = rrSampleFrequency,
-				MinValue          = 0,
-				MaxValue          = 4000.0,
-				UnitOfMeasurement = "ml",
-				Samples           = tidalVolumeSamples,
-				StartTime         = respirationRate.StartTime,
-				EndTime           = respirationRate.EndTime,
-			};
-
-			int flowWindowSize = (int)(HISTORY_WINDOW_DURATION * flowSampleFrequency);
-
-			double inspiratoryFlow = 0.0;
-			double inspiratoryTime = 0.0;
-			double lastOutputTime  = int.MinValue;
-
-			var smoother = new MovingAverageCalculator( 3 );
-
-			for( int i = 0; i < flowRate.Samples.Count; i++ )
-			{
-				var sample      = flowRate[ i ];
-				var currentTime = i * flowSampleInterval;
-				var emitSample  = (currentTime - lastOutputTime) >= rrSampleInterval;
-
-				if( sample > 0 )
-				{
-					inspiratoryFlow += sample;
-					inspiratoryTime += 1;
-				}
-
-				if( i < flowWindowSize )
-				{
-					if( emitSample )
-					{
-						tidalVolumeSamples.Add( 0 );
-						lastOutputTime = currentTime;
-					}
-					
-					continue;
-				}
-
-				var historySample = flowRate[ i - flowWindowSize ];
-				if( historySample > 0 )
-				{
-					inspiratoryFlow -= historySample;
-					inspiratoryTime -= 1;
-				}
-
-				if( !emitSample )
-				{	
-					continue;
-				}
-
-				var averageInspiratoryFlow = inspiratoryFlow / HISTORY_WINDOW_DURATION;
-				var respirationIndex       = Math.Min( (int)(currentTime / rrSampleInterval), respirationRate.Samples.Count - 1 );
-				var inspirationRatio       = inspiratoryTime / flowWindowSize;
-
-				var rr = respirationRate[ respirationIndex ];
-				var tv = averageInspiratoryFlow / inspirationRatio / rr / 60 * 1000;
-
-				// Cannot output a realistic value without a valid RR (and a zero RR value results in tv being Infinity)
-				var output = rr > 0 ? tv : 0;
-				smoother.AddObservation( output );
-
-				Debug.Assert( !double.IsNaN( smoother.Average ), "Unexpected NaN value in output" );
-				tidalVolumeSamples.Add( smoother.Average );
-				lastOutputTime = currentTime;
-			}
-
-			while( flowRate.StartTime.AddSeconds( lastOutputTime ) < tidalVolumeSignal.EndTime )
-			{
-				tidalVolumeSamples.Add( 0 );
-				lastOutputTime += rrSampleInterval;
-			}
-
-			return tidalVolumeSignal;
 		}
 
 		private static Signal GenerateMinuteVentilationSignal( Signal tidalVolume, Signal respirationRate )

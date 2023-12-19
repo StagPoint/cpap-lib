@@ -815,10 +815,10 @@ public partial class SignalChart : UserControl
 
 		if( ChartConfiguration.SignalName == SignalNames.FlowRate )
 		{
-			btnSettings.Visualizations.Add( new SignalMenuItem( "Sliding Window Baseline", VisualizeRMS ) );
-			btnSettings.Visualizations.Add( new SignalMenuItem( "Highlight Centerline",    VisualizeCenterline ) );
-			btnSettings.Visualizations.Add( new SignalMenuItem( "Mark Respirations",       VisualizeRespirations ) );
-			btnSettings.Visualizations.Add( new SignalMenuItem( "Noise Filter",            VisualizeNoiseFilter ) );
+			btnSettings.Visualizations.Add( new SignalMenuItem( "Sliding Average Flow", VisualizeRMS ) );
+			btnSettings.Visualizations.Add( new SignalMenuItem( "Highlight Centerline", VisualizeCenterline ) );
+			btnSettings.Visualizations.Add( new SignalMenuItem( "Mark Respirations",    VisualizeRespirations ) );
+			btnSettings.Visualizations.Add( new SignalMenuItem( "Show Noise Filter",    VisualizeNoiseFilter ) );
 		}
 		else
 		{
@@ -872,8 +872,6 @@ public partial class SignalChart : UserControl
 			}
 
 			var breaths           = BreathDetection.DetectBreaths( flowSignal, useVariableBaseline: true );
-			//var respirationRate   = DerivedSignals.GenerateRespirationRateSignal( breaths );
-			//var tidalVolumeSignal = DerivedSignals.GenerateTidalVolumeSignal( flowSignal, respirationRate );
 			var tidalVolumeSignal = DerivedSignals.GenerateTidalVolumeSignal( breaths );
 
 			var graph = Chart.Plot.AddSignal(
@@ -899,7 +897,7 @@ public partial class SignalChart : UserControl
 	{
 		var windowLengthInSeconds = await InputDialog.InputInteger(
 			TopLevel.GetTopLevel( this )!,
-			"Visualize Sliding Window Baseline",
+			"Visualize Average Flow",
 			"Enter the length of the window, in seconds",
 			120,
 			2,
