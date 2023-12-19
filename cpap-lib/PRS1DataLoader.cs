@@ -7,6 +7,7 @@ using System.Linq;
 
 using cpaplib;
 
+// ReSharper disable UseIndexFromEndExpression
 // ReSharper disable BadChildStatementIndent
 // ReSharper disable ConvertToUsingDeclaration
 // ReSharper disable StringLiteralTypo
@@ -198,11 +199,31 @@ public class PRS1DataLoader : ICpapDataLoader
 		{
 			day.Sessions.Sort();
 			day.Events.Sort();
+
+			// var signalNames = GetSignalNames( day );
+			// foreach( var signalName in signalNames )
+			// {
+			// 	if( signalName != SignalNames.FlowRate && signalName != SignalNames.AHI )
+			// 	{
+			// 		day.UpdateSignalStatistics( signalName );
+			// 	}
+			// }
 			
 			day.UpdateEventSummary();
 		}
 
 		return days;
+	}
+	
+	private static List<string> GetSignalNames( DailyReport day )
+	{
+		var signalNames = new List<string>();
+		foreach( var session in day.Sessions )
+		{
+			signalNames.AddRange( session.Signals.Select( x => x.Name ) );
+		}
+		
+		return signalNames.Distinct().ToList();
 	}
 	
 	private static void MergeSettings( DailyReport currentDay, ParsedSettings sessionSettings )
@@ -323,7 +344,7 @@ public class PRS1DataLoader : ICpapDataLoader
 					chunks.Add( chunk );
 				}
 
-				var signals = ReadSignals( chunks );
+				var signals = ReadSignals( chunks, sessionData.Events );
 				for( int i = 0; i < signals.Count; i++ )
 				{
 					sessionData.Session.AddSignal( signals[ i ] );
@@ -334,7 +355,7 @@ public class PRS1DataLoader : ICpapDataLoader
 		return sessionData;
 	}
 	
-	private static List<Signal> ReadSignals( List<DataChunk> chunks )
+	private static List<Signal> ReadSignals( List<DataChunk> chunks, List<ReportedEvent> events )
 	{
 		const double SAMPLE_FREQUENCY = 0.2;
 		
@@ -346,6 +367,7 @@ public class PRS1DataLoader : ICpapDataLoader
 		var samples    = new List<byte>();
 		var firstChunk = chunks[ 0 ];
 		var lastChunk  = chunks[ chunks.Count - 1 ];
+		var startTime  = firstChunk.Header.Timestamp;
 		var duration   = lastChunk.Header.EndTimestamp - firstChunk.Header.Timestamp;
 		var numSignals = firstChunk.Header.SignalInfo.Waveforms.Count;
 
@@ -361,12 +383,26 @@ public class PRS1DataLoader : ICpapDataLoader
 				
 				// The only reason I've found (so far) for a gap between chunks is when the machine has flagged
 				// a period of "No Breathing Detected", so we'll just fill the gap in the Signal data with zeros
-				// to match. 
+				// to match. It would probably be better to generate two Sessions instead of filling the gap, 
+				// but that would require more refactoring than I have time and motivation for at this moment. 
 				if( gapLength > SAMPLE_FREQUENCY )
 				{
-					for( int i = 0; i < gapLength / SAMPLE_FREQUENCY; i++ )
+					Debug.Assert( previousChunk.Header.Duration.TotalSeconds > 0, "Previous chunk was unexpectedly zero duration" );
 					{
-						samples.Add( 0 );
+						// Fill in the gap with zeros
+						for( int i = 0; i < gapLength / SAMPLE_FREQUENCY; i++ )
+						{
+							samples.Add( 0 );
+						}
+
+						// Add an event to flag the gap
+						events.Add( new ReportedEvent
+						{
+							Type       = EventType.BreathingNotDetected,
+							SourceType = SourceType.CPAP,
+							StartTime  = previousChunk.Header.EndTimestamp,
+							Duration   = TimeSpan.FromSeconds( gapLength ),
+						} );
 					}
 				}
 				else if( gapLength < -1 )
@@ -396,7 +432,7 @@ public class PRS1DataLoader : ICpapDataLoader
 		Debug.Assert( previousChunk != null, nameof( previousChunk ) + " != null" );
 
 		// Build a Signal from the sample data that matches the expected sample frequency and value ranges 
-		var signal = BuildFlowSignal( samples, firstChunk.Header.Timestamp, previousChunk.Header.EndTimestamp );
+		var signal = BuildFlowSignal( samples, startTime, previousChunk.Header.EndTimestamp );
 		
 		return new List<Signal> { signal };
 	}
@@ -1182,7 +1218,7 @@ public class PRS1DataLoader : ICpapDataLoader
 
 		public DateTime EndTimestamp { get => Timestamp + Duration; }
 
-		private TimeSpan Duration
+		public TimeSpan Duration
 		{
 			get
 			{

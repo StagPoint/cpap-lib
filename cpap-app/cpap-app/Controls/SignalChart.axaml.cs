@@ -321,7 +321,12 @@ public partial class SignalChart : UserControl
 
 	private void OnAnnotationsChanged( object? sender, AnnotationListEventArgs e )
 	{
-		Debug.Assert( _day != null,               nameof( _day ) + " != null" );
+		// If this Graph is not showing any data, then Annotations don't matter 
+		if( _day == null )
+		{
+			return;
+		}
+
 		Debug.Assert( ChartConfiguration != null, nameof( ChartConfiguration ) + " != null" );
 
 		if( _annotationMarkers.Count == 0 && !_day.Annotations.Any( x => x.Signal == ChartConfiguration.Title ) )
@@ -844,9 +849,11 @@ public partial class SignalChart : UserControl
 				null
 			);
 
-			graph.OffsetX    = (flowSignal.StartTime - _day.RecordingStartTime).TotalSeconds;
+			graph.OffsetX    = (respirationRate.StartTime - _day.RecordingStartTime).TotalSeconds;
 			graph.LineStyle  = LineStyle.Solid;
 			graph.MarkerSize = 0;
+
+			Chart.RenderRequest();
 
 			_visualizations.Add( graph );
 		}
@@ -864,18 +871,19 @@ public partial class SignalChart : UserControl
 				return;
 			}
 
-			var breaths           = BreathDetection.DetectBreaths( flowSignal );
-			var respirationRate   = DerivedSignals.GenerateRespirationRateSignal( breaths );
-			var tidalVolumeSignal = DerivedSignals.GenerateTidalVolumeSignal( flowSignal, respirationRate );
+			var breaths           = BreathDetection.DetectBreaths( flowSignal, useVariableBaseline: true );
+			//var respirationRate   = DerivedSignals.GenerateRespirationRateSignal( breaths );
+			//var tidalVolumeSignal = DerivedSignals.GenerateTidalVolumeSignal( flowSignal, respirationRate );
+			var tidalVolumeSignal = DerivedSignals.GenerateTidalVolumeSignal( breaths );
 
 			var graph = Chart.Plot.AddSignal(
 				tidalVolumeSignal.Samples.ToArray(),
 				tidalVolumeSignal.FrequencyInHz,
-				Color.Red,
+				Color.DarkMagenta,
 				null
 			);
 
-			graph.OffsetX    = (flowSignal.StartTime - _day.RecordingStartTime).TotalSeconds;
+			graph.OffsetX    = (tidalVolumeSignal.StartTime - _day.RecordingStartTime).TotalSeconds;
 			graph.LineStyle  = LineStyle.Solid;
 			graph.MarkerSize = 0;
 
@@ -1010,7 +1018,7 @@ public partial class SignalChart : UserControl
 				continue;
 			}
 
-			var breaths = BreathDetection.DetectBreaths( signal, 0.5 );
+			var breaths = BreathDetection.DetectBreaths( signal, useVariableBaseline: true );
 
 			double signalOffset = (signal.StartTime - _day.RecordingStartTime).TotalSeconds;
 

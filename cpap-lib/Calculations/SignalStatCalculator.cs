@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace cpaplib
@@ -52,11 +53,11 @@ namespace cpaplib
 			    Maximum           = double.MinValue
 		    };
 
-		    int     period         = (int)(60 * _signals[ 0 ].FrequencyInHz);
-		    decimal deviationSum   = 0;
-		    int     deviationTotal = 0;
-    		decimal sum            = 0;
-		    bool    foundMinimum   = false;
+		    int    period         = (int)(60 * _signals[ 0 ].FrequencyInHz);
+		    double deviationSum   = 0;
+		    int    deviationTotal = 0;
+    		double sum            = 0;
+		    bool   foundMinimum   = false;
     
     		foreach( var signal in _signals )
     		{
@@ -67,11 +68,12 @@ namespace cpaplib
     			for( int i = 0; i < data.Count; i++ )
     			{
     				var sample = data[ i ];
+				    Debug.Assert( !double.IsNaN( sample ) && !double.IsInfinity( sample ) );
 
 				    deviationCalculator.AddObservation( MathUtil.InverseLerp( signal.MinValue, signal.MaxValue, sample ) );
 				    if( deviationCalculator.HasFullPeriod )
 				    {
-					    deviationSum   += (decimal)deviationCalculator.StandardDeviation;
+					    deviationSum   += deviationCalculator.StandardDeviation;
 					    deviationTotal += 1;
 				    }
 
@@ -83,7 +85,7 @@ namespace cpaplib
 
 				    result.Maximum =  Math.Max( result.Maximum, sample );
 
-				    sum += (decimal)sample;
+				    sum += sample;
     				
     				if( percentileWindow.Count < percentileWindow.Capacity )
     				{

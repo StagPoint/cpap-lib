@@ -72,7 +72,7 @@
                                 <TextBlock Grid.Column="4"
                                            Text="{Binding EndTime, Mode=OneWay, StringFormat={}{0:T}}"
                                            TextWrapping="NoWrap" />
-                                <TextBlock Grid.Column="6" Text="{Binding Duration, Mode=OneWay}"
+                                <TextBlock Grid.Column="6" Text="{Binding Duration, Mode=OneWay, StringFormat={}{0:hh\\:mm\\:ss}}"
                                            TextWrapping="NoWrap" />
                             </Grid>
 

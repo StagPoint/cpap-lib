@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+// ReSharper disable UseIndexFromEndExpression
 
 namespace cpaplib
 {
@@ -79,7 +80,7 @@ namespace cpaplib
 			}
 
 			// Extract breath information from the Flow Rate data, which can be used to derive other Signals.
-			var breaths = BreathDetection.DetectBreaths( flowRateSignal );
+			var breaths = BreathDetection.DetectBreaths( flowRateSignal, useVariableBaseline: true );
 			if( breaths == null || breaths.Count == 0 )
 			{
 				return;
@@ -101,7 +102,7 @@ namespace cpaplib
 			var tidalVolumeSignal = session.GetSignalByName( SignalNames.TidalVolume );
 			if( tidalVolumeSignal == null )
 			{
-				tidalVolumeSignal = GenerateTidalVolumeSignal( flowRateSignal, respirationRateSignal );
+				tidalVolumeSignal = GenerateTidalVolumeSignal( breaths );
 				
 				if( tidalVolumeSignal != null )
 				{
@@ -226,11 +227,69 @@ namespace cpaplib
 			return outputSignal;
 		}
 
+		public static Signal GenerateTidalVolumeSignal( List<BreathRecord> breaths )
+		{
+			const double OUTPUT_FREQUENCY = 0.5;
+			const double OUTPUT_INTERVAL  = 1.0 / OUTPUT_FREQUENCY;
+			
+			var firstBreath   = breaths[ 0 ];
+			var lastBreath    = breaths[ breaths.Count - 1 ];
+			var totalDuration = (lastBreath.EndTime - firstBreath.StartInspiration).TotalSeconds;
+
+			var outputSamples = new List<double>( (int)(totalDuration * OUTPUT_FREQUENCY) );
+			var outputSignal = new Signal
+			{
+				Name              = SignalNames.TidalVolume,
+				FrequencyInHz     = OUTPUT_FREQUENCY,
+				MinValue          = 0,
+				MaxValue          = 4000.0,
+				UnitOfMeasurement = "ml",
+				Samples           = outputSamples,
+				StartTime         = firstBreath.StartInspiration,
+				EndTime           = lastBreath.EndTime,
+			};
+
+			int currentBreathIndex = 0;
+			var currentBreath      = breaths[ 0 ];
+
+			// Using a sliding window average allows us to calculate and use the instantaneous "breaths per minute" 
+			// value at each given point in time without having a "stepped" output.  
+			int smootherPeriod      = (int)(30.0 / OUTPUT_INTERVAL);
+			var respirationSmoother = new MovingAverageCalculator( smootherPeriod );
+			var flowSmoother        = new MovingAverageCalculator( smootherPeriod );
+			
+			for( DateTime currentTime = firstBreath.StartInspiration; currentTime < lastBreath.EndTime; currentTime = currentTime.AddSeconds( OUTPUT_INTERVAL ) )
+			{
+				while( currentBreath.EndTime < currentTime )
+				{
+					currentBreathIndex += 1;
+					currentBreath      =  breaths[ currentBreathIndex ];
+				}
+
+				var instantaneousBPM = 60.0 / currentBreath.TotalCycleTime;
+				respirationSmoother.AddObservation( instantaneousBPM );
+
+				var averageFlowOverBreathCycle = currentBreath.TotalFlow / currentBreath.TotalCycleTime;
+				flowSmoother.AddObservation( averageFlowOverBreathCycle );
+
+				var respirationRate = respirationSmoother.Average;
+				var tidalVolume     = (flowSmoother.Average + flowSmoother.StandardDeviation) / respirationRate / 60 * 1000;
+
+				var outputValue = respirationRate > 0 ? tidalVolume : 0;
+				Debug.Assert( !double.IsNaN( outputValue ), "Unexpected NaN value in output" );
+				outputSamples.Add( outputValue );
+
+				outputSignal.EndTime = currentTime;
+			}
+			
+			return outputSignal;
+		}
+
 		public static Signal GenerateTidalVolumeSignal( Signal flowRate, Signal respirationRate )
 		{
 			// TODO: For reasons that are not entirely clear to me, this function is extremely sensitive to the FlowRate sample frequency, and is apparently tuned to a frequency of 25Hz
 			
-			const int HISTORY_WINDOW_SIZE = 15;
+			const int HISTORY_WINDOW_DURATION = 15;
 			
 			double rrSampleFrequency   = respirationRate.FrequencyInHz;
 			double rrSampleInterval    = 1.0 / rrSampleFrequency;
@@ -250,7 +309,7 @@ namespace cpaplib
 				EndTime           = respirationRate.EndTime,
 			};
 
-			int flowWindowSize = (int)(HISTORY_WINDOW_SIZE * flowSampleFrequency);
+			int flowWindowSize = (int)(HISTORY_WINDOW_DURATION * flowSampleFrequency);
 
 			double inspiratoryFlow = 0.0;
 			double inspiratoryTime = 0.0;
@@ -293,7 +352,7 @@ namespace cpaplib
 					continue;
 				}
 
-				var averageInspiratoryFlow = inspiratoryFlow / HISTORY_WINDOW_SIZE;
+				var averageInspiratoryFlow = inspiratoryFlow / HISTORY_WINDOW_DURATION;
 				var respirationIndex       = Math.Min( (int)(currentTime / rrSampleInterval), respirationRate.Samples.Count - 1 );
 				var inspirationRatio       = inspiratoryTime / flowWindowSize;
 
@@ -304,6 +363,7 @@ namespace cpaplib
 				var output = rr > 0 ? tv : 0;
 				smoother.AddObservation( output );
 
+				Debug.Assert( !double.IsNaN( smoother.Average ), "Unexpected NaN value in output" );
 				tidalVolumeSamples.Add( smoother.Average );
 				lastOutputTime = currentTime;
 			}
@@ -346,18 +406,18 @@ namespace cpaplib
 
 		public static Signal GenerateRespirationRateSignal( List<BreathRecord> breaths )
 		{
-			const double FREQUENCY = 0.5;
-			const double INTERVAL  = 1.0 / FREQUENCY;
+			const double OUTPUT_FREQUENCY = 0.5;
+			const double OUTPUT_INTERVAL  = 1.0 / OUTPUT_FREQUENCY;
 			
 			var firstBreath   = breaths[ 0 ];
 			var lastBreath    = breaths[ breaths.Count - 1 ];
 			var totalDuration = (lastBreath.EndTime - firstBreath.StartInspiration).TotalSeconds;
 
-			var respirationSamples = new List<double>( (int)(totalDuration * FREQUENCY) );
+			var respirationSamples = new List<double>( (int)(totalDuration * OUTPUT_FREQUENCY) );
 			var respirationSignal = new Signal
 			{
 				Name              = SignalNames.RespirationRate,
-				FrequencyInHz     = FREQUENCY,
+				FrequencyInHz     = OUTPUT_FREQUENCY,
 				MinValue          = 0,
 				MaxValue          = 50,
 				UnitOfMeasurement = "sec",
@@ -366,34 +426,38 @@ namespace cpaplib
 				EndTime           = lastBreath.EndTime,
 			};
 
-			var window             = new List<BreathRecord>();
 			int currentBreathIndex = 0;
+			var currentBreath      = breaths[ 0 ];
 
-			for( DateTime currentTime = firstBreath.StartInspiration; currentTime < lastBreath.EndTime; currentTime = currentTime.AddSeconds( INTERVAL ) )
+			// Using a sliding window average allows us to calculate and use the instantaneous "breaths per minute" 
+			// value at each given point in time without having a "stepped" output.  
+			int smootherPeriod = (int)(30.0 / OUTPUT_INTERVAL);
+			var smoother       = new MovingAverageCalculator( smootherPeriod );
+			
+			for( DateTime currentTime = firstBreath.StartInspiration; currentTime < lastBreath.EndTime; currentTime = currentTime.AddSeconds( OUTPUT_INTERVAL ) )
 			{
-				// Remove breaths that ended more than a minute ago
-				while( window.Count > 0 && window[ 0 ].EndTime <= currentTime.AddSeconds( -60 ) )
+				while( currentBreath.EndTime < currentTime )
 				{
-					window.RemoveAt( 0 );
+					currentBreathIndex += 1;
+					currentBreath      =  breaths[ currentBreathIndex ];
 				}
 
-				// Add any breaths that overlap the current time 
-				while( currentBreathIndex < breaths.Count - 1 && breaths[ currentBreathIndex ].StartInspiration <= currentTime )
-				{
-					window.Add( breaths[ currentBreathIndex++ ] );
-				}
+				var currentBreathValue = 60.0 / currentBreath.TotalCycleTime;
+				smoother.AddObservation( currentBreathValue );
 
-				if( currentBreathIndex < 3 )
+				if( smoother.Count > smootherPeriod / 4 )
 				{
+					Debug.Assert( !double.IsNaN( smoother.Average ), "Unexpected NaN value in output" );
+					respirationSamples.Add( smoother.Average );
+				}
+				else
+				{
+					// Output zero while waiting for the smoother to accumulate enough samples to 
+					// have a meaningful average. 
 					respirationSamples.Add( 0 );
-					continue;
 				}
 
-				var multiplier = (window.Count <= 1) ? 1.0 : (60.0 / (window[ window.Count - 1 ].EndTime - window[ 0 ].StartInspiration).TotalSeconds);
-				
-				// Output the number of breaths that overlap the last minute
-				var outputValue = MathUtil.Clamp( respirationSignal.MinValue, respirationSignal.MaxValue, window.Count * multiplier );
-				respirationSamples.Add( outputValue );
+				respirationSignal.EndTime = currentTime;
 			}
 			
 			return respirationSignal;

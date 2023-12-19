@@ -133,7 +133,7 @@ namespace cpaplib
 				var signal = session.GetSignalByName( SignalNames.LeakRate );
 				if( signal != null )
 				{
-					day.Events.AddRange( Annotate( EventType.LargeLeak, signal, 5, LeakRedline, false ) );
+					day.Events.AddRange( Annotate( EventType.LargeLeak, signal, 1, LeakRedline, false ) );
 				}
 			}
 		}
