@@ -117,7 +117,7 @@ namespace cpaplib
 				
 				// TODO: Total flow calculation is likely incorrect, needs an error analysis  
 				// Keep track of all inspiratory and expiratory flow (unfiltered, not adjusted for baseline)
-				totalFlow += Math.Abs( flowSignal[ i ] ) * (30.0 / flowSignal.FrequencyInHz);
+				totalFlow += Math.Abs( flowSignal[ i ] ) * 1.2;
 
 				if( useVariableBaseline )
 				{

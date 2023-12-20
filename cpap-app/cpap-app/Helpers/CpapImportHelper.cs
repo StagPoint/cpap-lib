@@ -58,7 +58,7 @@ public class CpapImportHelper
 
 				var dialog = MessageBoxManager.GetMessageBoxStandard(
 					$"Import from {drive.RootDirectory}?",
-					$"There appears to be a CPAP data folder structure on Drive {drive.Name}\nMachine: {machineID.ProductName}, Serial #: {machineID.SerialNumber}\n\nDo you want to import this data from {drive.Name}?",
+					$"There appears to be a CPAP data folder structure on Drive {drive.Name}\nMachine: {machineID.ProductName}, Serial #{machineID.SerialNumber}\n\nDo you want to import this data from {drive.Name}?",
 					ButtonEnum.YesNoCancel,
 					Icon.Database );
 

@@ -900,10 +900,30 @@ public partial class MainView : UserControl
 		var owner = this.FindAncestorOfType<Window>();
 		Debug.Assert( owner != null, nameof( owner ) + " != null" );
 		
+		var profile = ActiveUserProfile;
+						
 		var import = await CpapImportHelper.GetImportFolder( owner );
 		if( import == null || string.IsNullOrEmpty( import.Folder ) )
 		{
 			return;
+		}
+
+		// Make sure that the user has the correct profile selected for the machine they are importing from
+		var machineInfo = import.Loader.LoadMachineIdentificationInfo( import.Folder );
+		if( !string.IsNullOrEmpty( profile.MachineID ) && profile.MachineID != machineInfo.SerialNumber )
+		{
+			var dialog = MessageBoxManager.GetMessageBoxStandard(
+				$"Import from {machineInfo.ProductName} to profile {profile.UserName}?",
+				$"The location you have selected contains data for '{machineInfo.ProductName}',\nbut your last import was from '{profile.VentilatorModel}'.\n\nAre you sure you wish to import this data into the {profile.UserName} profile?",
+				ButtonEnum.YesNo,
+				Icon.Database );
+
+			var result = await dialog.ShowWindowDialogAsync( owner );
+
+			if( result != ButtonResult.Yes )
+			{
+				return;
+			}
 		}
 
 		var td = new TaskDialog
@@ -950,8 +970,6 @@ public partial class MainView : UserControl
 
 					if( mostRecentDay != null )
 					{
-						var profile = ActiveUserProfile;
-						
 						// TODO: Because DailyReportView has its own flow for loading a DailyReport, this leaves open the possibility of bypassing things like event subscription, etc.
 						var importedDay = LoadDailyReport( profile.UserProfileID, mostRecentDay.Value );
 						DataContext = importedDay;

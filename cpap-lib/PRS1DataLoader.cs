@@ -182,11 +182,16 @@ public class PRS1DataLoader : ICpapDataLoader
 
 			foreach( var sesh in meta.Sessions )
 			{
+				currentDay.Events.AddRange( sesh.Events );
+
+				// Generate the missing Tidal Volume, Minute Ventilation, Respiration Rate, Inspiration Time,
+				// Expiration Time, and I:E Ratio signals from flow data 
 				DerivedSignals.GenerateMissingRespirationSignals( currentDay, sesh.Session );
+
+				// Need to generate the AHI signal after events are added
 				DerivedSignals.GenerateApneaIndexSignal( currentDay, sesh.Session );
 
 				currentDay.AddSession( sesh.Session );
-				currentDay.Events.AddRange( sesh.Events );
 
 				// Each DailyReport only retains the settings of the last Session.
 				MergeSettings( currentDay, sesh.Settings );
@@ -349,10 +354,62 @@ public class PRS1DataLoader : ICpapDataLoader
 				{
 					sessionData.Session.AddSignal( signals[ i ] );
 				}
+
+				signals = GenerateStatsSignals( sessionData );
+				for( int i = 0; i < signals.Count; i++ )
+				{
+					sessionData.Session.AddSignal( signals[ i ] );
+				}
 			}
 		}
 
 		return sessionData;
+	}
+
+	private static List<Signal> GenerateStatsSignals( ImportSession importSession )
+	{
+		var outputSignalList = new List<Signal>();
+
+		var startTime = importSession.StartTime;
+		var endTime   = importSession.EndTime;
+
+		var pressureSignal = BuildPressureSignal( importSession, SignalNames.Pressure, startTime, endTime );
+		outputSignalList.Add( pressureSignal );
+
+		if( importSession.Stats.Any( x => x.Name == SignalNames.EPAP ) )
+		{
+			var epapSignal = BuildPressureSignal( importSession, SignalNames.EPAP, startTime, endTime );
+			outputSignalList.Add( epapSignal );
+		}
+		
+		if( importSession.Stats.Any( x => x.Name == SignalNames.TotalLeak ) )
+		{
+			var totalLeakSignal = BuildStatsSignal( 
+				importSession, 
+				SignalNames.TotalLeak, 
+				0.0, 
+				120.0,
+				"L/min",
+				startTime, 
+				endTime
+			);
+			
+			outputSignalList.Add( totalLeakSignal );
+			
+			var leakRateSignal = BuildLeakSignal( 
+				importSession, 
+				pressureSignal, 
+				0.0, 
+				120.0,
+				"L/min",
+				startTime, 
+				endTime
+			);
+			
+			outputSignalList.Add( leakRateSignal );
+		}
+
+		return outputSignalList;
 	}
 	
 	private static List<Signal> ReadSignals( List<DataChunk> chunks, ImportSession importSession )
@@ -438,45 +495,6 @@ public class PRS1DataLoader : ICpapDataLoader
 		var flowSignal = BuildFlowSignal( samples, startTime, previousChunk.Header.EndTimestamp );
 		outputSignalList.Add( flowSignal );
 		
-		// Build signals from "stats" data
-		{
-			var pressureSignal = BuildPressureSignal( importSession, SignalNames.Pressure, startTime, previousChunk.Header.EndTimestamp );
-			outputSignalList.Add( pressureSignal );
-
-			if( importSession.Stats.Any( x => x.Name == SignalNames.EPAP ) )
-			{
-				var epapSignal = BuildPressureSignal( importSession, SignalNames.EPAP, startTime, previousChunk.Header.EndTimestamp );
-				outputSignalList.Add( epapSignal );
-			}
-			
-			if( importSession.Stats.Any( x => x.Name == SignalNames.TotalLeak ) )
-			{
-				// var totalLeakSignal = BuildStatsSignal( 
-				// 	importSession, 
-				// 	SignalNames.TotalLeak, 
-				// 	0.0, 
-				// 	120.0,
-				// 	"L/min",
-				// 	startTime, 
-				// 	previousChunk.Header.EndTimestamp 
-				// );
-				//
-				// outputSignalList.Add( totalLeakSignal );
-				
-				var leakRateSignal = BuildLeakSignal( 
-					importSession, 
-					pressureSignal, 
-					0.0, 
-					120.0,
-					"L/min",
-					startTime, 
-					previousChunk.Header.EndTimestamp 
-				);
-				
-				outputSignalList.Add( leakRateSignal );
-			}
-		}
-
 		return outputSignalList;
 	}
 	
@@ -522,8 +540,12 @@ public class PRS1DataLoader : ICpapDataLoader
 
 			var tPressure = MathUtil.InverseLerp( 4, 20, MathUtil.Clamp( 4, 20, pressureSignal[ outputSamples.Count ] ) );
 			
-			// TODO: Replace these "Mask-defined leak rate" constants with configurable values
-			var maskDefinedLeakRate = MathUtil.Lerp( 20.1, 48.3, tPressure );
+			// TODO: Replace these "Mask-defined leak rate" constants with configurable values. I know I've seen a table for different mask types, can't find it right now.
+			// This should be based on mask type or configurable options in the user's preferences, but from 
+			// what I've been able to find so far, the differences in "intentional leak" pressure curve for
+			// different masks and mask types are relatively close (which makes sense, as it serves the same
+			// purpose regardless of mask type).
+			var maskDefinedLeakRate = MathUtil.Lerp( 19, 48, tPressure );
 
 			outputSamples.Add( Math.Max( reportedLeak - maskDefinedLeakRate, 0 ) );
 		}
@@ -1068,7 +1090,7 @@ public class PRS1DataLoader : ICpapDataLoader
 							statistics.Add( new ValueAtTime
 							{
 								Timestamp = timestamp,
-								Name      = SignalNames.Pressure,
+								Name      = SignalNames.EPAP,
 								Value     = reader.ReadByte() * 0.1,
 							} );
 						}
