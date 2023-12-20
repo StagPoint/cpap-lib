@@ -196,6 +196,19 @@ namespace cpap_db
 		
 		#region Public functions (cpap-lib specific)
 
+		public List<string> GetStoredSignalNames( int profileID )
+		{
+			const string sql = $@"
+SELECT DISTINCT signal.Name 
+    FROM signal 
+INNER JOIN session ON 
+    signal.SessionID = session.ID 
+    AND 
+    session.dayID IN (SELECT ID from day WHERE day.UserProfileID = ?)
+";
+			return Connection.QueryScalars<string>( sql, profileID );
+		}
+
 		public List<DailyReport> LoadDailyReportsForRange( int profileID, DateTime start, DateTime end )
 		{
 			List<DailyReport> days = new List<DailyReport>();
@@ -226,7 +239,7 @@ namespace cpap_db
 			day.EventSummary     = SelectByForeignKey<EventSummary>( dayID ).FirstOrDefault() ?? new EventSummary();
 			day.StatsSummary     = SelectByForeignKey<StatisticsSummary>( dayID ).FirstOrDefault() ?? new StatisticsSummary();
 			day.Annotations      = SelectByForeignKey<Annotation>( dayID );
-			day.Settings         = SelectByForeignKey<MachineSettings>( dayID, out int settingsID );
+			day.Settings         = SelectByForeignKey<MachineSettings>( dayID, out int _ );
 
 			var sessionKeys = new List<int>();
 			day.Sessions = SelectByForeignKey<Session, int>( dayID, sessionKeys );
@@ -270,8 +283,7 @@ namespace cpap_db
 
 				Insert( day.EventSummary, foreignKeyValue: dayID );
 				Insert( day.MachineInfo,  foreignKeyValue: dayID );
-
-				int settingsID = Insert( day.Settings, foreignKeyValue: dayID );
+				Insert( day.Settings,     foreignKeyValue: dayID );
 
 				foreach( var evt in day.Events )
 				{
@@ -303,12 +315,15 @@ namespace cpap_db
 					Connection.Commit();
 				}
 			}
+#pragma warning disable CS0168 // Variable is declared but never used
 			catch( Exception err )
+#pragma warning restore CS0168 // Variable is declared but never used
 			{
 				if( !wasInTransaction )
 				{
 					Connection.Rollback();
 				}
+				
 				throw;
 			}
 		}

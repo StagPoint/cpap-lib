@@ -13,6 +13,8 @@ using cpap_app.Controls;
 using cpap_app.Events;
 using cpap_app.ViewModels;
 
+using cpap_db;
+
 using cpaplib;
 
 namespace cpap_app.Views;
@@ -403,8 +405,9 @@ public partial class SignalChartContainer : UserControl
 		_charts.Clear();
 		UnPinnedCharts.Children.Clear();
 		PinnedCharts.Children.Clear();
-		
-		List<SignalChartConfiguration> signalConfigs = SignalChartConfigurationStore.GetSignalConfigurations();
+
+		// TODO: Graph and Event Marker configurations should be profile-specific
+		List<SignalChartConfiguration> signalConfigs = GetFilteredGraphConfigurations();
 		List<EventMarkerConfiguration> eventConfigs  = EventMarkerConfigurationStore.GetEventMarkerConfigurations();
 
 		_eventGraph = new EventGraph( eventConfigs );
@@ -429,6 +432,18 @@ public partial class SignalChartContainer : UserControl
 		}
 	}
 	
+	private List<SignalChartConfiguration> GetFilteredGraphConfigurations()
+	{
+		// TODO: What is the best way to filter the list of available graphs according to the user's machine?
+		
+		var baseList = SignalChartConfigurationStore.GetSignalConfigurations();
+
+		var historicalSignals = StorageService.Connect().GetStoredSignalNames( UserProfileStore.GetActiveUserProfile().UserProfileID );
+		baseList.RemoveAll( x => !historicalSignals.Contains( x.SignalName ) );
+
+		return baseList;
+	}
+
 	private void LoadChartFromConfig( List<SignalChartConfiguration> signalConfigs, SignalChartConfiguration config, List<EventMarkerConfiguration> eventConfigs )
 	{
 		var chart = new SignalChart()

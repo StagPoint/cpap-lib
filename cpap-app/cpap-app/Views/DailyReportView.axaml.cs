@@ -103,6 +103,10 @@ public partial class DailyReportView : UserControl
 			throw new NullReferenceException( $"There is no {nameof( ActiveUserProfile )} value assigned." );
 		}
 
+		var signals = StorageService.Connect().GetStoredSignalNames( ActiveUserProfile.UserProfileID );
+		TabOxygen.IsVisible = signals.Contains( SignalNames.SpO2 );
+		TabStages.IsVisible = signals.Contains( SignalNames.SleepStages );
+
 		LoadTabPage( new DailyDetailsView() { DataContext = DataContext } );
 
 		using var store = StorageService.Connect();
