@@ -43,7 +43,13 @@ public partial class StatisticsView : UserControl
 	private TherapyStatisticsViewModel BuildStatisticsViewModel()
 	{
 		var profileID = UserProfileStore.GetActiveUserProfile().UserProfileID;
-		var end       = StorageService.Connect().GetMostRecentStoredDate( profileID ); 
+		var end       = StorageService.Connect().GetMostRecentStoredDate( profileID );
+
+		if( end <= DateHelper.UnixEpoch )
+		{
+			return new TherapyStatisticsViewModel();
+		}
+		
 		var start     = end.AddYears( -1 );
 		var history   = HistoryViewModel.GetHistory( profileID, start, end );
 

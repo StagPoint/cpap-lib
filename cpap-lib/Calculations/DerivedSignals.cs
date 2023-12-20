@@ -254,7 +254,7 @@ namespace cpaplib
 
 			// Using a sliding window average allows us to calculate and use the instantaneous "breaths per minute" 
 			// value at each given point in time without having a "stepped" output.  
-			int smootherPeriod      = (int)(30.0 / OUTPUT_INTERVAL);
+			int smootherPeriod      = (int)(60.0 / OUTPUT_INTERVAL);
 			var respirationSmoother = new MovingAverageCalculator( smootherPeriod );
 			var flowSmoother        = new MovingAverageCalculator( smootherPeriod );
 			
@@ -339,7 +339,7 @@ namespace cpaplib
 
 			// Using a sliding window average allows us to calculate and use the instantaneous "breaths per minute" 
 			// value at each given point in time without having a "stepped" output.  
-			int smootherPeriod = (int)(30.0 / OUTPUT_INTERVAL);
+			int smootherPeriod = (int)(60.0 / OUTPUT_INTERVAL);
 			var smoother       = new MovingAverageCalculator( smootherPeriod );
 			
 			for( DateTime currentTime = firstBreath.StartInspiration; currentTime < lastBreath.EndTime; currentTime = currentTime.AddSeconds( OUTPUT_INTERVAL ) )
@@ -373,18 +373,18 @@ namespace cpaplib
 
 		internal static ( Signal, Signal, Signal ) GenerateRespirationTimeSignals( List<BreathRecord> breaths )
 		{
-			const double FREQUENCY = 0.5;
-			const double INTERVAL  = 1.0 / FREQUENCY;
+			const double OUTPUT_FREQUENCY = 0.5;
+			const double OUTPUT_INTERVAL  = 1.0 / OUTPUT_FREQUENCY;
 			
 			var firstBreath   = breaths[ 0 ];
 			var lastBreath    = breaths[ breaths.Count - 1 ];
 			var totalDuration = (lastBreath.EndTime - firstBreath.StartInspiration).TotalSeconds;
 
-			var inspirationSamples = new List<double>( (int)(totalDuration * FREQUENCY) );
+			var inspirationSamples = new List<double>( (int)(totalDuration * OUTPUT_FREQUENCY) );
 			var inspirationSignal = new Signal
 			{
 				Name              = SignalNames.InspirationTime,
-				FrequencyInHz     = FREQUENCY,
+				FrequencyInHz     = OUTPUT_FREQUENCY,
 				MinValue          = 0,
 				MaxValue          = 30,
 				UnitOfMeasurement = "sec",
@@ -393,11 +393,11 @@ namespace cpaplib
 				EndTime           = lastBreath.EndTime,
 			};
 
-			var expirationSamples = new List<double>( (int)(totalDuration * FREQUENCY) );
+			var expirationSamples = new List<double>( (int)(totalDuration * OUTPUT_FREQUENCY) );
 			var expirationSignal = new Signal
 			{
 				Name              = SignalNames.ExpirationTime,
-				FrequencyInHz     = FREQUENCY,
+				FrequencyInHz     = OUTPUT_FREQUENCY,
 				MinValue          = 0,
 				MaxValue          = 30,
 				UnitOfMeasurement = "sec",
@@ -406,11 +406,11 @@ namespace cpaplib
 				EndTime           = lastBreath.EndTime,
 			};
 
-			var ratioSamples = new List<double>( (int)(totalDuration * FREQUENCY) );
+			var ratioSamples = new List<double>( (int)(totalDuration * OUTPUT_FREQUENCY) );
 			var ratioSignal = new Signal
 			{
 				Name              = SignalNames.InspToExpRatio,
-				FrequencyInHz     = FREQUENCY,
+				FrequencyInHz     = OUTPUT_FREQUENCY,
 				MinValue          = 0,
 				MaxValue          = 8.0,
 				UnitOfMeasurement = "",
@@ -422,9 +422,12 @@ namespace cpaplib
 
 			var currentBreathIndex = 0;
 
-			for( DateTime currentTime = firstBreath.StartInspiration; currentTime < lastBreath.EndTime; currentTime = currentTime.AddSeconds( INTERVAL ) )
+			const int smootherPeriod      = (int)(30.0 / OUTPUT_INTERVAL);
+			var       inspirationSmoother = new MovingAverageCalculator( smootherPeriod );
+			var       expirationSmoother  = new MovingAverageCalculator( smootherPeriod );
+
+			for( DateTime currentTime = firstBreath.StartInspiration; currentTime < lastBreath.EndTime; currentTime = currentTime.AddSeconds( OUTPUT_INTERVAL ) )
 			{
-				// Advance to the breath that overlaps the current timestamp
 				while( breaths[ currentBreathIndex ].EndTime <= currentTime )
 				{
 					currentBreathIndex += 1;
@@ -434,34 +437,14 @@ namespace cpaplib
 				var inspirationLength = currentBreath.InspirationLength;
 				var expirationLength  = currentBreath.ExpirationLength;
 
-				// Because we're mapping a measurement that does not have a constant period to an output that does, 
-				// we'll interpolate values from one breath to the next as the timeline progresses. 
-				if( currentBreathIndex < breaths.Count - 1 )
-				{
-					var nextBreath = breaths[ currentBreathIndex + 1 ];
-
-					var t = MathUtil.InverseLerp(
-						currentBreath.StartInspiration.ToFileTimeUtc(),
-						nextBreath.StartInspiration.ToFileTimeUtc(),
-						currentTime.ToFileTimeUtc()
-					);
-
-					t = MathUtil.Clamp( t, 0.0, 1.0 );
-
-					inspirationLength = MathUtil.Lerp( currentBreath.InspirationLength, nextBreath.InspirationLength, t );
-					expirationLength  = MathUtil.Lerp( currentBreath.ExpirationLength,  nextBreath.ExpirationLength,  t );
-				}
-
-				inspirationSamples.Add( MathUtil.Clamp( 0, 30, inspirationLength ) );
-				expirationSamples.Add( MathUtil.Clamp( 0,  30, expirationLength ) );
-				ratioSamples.Add( expirationLength / inspirationLength );
+				inspirationSmoother.AddObservation( inspirationLength );
+				expirationSmoother.AddObservation( expirationLength );
+				
+				inspirationSamples.Add( inspirationSmoother.Average );
+				expirationSamples.Add( expirationSmoother.Average );
+				ratioSamples.Add( expirationSmoother.Average / inspirationSmoother.Average );
 			}
 
-			// Apply a bit of smoothing to remove the noise inherent in using periodic measurements rather than continuous data
-			ButterworthFilter.FilterInPlace( inspirationSamples, 10, 1.0 );
-			ButterworthFilter.FilterInPlace( expirationSamples,  10, 1.0 );
-			ButterworthFilter.FilterInPlace( ratioSamples,       10, 1.0 );
-			
 			return (inspirationSignal, expirationSignal, ratioSignal);
 		}
 	}

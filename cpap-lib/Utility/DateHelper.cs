@@ -30,6 +30,25 @@ namespace cpaplib
 		{
 			return !AreRangesDisjoint( startA, endA, startB, endB );
 		}
+		
+		public static double InverseLerp( DateTime a, DateTime b, DateTime value )
+		{
+			var numA = (a - UnixEpoch).TotalMilliseconds;
+			var numB = (b - UnixEpoch).TotalMilliseconds;
+			var numV = (value - UnixEpoch).TotalMilliseconds;
+
+			return MathUtil.InverseLerp( numA, numB, MathUtil.Clamp( numA, numB, numV ) );
+		}
+
+		public static DateTime Lerp( DateTime a, DateTime b, double t )
+		{
+			var numA = (a - UnixEpoch).TotalMilliseconds;
+			var numB = (b - UnixEpoch).TotalMilliseconds;
+
+			var lerp = MathUtil.Lerp( numA, numB, t );
+
+			return UnixEpoch.AddMilliseconds( lerp );
+		}
 	}
 }
 

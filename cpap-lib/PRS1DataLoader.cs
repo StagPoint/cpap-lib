@@ -200,14 +200,14 @@ public class PRS1DataLoader : ICpapDataLoader
 			day.Sessions.Sort();
 			day.Events.Sort();
 
-			// var signalNames = GetSignalNames( day );
-			// foreach( var signalName in signalNames )
-			// {
-			// 	if( signalName != SignalNames.FlowRate && signalName != SignalNames.AHI )
-			// 	{
-			// 		day.UpdateSignalStatistics( signalName );
-			// 	}
-			// }
+			var signalNames = GetSignalNames( day );
+			foreach( var signalName in signalNames )
+			{
+				if( signalName != SignalNames.FlowRate && signalName != SignalNames.AHI )
+				{
+					day.UpdateSignalStatistics( signalName );
+				}
+			}
 			
 			day.UpdateEventSummary();
 		}
@@ -344,7 +344,7 @@ public class PRS1DataLoader : ICpapDataLoader
 					chunks.Add( chunk );
 				}
 
-				var signals = ReadSignals( chunks, sessionData.Events );
+				var signals = ReadSignals( chunks, sessionData );
 				for( int i = 0; i < signals.Count; i++ )
 				{
 					sessionData.Session.AddSignal( signals[ i ] );
@@ -355,7 +355,7 @@ public class PRS1DataLoader : ICpapDataLoader
 		return sessionData;
 	}
 	
-	private static List<Signal> ReadSignals( List<DataChunk> chunks, List<ReportedEvent> events )
+	private static List<Signal> ReadSignals( List<DataChunk> chunks, ImportSession importSession )
 	{
 		const double SAMPLE_FREQUENCY = 0.2;
 		
@@ -364,6 +364,7 @@ public class PRS1DataLoader : ICpapDataLoader
 			return new List<Signal>();
 		}
 
+		var events     = importSession.Events;
 		var samples    = new List<byte>();
 		var firstChunk = chunks[ 0 ];
 		var lastChunk  = chunks[ chunks.Count - 1 ];
@@ -431,10 +432,191 @@ public class PRS1DataLoader : ICpapDataLoader
 
 		Debug.Assert( previousChunk != null, nameof( previousChunk ) + " != null" );
 
+		var outputSignalList = new List<Signal>();
+
 		// Build a Signal from the sample data that matches the expected sample frequency and value ranges 
-		var signal = BuildFlowSignal( samples, startTime, previousChunk.Header.EndTimestamp );
+		var flowSignal = BuildFlowSignal( samples, startTime, previousChunk.Header.EndTimestamp );
+		outputSignalList.Add( flowSignal );
 		
-		return new List<Signal> { signal };
+		// Build signals from "stats" data
+		{
+			var pressureSignal = BuildPressureSignal( importSession, SignalNames.Pressure, startTime, previousChunk.Header.EndTimestamp );
+			outputSignalList.Add( pressureSignal );
+
+			if( importSession.Stats.Any( x => x.Name == SignalNames.EPAP ) )
+			{
+				var epapSignal = BuildPressureSignal( importSession, SignalNames.EPAP, startTime, previousChunk.Header.EndTimestamp );
+				outputSignalList.Add( epapSignal );
+			}
+			
+			if( importSession.Stats.Any( x => x.Name == SignalNames.TotalLeak ) )
+			{
+				// var totalLeakSignal = BuildStatsSignal( 
+				// 	importSession, 
+				// 	SignalNames.TotalLeak, 
+				// 	0.0, 
+				// 	120.0,
+				// 	"L/min",
+				// 	startTime, 
+				// 	previousChunk.Header.EndTimestamp 
+				// );
+				//
+				// outputSignalList.Add( totalLeakSignal );
+				
+				var leakRateSignal = BuildLeakSignal( 
+					importSession, 
+					pressureSignal, 
+					0.0, 
+					120.0,
+					"L/min",
+					startTime, 
+					previousChunk.Header.EndTimestamp 
+				);
+				
+				outputSignalList.Add( leakRateSignal );
+			}
+		}
+
+		return outputSignalList;
+	}
+	
+	private static Signal BuildLeakSignal( ImportSession session, Signal pressureSignal, double minValue, double maxValue, string units, DateTime startTime, DateTime endTime )
+	{
+		var points = session.Stats.Where( x => x.Name == SignalNames.TotalLeak ).ToArray();
+		Debug.Assert( points.Length > 0 );
+
+		var signal = new Signal
+		{
+			Name              = SignalNames.LeakRate,
+			FrequencyInHz     = 1,
+			MinValue          = minValue,
+			MaxValue          = maxValue,
+			UnitOfMeasurement = units,
+			StartTime         = startTime,
+			EndTime           = endTime,
+		};
+
+		var outputSamples = signal.Samples;
+		var lastIndex     = 0;
+		var currentIndex  = 0;
+
+		for( var currentTime = startTime; currentTime < endTime; currentTime += TimeSpan.FromSeconds( signal.FrequencyInHz ) )
+		{
+			while( currentIndex < points.Length - 1 && points[ currentIndex ].Timestamp <= currentTime )
+			{
+				lastIndex    =  currentIndex;
+				currentIndex += 1;
+			}
+
+			var reportedLeak = 0.0;
+			if( lastIndex == currentIndex )
+			{
+				reportedLeak = points[ currentIndex ].Value;
+			}
+			else
+			{
+				var t = DateHelper.InverseLerp( points[ lastIndex ].Timestamp, points[ currentIndex ].Timestamp, currentTime );
+				
+				reportedLeak = MathUtil.Lerp( points[ lastIndex ].Value, points[ currentIndex ].Value, t );
+			}
+
+			var tPressure = MathUtil.InverseLerp( 4, 20, MathUtil.Clamp( 4, 20, pressureSignal[ outputSamples.Count ] ) );
+			
+			// TODO: Replace these "Mask-defined leak rate" constants with configurable values
+			var maskDefinedLeakRate = MathUtil.Lerp( 20.1, 48.3, tPressure );
+
+			outputSamples.Add( Math.Max( reportedLeak - maskDefinedLeakRate, 0 ) );
+		}
+
+		return signal;
+	}
+
+	private static Signal BuildStatsSignal( ImportSession session, string key, double minValue, double maxValue, string units, DateTime startTime, DateTime endTime )
+	{
+		var points = session.Stats.Where( x => x.Name == key ).ToArray();
+		Debug.Assert( points.Length > 0 );
+
+		var signal = new Signal
+		{
+			Name              = key,
+			FrequencyInHz     = 1,
+			MinValue          = minValue,
+			MaxValue          = maxValue,
+			UnitOfMeasurement = units,
+			StartTime         = startTime,
+			EndTime           = endTime,
+		};
+
+		var outputSamples = signal.Samples;
+		var lastIndex     = 0;
+		var currentIndex  = 0;
+
+		for( var currentTime = startTime; currentTime < endTime; currentTime += TimeSpan.FromSeconds( signal.FrequencyInHz ) )
+		{
+			while( currentIndex < points.Length - 1 && points[ currentIndex ].Timestamp <= currentTime )
+			{
+				lastIndex    =  currentIndex;
+				currentIndex += 1;
+			}
+
+			if( lastIndex == currentIndex )
+			{
+				outputSamples.Add( points[ currentIndex ].Value );
+			}
+			else
+			{
+				var t           = DateHelper.InverseLerp( points[ lastIndex ].Timestamp, points[ currentIndex ].Timestamp, currentTime );
+				var outputValue = MathUtil.Lerp( points[ lastIndex ].Value, points[ currentIndex ].Value, t );
+				
+				outputSamples.Add( outputValue );
+			}
+		}
+
+		return signal;
+	}
+
+	private static Signal BuildPressureSignal( ImportSession session, string key, DateTime startTime, DateTime endTime )
+	{
+		var points = session.Stats.Where( x => x.Name == key ).ToArray();
+		Debug.Assert( points.Length > 0 );
+
+		var signal = new Signal
+		{
+			Name              = key,
+			FrequencyInHz     = 1,
+			MinValue          = 0,
+			MaxValue          = 30,
+			UnitOfMeasurement = "cmH2O",
+			StartTime         = startTime,
+			EndTime           = endTime,
+		};
+
+		var outputSamples = signal.Samples;
+		var lastIndex     = 0;
+		var currentIndex  = 0;
+
+		for( var currentTime = startTime; currentTime < endTime; currentTime += TimeSpan.FromSeconds( signal.FrequencyInHz ) )
+		{
+			while( currentIndex < points.Length - 1 && points[ currentIndex ].Timestamp <= currentTime )
+			{
+				lastIndex    =  currentIndex;
+				currentIndex += 1;
+			}
+
+			if( lastIndex == currentIndex )
+			{
+				outputSamples.Add( points[ currentIndex ].Value );
+			}
+			else
+			{
+				var t           = DateHelper.InverseLerp( points[ lastIndex ].Timestamp, points[ currentIndex ].Timestamp, currentTime );
+				var outputValue = MathUtil.Lerp( points[ lastIndex ].Value, points[ currentIndex ].Value, t );
+				
+				outputSamples.Add( outputValue );
+			}
+		}
+
+		return signal;
 	}
 
 	private static Signal BuildFlowSignal( List<byte> samples, DateTime startTime, DateTime endTime )
@@ -670,6 +852,7 @@ public class PRS1DataLoader : ICpapDataLoader
 					case 0x01:
 						{
 							// Pressure set
+							
 							statistics.Add( new ValueAtTime
 							{
 								Timestamp = timestamp,
@@ -681,6 +864,7 @@ public class PRS1DataLoader : ICpapDataLoader
 					case 0x02:
 						{
 							// Pressure set (bilevel)
+							
 							statistics.Add( new ValueAtTime
 							{
 								Timestamp = timestamp,
@@ -706,6 +890,7 @@ public class PRS1DataLoader : ICpapDataLoader
 					case 0x05:
 						{
 							// RERA
+							
 							var elapsed   = TimeSpan.FromSeconds( reader.ReadByte() );
 							var startTime = timestamp - elapsed;
 							
@@ -721,6 +906,7 @@ public class PRS1DataLoader : ICpapDataLoader
 					case 0x06:
 						{
 							// Obstructive Apnea
+							
 							var elapsed   = TimeSpan.FromSeconds( reader.ReadByte() );
 							var startTime = timestamp - elapsed;
 							
@@ -736,6 +922,7 @@ public class PRS1DataLoader : ICpapDataLoader
 					case 0x07:
 						{
 							// Central Apnea
+							
 							var elapsed   = TimeSpan.FromSeconds( reader.ReadByte() );
 							var startTime = timestamp - elapsed;
 							
@@ -751,6 +938,7 @@ public class PRS1DataLoader : ICpapDataLoader
 					case 0x0A:
 						{
 							// Hypopnea Type 1?
+							
 							var elapsed   = TimeSpan.FromSeconds( reader.ReadByte() );
 							var startTime = timestamp - elapsed;
 							
@@ -767,7 +955,8 @@ public class PRS1DataLoader : ICpapDataLoader
 						{
 							// Hypopnea Type 2? Maybe "Hypopnea, with duration?"
 							// Not convinced that the first parameter is a duration, but will graph it and see if it lines up.
-							// TODO: Looks like these "Hypopnea type 2" events frequently (if not always) overlap with the other type of Hypopnea event. Find out what that means. 
+							// TODO: Looks like these "Hypopnea type 2" events frequently (if not always) overlap with the other type of Hypopnea event. Find out what that means.
+							
 							var duration  = TimeSpan.FromSeconds( reader.ReadByte() );
 							var elapsed   = TimeSpan.FromSeconds( reader.ReadByte() );
 							var startTime = timestamp - elapsed;
@@ -784,6 +973,7 @@ public class PRS1DataLoader : ICpapDataLoader
 					case 0x0C:
 						{
 							// Flow Limitation
+							
 							var elapsed   = TimeSpan.FromSeconds( reader.ReadByte() );
 							var startTime = timestamp - elapsed;
 													
@@ -809,6 +999,7 @@ public class PRS1DataLoader : ICpapDataLoader
 					case 0x0E:
 						{
 							// Variable Breathing
+							
 							var duration  = TimeSpan.FromSeconds( reader.ReadUInt16() * 2 );
 							var elapsed   = TimeSpan.FromSeconds( reader.ReadByte() );
 							var startTime = timestamp - elapsed - duration;
@@ -825,6 +1016,7 @@ public class PRS1DataLoader : ICpapDataLoader
 					case 0x0F:
 						{
 							// Periodic Breathing
+							
 							var duration  = TimeSpan.FromSeconds( reader.ReadUInt16() * 2 );
 							var elapsed   = TimeSpan.FromSeconds( reader.ReadByte() );
 							var startTime = timestamp - elapsed - duration;
@@ -841,6 +1033,7 @@ public class PRS1DataLoader : ICpapDataLoader
 					case 0x10:
 						{
 							// Large Leak
+							
 							var duration  = TimeSpan.FromSeconds( reader.ReadUInt16() * 2 );
 							var elapsed   = TimeSpan.FromSeconds( reader.ReadByte() );
 							var startTime = timestamp - elapsed - duration;
@@ -857,18 +1050,21 @@ public class PRS1DataLoader : ICpapDataLoader
 					case 0x11:
 						{
 							// Statistics 
+							
 							statistics.Add( new ValueAtTime
 							{
 								Timestamp = timestamp,
-								Name      = SignalNames.LeakRate,
-								Value     = reader.ReadByte() * 0.1,
+								Name      = SignalNames.TotalLeak,
+								Value     = reader.ReadByte(),
 							} );
+							
 							statistics.Add( new ValueAtTime
 							{
 								Timestamp = timestamp,
 								Name      = SignalNames.Snore,
 								Value     = reader.ReadByte(),
 							} );
+							
 							statistics.Add( new ValueAtTime
 							{
 								Timestamp = timestamp,

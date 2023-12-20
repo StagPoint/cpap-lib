@@ -115,9 +115,9 @@ namespace cpaplib
 					maxValue = sample;
 				}
 				
-				// TODO: Total flow calculation is incorrect (should not be based on sampling frequency). Gets close empirically to the ResMed reference values, but is wrong.  
+				// TODO: Total flow calculation is likely incorrect, needs an error analysis  
 				// Keep track of all inspiratory and expiratory flow (unfiltered, not adjusted for baseline)
-				totalFlow += Math.Abs( flowSignal[ i ] ) * (25.0 / flowSignal.FrequencyInHz);
+				totalFlow += Math.Abs( flowSignal[ i ] ) * (30.0 / flowSignal.FrequencyInHz);
 
 				if( useVariableBaseline )
 				{
@@ -168,7 +168,7 @@ namespace cpaplib
 						lastBreath = breath;
 					}
 
-					lastStartIndex       = i;
+					lastStartIndex = i;
 
 					minValue  = 0;
 					maxValue  = 0;

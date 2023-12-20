@@ -12,6 +12,7 @@ using Avalonia.Threading;
 using cpap_app.Configuration;
 using cpap_app.Controls;
 using cpap_app.Events;
+using cpap_app.Helpers;
 using cpap_app.ViewModels;
 
 using cpap_db;
@@ -162,6 +163,10 @@ public partial class HistoryView : UserControl
 			}
 			
 			var lastAvailableDate = store.GetMostRecentStoredDate( profileID );
+			if( lastAvailableDate <= DateHelper.UnixEpoch )
+			{
+				return;
+			}
 
 			// If a set number of days is defined, show only that number of days (from the last available date)
 			if( int.TryParse( value, out int amount ) )
