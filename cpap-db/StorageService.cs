@@ -82,7 +82,7 @@ namespace cpap_db
 
 			var samplesBlobMapping = new ColumnMapping( "samples", "Samples", typeof( Signal ) )
 			{
-				Converter = new DoubleListBlobConverter(),
+				Converter = new SignalDataBlobConverter(),
 			};
 
 			var signalMapping = CreateMapping<Signal>( TableNames.Signal );
@@ -210,7 +210,7 @@ INNER JOIN session ON
 			return Connection.QueryScalars<string>( sql, profileID );
 		}
 
-		public List<DailyReport> LoadDailyReportsForRange( int profileID, DateTime start, DateTime end )
+		public List<DailyReport> LoadDailyReportsForRange( int profileID, DateTime start, DateTime end, bool loadSignalData = true )
 		{
 			List<DailyReport> days = new List<DailyReport>();
 
@@ -218,7 +218,7 @@ INNER JOIN session ON
 
 			foreach( var date in dates )
 			{
-				days.Add( LoadDailyReport( profileID, date ) );
+				days.Add( LoadDailyReport( profileID, date, loadSignalData ) );
 			}
 
 			return days;
