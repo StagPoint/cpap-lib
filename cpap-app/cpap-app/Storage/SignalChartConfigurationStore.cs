@@ -103,16 +103,27 @@ public static class SignalChartConfigurationStore
 					break;
 				
 				case SignalNames.LeakRate:
+					config.SecondarySignalName = SignalNames.TotalLeak;
+					config.ShowStepped         = true;
+					config.BaselineHigh        = 24;
+					config.BaselineLow         = 8;
+					config.AxisMinValue        = 0;
+					config.AxisMaxValue        = 40;
+					config.ScalingMode         = AxisScalingMode.Override;
+					config.DisplayedEvents = new List<EventType>()
+					{
+						EventType.LargeLeak
+					};
+					break;
+				
+				case SignalNames.TotalLeak:
+					config.IsVisible    = false;
 					config.ShowStepped  = true;
 					config.BaselineHigh = 24;
 					config.BaselineLow  = 8;
 					config.AxisMinValue = 0;
 					config.AxisMaxValue = 40;
 					config.ScalingMode  = AxisScalingMode.Override;
-					config.DisplayedEvents = new List<EventType>()
-					{
-						EventType.LargeLeak
-					};
 					break;
 				
 				case SignalNames.FlowLimit:

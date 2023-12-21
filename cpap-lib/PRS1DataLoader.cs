@@ -1221,7 +1221,7 @@ public class PRS1DataLoader : ICpapDataLoader
 			var minPS               = reader.ReadByte() * SCALE;
 			var maxPS               = reader.ReadByte() * SCALE;
 			var startupMode         = reader.ReadByte();
-			var rampTime            = reader.ReadByte();
+			var rampTime            = (int)reader.ReadByte();
 			var rampPressure        = reader.ReadByte() * SCALE;
 			var flexMode            = ReadFlexInfo( reader, mode );
 			var humidifierSettings  = ReadHumidifierSettings( reader );
@@ -1260,12 +1260,8 @@ public class PRS1DataLoader : ICpapDataLoader
 			settings[ SettingNames.AlertMask ]          = maskAlertEnabled;
 			settings[ SettingNames.ShowAHI ]            = showAHIEnabled;
 			settings[ SettingNames.HoseDiameter ]       = hoseDiameter;
-
-			if( humidifierSettings.Mode == HumidifierMode.HeatedTube )
-			{
-				settings[ SettingNames.TubeTemperature ] = humidifierSettings.TubeTemperature;
-				settings[ SettingNames.TubeTempLocked ]  = tubeTempLock;
-			}
+			settings[ SettingNames.TubeTemperature ]    = humidifierSettings.TubeTemperature;
+			settings[ SettingNames.TubeTempLocked ]     = tubeTempLock;
 
 			Debug.Assert( unknown1 == 1 );
 			Debug.Assert( unknown2 == 0 );

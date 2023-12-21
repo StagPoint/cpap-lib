@@ -1,17 +1,18 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 
 namespace cpaplib
 {
-	public class MachineSettings
+	public class MachineSettings : IEnumerable<KeyValuePair<string, object>>
 	{
 		#region Public properties
 
 		public Dictionary<string, object> Values { get; set; } = new Dictionary<string, object>();
-		
-		#endregion 
-		
+
+		#endregion
+
 		#region Indexer properties
 
 		public object this[ string key ]
@@ -19,9 +20,9 @@ namespace cpaplib
 			get { return Values[ key ]; }
 			set { Values[ key ] = value; }
 		}
-		
-		#endregion 
-		
+
+		#endregion
+
 		#region Public functions
 
 		public bool TryGetValue<T>( string key, out T value )
@@ -40,7 +41,21 @@ namespace cpaplib
 		{
 			return (T)Values[ key ];
 		}
-		
-		#endregion 
+
+		#endregion
+
+		#region IEnumerable interface implementation
+
+		public IEnumerator<KeyValuePair<string, object>> GetEnumerator()
+		{
+			return Values.GetEnumerator();
+		}
+
+		IEnumerator IEnumerable.GetEnumerator()
+		{
+			return Values.GetEnumerator();
+		}
+
+		#endregion
 	}
 }

@@ -157,7 +157,6 @@ namespace cpap_db
 			{
 				foreach( var mapping in _mappings )
 				{
-					//Debug.WriteLine( $"Checking database table {mapping.Key.Name}" );
 					mapping.Value.CreateTable( store.Connection );
 				}
 
@@ -226,8 +225,6 @@ INNER JOIN session ON
 		
 		public DailyReport LoadDailyReport( int profileID, DateTime date, bool loadSignalData = true )
 		{
-			var startTime = Environment.TickCount;
-
 			var day = SelectByForeignKey<DailyReport>( profileID ).FirstOrDefault( x => x.ReportDate.Date == date );
 			if( day == null )
 			{
@@ -257,9 +254,6 @@ INNER JOIN session ON
 			day.Events.Sort();
 			day.Sessions.Sort();
 			day.Annotations.Sort();
-
-			var elapsed = Environment.TickCount - startTime;
-			Debug.WriteLine( $"Retrieved {date},    Elapsed: {elapsed}ms" );
 
 			return day;
 		}

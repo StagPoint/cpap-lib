@@ -130,9 +130,9 @@ public class DatabaseMapping
 	private string _selectByForeignKeyQuery = string.Empty;
 
 	#endregion
-	
-	#region Public functions 
-	
+
+	#region Public functions
+
 	public ColumnMapping GetColumnByName( string name )
 	{
 		foreach( var column in Columns )
@@ -179,7 +179,7 @@ public class DatabaseMapping
 
 					if( !column.IsNullable )
 					{
-						string defaultValue = column.Type == typeof( string ) ? "''" : "0"; 
+						string defaultValue = column.Type == typeof( string ) ? "''" : "0";
 						sql += $" NOT NULL DEFAULT ({defaultValue})";
 					}
 
@@ -187,9 +187,9 @@ public class DatabaseMapping
 					tableAltered = true;
 				}
 			}
-			
-			#region DROP COLUMN is not supported by all versions of SQLite 
-			
+
+			#region DROP COLUMN is not supported by all versions of SQLite
+
 			// TODO: Consider whether it's worthwhile to alter the table using the "SELECT INTO TEMP, DROP TABLE, RECREATE TABLE, REPOPULATE FROM TEMP" pattern to alter table structure.
 
 			// // Conversely, if there are columns in the database that no longer appear in the mapping, 
@@ -217,15 +217,15 @@ public class DatabaseMapping
 			// 	
 			// 	tableAltered = true;
 			// }
-			
-			#endregion 
+
+			#endregion
 		}
-		
+
 		return tableAltered;
 	}
 
-	#endregion 
-	
+	#endregion
+
 	#region Private functions
 
 	private string GenerateSelectByPrimaryKeyQuery()
@@ -277,7 +277,7 @@ public class DatabaseMapping
 			{
 				builder.Append( ',' );
 			}
-			
+
 			builder.Append( $"\n\t[{ForeignKey.ColumnName}]" );
 			firstColumn = false;
 		}
@@ -288,7 +288,7 @@ public class DatabaseMapping
 			{
 				builder.Append( ',' );
 			}
-			
+
 			builder.Append( $"\n\t[{column.ColumnName}]" );
 			firstColumn = false;
 		}
@@ -354,15 +354,15 @@ public class DatabaseMapping
 		{
 			throw new Exception( $"Cannot execute an UPDATE statement without a Primary Key for {ObjectType}" );
 		}
-		
-		var builder    = new StringBuilder();
+
+		var builder = new StringBuilder();
 
 		builder.Append( $"UPDATE [{TableName}] \nSET\n" );
 
 		for( int i = 0; i < Columns.Count; i++ )
 		{
 			var column = Columns[ i ];
-			
+
 			builder.Append( $"    [{column.ColumnName}] = ?" );
 
 			if( i < Columns.Count - 1 )
@@ -536,12 +536,12 @@ public class DatabaseMapping
 	#endregion
 }
 
-public class DatabaseMapping<T> : DatabaseMapping 
-	where T: class, new()
+public class DatabaseMapping<T> : DatabaseMapping
+	where T : class, new()
 {
 	#region Constructors
 
-	public DatabaseMapping( string tableName ) 
+	public DatabaseMapping( string tableName )
 	{
 		ObjectType = typeof( T );
 		TableName  = tableName;
@@ -554,7 +554,7 @@ public class DatabaseMapping<T> : DatabaseMapping
 			{
 				continue;
 			}
-			
+
 			if( property.CanRead && property.CanWrite )
 			{
 				if( property.PropertyType.IsValueType || property.PropertyType == typeof( string ) )
@@ -563,7 +563,7 @@ public class DatabaseMapping<T> : DatabaseMapping
 						property.Name.Equals( $"{ObjectType.Name}ID", StringComparison.OrdinalIgnoreCase ) ||
 						property.Name.Equals( "_id",                  StringComparison.OrdinalIgnoreCase ) ||
 						property.Name.Equals( "id",                   StringComparison.OrdinalIgnoreCase );
-					
+
 					if( fitsPrimaryKeyColumnNamingPattern )
 					{
 						var isIntegerProperty = property.PropertyType.GetTypeInfo().GetInterfaces().Any( i => i.IsGenericType && (i.GetGenericTypeDefinition() == typeof( INumber<> )) );
@@ -574,10 +574,10 @@ public class DatabaseMapping<T> : DatabaseMapping
 					else
 					{
 						// TODO: This doesn't seem to handle nullable strings properly? Noticed at one point, don't have a repro unfortunately.
-						
+
 						var newColumn = new ColumnMapping( property.Name, property );
 						newColumn.IsNullable = Nullable.GetUnderlyingType( property.PropertyType ) != null;
-						
+
 						Columns.Add( newColumn );
 					}
 				}
@@ -598,7 +598,7 @@ public class DatabaseMapping<T> : DatabaseMapping
 		{
 			if( map.TryGetValue( column.ColumnName, out object value ) )
 			{
-				value = StorageService.ConvertValue( value, data.GetColumnType( column.ColumnName ), column.Type );				
+				value = StorageService.ConvertValue( value, data.GetColumnType( column.ColumnName ), column.Type );
 				column.SetValue( obj, value );
 			}
 		}
@@ -618,7 +618,7 @@ public class DatabaseMapping<T> : DatabaseMapping
 		return list;
 	}
 
-	internal List<T> ExecuteQuery<P>( SQLiteConnection connection, string query, IList<P> primaryKeys, params object[] arguments ) 
+	internal List<T> ExecuteQuery<P>( SQLiteConnection connection, string query, IList<P> primaryKeys, params object[] arguments )
 		where P : struct
 	{
 		List<T> result = new();
@@ -642,7 +642,7 @@ public class DatabaseMapping<T> : DatabaseMapping
 				{
 					var columnName = SQLite3.ColumnName( stmt, index );
 					var columnType = SQLite3.ColumnType( stmt, index );
-					
+
 					var columnMapping = GetColumnByName( columnName );
 					if( columnMapping != null )
 					{
@@ -694,10 +694,10 @@ public class DatabaseMapping<T> : DatabaseMapping
 				int columnCount = SQLite3.ColumnCount( stmt );
 				for( int index = 0; index < columnCount; ++index )
 				{
-					var columnName  = SQLite3.ColumnName( stmt, index );
-					var columnType  = SQLite3.ColumnType( stmt, index );
-					
-					var columnMapping  = GetColumnByName( columnName );
+					var columnName = SQLite3.ColumnName( stmt, index );
+					var columnType = SQLite3.ColumnType( stmt, index );
+
+					var columnMapping = GetColumnByName( columnName );
 					if( columnMapping != null )
 					{
 						var columnValue = StorageService.ReadColumn( stmt, index, columnType, columnMapping.Type );
@@ -727,7 +727,7 @@ public class DatabaseMapping<T> : DatabaseMapping
 	internal bool Delete( SQLiteConnection connection, object primaryKeyValue )
 	{
 		var rows = connection.Execute( DeleteQuery, primaryKeyValue );
-		
+
 		return rows > 0;
 	}
 
@@ -753,13 +753,13 @@ public class DatabaseMapping<T> : DatabaseMapping
 		return ExecuteQuery( connection, SelectByPrimaryKeyQuery, primaryKeyValue );
 	}
 
-	internal List<T> SelectByForeignKey<P>( SQLiteConnection connection, object foreignKeyValue, IList<P> primaryKeys = null ) 
-		where P: struct
+	internal List<T> SelectByForeignKey<P>( SQLiteConnection connection, object foreignKeyValue, IList<P> primaryKeys = null )
+		where P : struct
 	{
 		return ExecuteQuery( connection, SelectByForeignKeyQuery, primaryKeys, foreignKeyValue );
 	}
 
-	internal List<T> SelectByForeignKey( SQLiteConnection connection, object foreignKeyValue ) 
+	internal List<T> SelectByForeignKey( SQLiteConnection connection, object foreignKeyValue )
 	{
 		return ExecuteQuery( connection, SelectByForeignKeyQuery, foreignKeyValue );
 	}
@@ -769,7 +769,7 @@ public class DatabaseMapping<T> : DatabaseMapping
 		object[] args = new object[ Columns.Count + 1 ];
 
 		int nextColumnIndex = 0;
-		
+
 		foreach( var column in Columns )
 		{
 			args[ nextColumnIndex++ ] = column.GetValue( data );

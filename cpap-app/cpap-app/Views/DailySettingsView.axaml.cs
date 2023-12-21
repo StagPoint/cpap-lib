@@ -28,17 +28,83 @@ public partial class DailySettingsView : UserControl
 		}
 	}
 	
-	private MachineSettingsViewModel CreateMachineSettingsViewModel( DailyReport day )
+	private static MachineSettingsViewModel CreateMachineSettingsViewModel( DailyReport day )
 	{
 		if( day.MachineInfo.Manufacturer == MachineManufacturer.ResMed )
 		{
 			return CreateResMedViewModel( day );
 		}
 
-		return new MachineSettingsViewModel();
+		return CreatePhilipsRespironicsViewModel( day );
+	}
+	
+	private static MachineSettingsViewModel CreatePhilipsRespironicsViewModel( DailyReport day )
+	{
+		var settings  = day.Settings;
+		var viewModel = new MachineSettingsViewModel();
+		var items     = viewModel.Settings;
+
+		var mode = settings.GetValue<OperatingMode>( SettingNames.Mode );
+		items.Add( new MachineSettingsItemViewModel( "Mode", GetModeString( mode ) ) );
+
+		switch( mode )
+		{
+			case OperatingMode.Cpap:
+				items.Add( new MachineSettingsItemViewModel( "Pressure", $"{settings[ SettingNames.Pressure ]:F2}", "cmH20" ) );
+				break;
+			case OperatingMode.Apap:
+				items.Add( new MachineSettingsItemViewModel( "Min Pressure", $"{settings[ SettingNames.MinPressure ]:F2}", "cmH20" ) );
+				items.Add( new MachineSettingsItemViewModel( "Max Pressure", $"{settings[ SettingNames.MaxPressure ]:F2}", "cmH20" ) );
+
+				var flexMode = (FlexMode)settings[ SettingNames.FlexMode ];
+				items.Add( new MachineSettingsItemViewModel( "Flex Mode", flexMode ) );
+
+				if( flexMode != FlexMode.None && flexMode != FlexMode.Unknown )
+				{
+					items.Add( new MachineSettingsItemViewModel( "Flex Level",  (int)settings[ SettingNames.FlexLevel ] ) );
+					items.Add( new MachineSettingsItemViewModel( "Flex Locked", (bool)settings[ SettingNames.FlexLock ] ) );
+				}
+				break;
+		}
+
+		var rampTime = (int)settings[ SettingNames.RampTime ];
+		if( rampTime > 0 )
+		{
+			items.Add( new MachineSettingsItemViewModel( "Ramp Pressure", $"{settings[ SettingNames.RampPressure ]:F2}", "cmH20" ) );
+			items.Add( new MachineSettingsItemViewModel( "Ramp Time",     rampTime,                                      "Minutes" ) );
+		}
+
+		items.Add( new MachineSettingsItemViewModel( "Auto On",  (bool)settings[ SettingNames.AutoOn ] ) );
+		items.Add( new MachineSettingsItemViewModel( "Auto Off", (bool)settings[ SettingNames.AutoOff ] ) );
+		
+		items.Add( new MachineSettingsItemViewModel( "Hose Diameter", (int)settings[ SettingNames.HoseDiameter ] ) );
+		
+		var humidiferAttached = (bool)settings[ SettingNames.HumidifierAttached ];
+		items.Add( new MachineSettingsItemViewModel( "Humidifier Connected", humidiferAttached ? "Yes" : "No" ) );
+		if( humidiferAttached )
+		{
+			var humidifierMode = (HumidifierMode)settings[ SettingNames.HumidifierMode ];
+			items.Add( new MachineSettingsItemViewModel( "Humidifier Mode", humidifierMode ) );
+
+			if( humidifierMode == HumidifierMode.Fixed )
+			{
+				items.Add( new MachineSettingsItemViewModel( "Humidity Level", (int)settings[ SettingNames.HumidityLevel ] ) );
+			}
+			else if( humidifierMode == HumidifierMode.HeatedTube )
+			{
+				items.Add( new MachineSettingsItemViewModel( "Tube Temperature", (double)settings[ SettingNames.TubeTemperature ] ) );
+			}
+		}
+
+		if( settings.TryGetValue( SettingNames.TubeTempLocked, out bool tubeTempLocked ) )
+		{
+			items.Add( new MachineSettingsItemViewModel( "Tube Locked", tubeTempLocked ) );
+		}
+
+		return viewModel;
 	}
 
-	private MachineSettingsViewModel CreateResMedViewModel( DailyReport day )
+	private static MachineSettingsViewModel CreateResMedViewModel( DailyReport day )
 	{
 		var settings  = day.Settings;
 		var viewModel = new MachineSettingsViewModel();
@@ -131,11 +197,11 @@ public partial class DailySettingsView : UserControl
 		// TODO: Should probably refer to the raw Mode setting to differentiate modes, which would entail making the raw settings data available 
 		return mode switch
 		{
-			OperatingMode.Cpap              => "CPAP",
-			OperatingMode.Apap              => "Auto",
-			OperatingMode.Asv               => "ASV",
+			OperatingMode.Cpap            => "CPAP",
+			OperatingMode.Apap            => "Auto",
+			OperatingMode.Asv             => "ASV",
 			OperatingMode.AsvVariableEpap => "ASV Auto",
-			_                               => mode.ToString()
+			_                             => mode.ToString()
 		};
 	}
 }
