@@ -1786,7 +1786,7 @@ public partial class SignalChart : UserControl
 			// Not every Session will contain the signal data for this chart. This is often the case when Sessions
 			// have been added after CPAP data was imported, such as when importing pulse oximeter data or sleep
 			// stage data, for example. 
-			if( signal == null )
+			if( signal == null || signal.Samples.Count == 0 )
 			{
 				continue;
 			}

@@ -135,10 +135,10 @@ public partial class DailyScoreSummaryView : UserControl
 
 	private void LoadDate( StorageService db, int profileID, DateTime date, List<DateTime> dates )
 	{
-		var day      = db.LoadDailyReport( profileID, date );
+		var day      = db.LoadDailyReport( profileID, date, false );
 		var prevDate = dates.LastOrDefault( x => x < date );
 
-		DailyReport? previousDay = (prevDate > DateTime.MinValue) ? db.LoadDailyReport( profileID, prevDate ) : null;
+		DailyReport? previousDay = (prevDate > DateTime.MinValue) ? db.LoadDailyReport( profileID, prevDate, false ) : null;
 
 		DataContext = new DailyScoreSummaryViewModel( day, previousDay );
 	}

@@ -27,9 +27,9 @@ public class DoubleListBlobConverter : IBlobTypeConverter
 		using var stream = new MemoryStream( data, true );
 		using var reader = new BinaryReader( stream );
 
-		var result = new List<double>();
+		var result = new List<double>( data.Length / sizeof( double ) );
 
-		while( reader.BaseStream.Position < data.Length )
+		while( stream.Position < data.Length )
 		{
 			result.Add( reader.ReadDouble() );
 		}

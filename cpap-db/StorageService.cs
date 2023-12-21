@@ -129,7 +129,8 @@ namespace cpap_db
 
 		internal StorageService( string databasePath )
 		{
-			Connection = new SQLiteConnection( databasePath );
+			var flags = SQLiteOpenFlags.ReadWrite | SQLiteOpenFlags.Create | SQLiteOpenFlags.FullMutex;
+			Connection = new SQLiteConnection( databasePath, flags );
 		}
 
 		#endregion
@@ -223,7 +224,7 @@ INNER JOIN session ON
 			return days;
 		}
 		
-		public DailyReport LoadDailyReport( int profileID, DateTime date )
+		public DailyReport LoadDailyReport( int profileID, DateTime date, bool loadSignalData = true )
 		{
 			var startTime = Environment.TickCount;
 
@@ -243,12 +244,16 @@ INNER JOIN session ON
 			day.Annotations  = SelectByForeignKey<Annotation>( dayID );
 			day.Settings     = SelectByForeignKey<MachineSettings>( dayID, out int _ );
 			day.Sessions     = SelectByForeignKey<Session>( dayID );
-			
-			foreach( var session in day.Sessions )
+
+			if( loadSignalData )
 			{
-				session.Signals = SelectByForeignKey<Signal>( session.ID );
+				for( int i = 0; i < day.Sessions.Count; i++ )
+				{
+					var session = day.Sessions[ i ];
+					session.Signals = SelectByForeignKey<Signal>( session.ID );
+				}
 			}
-			
+
 			day.Events.Sort();
 			day.Sessions.Sort();
 			day.Annotations.Sort();
@@ -715,6 +720,11 @@ INNER JOIN session ON
 				return new DateTimeOffset( SQLite3.ColumnInt64( stmt, index ), TimeSpan.Zero );
 			}
 
+			if( clrType == typeof( byte[] ) )
+			{
+				return SQLite3.ColumnByteArray( stmt, index );
+			}
+
 			if( typeInfo.IsEnum )
 			{
 				if( type != SQLite3.ColType.Text )
@@ -759,11 +769,6 @@ INNER JOIN session ON
 			if( clrType == typeof( sbyte ) )
 			{
 				return (sbyte)SQLite3.ColumnInt( stmt, index );
-			}
-
-			if( clrType == typeof( byte[] ) )
-			{
-				return SQLite3.ColumnByteArray( stmt, index );
 			}
 
 			if( clrType == typeof( Guid ) )
