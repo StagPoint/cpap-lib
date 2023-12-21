@@ -831,6 +831,7 @@ public partial class SignalChart : UserControl
 	
 	private void VisualizeRespirationRate()
 	{
+		Debug.Assert( _day != null, nameof( _day ) + " != null" );
 		foreach( var session in _day.Sessions )
 		{
 			var flowSignal = session.GetSignalByName( SignalNames.FlowRate );
@@ -863,6 +864,7 @@ public partial class SignalChart : UserControl
 
 	private void VisualizeTidalVolume()
 	{
+		Debug.Assert( _day != null, nameof( _day ) + " != null" );
 		foreach( var session in _day.Sessions )
 		{
 			var flowSignal = session.GetSignalByName( SignalNames.FlowRate );
@@ -1660,17 +1662,23 @@ public partial class SignalChart : UserControl
 
 	private void LoadData( DailyReport day )
 	{
-		Debug.Assert( day != null, $"{nameof( day )} == null" );
+		Debug.Assert( ChartConfiguration != null, nameof( ChartConfiguration ) + " != null" );
+		Debug.Assert( day != null,                $"{nameof( day )} == null" );
 		
 		if( day is not DailyReportViewModel viewModel )
 		{
 			throw new InvalidOperationException( $"Expected a {nameof( DailyReportViewModel )} instance" );
 		}
 
-		if( ReferenceEquals( _day, day ) )
+		// TODO: Find out why graphs are being reloaded (only at startup? Not sure, but definitely then at least)
+		if( _day != null && ReferenceEquals( _day, day ) )
 		{
-			// TODO: Find out why graphs are being loaded twice (only at startup? Not sure, but definitely then at least)
-			Debug.WriteLine( $"Re-loading {day.ReportDate}" );
+			// One way to know is whether being called with the same Day is an actual problem is to determine
+			// whether Signal data is already loaded.  
+			if( _signals.Count > 0 )
+			{
+				Debug.WriteLine( $"Re-loading {day.ReportDate},    Signal: {ChartConfiguration.SignalName},     Caller: {new System.Diagnostics.StackTrace()}" );
+			}
 		}
 		
 		_day = day;

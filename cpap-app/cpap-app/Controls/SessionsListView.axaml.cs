@@ -74,6 +74,11 @@ public partial class SessionsListView : UserControl
 	{
 		base.OnPropertyChanged( change );
 
+		if( change.Property.Name != nameof( DataContext ) )
+		{
+			return;
+		}
+
 		if( change.NewValue is DailyReport day )
 		{
 			// Filter the day's Sessions to only those that match the specified SourceType

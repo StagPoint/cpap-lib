@@ -225,6 +225,8 @@ INNER JOIN session ON
 		
 		public DailyReport LoadDailyReport( int profileID, DateTime date )
 		{
+			var startTime = Environment.TickCount;
+
 			var day = SelectByForeignKey<DailyReport>( profileID ).FirstOrDefault( x => x.ReportDate.Date == date );
 			if( day == null )
 			{
@@ -233,26 +235,26 @@ INNER JOIN session ON
 
 			var dayID = day.ID;
 			
-			day.MachineInfo      = SelectByForeignKey<MachineIdentification>( dayID ).First();
-			day.Statistics       = SelectByForeignKey<SignalStatistics>( dayID );
-			day.Events           = SelectByForeignKey<ReportedEvent>( dayID );
-			day.EventSummary     = SelectByForeignKey<EventSummary>( dayID ).FirstOrDefault() ?? new EventSummary();
-			day.StatsSummary     = SelectByForeignKey<StatisticsSummary>( dayID ).FirstOrDefault() ?? new StatisticsSummary();
-			day.Annotations      = SelectByForeignKey<Annotation>( dayID );
-			day.Settings         = SelectByForeignKey<MachineSettings>( dayID, out int _ );
-
-			var sessionKeys = new List<int>();
-			day.Sessions = SelectByForeignKey<Session, int>( dayID, sessionKeys );
-
-			Debug.Assert( sessionKeys.Count == day.Sessions.Count );
-			for( int i = 0; i < sessionKeys.Count; i++ )
+			day.MachineInfo  = SelectByForeignKey<MachineIdentification>( dayID ).First();
+			day.Statistics   = SelectByForeignKey<SignalStatistics>( dayID );
+			day.Events       = SelectByForeignKey<ReportedEvent>( dayID );
+			day.EventSummary = SelectByForeignKey<EventSummary>( dayID ).FirstOrDefault() ?? new EventSummary();
+			day.StatsSummary = SelectByForeignKey<StatisticsSummary>( dayID ).FirstOrDefault() ?? new StatisticsSummary();
+			day.Annotations  = SelectByForeignKey<Annotation>( dayID );
+			day.Settings     = SelectByForeignKey<MachineSettings>( dayID, out int _ );
+			day.Sessions     = SelectByForeignKey<Session>( dayID );
+			
+			foreach( var session in day.Sessions )
 			{
-				day.Sessions[ i ].Signals = SelectByForeignKey<Signal>( sessionKeys[ i ] );
+				session.Signals = SelectByForeignKey<Signal>( session.ID );
 			}
 			
 			day.Events.Sort();
 			day.Sessions.Sort();
 			day.Annotations.Sort();
+
+			var elapsed = Environment.TickCount - startTime;
+			Debug.WriteLine( $"Retrieved {date},    Elapsed: {elapsed}ms" );
 
 			return day;
 		}
