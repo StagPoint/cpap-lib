@@ -1,11 +1,6 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
-
-using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
 
 using cpap_app.Helpers;
 using cpap_app.ViewModels;
@@ -56,8 +51,8 @@ public partial class SessionTimesGraph : HistoryGraphBase
 
 		foreach( var day in days )
 		{
-			var baseDate = day.ReportDate.Date.AddHours( 12 );
-			var minX     = (day.ReportDate.Date - viewModel.Start).TotalDays - 0.45;
+			var baseDate = day.ReportDate.Date;
+			var minX     = (baseDate - viewModel.Start).TotalDays - 0.45;
 			
 			foreach( var session in day.Sessions )
 			{
@@ -79,20 +74,27 @@ public partial class SessionTimesGraph : HistoryGraphBase
 			}
 		}
 
+		minStartTime = Math.Floor( minStartTime );
+		maxEndTime   = Math.Ceiling( maxEndTime );
+
 		Chart.Plot.SetAxisLimitsY( minStartTime - 1, maxEndTime + 1 );
 		Chart.Plot.YAxis.SetBoundary( minStartTime - 1, maxEndTime + 1 );
 
-		// var positions = new double[ 5 ];
-		// var labels    = new string[ 5 ];
-		// var range     = (maxEndTime - minStartTime);
-		//
-		// for( int i = 0; i < 5; i++ )
-		// {
-		// 	positions[ i ] = i == 0 ? 0.0 : i * range / 4;
-		// 	labels[ i ]    = positions[ i ].ToString( "F2" );
-		// }
-		//
-		// Chart.Plot.YAxis.ManualTickPositions( positions, labels );
+		var positions = new double[ 5 ];
+		var labels    = new string[ 5 ];
+		var range     = (maxEndTime - minStartTime);
+		
+		for( int i = 0; i < 5; i++ )
+		{
+			var closestHour = (i == 0) ? minStartTime : Math.Round( minStartTime + i * range / 4 );
+			var clockTime   = (int)(closestHour % 24);
+			var labelValue  = (clockTime > 12) ? $"{clockTime - 12:F0} PM" : (clockTime == 0) ? "12 AM" : $"{clockTime:F0} AM";
+			
+			positions[ i ] = closestHour;
+			labels[ i ]    = labelValue;
+		}
+		
+		Chart.Plot.YAxis.ManualTickPositions( positions, labels );
 		
 		_selectionSpan                = Chart.Plot.AddHorizontalSpan( -1, -1, Color.Red.MultiplyAlpha( 0.2f ), null );
         _selectionSpan.IgnoreAxisAuto = true;
@@ -103,22 +105,28 @@ public partial class SessionTimesGraph : HistoryGraphBase
 	
 	protected override object BuildTooltipDataContext( DailyReport day )
 	{
-		var longestSessionTime = TimeSpan.Zero;
-		if( day.Sessions.Count > 0 )
+		var cpapSessions = day.Sessions.Where( x => x.SourceType == SourceType.CPAP ).ToArray();
+
+		if( cpapSessions.Length == 0 )
 		{
-			longestSessionTime = TimeSpan.FromHours( 
-				day.Sessions
-				   .Where( x => x.SourceType == SourceType.CPAP )
-				   .Max( x => x.Duration.TotalHours ) 
-			);
+			return new SessionTimesViewModel()
+			{
+				Date               = day.ReportDate.Date,
+				NumberOfSessions   = 0,
+				LongestSessionTime = TimeSpan.Zero,
+			};
 		}
+		
+		var longestSessionTime = TimeSpan.FromHours( cpapSessions.Max( x => x.Duration.TotalHours ) );
 
 		return new SessionTimesViewModel()
 		{
 			Date               = day.ReportDate.Date,
+			Start              = cpapSessions.Min( x => x.StartTime ),
+			End                = cpapSessions.Max( x => x.EndTime ),
 			TotalTimeSpan      = day.TotalTimeSpan,
 			TotalSleepTime     = day.TotalSleepTime,
-			NumberOfSessions   = day.Sessions.Count,
+			NumberOfSessions   = cpapSessions.Length,
 			LongestSessionTime = longestSessionTime,
 		};
 	}

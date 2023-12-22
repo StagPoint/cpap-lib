@@ -11,7 +11,7 @@
     </Design.DataContext>
     <StackPanel Orientation="Vertical">
         <TextBlock Text="{Binding Date, StringFormat={}{0:d}}" FontWeight="Bold" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" HorizontalAlignment="Center" />
-        <Grid ColumnDefinitions="Auto,12,Auto" RowDefinitions="Auto,Auto,Auto,Auto,Auto" HorizontalAlignment="Left" IsVisible="{Binding NumberOfSessions}">
+        <Grid ColumnDefinitions="Auto,12,Auto" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto" HorizontalAlignment="Left" IsVisible="{Binding NumberOfSessions}">
             <TextBlock Grid.Column="0" Grid.Row="1" Text="Usage" FontWeight="Bold" HorizontalAlignment="Right" />
             <TextBlock Grid.Column="2" Grid.Row="1" Text="{Binding TotalSleepTime, StringFormat={}{0:h\\:mm\\:ss}}" />
             
@@ -21,8 +21,11 @@
             <TextBlock Grid.Column="0" Grid.Row="3" Text="Sessions" FontWeight="Bold" HorizontalAlignment="Right" />
             <TextBlock Grid.Column="2" Grid.Row="3" Text="{Binding NumberOfSessions}" />
 
-            <TextBlock Grid.Column="0" Grid.Row="4" Text="Longest" FontWeight="Bold" HorizontalAlignment="Right" />
-            <TextBlock Grid.Column="2" Grid.Row="4" Text="{Binding LongestSessionTime, StringFormat={}{0:h\\:mm\\:ss}}" />
+            <TextBlock Grid.Column="0" Grid.Row="4" Text="Start" FontWeight="Bold" HorizontalAlignment="Right" />
+            <TextBlock Grid.Column="2" Grid.Row="4" Text="{Binding Start, StringFormat={}{0:h\\:mm\\:ss tt}}" />
+
+            <TextBlock Grid.Column="0" Grid.Row="5" Text="End" FontWeight="Bold" HorizontalAlignment="Right" />
+            <TextBlock Grid.Column="2" Grid.Row="5" Text="{Binding End, StringFormat={}{0:h\\:mm\\:ss tt}}" />
         </Grid>
     </StackPanel>
 </UserControl>
