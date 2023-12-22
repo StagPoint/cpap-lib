@@ -44,6 +44,7 @@
             <StackPanel Name="Graphs">
                 <controls:AhiHistoryGraph />
                 <controls:UsageHoursGraph />
+                <controls:SessionTimesGraph />
             </StackPanel>
         </ScrollViewer>
     </DockPanel>

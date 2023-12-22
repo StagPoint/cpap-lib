@@ -25,7 +25,7 @@ public partial class UsageHoursGraph : HistoryGraphBase
 	
 	#endregion 
 	
-	#region Private functions
+	#region Base class overrides 
 
 	protected override void LoadData( HistoryViewModel viewModel )
 	{
@@ -100,6 +100,10 @@ public partial class UsageHoursGraph : HistoryGraphBase
 		};
 	}
 
+	#endregion
+	
+	#region Private functions 
+	
 	private static TimeSpan CalculateMaskOffTime( DailyReport day )
 	{
 		var result = TimeSpan.Zero;

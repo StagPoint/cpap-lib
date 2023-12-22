@@ -25,7 +25,7 @@
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
       <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
-      <DefineConstants></DefineConstants>
+      <DefineConstants>TRACE IMPORT_ASYNC</DefineConstants>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
