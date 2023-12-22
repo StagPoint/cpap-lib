@@ -1,0 +1,28 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:tooltips="clr-namespace:cpap_app.ViewModels.Tooltips"
+             mc:Ignorable="d"
+             x:DataType="tooltips:SessionTimesViewModel"
+             x:Class="cpap_app.Views.Tooltips.SessionTimesTooltipView">
+    <Design.DataContext>
+        <tooltips:SessionTimesViewModel/>
+    </Design.DataContext>
+    <StackPanel Orientation="Vertical">
+        <TextBlock Text="{Binding Date, StringFormat={}{0:d}}" FontWeight="Bold" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" HorizontalAlignment="Center" />
+        <Grid ColumnDefinitions="Auto,12,Auto" RowDefinitions="Auto,Auto,Auto,Auto,Auto" HorizontalAlignment="Left" IsVisible="{Binding NumberOfSessions}">
+            <TextBlock Grid.Column="0" Grid.Row="1" Text="Usage" FontWeight="Bold" HorizontalAlignment="Right" />
+            <TextBlock Grid.Column="2" Grid.Row="1" Text="{Binding TotalSleepTime, StringFormat={}{0:h\\:mm\\:ss}}" />
+            
+            <TextBlock Grid.Column="0" Grid.Row="2" Text="Efficiency" FontWeight="Bold" HorizontalAlignment="Right" />
+            <TextBlock Grid.Column="2" Grid.Row="2" Text="{Binding SleepEfficiency, StringFormat={}{0:P2}}" />
+
+            <TextBlock Grid.Column="0" Grid.Row="3" Text="Sessions" FontWeight="Bold" HorizontalAlignment="Right" />
+            <TextBlock Grid.Column="2" Grid.Row="3" Text="{Binding NumberOfSessions}" />
+
+            <TextBlock Grid.Column="0" Grid.Row="4" Text="Longest" FontWeight="Bold" HorizontalAlignment="Right" />
+            <TextBlock Grid.Column="2" Grid.Row="4" Text="{Binding LongestSessionTime, StringFormat={}{0:h\\:mm\\:ss}}" />
+        </Grid>
+    </StackPanel>
+</UserControl>

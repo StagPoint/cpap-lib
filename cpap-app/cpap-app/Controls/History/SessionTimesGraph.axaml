@@ -11,7 +11,7 @@
              x:Class="cpap_app.Controls.SessionTimesGraph">
     <ToolTip.Tip>
         <ToolTip>
-            <tooltips:UsageHoursTooltipView />
+            <tooltips:SessionTimesTooltipView />
         </ToolTip>
     </ToolTip.Tip>
 </UserControl>

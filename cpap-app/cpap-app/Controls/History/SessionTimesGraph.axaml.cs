@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Drawing;
+using System.Linq;
 
 using Avalonia;
 using Avalonia.Controls;
@@ -8,6 +9,7 @@ using Avalonia.Markup.Xaml;
 
 using cpap_app.Helpers;
 using cpap_app.ViewModels;
+using cpap_app.ViewModels.Tooltips;
 
 using cpaplib;
 
@@ -59,7 +61,7 @@ public partial class SessionTimesGraph : HistoryGraphBase
 			
 			foreach( var session in day.Sessions )
 			{
-				if( session.SourceType != SourceType.CPAP || session.Duration.TotalMinutes < 15 )
+				if( session.SourceType != SourceType.CPAP || session.Duration.TotalMinutes < 5 )
 				{
 					continue;
 				}
@@ -101,7 +103,24 @@ public partial class SessionTimesGraph : HistoryGraphBase
 	
 	protected override object BuildTooltipDataContext( DailyReport day )
 	{
-		return null;
+		var longestSessionTime = TimeSpan.Zero;
+		if( day.Sessions.Count > 0 )
+		{
+			longestSessionTime = TimeSpan.FromHours( 
+				day.Sessions
+				   .Where( x => x.SourceType == SourceType.CPAP )
+				   .Max( x => x.Duration.TotalHours ) 
+			);
+		}
+
+		return new SessionTimesViewModel()
+		{
+			Date               = day.ReportDate.Date,
+			TotalTimeSpan      = day.TotalTimeSpan,
+			TotalSleepTime     = day.TotalSleepTime,
+			NumberOfSessions   = day.Sessions.Count,
+			LongestSessionTime = longestSessionTime,
+		};
 	}
 
 	#endregion
