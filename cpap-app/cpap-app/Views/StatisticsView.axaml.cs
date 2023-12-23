@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
 using Avalonia;
 using Avalonia.Controls;
@@ -50,9 +52,10 @@ public partial class StatisticsView : UserControl
 			return new TherapyStatisticsViewModel();
 		}
 		
-		var start     = end.AddYears( -1 );
-		var history   = HistoryViewModel.GetHistory( profileID, start, end );
-
+		var start   = end.AddYears( -1 );
+		var history = HistoryViewModel.GetHistory( profileID, start, end );
+		var groups  = true ? GroupDaysByMonth( history.Days, start, end ) : GroupDaysStandard( history.Days, start, end );
+		
 		var viewModel = new TherapyStatisticsViewModel
 		{
 			MostRecentDate      = history.End,
@@ -62,10 +65,98 @@ public partial class StatisticsView : UserControl
 			LastYearStart       = DateHelper.Max( history.End.AddYears( -1 ), history.Start ),
 		};
 
-		viewModel.Groups.Add(BuildCPAPUsageStats( history ) );
+		viewModel.Groups.Add( BuildCPAPUsageStats( history ) );
 		viewModel.Groups.Add( BuildEventsStats( history ) );
 
 		return viewModel;
+	}
+
+	private static List<GroupedDays> GroupDaysByMonth( List<DailyReport> days, DateTime startDay, DateTime endDay )
+	{
+		var results = new List<GroupedDays>();
+
+		results.Add( new GroupedDays()
+		{
+			Label     = "Most Recent",
+			StartDate = endDay.Date,
+			EndDate   = endDay.Date,
+		} );
+
+		var lastMonthStart = new DateTime( endDay.Year, endDay.Month, 1 ).AddMonths( 1 );
+
+		for( int i = 0; i < 12; i++ )
+		{
+			var monthStart = lastMonthStart.AddMonths( -1 );
+			var monthEnd   = lastMonthStart.AddDays( -1 );
+
+			if( !days.Any( x => x.ReportDate.Date <= monthEnd ) )
+			{
+				break;
+			}
+
+			results.Add( new GroupedDays()
+			{
+				Label     = $"{monthStart:MMMM yyyy}",
+				StartDate = monthStart,
+				EndDate   = monthEnd,
+			} );
+
+			lastMonthStart = monthStart;
+		}
+
+		foreach( var group in results )
+		{
+			group.Days.AddRange( days.Where( x => x.ReportDate.Date >= group.StartDate && x.ReportDate.Date <= group.EndDate ) );
+		}
+		
+		return results;
+	}
+	
+	private static List<GroupedDays> GroupDaysStandard( List<DailyReport> days, DateTime startDay, DateTime endDay )
+	{
+		var results = new List<GroupedDays>();
+
+		results.Add( new GroupedDays()
+		{
+			Label     = "Most Recent",
+			StartDate = endDay.Date,
+			EndDate   = endDay.Date,
+		} );
+
+		results.Add( new GroupedDays()
+		{
+			Label     = "Last Week",
+			StartDate = endDay.Date.AddDays( -6 ),
+			EndDate   = endDay.Date,
+		} );
+
+		results.Add( new GroupedDays()
+		{
+			Label     = "Last Month",
+			StartDate = endDay.Date.AddMonths( -1 ),
+			EndDate   = endDay.Date,
+		} );
+		
+		results.Add( new GroupedDays()
+		{
+			Label     = "Last Three Months",
+			StartDate = endDay.Date.AddMonths( -3 ),
+			EndDate   = endDay.Date,
+		} );
+		
+		results.Add( new GroupedDays()
+		{
+			Label     = "Last Year",
+			StartDate = endDay.Date.AddYears( -1 ),
+			EndDate   = endDay.Date,
+		} );
+
+		foreach( var group in results )
+		{
+			group.Days.AddRange( days.Where( x => x.ReportDate.Date >= group.StartDate && x.ReportDate.Date <= group.EndDate ) );
+		}
+		
+		return results;
 	}
 	
 	private TherapyStatisticsGroupViewModel BuildEventsStats( HistoryViewModel history )
@@ -207,4 +298,21 @@ public partial class StatisticsView : UserControl
 
 		return TimeSpan.FromHours( totalHours / numberOfDays );
 	}
+	
+	#region Nested types
+
+	private class GroupedDays
+	{
+		public required string            Label     { get; set; }
+		public          DateTime          StartDate { get; set; }
+		public          DateTime          EndDate   { get; set; }
+		public          List<DailyReport> Days      { get; set; } = new List<DailyReport>();
+
+		public override string ToString()
+		{
+			return $"{Label} - {Days.Count} days";
+		}
+	}
+	
+	#endregion 
 }

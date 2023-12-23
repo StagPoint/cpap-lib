@@ -23,6 +23,7 @@ public class TherapyStatisticsGroupViewModel
 	public List<TherapyStatisticsItemViewModel> Items { get; set; } = new();
 }
 
+
 public class TherapyStatisticsItemViewModel
 {
 	public string Name                 { get; set; } = string.Empty;
