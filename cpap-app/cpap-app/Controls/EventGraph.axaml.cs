@@ -149,6 +149,11 @@ public partial class EventGraph : UserControl
 
 	protected override void OnKeyDown( KeyEventArgs args )
 	{
+		if( _day == null )
+		{
+			return;
+		}
+		
 		switch( args.Key )
 		{
 			case Key.Left or Key.Right:
@@ -157,12 +162,10 @@ public partial class EventGraph : UserControl
 				var  endTime      = _rightOccluder!.X1;
 				var  range        = (endTime - startTime);
 				bool isShiftDown  = (args.KeyModifiers & KeyModifiers.Shift) != 0;
-				bool isAltKeyDown = (args.KeyModifiers & KeyModifiers.Alt) != 0;
 
-				// If the ALT key is down, scroll by the entire visible timeframe. 
-				// Otherwise, if the SHIFT key is down, scroll by 25% of the visible timeframe.
+				// If the SHIFT key is down, scroll by 25% of the visible timeframe.
 				// Otherwise, scroll by 10% of the visible timeframe. 
-				var amount = range * (isAltKeyDown ? 1.0 : (isShiftDown ? 0.25 : 0.10));
+				var amount = range * (isShiftDown ? 0.25 : 0.10);
 
 				if( args.Key == Key.Left )
 				{
@@ -177,7 +180,30 @@ public partial class EventGraph : UserControl
 			
 				UpdateVisibleRange( startTime, endTime );
 			
-				//HideTimeMarker();
+				OnAxesChanged( this, EventArgs.Empty ); 
+			
+				args.Handled = true;
+				break;
+			}
+			case Key.PageUp or Key.PageDown:
+			{
+				var  startTime    = _leftOccluder!.X2;
+				var  endTime      = _rightOccluder!.X1;
+				var  range        = (endTime - startTime);
+
+				if( args.Key == Key.PageUp )
+				{
+					startTime = Math.Max( startTime - range, 0 );
+					endTime   = startTime + range;
+				}
+				else
+				{
+					endTime   = Math.Min( endTime + range, _rightOccluder.X2 );
+					startTime = endTime - range;
+				}
+			
+				UpdateVisibleRange( startTime, endTime );
+			
 				OnAxesChanged( this, EventArgs.Empty ); 
 			
 				args.Handled = true;
@@ -196,9 +222,31 @@ public partial class EventGraph : UserControl
 
 				UpdateVisibleRange( left, right );
 
-				//HideTimeMarker();
 				OnAxesChanged( this, EventArgs.Empty );
 				
+				args.Handled = true;
+				break;
+			}
+			case Key.Home or Key.End:
+			{
+				var  startTime    = _leftOccluder!.X2;
+				var  endTime      = _rightOccluder!.X1;
+				var  range        = (endTime - startTime);
+
+				if( args.Key == Key.Home )
+				{
+					UpdateVisibleRange( 0, 0 + range );
+				}
+				else
+				{
+					endTime   = _day.TotalTimeSpan.TotalSeconds;
+					startTime = endTime - range;
+			
+					UpdateVisibleRange( startTime, endTime );
+				}
+			
+				OnAxesChanged( this, EventArgs.Empty ); 
+			
 				args.Handled = true;
 				break;
 			}
@@ -208,26 +256,6 @@ public partial class EventGraph : UserControl
 				{
 					CancelSelectionMode();
 				}
-				break;
-			}
-			case Key.A:
-			{
-				/*
-				if( args.KeyModifiers == KeyModifiers.None )
-				{
-					// ReSharper disable once SwitchStatementMissingSomeEnumCasesNoDefault
-					switch( _interactionMode )
-					{
-						case GraphInteractionMode.Selecting:
-							AddAnnotationForCurrentSelection();
-							break;
-						case GraphInteractionMode.None when _selectionStartTime > 0:
-							_selectionEndTime = _selectionStartTime;
-							AddAnnotationForCurrentSelection();
-							break;
-					}
-				}
-				*/
 				break;
 			}
 		}

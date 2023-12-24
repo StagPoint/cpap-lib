@@ -198,6 +198,10 @@ public partial class SignalChart : UserControl
 	protected override void OnKeyDown( KeyEventArgs args )
 	{
 		Debug.Assert( ChartConfiguration != null, nameof( ChartConfiguration ) + " != null" );
+		if( _day == null )
+		{
+			return;
+		}
 
 		switch( args.Key )
 		{
@@ -207,12 +211,10 @@ public partial class SignalChart : UserControl
 				var  startTime    = axisLimits.XMin;
 				var  endTime      = axisLimits.XMax;
 				bool isShiftDown  = (args.KeyModifiers & KeyModifiers.Shift) != 0;
-				bool isAltKeyDown = (args.KeyModifiers & KeyModifiers.Alt) != 0;
 
-				// If the ALT key is down, scroll by the entire visible timeframe. 
-				// Otherwise, if the SHIFT key is down, scroll by 25% of the visible timeframe.
+				// If the SHIFT key is down, scroll by 25% of the visible timeframe.
 				// Otherwise, scroll by 10% of the visible timeframe. 
-				var amount = axisLimits.XSpan * (isAltKeyDown ? 1.0 : (isShiftDown ? 0.25 : 0.10));
+				var amount = axisLimits.XSpan * (isShiftDown ? 0.25 : 0.10);
 
 				if( args.Key == Key.Left )
 				{
@@ -223,6 +225,37 @@ public partial class SignalChart : UserControl
 				{
 					endTime   += amount;
 					startTime =  endTime - axisLimits.XSpan;
+				}
+			
+				Chart.Plot.SetAxisLimits( startTime, endTime );
+			
+				HideTimeMarker();
+				RenderGraph( false );
+				OnAxesChanged( this, EventArgs.Empty ); 
+			
+				args.Handled = true;
+				break;
+			}
+			case Key.PageUp or Key.PageDown:
+			{
+				var  axisLimits   = Chart.Plot.GetAxisLimits();
+				var  startTime    = axisLimits.XMin;
+				var  endTime      = axisLimits.XMax;
+
+				// If the ALT key is down, scroll by the entire visible timeframe. 
+				// Otherwise, if the SHIFT key is down, scroll by 25% of the visible timeframe.
+				// Otherwise, scroll by 10% of the visible timeframe. 
+				var amount = axisLimits.XSpan;
+
+				if( args.Key == Key.PageUp )
+				{
+					startTime = Math.Max( startTime - amount, 0 );
+					endTime   = startTime + axisLimits.XSpan;
+				}
+				else
+				{
+					endTime   = Math.Min( endTime + amount, _day.TotalTimeSpan.TotalSeconds );
+					startTime = endTime - axisLimits.XSpan;
 				}
 			
 				Chart.Plot.SetAxisLimits( startTime, endTime );
@@ -247,6 +280,32 @@ public partial class SignalChart : UserControl
 				RenderGraph( false );
 				OnAxesChanged( this, EventArgs.Empty ); 
 
+				break;
+			}
+			case Key.Home or Key.End:
+			{
+				var axisLimits = Chart.Plot.GetAxisLimits();
+				var startTime  = axisLimits.XMin;
+				var endTime    = axisLimits.XMax;
+				var range      = endTime - startTime;
+			
+				if( args.Key == Key.Home )
+				{
+					Chart.Plot.SetAxisLimits( 0, range );
+				}
+				else
+				{
+					endTime   = _day.TotalTimeSpan.TotalSeconds;
+					startTime = endTime - range;
+
+					Chart.Plot.SetAxisLimits( startTime, endTime );
+				}
+
+				HideTimeMarker();
+				RenderGraph( false );
+				OnAxesChanged( this, EventArgs.Empty ); 
+			
+				args.Handled = true;
 				break;
 			}
 			case Key.Escape:
