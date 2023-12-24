@@ -3,11 +3,27 @@ using System.Collections.Generic;
 
 using Avalonia.Controls;
 
+using cpaplib;
+
 namespace cpap_app.ViewModels;
+
+public class GroupedDays
+{
+	public required string            Label     { get; set; }
+	public          DateTime          StartDate { get; set; }
+	public          DateTime          EndDate   { get; set; }
+	public          List<DailyReport> Days      { get; set; } = new List<DailyReport>();
+
+	public override string ToString()
+	{
+		return $"{Label} - {Days.Count} days";
+	}
+}
 
 public class TherapyStatisticsViewModel
 {
-	public List<TherapyStatisticsGroupViewModel> Groups { get; set; } = new();
+	public List<GroupedDays>                     Headers { get; set; } = new();
+	public List<TherapyStatisticsGroupViewModel> Groups  { get; set; } = new();
 
 	public DateTime MostRecentDate      { get; set; } = DateTime.Today;
 	public DateTime LastWeekStart       { get; set; } = DateTime.Today.AddDays( -7 );

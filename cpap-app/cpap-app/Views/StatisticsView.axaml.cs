@@ -55,9 +55,10 @@ public partial class StatisticsView : UserControl
 		var start   = end.AddYears( -1 );
 		var history = HistoryViewModel.GetHistory( profileID, start, end );
 		var groups  = true ? GroupDaysByMonth( history.Days, start, end ) : GroupDaysStandard( history.Days, start, end );
-		
+
 		var viewModel = new TherapyStatisticsViewModel
 		{
+			Headers             = groups,
 			MostRecentDate      = history.End,
 			LastWeekStart       = DateHelper.Max( history.End.AddDays( -7 ),  history.Start ),
 			LastMonthStart      = DateHelper.Max( history.End.AddDays( -30 ), history.Start ),
@@ -298,21 +299,4 @@ public partial class StatisticsView : UserControl
 
 		return TimeSpan.FromHours( totalHours / numberOfDays );
 	}
-	
-	#region Nested types
-
-	private class GroupedDays
-	{
-		public required string            Label     { get; set; }
-		public          DateTime          StartDate { get; set; }
-		public          DateTime          EndDate   { get; set; }
-		public          List<DailyReport> Days      { get; set; } = new List<DailyReport>();
-
-		public override string ToString()
-		{
-			return $"{Label} - {Days.Count} days";
-		}
-	}
-	
-	#endregion 
 }

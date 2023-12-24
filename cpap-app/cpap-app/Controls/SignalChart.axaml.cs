@@ -203,11 +203,16 @@ public partial class SignalChart : UserControl
 		{
 			case Key.Left or Key.Right:
 			{
-				var  axisLimits  = Chart.Plot.GetAxisLimits();
-				var  startTime   = axisLimits.XMin;
-				var  endTime     = axisLimits.XMax;
-				bool isShiftDown = (args.KeyModifiers & KeyModifiers.Shift) != 0;
-				var  amount      = axisLimits.XSpan * (isShiftDown ? 0.25 : 0.10);
+				var  axisLimits   = Chart.Plot.GetAxisLimits();
+				var  startTime    = axisLimits.XMin;
+				var  endTime      = axisLimits.XMax;
+				bool isShiftDown  = (args.KeyModifiers & KeyModifiers.Shift) != 0;
+				bool isAltKeyDown = (args.KeyModifiers & KeyModifiers.Alt) != 0;
+
+				// If the ALT key is down, scroll by the entire visible timeframe. 
+				// Otherwise, if the SHIFT key is down, scroll by 25% of the visible timeframe.
+				// Otherwise, scroll by 10% of the visible timeframe. 
+				var amount = axisLimits.XSpan * (isAltKeyDown ? 1.0 : (isShiftDown ? 0.25 : 0.10));
 
 				if( args.Key == Key.Left )
 				{
@@ -1030,8 +1035,16 @@ public partial class SignalChart : UserControl
 				}
 				
 				var breathOffset = (breath.StartInspiration - signal.StartTime).TotalSeconds;
+
+				IPlottable line  = Chart.Plot.AddVerticalLine( signalOffset + breathOffset, Color.Red, 1f, LineStyle.Solid );
+				_visualizations.Add( line );
 				
-				var line = Chart.Plot.AddVerticalLine( signalOffset + breathOffset, Color.Red, 1f, LineStyle.Solid );
+				var lineX = signalOffset + (breath.TimeOfPeakInspiration - signal.StartTime).TotalSeconds;
+				line = Chart.Plot.AddLine( lineX, 0, lineX, breath.MaxValue, Color.Magenta, 1f );
+				_visualizations.Add( line );
+
+				lineX = signalOffset + (breath.TimeOfPeakExpiration - signal.StartTime).TotalSeconds;
+				line  = Chart.Plot.AddLine( lineX, 0, lineX, breath.MinValue, Color.Magenta, 1f );
 				_visualizations.Add( line );
 			}
 		}

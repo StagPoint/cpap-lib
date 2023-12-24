@@ -49,6 +49,13 @@
                         <ColumnDefinition Width="Auto" SharedSizeGroup="StatsC3" />
                         <ColumnDefinition Width="Auto" SharedSizeGroup="StatsC4" />
                         <ColumnDefinition Width="Auto" SharedSizeGroup="StatsC5" />
+                        <ColumnDefinition Width="Auto" SharedSizeGroup="StatsC6" />
+                        <ColumnDefinition Width="Auto" SharedSizeGroup="StatsC7" />
+                        <ColumnDefinition Width="Auto" SharedSizeGroup="StatsC8" />
+                        <ColumnDefinition Width="Auto" SharedSizeGroup="StatsC9" />
+                        <ColumnDefinition Width="Auto" SharedSizeGroup="StatsC10" />
+                        <ColumnDefinition Width="Auto" SharedSizeGroup="StatsC11" />
+                        <ColumnDefinition Width="Auto" SharedSizeGroup="StatsC12" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
 
@@ -62,52 +69,123 @@
                     <TextBlock Grid.Column="0" Grid.Row="0" Text="Details" HorizontalAlignment="Left"
                                Margin="8 0 24 0" />
 
-                    <TextBlock Grid.Column="1" Grid.Row="0" Text="Most Recent" />
-                    <TextBlock Grid.Column="1" Grid.Row="1" Text="{Binding MostRecentDate, StringFormat={}{0:d}}"
-                               />
+                    <TextBlock Grid.Column="1" Grid.Row="0" Text="{Binding Headers[0].Label}" />
+                    <TextBlock Grid.Column="1" Grid.Row="1" Text="{Binding Headers[0].EndDate, StringFormat={}{0:d}}" />
 
-                    <TextBlock Grid.Column="2" Grid.Row="0" Text="Last Week" />
+                    <TextBlock Grid.Column="2" Grid.Row="0" Text="{Binding Headers[1].Label}" />
                     <TextBlock Grid.Column="2" Grid.Row="1" >
                         <TextBox.Text>
                             <MultiBinding StringFormat="{}{0:d} - {1:d}">
-                                <Binding Path="LastWeekStart" Mode="OneWay" />
-                                <Binding Path="MostRecentDate" Mode="OneWay" />
+                                <Binding Path="Headers[1].StartDate" Mode="OneWay" />
+                                <Binding Path="Headers[1].EndDate" Mode="OneWay" />
                             </MultiBinding>
                         </TextBox.Text>
                     </TextBlock>
 
-                    <TextBlock Grid.Column="3" Grid.Row="0" Text="Last Month" />
+                    <TextBlock Grid.Column="3" Grid.Row="0" Text="{Binding Headers[2].Label}" />
                     <TextBlock Grid.Column="3" Grid.Row="1" >
                         <TextBox.Text>
                             <MultiBinding StringFormat="{}{0:d} - {1:d}">
-                                <Binding Path="LastMonthStart" Mode="OneWay" />
-                                <Binding Path="MostRecentDate" Mode="OneWay" />
+                                <Binding Path="Headers[2].StartDate" Mode="OneWay" />
+                                <Binding Path="Headers[2].EndDate" Mode="OneWay" />
                             </MultiBinding>
                         </TextBox.Text>
                     </TextBlock>
 
-                    <TextBlock Grid.Column="4" Grid.Row="0" Text="Last 90 Days" />
+                    <TextBlock Grid.Column="4" Grid.Row="0" Text="{Binding Headers[3].Label}" />
                     <TextBlock Grid.Column="4" Grid.Row="1" >
                         <TextBox.Text>
                             <MultiBinding StringFormat="{}{0:d} - {1:d}">
-                                <Binding Path="LastNinetyDaysStart" Mode="OneWay" />
-                                <Binding Path="MostRecentDate" Mode="OneWay" />
+                                <Binding Path="Headers[3].StartDate" Mode="OneWay" />
+                                <Binding Path="Headers[3].EndDate" Mode="OneWay" />
                             </MultiBinding>
                         </TextBox.Text>
                     </TextBlock>
 
-                    <TextBlock Grid.Column="5" Grid.Row="0" Text="Last Year" />
+                    <TextBlock Grid.Column="5" Grid.Row="0" Text="{Binding Headers[4].Label}" />
                     <TextBlock Grid.Column="5" Grid.Row="1" >
                         <TextBox.Text>
                             <MultiBinding StringFormat="{}{0:d} - {1:d}">
-                                <Binding Path="LastYearStart" Mode="OneWay" />
-                                <Binding Path="MostRecentDate" Mode="OneWay" />
+                                <Binding Path="Headers[4].StartDate" Mode="OneWay" />
+                                <Binding Path="Headers[4].EndDate" Mode="OneWay" />
                             </MultiBinding>
                         </TextBox.Text>
                     </TextBlock>
+
+                    <TextBlock Grid.Column="6" Grid.Row="0" Text="{Binding Headers[5].Label}" />
+                    <TextBlock Grid.Column="6" Grid.Row="1" >
+                        <TextBox.Text>
+                            <MultiBinding StringFormat="{}{0:d} - {1:d}">
+                                <Binding Path="Headers[5].StartDate" Mode="OneWay" />
+                                <Binding Path="Headers[5].EndDate" Mode="OneWay" />
+                            </MultiBinding>
+                        </TextBox.Text>
+                    </TextBlock>
+
+                    <TextBlock Grid.Column="7" Grid.Row="0" Text="{Binding Headers[6].Label}" />
+                    <TextBlock Grid.Column="7" Grid.Row="1" >
+                        <TextBox.Text>
+                            <MultiBinding StringFormat="{}{0:d} - {1:d}">
+                                <Binding Path="Headers[6].StartDate" Mode="OneWay" />
+                                <Binding Path="Headers[6].EndDate" Mode="OneWay" />
+                            </MultiBinding>
+                        </TextBox.Text>
+                    </TextBlock>
+
+                    <TextBlock Grid.Column="8" Grid.Row="0" Text="{Binding Headers[7].Label}" />
+                    <TextBlock Grid.Column="8" Grid.Row="1" >
+                        <TextBox.Text>
+                            <MultiBinding StringFormat="{}{0:d} - {1:d}">
+                                <Binding Path="Headers[7].StartDate" Mode="OneWay" />
+                                <Binding Path="Headers[7].EndDate" Mode="OneWay" />
+                            </MultiBinding>
+                        </TextBox.Text>
+                    </TextBlock>
+
+                    <TextBlock Grid.Column="9" Grid.Row="0" Text="{Binding Headers[8].Label}" />
+                    <TextBlock Grid.Column="9" Grid.Row="1" >
+                        <TextBox.Text>
+                            <MultiBinding StringFormat="{}{0:d} - {1:d}">
+                                <Binding Path="Headers[8].StartDate" Mode="OneWay" />
+                                <Binding Path="Headers[8].EndDate" Mode="OneWay" />
+                            </MultiBinding>
+                        </TextBox.Text>
+                    </TextBlock>
+
+                    <TextBlock Grid.Column="10" Grid.Row="0" Text="{Binding Headers[9].Label}" />
+                    <TextBlock Grid.Column="10" Grid.Row="1" >
+                        <TextBox.Text>
+                            <MultiBinding StringFormat="{}{0:d} - {1:d}">
+                                <Binding Path="Headers[9].StartDate" Mode="OneWay" />
+                                <Binding Path="Headers[9].EndDate" Mode="OneWay" />
+                            </MultiBinding>
+                        </TextBox.Text>
+                    </TextBlock>
+
+                    <TextBlock Grid.Column="11" Grid.Row="0" Text="{Binding Headers[10].Label}" />
+                    <TextBlock Grid.Column="11" Grid.Row="1" >
+                        <TextBox.Text>
+                            <MultiBinding StringFormat="{}{0:d} - {1:d}">
+                                <Binding Path="Headers[10].StartDate" Mode="OneWay" />
+                                <Binding Path="Headers[10].EndDate" Mode="OneWay" />
+                            </MultiBinding>
+                        </TextBox.Text>
+                    </TextBlock>
+
+                    <TextBlock Grid.Column="12" Grid.Row="0" Text="{Binding Headers[11].Label}" />
+                    <TextBlock Grid.Column="12" Grid.Row="1" >
+                        <TextBox.Text>
+                            <MultiBinding StringFormat="{}{0:d} - {1:d}">
+                                <Binding Path="Headers[11].StartDate" Mode="OneWay" />
+                                <Binding Path="Headers[11].EndDate" Mode="OneWay" />
+                            </MultiBinding>
+                        </TextBox.Text>
+                    </TextBlock>
+
                 </Grid>
             </Border>
-
+            
+            <!--
             <ItemsRepeater ItemsSource="{Binding Groups}">
                 <ItemsRepeater.Layout>
                     <StackLayout Orientation="Vertical" DisableVirtualization="True" />
@@ -168,6 +246,7 @@
                     </DataTemplate>
                 </ItemsRepeater.ItemTemplate>
             </ItemsRepeater>
+        -->
         </StackPanel>
     </ScrollViewer>
 </UserControl>

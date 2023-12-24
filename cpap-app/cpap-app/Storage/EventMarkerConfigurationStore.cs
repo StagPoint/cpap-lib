@@ -23,6 +23,17 @@ public class EventMarkerConfigurationStore
 
 		return store.SelectAll<EventMarkerConfiguration>().OrderBy( x => x.EventType ).ToList();
 	}
+
+	public static List<EventType> GetUserEventTypes( int profileID )
+	{
+		using var store = StorageService.Connect();
+		
+		var eventMapping = StorageService.GetMapping<ReportedEvent>();
+		var dayMapping   = StorageService.GetMapping<DailyReport>();
+
+		var query = $"SELECT DISTINCT Type FROM {eventMapping.TableName} WHERE {eventMapping.ForeignKey.ColumnName} in (SELECT {dayMapping.PrimaryKey.ColumnName} FROM {dayMapping.TableName} WHERE {dayMapping.TableName}.{dayMapping.ForeignKey.ColumnName} = ?)";
+		return store.Connection.QueryScalars<EventType>( query, profileID );
+	}
 	
 	private static void Initialize( StorageService store )
 	{

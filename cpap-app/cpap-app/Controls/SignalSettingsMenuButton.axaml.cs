@@ -141,6 +141,10 @@ public partial class SignalSettingsMenuButton : UserControl
 		EventOverlays.Items.Clear();
 		
 		var allEventTypes = EventTypes.RespiratoryDisturbance.Concat( EventTypes.OxygenSaturation.Concat( EventTypes.Pulse ) );
+		
+		var userEventTypes = EventMarkerConfigurationStore.GetUserEventTypes( UserProfileStore.GetActiveUserProfile().UserProfileID );
+		userEventTypes.Sort();
+		
 		foreach( var eventType in allEventTypes )
 		{
 			var item = new CheckmarkMenuItemViewModel()

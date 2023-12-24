@@ -8,13 +8,14 @@ namespace cpaplib
 {
 	public class BreathRecord
 	{
-		public DateTime StartInspiration { get; set; }
-		public DateTime StartExpiration  { get; set; }
-		public DateTime EndTime          { get; set; }
-
-		public double MinValue         { get; set; }
-		public double MaxValue         { get; set; }
-		public double TotalFlow        { get; set; }
+		public DateTime StartInspiration      { get; set; }
+		public DateTime TimeOfPeakInspiration { get; set; }
+		public DateTime StartExpiration       { get; set; }
+		public DateTime TimeOfPeakExpiration  { get; set; }
+		public DateTime EndTime               { get; set; }
+		public double   MinValue              { get; set; }
+		public double   MaxValue              { get; set; }
+		public double   TotalFlow             { get; set; }
 
 		public double Range
 		{
@@ -86,6 +87,7 @@ namespace cpaplib
 			int startIndex = 0;
 			while( filtered[ startIndex ] <= 1 )
 			{
+				slidingMean.AddObservation( filtered[ startIndex ] );
 				startIndex += 1;
 			}
 
@@ -95,41 +97,50 @@ namespace cpaplib
 			var lastStartIndex    = startIndex;
 			var lastSignFlipIndex = startIndex;
 			
-			var minValue  = 0.0;
-			var maxValue  = 0.0;
-			var totalFlow = 0.0;
+			var minValue      = 0.0;
+			var minValueIndex = 0;
+			var maxValue      = 0.0;
+			var maxValueIndex = 0;
+			var totalFlow     = 0.0;
 
 			BreathRecord lastBreath = null;
 
 			for( int i = startIndex; i < filtered.Length; i++ )
 			{
-				var sample = filtered[ i ];
-
-				if( sample <= minValue )
+				// Track the *actual* total flow, min, and max values 
 				{
-					minValue = sample;
+					var actualValue = flowSignal[ i ];
+					
+					if( actualValue < minValue )
+					{
+						minValue      = actualValue;
+						minValueIndex = i;
+					}
+
+					if( actualValue > maxValue )
+					{
+						maxValue      = actualValue;
+						maxValueIndex = i;
+					}
+					
+					// TODO: Total flow calculation is likely incorrect, needs an error analysis  
+					// Keep track of all inspiratory and expiratory flow (unfiltered, not adjusted for baseline)
+					totalFlow += Math.Abs( actualValue ) * 1.2;
 				}
 
-				if( sample >= maxValue )
-				{
-					maxValue = sample;
-				}
-				
-				// TODO: Total flow calculation is likely incorrect, needs an error analysis  
-				// Keep track of all inspiratory and expiratory flow (unfiltered, not adjusted for baseline)
-				totalFlow += Math.Abs( flowSignal[ i ] ) * 1.2;
+				var currentSample = filtered[ i ];
 
 				if( useVariableBaseline )
 				{
 					// What we're really interested in is the flow rate relative to the (moving) baseline, which may not be zero
 					// Inspiration is anything above baseline, expiration is baseline or below
-					slidingMean.AddObservation( sample );
-					sample -= slidingMean.Average;
+					slidingMean.AddObservation( currentSample );
+					currentSample -= slidingMean.Average;
 				}
 
 				// Calculate which side of the baseline the sample is on (with a little built-in hysteresis)
 				const double HYSTERESIS_THRESHOLD = 0.5;
-				sign = (sign <= 0) ? (sample >= HYSTERESIS_THRESHOLD ? 1 : -1) : (sample <= -HYSTERESIS_THRESHOLD ? -1 : 1);
+				sign = (sign <= 0) ? (currentSample >= HYSTERESIS_THRESHOLD ? 1 : -1) : (currentSample <= -HYSTERESIS_THRESHOLD ? -1 : 1);
 
 				// If the signal has not crossed the zero line, keep searching 
 				if( sign == lastSign )
@@ -142,12 +153,14 @@ namespace cpaplib
 				{
 					var breath = new BreathRecord
 					{
-						StartInspiration = timeAtIndex( lastStartIndex ),
-						StartExpiration  = timeAtIndex( lastSignFlipIndex ),
-						EndTime          = timeAtIndex( i ),
-						MinValue         = minValue,
-						MaxValue         = maxValue,
-						TotalFlow        = totalFlow,
+						StartInspiration      = timeAtIndex( lastStartIndex ),
+						TimeOfPeakInspiration = timeAtIndex( maxValueIndex ),
+						StartExpiration       = timeAtIndex( lastSignFlipIndex ),
+						TimeOfPeakExpiration  = timeAtIndex( minValueIndex ),
+						EndTime               = timeAtIndex( i ),
+						MinValue              = minValue,
+						MaxValue              = maxValue,
+						TotalFlow             = totalFlow,
 					};
 
 					// If the breath was too short to be a real breath then it was probably just a minor

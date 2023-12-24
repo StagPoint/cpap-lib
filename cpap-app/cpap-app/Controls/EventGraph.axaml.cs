@@ -153,11 +153,16 @@ public partial class EventGraph : UserControl
 		{
 			case Key.Left or Key.Right:
 			{
-				var  startTime   = _leftOccluder!.X2;
-				var  endTime     = _rightOccluder!.X1;
-				var  range       = (endTime - startTime);
-				bool isShiftDown = (args.KeyModifiers & KeyModifiers.Shift) != 0;
-				var  amount      = range * (isShiftDown ? 0.25 : 0.10);
+				var  startTime    = _leftOccluder!.X2;
+				var  endTime      = _rightOccluder!.X1;
+				var  range        = (endTime - startTime);
+				bool isShiftDown  = (args.KeyModifiers & KeyModifiers.Shift) != 0;
+				bool isAltKeyDown = (args.KeyModifiers & KeyModifiers.Alt) != 0;
+
+				// If the ALT key is down, scroll by the entire visible timeframe. 
+				// Otherwise, if the SHIFT key is down, scroll by 25% of the visible timeframe.
+				// Otherwise, scroll by 10% of the visible timeframe. 
+				var amount = range * (isAltKeyDown ? 1.0 : (isShiftDown ? 0.25 : 0.10));
 
 				if( args.Key == Key.Left )
 				{
@@ -658,7 +663,7 @@ public partial class EventGraph : UserControl
 		Chart.IsEnabled        = true;
 		this.IsEnabled         = true;
 
-		var eventTypes = GetVisibleEventTypes();
+		var eventTypes = GetVisibleEventTypes( day );
 		
 		Chart.Plot.SetAxisLimitsX( 0, day.TotalTimeSpan.TotalSeconds );
 		Chart.Plot.SetAxisLimitsY( -eventTypes.Count, 1 );
@@ -722,11 +727,19 @@ public partial class EventGraph : UserControl
 		UpdateVisibleRange( _day.RecordingStartTime, _day.RecordingEndTime );
 	}
 
-	private List<EventType> GetVisibleEventTypes()
+	private List<EventType> GetVisibleEventTypes( DailyReport day )
 	{
 		var eventTypes = EventTypes.RespiratoryDisturbance.ToList();
 		eventTypes.Add( EventType.LargeLeak );
 
+		if( day.MachineInfo.Manufacturer == MachineManufacturer.PhilipsRespironics )
+		{
+			eventTypes.Add( EventType.PeriodicBreathing );
+			eventTypes.Add( EventType.VariableBreathing );
+			eventTypes.Add( EventType.BreathingNotDetected );
+			eventTypes.Add( EventType.VibratorySnore );
+		}
+		
 		return eventTypes;
 	}
 

@@ -33,7 +33,7 @@ public class SignalDataBlobConverter : IBlobTypeConverter
 
 		while( stream.Position < data.Length )
 		{
-			result.Add( (double)reader.ReadSingle() );
+			result.Add( reader.ReadSingle() );
 		}
 
 		return result;
