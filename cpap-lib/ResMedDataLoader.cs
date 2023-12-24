@@ -463,6 +463,18 @@ namespace cpaplib
 			{
 				foreach( var session in day.Sessions )
 				{
+					// If there are no Signals recorded for this Session then it was likely that the user did
+					// not have the SD Card inserted when this Session was created, in which case there is no 
+					// need to adjust the session times or generate any additional calculated Signals. 
+					if( session.Signals.Count == 0 )
+					{
+						// We still want to keep track of the recorded Session times, though. 
+						lastRecordedTime  = DateUtil.Max( lastRecordedTime, session.EndTime );
+						firstRecordedTime = DateUtil.Min( firstRecordedTime, session.StartTime );
+
+						continue;
+					}
+					
 					// Reset the session times to ensure that we don't keep artificial boundary times 
 					session.StartTime = DateTime.MaxValue;
 					session.EndTime   = DateTime.MinValue;
@@ -512,7 +524,18 @@ namespace cpaplib
 
 		private static void CalculateSignalStatistics( DailyReport day )
 		{
-			foreach( var signal in day.Sessions[ 0 ].Signals )
+			// Not all Sessions will have data (such as when the SD Card wasn't inserted during a Session)
+			// so attempt to find one that does.
+			var firstSessionWithSignalData = day.Sessions.FirstOrDefault( x => x.Signals.Count > 0 );
+			if( firstSessionWithSignalData == null )
+			{
+				return;
+			}
+
+			// Since each Session that contains Signal data (at least at this point in the import process)
+			// should contain the same signal data as every other Session, we can just iterate through the
+			// one Session's Signals to find out which ones to generate Statistics for. 
+			foreach( var signal in firstSessionWithSignalData.Signals )
 			{
 				// Automatically calculate statistics for all Signals whose value range is zero or above
 				if( signal.MinValue >= 0 && signal.MaxValue > signal.MinValue )

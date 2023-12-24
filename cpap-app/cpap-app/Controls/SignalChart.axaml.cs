@@ -267,10 +267,10 @@ public partial class SignalChart : UserControl
 				args.Handled = true;
 				break;
 			}
-			case Key.Up or Key.Down:
+			case Key.Up or Key.Down or Key.OemPlus or Key.OemMinus:
 			{
 				double increment = ((args.KeyModifiers & KeyModifiers.Shift) != 0) ? 0.35 : 0.2;
-				double amount    = (args.Key == Key.Up ? 1.0 : -1.0) * increment + 1.0;
+				double amount    = (args.Key is Key.Up or Key.OemPlus ? 1.0 : -1.0) * increment + 1.0;
 			
 				Chart.Plot.AxisZoom( amount, 1.0 );
 

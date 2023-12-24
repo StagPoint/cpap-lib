@@ -185,7 +185,7 @@ namespace cpaplib
 
 		public override string ToString()
 		{
-			return Name;
+			return $"{Name}, Freq: {FrequencyInHz}, Min: {MinValue}, Max: {MaxValue}";
 		}
 
 		#endregion
