@@ -37,7 +37,8 @@
             <Setter Property="Foreground" Value="{DynamicResource DataGridColumnHeaderForegroundBrush}" />
         </Style>
     </UserControl.Styles>
-    <ScrollViewer>
+    <DockPanel>
+    <ScrollViewer DockPanel.Dock="Top" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
         <StackPanel Orientation="Vertical" Grid.IsSharedSizeScope="True" Margin="10" x:DataType="viewModels:TherapyStatisticsViewModel">
             
             <TextBlock Text="CPAP Statistics" HorizontalAlignment="Center" Theme="{DynamicResource SubtitleTextBlockStyle}" Margin="0 0 0 10"/>
@@ -45,7 +46,10 @@
             <!-- MAIN COLUMN HEADERS -->
             <Border Padding="2" Classes="ColumnHeader">
                 <StackPanel Orientation="Horizontal">
-                    <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="300" Classes="ColumnHeader" >
+                    <Grid RowDefinitions="Auto,Auto" Classes="ColumnHeader" >
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="StatsC0" />
+                        </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0" Grid.Row="0" Text="Details" HorizontalAlignment="Left"
                                    Margin="8 0 24 0" />
                         <Rectangle Grid.Column="0" Grid.Row="0" Grid.RowSpan="2" Classes="HeaderSeparator2" />
@@ -94,8 +98,11 @@
                                     <DataTemplate DataType="{x:Type viewModels:TherapyStatisticsLineItemViewModel}">
                                         <Border Classes="SelectionRect">
                                             <StackPanel Orientation="Horizontal">
-                                                <Grid ColumnDefinitions="300" RowDefinitions="Auto" Classes="TableData">
-                                                    <TextBlock Text="{Binding Label}" Padding="16 0" />
+                                                <Grid RowDefinitions="Auto" Classes="TableData">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto" SharedSizeGroup="StatsC0" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Text="{Binding Label}" Padding="16 0 48 0" />
                                                 </Grid>
                                                 <ItemsRepeater ItemsSource="{Binding Values}" Margin="0 2 0 0" VerticalCacheLength="100">
                                                     <ItemsRepeater.Layout>
@@ -129,4 +136,5 @@
             </ItemsRepeater>
         </StackPanel>
     </ScrollViewer>
+    </DockPanel>
 </UserControl>

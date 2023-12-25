@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 
 using Avalonia;
@@ -63,8 +62,8 @@ public partial class StatisticsView : UserControl
 			Headers = groups,
 		};
 
-		viewModel.Groups.Add( BuildEventsStats( groups ) );
 		viewModel.Groups.Add( BuildCPAPUsageStats( groups ) );
+		viewModel.Groups.Add( BuildEventsStats( groups ) );
 		viewModel.Groups.Add( BuildLeakStats( groups ) );
 		viewModel.Groups.Add( BuildPressureStats( groups ) );
 
@@ -86,21 +85,50 @@ public partial class StatisticsView : UserControl
 		return group;
 	}
 
-	private TherapyStatisticsGroupViewModel BuildLeakStats( List<GroupedDays> groups )
+	private static TherapyStatisticsGroupViewModel BuildLeakStats( List<GroupedDays> groups )
 	{
 		var group = new TherapyStatisticsGroupViewModel
 		{
 			Label = "Leak Statistics",
 		};
 
-		group.Items.Add( CompileGroupAverages( "Median leak rate",         groups, GetStatisticsValue( SignalNames.LeakRate, stats => stats.Median ) ) );
-		group.Items.Add( CompileGroupAverages( "Average leak rate",         groups, GetStatisticsValue( SignalNames.LeakRate, stats => stats.Average ) ) );
-		group.Items.Add( CompileGroupAverages( "95th Percentile leak rate", groups, GetStatisticsValue( SignalNames.LeakRate, stats => stats.Percentile95 ) ) );
+		group.Items.Add( CompileGroupAverages( "Median leak rate",             groups, GetStatisticsValue( SignalNames.LeakRate, stats => stats.Median ) ) );
+		group.Items.Add( CompileGroupAverages( "Average leak rate",            groups, GetStatisticsValue( SignalNames.LeakRate, stats => stats.Average ) ) );
+		group.Items.Add( CompileGroupAverages( "95th Percentile leak rate",    groups, GetStatisticsValue( SignalNames.LeakRate, stats => stats.Percentile95 ) ) );
+		group.Items.Add( CompileGroupAverages( "Large Leak (% of total time)", groups, GetEventPercentage( EventType.LargeLeak ), value => $"{value:P2}" ) );
 
 		return group;
 	}
 
-	private Func<DailyReport, double> GetStatisticsValue( string signalName, Func<SignalStatistics, double> valueFunc )
+	private static Func<DailyReport, double> GetEventPercentage( EventType eventType )
+	{
+		return day =>
+		{
+			var totalLeakTime = day.Events.Where( x => x.Type == eventType ).Sum( x => x.Duration.TotalMinutes );
+			if( totalLeakTime < float.Epsilon )
+			{
+				return 0;
+			}
+
+			return totalLeakTime / day.TotalSleepTime.TotalMinutes;
+		};
+	}
+
+	private static Func<DailyReport, double> GetEventIndex( EventType eventType )
+	{
+		return day =>
+		{
+			var eventCount = day.Events.Count( x => x.Type == eventType );
+			if( eventCount == 0 )
+			{
+				return 0;
+			}
+
+			return eventCount / day.TotalSleepTime.TotalHours;
+		};
+	}
+
+	private static Func<DailyReport, double> GetStatisticsValue( string signalName, Func<SignalStatistics, double> valueFunc )
 	{
 		return day =>
 		{
@@ -124,6 +152,8 @@ public partial class StatisticsView : UserControl
 
 		var lastMonthStart = new DateTime( endDay.Year, endDay.Month, 1 ).AddMonths( 1 );
 
+		// TODO: Only the first and last months should have their start and/or end times adjusted. All others should span the full month. 
+		
 		for( int i = 0; i < 12; i++ )
 		{
 			var monthStart = lastMonthStart.AddMonths( -1 );
@@ -216,19 +246,29 @@ public partial class StatisticsView : UserControl
 	{
 		var group = new TherapyStatisticsGroupViewModel
 		{
-			Label = "Respiratory Event Indices",
+			Label = "Respiratory Events",
 		};
 
-		group.Items.Add( CompileGroupAverages( "AHI", groups, day => day.EventSummary.AHI ) );
-		group.Items.Add( CompileGroupAverages( "Obstructive Apnea Index", groups, day => day.EventSummary.ObstructiveApneaIndex ) );
-		group.Items.Add( CompileGroupAverages( "Hypopnea Index", groups, day => day.EventSummary.HypopneaIndex ) );
-		group.Items.Add( CompileGroupAverages( "Unclassified Apnea Index", groups, day => day.EventSummary.UnclassifiedApneaIndex ) );
-		group.Items.Add( CompileGroupAverages( "Central Apnea Index", groups, day => day.EventSummary.CentralApneaIndex ) );
-		group.Items.Add( CompileGroupAverages( "RERA Index", groups, day => day.EventSummary.RespiratoryArousalIndex ) );
+		group.Items.Add( CompileGroupAverages( "AHI",                                      groups, day => day.EventSummary.AHI ) );
+		group.Items.Add( CompileGroupAverages( "Obstructive Apnea Index",                  groups, day => day.EventSummary.ObstructiveApneaIndex ) );
+		group.Items.Add( CompileGroupAverages( "Hypopnea Index",                           groups, day => day.EventSummary.HypopneaIndex ) );
+		group.Items.Add( CompileGroupAverages( "Unclassified Apnea Index",                 groups, day => day.EventSummary.UnclassifiedApneaIndex ) );
+		group.Items.Add( CompileGroupAverages( "Central Apnea Index",                      groups, day => day.EventSummary.CentralApneaIndex ) );
+		group.Items.Add( CompileGroupAverages( "RERA Index",                               groups, day => day.EventSummary.RespiratoryArousalIndex ) );
+		group.Items.Add( CompileGroupAverages( "Flow Reduction Index",                     groups, GetEventIndex( EventType.FlowReduction ), value => $"{value:F2}" ) );
+		group.Items.Add( CompileGroupAverages( "Total Time in Apnea",                      groups, GetTotalTimeInApnea,                      value => $"{TimeSpan.FromSeconds( value ):hh\\:mm\\:ss}" ) );
+		group.Items.Add( CompileGroupAverages( "Cheyne-Stokes Respiration (% total time)", groups, GetEventPercentage( EventType.CSR ),      value => $"{value:P2}" ) );
 
 		return group;
 	}
 	
+	private double GetTotalTimeInApnea( DailyReport day )
+	{
+		return day.Events
+			.Where( x => EventTypes.Apneas.Contains( x.Type ) )
+			.Sum( x => x.Duration.TotalSeconds );
+	}
+
 	private static TherapyStatisticsLineItemViewModel CompileGroupAverages( string name, List<GroupedDays> groups, Func<DailyReport,double> averageFunc, Func<double, string>? conversionFunc = null )
 	{
 		var viewModel = new TherapyStatisticsLineItemViewModel() { Label = name };
