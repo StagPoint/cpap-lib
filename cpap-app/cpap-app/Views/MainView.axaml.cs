@@ -668,6 +668,7 @@ public partial class MainView : UserControl
 			{
 				for( int i = 0; i < filePicker.Count; i++ )
 				{
+					// ReSharper disable once AccessToModifiedClosure
 					if( operationWasCancelled )
 					{
 						break;
@@ -691,11 +692,12 @@ public partial class MainView : UserControl
 						await using var file = File.OpenRead( fileItem.Path.LocalPath );
 
 						// TODO: The import options should be retrieved from the database. Perhaps on a per-device basis? 
-						var importOptions        = new PulseOximetryImportOptions() { TimeAdjust = -60 };
+						var importOptions        = new PulseOximetryImportOptions() { TimeAdjust = -60, CalibrationAdjust = -2 };
 						var eventGeneratorConfig = new OximetryEventGeneratorConfig();
 
 						foreach( var importer in importers )
 						{
+							// ReSharper disable once AccessToModifiedClosure
 							if( operationWasCancelled )
 							{
 								break;

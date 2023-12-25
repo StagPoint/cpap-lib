@@ -47,11 +47,13 @@
                                 <fui:SymbolIcon Name="mnuFillBelow" Symbol="Checkmark" />
                             </MenuItem.Icon>
                         </MenuItem>
+                        <!--
                         <MenuItem Header="High Quality" StaysOpenOnClick="True">
                             <MenuItem.Icon>
                                 <fui:SymbolIcon Name="mnuHighQuality" Symbol="Checkmark" IsVisible="False"/>
                             </MenuItem.Icon>
                         </MenuItem>
+                        -->
                     </MenuItem>
                     
                     <Separator />

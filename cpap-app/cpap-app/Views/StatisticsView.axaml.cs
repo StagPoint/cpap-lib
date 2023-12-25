@@ -5,6 +5,7 @@ using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Avalonia.LogicalTree;
 
 using cpap_app.Helpers;
 using cpap_app.ViewModels;
@@ -386,6 +387,15 @@ public partial class StatisticsView : UserControl
 	
 	private void ReportMode_SelectionChanged( object? sender, SelectionChangedEventArgs e )
 	{
+		if( StatsContainer != null )
+		{
+			Grid.SetIsSharedSizeScope( StatsContainer, false );
+		}
 		DataContext = BuildStatisticsViewModel();
+
+		if( StatsContainer != null )
+		{
+			Grid.SetIsSharedSizeScope( StatsContainer, true );
+		}
 	}
 }

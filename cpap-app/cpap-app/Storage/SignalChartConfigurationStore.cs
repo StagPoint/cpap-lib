@@ -90,7 +90,7 @@ public static class SignalChartConfigurationStore
 				
 				case SignalNames.Pressure:
 					config.SecondarySignalName = SignalNames.EPAP;
-					config.AxisMinValue        = 0;
+					config.AxisMinValue        = 5;
 					config.AxisMaxValue        = 20;
 					config.ScalingMode         = AxisScalingMode.Override;
 					break;

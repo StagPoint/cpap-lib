@@ -57,7 +57,7 @@
         <ScrollViewer DockPanel.Dock="Top" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
             
             <!-- CPAP Statistics -->
-            <StackPanel Orientation="Vertical" Grid.IsSharedSizeScope="True" Margin="10"
+            <StackPanel Name="StatsContainer" Orientation="Vertical" Grid.IsSharedSizeScope="True" Margin="10"
                         x:DataType="viewModels:TherapyStatisticsViewModel">
 
                 <TextBlock Text="CPAP Statistics" HorizontalAlignment="Center"
@@ -66,7 +66,7 @@
                 <!-- MAIN COLUMN HEADERS -->
                 <Border Padding="2" Classes="ColumnHeader">
                     <StackPanel Orientation="Horizontal">
-                        <Grid RowDefinitions="Auto,Auto" Classes="ColumnHeader">
+                        <Grid Name="DetailsColumn" RowDefinitions="Auto,Auto" Classes="ColumnHeader">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" SharedSizeGroup="StatsC0" />
                             </Grid.ColumnDefinitions>

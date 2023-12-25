@@ -198,10 +198,11 @@ public class PRS1DataLoader : ICpapDataLoader
 			}
 		}
 		
-		// Some of the events are apparently out of order on import. Although not seen, this could conceivably apply
-		// to other timestamped collections as well, so we'll just sort them all to be certain. 
 		foreach( var day in days )
 		{
+			// Some of the events are apparently out of order on import. Although not seen in my sample data,
+			// this could conceivably apply to other timestamped collections as well, so we'll just sort them
+			// all to be certain. 
 			day.Sessions.Sort();
 			day.Events.Sort();
 
@@ -214,12 +215,51 @@ public class PRS1DataLoader : ICpapDataLoader
 				}
 			}
 			
+			day.StatsSummary = GenerateStatsSummary( currentDay );
 			day.UpdateEventSummary();
 		}
 
 		return days;
 	}
 	
+	private static StatisticsSummary GenerateStatsSummary( DailyReport currentDay )
+	{
+		if( currentDay.Statistics.Count == 0 )
+		{
+			return new StatisticsSummary();
+		}
+		
+		var leakStats        = currentDay.Statistics.First( x => x.SignalName == SignalNames.LeakRate );
+		var respirationStats = currentDay.Statistics.First( x => x.SignalName == SignalNames.RespirationRate );
+		var minuteVentStats = currentDay.Statistics.First( x => x.SignalName == SignalNames.MinuteVent );
+		var tidalVolumeStats = currentDay.Statistics.First( x => x.SignalName == SignalNames.TidalVolume );
+		var pressureStats = currentDay.Statistics.First( x => x.SignalName == SignalNames.Pressure );
+		
+		return new StatisticsSummary
+		{
+			Leak95                  = leakStats.Percentile95,
+			LeakMedian              = leakStats.Median,
+			RespirationRateMax      = respirationStats.Maximum,
+			RespirationRate95       = respirationStats.Percentile95,
+			RespirationRateMedian   = respirationStats.Median,
+			MinuteVentilationMax    = minuteVentStats.Maximum,
+			MinuteVentilation95     = minuteVentStats.Percentile95,
+			MinuteVentilationMedian = minuteVentStats.Median,
+			TidalVolumeMax          = tidalVolumeStats.Maximum,
+			TidalVolume95           = tidalVolumeStats.Percentile95,
+			TidalVolumeMedian       = tidalVolumeStats.Median,
+			PressureMax             = pressureStats.Maximum,
+			Pressure95              = pressureStats.Percentile95,
+			PressureMedian          = pressureStats.Median,
+			TargetIpapMax           = 0,
+			TargetIpap95            = 0,
+			TargetIpapMedian        = 0,
+			TargetEpapMax           = 0,
+			TargetEpap95            = 0,
+			TargetEpapMedian        = 0
+		};
+	}
+
 	private static List<string> GetSignalNames( DailyReport day )
 	{
 		var signalNames = new List<string>();
