@@ -66,10 +66,26 @@ public partial class StatisticsView : UserControl
 		viewModel.Groups.Add( BuildEventsStats( groups ) );
 		viewModel.Groups.Add( BuildCPAPUsageStats( groups ) );
 		viewModel.Groups.Add( BuildLeakStats( groups ) );
+		viewModel.Groups.Add( BuildPressureStats( groups ) );
 
 		return viewModel;
 	}
 	
+	private TherapyStatisticsGroupViewModel BuildPressureStats( List<GroupedDays> groups )
+	{
+		var group = new TherapyStatisticsGroupViewModel
+		{
+			Label = "Pressure Statistics",
+		};
+
+		group.Items.Add( CompileGroupAverages( "Average Pressure", groups, GetStatisticsValue( SignalNames.Pressure, stats => stats.Average ) ) );
+		group.Items.Add( CompileGroupAverages( "Min Pressure", groups, GetStatisticsValue( SignalNames.Pressure, stats => stats.Minimum ) ) );
+		group.Items.Add( CompileGroupAverages( "Max Pressure", groups, GetStatisticsValue( SignalNames.Pressure, stats => stats.Maximum ) ) );
+		group.Items.Add( CompileGroupAverages( "95th Percentile Pressure", groups, GetStatisticsValue( SignalNames.Pressure, stats => stats.Percentile95 ) ) );
+
+		return group;
+	}
+
 	private TherapyStatisticsGroupViewModel BuildLeakStats( List<GroupedDays> groups )
 	{
 		var group = new TherapyStatisticsGroupViewModel
@@ -77,24 +93,21 @@ public partial class StatisticsView : UserControl
 			Label = "Leak Statistics",
 		};
 
-		group.Items.Add( CompileGroupAverages( "Average leak rate",         groups, GetAverageLeakRate, value => $"{value:F2} L/min" ) );
-		group.Items.Add( CompileGroupAverages( "95th Percentile leak rate", groups, GetMaxLeakRate, value => $"{value:F2} L/min" ) );
+		group.Items.Add( CompileGroupAverages( "Median leak rate",         groups, GetStatisticsValue( SignalNames.LeakRate, stats => stats.Median ) ) );
+		group.Items.Add( CompileGroupAverages( "Average leak rate",         groups, GetStatisticsValue( SignalNames.LeakRate, stats => stats.Average ) ) );
+		group.Items.Add( CompileGroupAverages( "95th Percentile leak rate", groups, GetStatisticsValue( SignalNames.LeakRate, stats => stats.Percentile95 ) ) );
 
 		return group;
 	}
-	
-	private double GetAverageLeakRate( DailyReport day )
+
+	private Func<DailyReport, double> GetStatisticsValue( string signalName, Func<SignalStatistics, double> valueFunc )
 	{
-		var stat = day.Statistics.FirstOrDefault( x => x.SignalName == SignalNames.LeakRate );
+		return day =>
+		{
+			var stat = day.Statistics.FirstOrDefault( x => x.SignalName == signalName );
 
-		return stat?.Average ?? 0;
-	}
-
-	private double GetMaxLeakRate( DailyReport day )
-	{
-		var stat = day.Statistics.FirstOrDefault( x => x.SignalName == SignalNames.LeakRate );
-
-		return stat?.Percentile95 ?? 0;
+			return stat != null ? valueFunc( stat ) : 0;
+		};
 	}
 
 	private static List<GroupedDays> GroupDaysByMonth( List<DailyReport> days, DateTime startDay, DateTime endDay )

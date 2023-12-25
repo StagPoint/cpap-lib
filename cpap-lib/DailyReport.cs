@@ -232,7 +232,7 @@ namespace cpaplib
 				maskOffTime += sessions[ i ].StartTime - sessions[ i - 1 ].EndTime;
 			}
 
-			return maskOffTime.TotalMinutes / sessions.Sum( x => x.Duration.TotalMinutes );
+			return 1.0 - maskOffTime.TotalMinutes / sessions.Sum( x => x.Duration.TotalMinutes );
 		}
 
 		/// <summary>

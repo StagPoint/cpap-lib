@@ -22,9 +22,9 @@
             <Setter Property="Height" Value="36" />
             <Setter Property="Margin" Value="-4 0 0 0" />
         </Style>
-        <Style Selector="Border.ColumnHeader > Grid > TextBlock">
-            <Setter Property="HorizontalAlignment" Value="Center" />
-            <Setter Property="Margin" Value="24 0" />
+        <Style Selector="Grid.ColumnHeader > TextBlock">
+            <Setter Property="Theme" Value="{DynamicResource BodyStrongTextBlockStyle}" />
+            <Setter Property="Foreground" Value="{DynamicResource DataGridColumnHeaderForegroundBrush}" />
         </Style>
         <Style Selector="Border.GroupHeader">
             <Setter Property="Background" Value="{DynamicResource DataGridRowGroupHeaderBackgroundBrush}" />
@@ -32,18 +32,20 @@
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Padding" Value="8 4 4 4" />
         </Style>
-        <Style Selector="Border.GroupHeader > Grid > TextBlock">
+        <Style Selector="Border.GroupHeader > TextBlock">
             <Setter Property="Theme" Value="{DynamicResource BodyStrongTextBlockStyle}" />
             <Setter Property="Foreground" Value="{DynamicResource DataGridColumnHeaderForegroundBrush}" />
         </Style>
     </UserControl.Styles>
     <ScrollViewer>
         <StackPanel Orientation="Vertical" Grid.IsSharedSizeScope="True" Margin="10" x:DataType="viewModels:TherapyStatisticsViewModel">
+            
+            <TextBlock Text="CPAP Statistics" HorizontalAlignment="Center" Theme="{DynamicResource SubtitleTextBlockStyle}" Margin="0 0 0 10"/>
 
             <!-- MAIN COLUMN HEADERS -->
-            <Border Classes="ColumnHeader" Padding="2">
+            <Border Padding="2" Classes="ColumnHeader">
                 <StackPanel Orientation="Horizontal">
-                    <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="300">
+                    <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="300" Classes="ColumnHeader" >
                         <TextBlock Grid.Column="0" Grid.Row="0" Text="Details" HorizontalAlignment="Left"
                                    Margin="8 0 24 0" />
                         <Rectangle Grid.Column="0" Grid.Row="0" Grid.RowSpan="2" Classes="HeaderSeparator2" />
@@ -54,7 +56,7 @@
                         </ItemsRepeater.Layout>
                         <ItemsRepeater.ItemTemplate>
                             <DataTemplate DataType="{x:Type viewModels:GroupedDays}">
-                                <Grid RowDefinitions="Auto,Auto" Margin="10 0">
+                                <Grid RowDefinitions="Auto,Auto" Margin="10 0" Classes="ColumnHeader" >
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto" SharedSizeGroup="StatsC1"></ColumnDefinition>
                                     </Grid.ColumnDefinitions>
