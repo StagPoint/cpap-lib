@@ -52,10 +52,12 @@ public partial class StatisticsView : UserControl
 			return new TherapyStatisticsViewModel();
 		}
 
+		var byMonth = ReportMode is { SelectedIndex: 1 };
+
 		var end     = storedDates.Last();
 		var start   = DateHelper.Max( storedDates[ 0 ], end.AddYears( -1 ) );
 		var history = HistoryViewModel.GetHistory( profileID, start, end );
-		var groups  = true ? GroupDaysByMonth( history.Days, start, end ) : GroupDaysStandard( history.Days, start, end );
+		var groups  = byMonth ? GroupDaysByMonth( history.Days, start, end ) : GroupDaysStandard( history.Days, start, end );
 
 		var viewModel = new TherapyStatisticsViewModel
 		{
@@ -81,6 +83,9 @@ public partial class StatisticsView : UserControl
 		group.Items.Add( CompileGroupAverages( "Min Pressure", groups, GetStatisticsValue( SignalNames.Pressure, stats => stats.Minimum ) ) );
 		group.Items.Add( CompileGroupAverages( "Max Pressure", groups, GetStatisticsValue( SignalNames.Pressure, stats => stats.Maximum ) ) );
 		group.Items.Add( CompileGroupAverages( "95th Percentile Pressure", groups, GetStatisticsValue( SignalNames.Pressure, stats => stats.Percentile95 ) ) );
+		group.Items.Add( CompileGroupAverages( "Average EPAP", groups, GetStatisticsValue( SignalNames.EPAP, stats => stats.Average ) ) );
+		group.Items.Add( CompileGroupAverages( "Min EPAP", groups, GetStatisticsValue( SignalNames.EPAP, stats => stats.Minimum ) ) );
+		group.Items.Add( CompileGroupAverages( "Max EPAP", groups, GetStatisticsValue( SignalNames.EPAP, stats => stats.Maximum ) ) );
 
 		return group;
 	}
@@ -255,7 +260,7 @@ public partial class StatisticsView : UserControl
 		group.Items.Add( CompileGroupAverages( "Unclassified Apnea Index",                 groups, day => day.EventSummary.UnclassifiedApneaIndex ) );
 		group.Items.Add( CompileGroupAverages( "Central Apnea Index",                      groups, day => day.EventSummary.CentralApneaIndex ) );
 		group.Items.Add( CompileGroupAverages( "RERA Index",                               groups, day => day.EventSummary.RespiratoryArousalIndex ) );
-		group.Items.Add( CompileGroupAverages( "Flow Reduction Index",                     groups, GetEventIndex( EventType.FlowReduction ), value => $"{value:F2}" ) );
+		// group.Items.Add( CompileGroupAverages( "Flow Reduction Index",                     groups, GetEventIndex( EventType.FlowReduction ), value => $"{value:F2}" ) );
 		group.Items.Add( CompileGroupAverages( "Total Time in Apnea",                      groups, GetTotalTimeInApnea,                      value => $"{TimeSpan.FromSeconds( value ):hh\\:mm\\:ss}" ) );
 		group.Items.Add( CompileGroupAverages( "Cheyne-Stokes Respiration (% total time)", groups, GetEventPercentage( EventType.CSR ),      value => $"{value:P2}" ) );
 
@@ -377,5 +382,10 @@ public partial class StatisticsView : UserControl
 		var numberOfGroupDays     = (days.EndDate.Date - days.StartDate.Date).TotalDays + 1.0;
 
 		return ( numberOfCompliantDays / numberOfGroupDays );
+	}
+	
+	private void ReportMode_SelectionChanged( object? sender, SelectionChangedEventArgs e )
+	{
+		DataContext = BuildStatisticsViewModel();
 	}
 }

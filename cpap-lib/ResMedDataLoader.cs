@@ -911,8 +911,8 @@ namespace cpaplib
 				case OperatingMode.Cpap:
 					break;
 				case OperatingMode.Apap:
-					settings[ SettingNames.MinPressure ] = data[ "S.AS.MaxPress" ];
-					settings[ SettingNames.MaxPressure ] = data[ "S.AS.MinPress" ];
+					settings[ SettingNames.MinPressure ] = data[ "S.AS.MinPress" ];
+					settings[ SettingNames.MaxPressure ] = data[ "S.AS.MaxPress" ];
 					break;
 				case OperatingMode.Asv:
 					settings[ SettingNames.RampPressure ]       = data[ "S.AV.StartPress" ];
