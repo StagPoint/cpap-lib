@@ -49,6 +49,7 @@ public class HistoryViewModel : ViewModelBase
 		{
 			day.Events       = store.SelectByForeignKey<ReportedEvent>( day.ID );
 			day.EventSummary = store.SelectByForeignKey<EventSummary>( day.ID ).First();
+			day.StatsSummary = store.SelectByForeignKey<StatisticsSummary>( day.ID ).FirstOrDefault() ?? new StatisticsSummary();
 			day.Statistics   = store.SelectByForeignKey<SignalStatistics>( day.ID );
 			day.Sessions     = store.SelectByForeignKey<Session>( day.ID );
 		}

@@ -282,6 +282,7 @@ INNER JOIN session ON
 
 				int dayID = day.ID;
 
+				Insert( day.StatsSummary, foreignKeyValue: dayID );
 				Insert( day.EventSummary, foreignKeyValue: dayID );
 				Insert( day.MachineInfo,  foreignKeyValue: dayID );
 				Insert( day.Settings,     foreignKeyValue: dayID );

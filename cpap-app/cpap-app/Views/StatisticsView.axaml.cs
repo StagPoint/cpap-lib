@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 
 using Avalonia;
@@ -44,32 +45,56 @@ public partial class StatisticsView : UserControl
 
 	private TherapyStatisticsViewModel BuildStatisticsViewModel()
 	{
-		var profileID = UserProfileStore.GetActiveUserProfile().UserProfileID;
-		var end       = StorageService.Connect().GetMostRecentStoredDate( profileID );
+		var profileID   = UserProfileStore.GetActiveUserProfile().UserProfileID;
+		var storedDates = StorageService.Connect().GetStoredDates( profileID );
 
-		if( end <= DateHelper.UnixEpoch )
+		if( storedDates.Count == 0 )
 		{
 			return new TherapyStatisticsViewModel();
 		}
-		
-		var start   = end.AddYears( -1 );
+
+		var end     = storedDates.Last();
+		var start   = DateHelper.Max( storedDates[ 0 ], end.AddYears( -1 ) );
 		var history = HistoryViewModel.GetHistory( profileID, start, end );
 		var groups  = true ? GroupDaysByMonth( history.Days, start, end ) : GroupDaysStandard( history.Days, start, end );
 
 		var viewModel = new TherapyStatisticsViewModel
 		{
-			Headers             = groups,
-			MostRecentDate      = history.End,
-			LastWeekStart       = DateHelper.Max( history.End.AddDays( -7 ),  history.Start ),
-			LastMonthStart      = DateHelper.Max( history.End.AddDays( -30 ), history.Start ),
-			LastNinetyDaysStart = DateHelper.Max( history.End.AddDays( -90 ), history.Start ),
-			LastYearStart       = DateHelper.Max( history.End.AddYears( -1 ), history.Start ),
+			Headers = groups,
 		};
 
-		viewModel.Groups.Add( BuildCPAPUsageStats( history ) );
-		viewModel.Groups.Add( BuildEventsStats( history ) );
+		viewModel.Groups.Add( BuildEventsStats( groups ) );
+		viewModel.Groups.Add( BuildCPAPUsageStats( groups ) );
+		viewModel.Groups.Add( BuildLeakStats( groups ) );
 
 		return viewModel;
+	}
+	
+	private TherapyStatisticsGroupViewModel BuildLeakStats( List<GroupedDays> groups )
+	{
+		var group = new TherapyStatisticsGroupViewModel
+		{
+			Label = "Leak Statistics",
+		};
+
+		group.Items.Add( CompileGroupAverages( "Average leak rate",         groups, GetAverageLeakRate, value => $"{value:F2} L/min" ) );
+		group.Items.Add( CompileGroupAverages( "95th Percentile leak rate", groups, GetMaxLeakRate, value => $"{value:F2} L/min" ) );
+
+		return group;
+	}
+	
+	private double GetAverageLeakRate( DailyReport day )
+	{
+		var stat = day.Statistics.FirstOrDefault( x => x.SignalName == SignalNames.LeakRate );
+
+		return stat?.Average ?? 0;
+	}
+
+	private double GetMaxLeakRate( DailyReport day )
+	{
+		var stat = day.Statistics.FirstOrDefault( x => x.SignalName == SignalNames.LeakRate );
+
+		return stat?.Percentile95 ?? 0;
 	}
 
 	private static List<GroupedDays> GroupDaysByMonth( List<DailyReport> days, DateTime startDay, DateTime endDay )
@@ -79,6 +104,7 @@ public partial class StatisticsView : UserControl
 		results.Add( new GroupedDays()
 		{
 			Label     = "Most Recent",
+			DateLabel = string.Empty,
 			StartDate = endDay.Date,
 			EndDate   = endDay.Date,
 		} );
@@ -88,19 +114,23 @@ public partial class StatisticsView : UserControl
 		for( int i = 0; i < 12; i++ )
 		{
 			var monthStart = lastMonthStart.AddMonths( -1 );
-			var monthEnd   = lastMonthStart.AddDays( -1 );
+			var monthEnd   = DateHelper.Min( lastMonthStart.AddDays( -1 ), endDay );
 
-			if( !days.Any( x => x.ReportDate.Date <= monthEnd ) )
+			if( monthEnd < startDay )
 			{
 				break;
 			}
 
-			results.Add( new GroupedDays()
+			if( days.Any( x => x.ReportDate.Date <= monthEnd ) )
 			{
-				Label     = $"{monthStart:MMMM yyyy}",
-				StartDate = monthStart,
-				EndDate   = monthEnd,
-			} );
+				results.Add( new GroupedDays()
+				{
+					Label     = $"{monthStart:MMMM}",
+					DateLabel = $"{monthStart:yyyy}",
+					StartDate = DateHelper.Max( startDay, monthStart ),
+					EndDate   = monthEnd,
+				} );
+			}
 
 			lastMonthStart = monthStart;
 		}
@@ -124,179 +154,175 @@ public partial class StatisticsView : UserControl
 			EndDate   = endDay.Date,
 		} );
 
+		var groupStartDate = DateHelper.Max( startDay, endDay.Date.AddDays( -6 ) );
 		results.Add( new GroupedDays()
 		{
 			Label     = "Last Week",
-			StartDate = endDay.Date.AddDays( -6 ),
+			StartDate = groupStartDate,
 			EndDate   = endDay.Date,
 		} );
 
+		groupStartDate = DateHelper.Max( startDay, endDay.Date.AddMonths( -1 ) );
 		results.Add( new GroupedDays()
 		{
 			Label     = "Last Month",
-			StartDate = endDay.Date.AddMonths( -1 ),
+			StartDate = groupStartDate,
 			EndDate   = endDay.Date,
 		} );
-		
+
+		groupStartDate = DateHelper.Max( startDay, endDay.Date.AddMonths( -3 ) );
 		results.Add( new GroupedDays()
 		{
 			Label     = "Last Three Months",
-			StartDate = endDay.Date.AddMonths( -3 ),
+			StartDate = groupStartDate,
 			EndDate   = endDay.Date,
 		} );
-		
+
+		groupStartDate = DateHelper.Max( startDay, endDay.Date.AddYears( -1 ) );
 		results.Add( new GroupedDays()
 		{
 			Label     = "Last Year",
-			StartDate = endDay.Date.AddYears( -1 ),
+			StartDate = groupStartDate,
 			EndDate   = endDay.Date,
 		} );
 
 		foreach( var group in results )
 		{
+			if( group.StartDate < group.EndDate )
+			{
+				group.DateLabel = $"{group.StartDate:d} - {group.EndDate:d}";
+			}
+			
 			group.Days.AddRange( days.Where( x => x.ReportDate.Date >= group.StartDate && x.ReportDate.Date <= group.EndDate ) );
 		}
 		
 		return results;
 	}
 	
-	private TherapyStatisticsGroupViewModel BuildEventsStats( HistoryViewModel history )
+	private TherapyStatisticsGroupViewModel BuildEventsStats( List<GroupedDays> groups )
 	{
 		var group = new TherapyStatisticsGroupViewModel
 		{
-			Name = "Respiratory Event Indices",
+			Label = "Respiratory Event Indices",
 		};
 
-		var days          = history.Days;
-		var mostRecentDay = history.Days[ ^1 ];
-
-		group.Items.Add( CalcRespiratoryEventIndexSummary( "AHI", history, day => day.EventSummary.AHI ) );
-		group.Items.Add( CalcRespiratoryEventIndexSummary( "Obstructive Apnea Index", history, day => day.EventSummary.ObstructiveApneaIndex ) );
-		group.Items.Add( CalcRespiratoryEventIndexSummary( "Hypopnea Index", history, day => day.EventSummary.HypopneaIndex ) );
-		group.Items.Add( CalcRespiratoryEventIndexSummary( "Unclassified Apnea Index", history, day => day.EventSummary.UnclassifiedApneaIndex ) );
-		group.Items.Add( CalcRespiratoryEventIndexSummary( "Central Apnea Index", history, day => day.EventSummary.CentralApneaIndex ) );
-		group.Items.Add( CalcRespiratoryEventIndexSummary( "RERA Index", history, day => day.EventSummary.RespiratoryArousalIndex ) );
+		group.Items.Add( CompileGroupAverages( "AHI", groups, day => day.EventSummary.AHI ) );
+		group.Items.Add( CompileGroupAverages( "Obstructive Apnea Index", groups, day => day.EventSummary.ObstructiveApneaIndex ) );
+		group.Items.Add( CompileGroupAverages( "Hypopnea Index", groups, day => day.EventSummary.HypopneaIndex ) );
+		group.Items.Add( CompileGroupAverages( "Unclassified Apnea Index", groups, day => day.EventSummary.UnclassifiedApneaIndex ) );
+		group.Items.Add( CompileGroupAverages( "Central Apnea Index", groups, day => day.EventSummary.CentralApneaIndex ) );
+		group.Items.Add( CompileGroupAverages( "RERA Index", groups, day => day.EventSummary.RespiratoryArousalIndex ) );
 
 		return group;
 	}
 	
-	private static TherapyStatisticsItemViewModel CalcRespiratoryEventIndexSummary( string name, HistoryViewModel history, Func<DailyReport,double> func )
+	private static TherapyStatisticsLineItemViewModel CompileGroupAverages( string name, List<GroupedDays> groups, Func<DailyReport,double> averageFunc, Func<double, string>? conversionFunc = null )
 	{
-		if( history.Days.Count == 0 )
-		{
-			return new TherapyStatisticsItemViewModel() { Name = name };
-		}
-		
-		return new TherapyStatisticsItemViewModel
-		{
-			Name                 = name,
-			MostRecentValue      = $"{func( history.Days[ ^1 ] ):F2}",
-			LastWeekAverage      = $"{CalcHistoricalAverage( history, 7,   func ):F2}",
-			LastMonthAverage     = $"{CalcHistoricalAverage( history, 30,  func ):F2}",
-			LastNinetyDayAverage = $"{CalcHistoricalAverage( history, 90,  func ):F2}",
-			LastYearAverage      = $"{CalcHistoricalAverage( history, 365, func ):F2}"
-		};
-	}
+		var viewModel = new TherapyStatisticsLineItemViewModel() { Label = name };
+		var averages  = CompileGroupAverages( groups, averageFunc );
 
-	private static double CalcHistoricalAverage( HistoryViewModel history, int count, Func<DailyReport,double> func )
-	{
-		var days = history.Days;
-		
-		double totalValue = 0;
-		var    startDate  = DateHelper.Max( history.Start, history.End.AddDays( -(count - 1) ) );
-		var    startIndex = days.FindIndex( x => x.ReportDate.Date >= startDate );
+		conversionFunc ??= ( value ) => $"{value:F2}";
 
-		if( startIndex < 0 )
+		foreach( var average in averages )
 		{
-			return 0;
+			viewModel.Values.Add( conversionFunc( average ) );
 		}
 
-		for( int i = startIndex; i < days.Count; i++ )
-		{
-			totalValue += func( days[ i ] );
-		}
-
-		var numberOfDays = Math.Min( count, history.TotalDays );
-
-		return ( totalValue / numberOfDays );
+		return viewModel;
 	}
 
-	private static TherapyStatisticsGroupViewModel BuildCPAPUsageStats( HistoryViewModel history )
+	private static List<double> CompileGroupAverages( List<GroupedDays> groups, Func<DailyReport,double> func )
 	{
-		var group = new TherapyStatisticsGroupViewModel
+		var result = new List<double>( groups.Count );
+
+		foreach( var group in groups )
 		{
-			Name  = "Therapy Time",
-		};
+			double totalValue = 0;
 
-		var days          = history.Days;
-		var mostRecentDay = history.Days[ ^1 ];
-
-		group.Items.Add( new TherapyStatisticsItemViewModel
-		{
-			Name                 = "Average usage per night",
-			MostRecentValue      = mostRecentDay.TotalSleepTime.ToString( @"hh\:mm" ),
-			LastWeekAverage      = GetAverageSleepTime( history, 7 ).ToString( @"hh\:mm" ),
-			LastMonthAverage     = GetAverageSleepTime( history, 30 ).ToString( @"hh\:mm" ),
-			LastNinetyDayAverage = GetAverageSleepTime( history, 90 ).ToString( @"hh\:mm" ),
-			LastYearAverage      = GetAverageSleepTime( history, 365 ).ToString( @"hh\:mm" ),
-		} );
-
-		group.Items.Add( new TherapyStatisticsItemViewModel
-		{
-			Name                 = "Compliance (> 4 hours per day)",
-			MostRecentValue      = mostRecentDay.TotalSleepTime.TotalHours >= 4 ? "100%" : "0%",
-			LastWeekAverage      = $"{GetCompliancePercentage( history, 7 ):P0}",
-			LastMonthAverage     = $"{GetCompliancePercentage( history, 30 ):P0}",
-			LastNinetyDayAverage = $"{GetCompliancePercentage( history, 90 ):P0}",
-			LastYearAverage      = $"{GetCompliancePercentage( history, 365 ):P0}"
-		} );
-
-		return group;
-	}
-	
-	private static double GetCompliancePercentage( HistoryViewModel history, int count, double complianceThreshold = 4 )
-	{
-		var days      = history.Days;
-		var startDate = DateHelper.Max( history.Start, history.End.AddDays( -(count - 1) ) );
-
-		double numberOfCompliantDays = 0;
-
-		int i = days.Count - 1;
-		while( i > 0 && days[ i ].ReportDate >= startDate )
-		{
-			if( days[ i ].TotalSleepTime.TotalHours >= complianceThreshold )
+			foreach( var day in group.Days )
 			{
-				numberOfCompliantDays += 1;
+				totalValue += func( day );
 			}
 
-			i -= 1;
-		}
-		
-		var numberOfDays = Math.Min( count, history.TotalDays );
+			var average = group.Days.Count > 0 ? totalValue / group.Days.Count : 0.0;
 
-		return ( numberOfCompliantDays / numberOfDays );
+			result.Add( average );
+		}
+
+		return result;
 	}
 
-	private static TimeSpan GetAverageSleepTime( HistoryViewModel history, int count )
+	private static TherapyStatisticsGroupViewModel BuildCPAPUsageStats( List<GroupedDays> groups )
 	{
-		var days = history.Days;
+		var group = new TherapyStatisticsGroupViewModel
+		{
+			Label  = "Therapy Time",
+		};
+
+		group.Items.Add( CalculateCompliancePerPeriod( groups ) );
+		group.Items.Add( CalculateAverageUsagePerPeriod( groups ) );
+		group.Items.Add( CompileAverageNumberOfSessions( groups ) );
+		group.Items.Add( CalculateAverageSleepEfficiency( groups ) );
+
+		return group;
+	}
+	
+	private static TherapyStatisticsLineItemViewModel CalculateAverageSleepEfficiency( List<GroupedDays> groups )
+	{
+		var averages = CompileGroupAverages( groups, day => day.CalculateSleepEfficiency() );
 		
-		double totalHours = 0;
-		var    startDate  = DateHelper.Max( history.Start, history.End.AddDays( -(count - 1) ) );
-		var    startIndex = days.FindIndex( x => x.ReportDate.Date >= startDate );
-
-		if( startIndex < 0 )
+		return new TherapyStatisticsLineItemViewModel
 		{
-			return TimeSpan.Zero;
+			Label  = "Average sleep efficiency",
+			Values = averages.Select( x => $"{x:P1}" ).ToList()
+		};
+	}
+
+	private static TherapyStatisticsLineItemViewModel CompileAverageNumberOfSessions( List<GroupedDays> groups )
+	{
+		var averages = CompileGroupAverages( groups, day => day.Sessions.Count( x => x.SourceType == SourceType.CPAP ) );
+		
+		return new TherapyStatisticsLineItemViewModel
+		{
+			Label  = "Average number of sessions",
+			Values = averages.Select( x => $"{x:N0}" ).ToList()
+		};
+	}
+
+	private static TherapyStatisticsLineItemViewModel CalculateCompliancePerPeriod( List<GroupedDays> groups )
+	{
+		var complianceValues = new List<double>( groups.Count );
+		for( int i = 0; i < groups.Count; i++ )
+		{
+			complianceValues.Add( GetCompliancePercentage( groups[ i ] ) );
 		}
 
-		for( int i = startIndex; i < days.Count; i++ )
+		var complianceModel = new TherapyStatisticsLineItemViewModel
 		{
-			totalHours  += days[ i ].TotalSleepTime.TotalHours;
-		}
+			Label  = "Compliance (> 4 hours per day)",
+			Values = complianceValues.Select( x => $"{x:P0}" ).ToList()
+		};
 
-		var numberOfDays = Math.Min( count, history.TotalDays );
+		return complianceModel;
+	}
 
-		return TimeSpan.FromHours( totalHours / numberOfDays );
+	private static TherapyStatisticsLineItemViewModel CalculateAverageUsagePerPeriod( List<GroupedDays> groups )
+	{
+		var averageSleepTimes = CompileGroupAverages( groups, day => day.TotalSleepTime.TotalHours );
+		var averageUsageModel = new TherapyStatisticsLineItemViewModel
+		{
+			Label  = "Average usage per night",
+			Values = averageSleepTimes.Select( x => TimeSpan.FromHours( x ).ToString( @"h\:mm" ) ).ToList()
+		};
+
+		return averageUsageModel;
+	}
+
+	private static double GetCompliancePercentage( GroupedDays days, double complianceThreshold = 4 )
+	{
+		var numberOfCompliantDays = days.Days.Count( x => x.TotalSleepTime.TotalHours >= complianceThreshold );
+		var numberOfGroupDays     = (days.EndDate.Date - days.StartDate.Date).TotalDays + 1.0;
+
+		return ( numberOfCompliantDays / numberOfGroupDays );
 	}
 }

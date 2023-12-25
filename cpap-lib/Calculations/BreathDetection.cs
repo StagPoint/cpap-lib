@@ -165,12 +165,12 @@ namespace cpaplib
 
 					// If the breath was too short to be a real breath then it was probably just a minor
 					// fluctuation across the baseline, so just append it to the previous breath. 
-					if( breath.TotalCycleTime < 0.5 && lastBreath != null && lastBreath.TotalCycleTime < 10.0 )
+					if( breath.TotalCycleTime < 1.0 && lastBreath != null && lastBreath.TotalCycleTime < 10.0 )
 					{
 						lastBreath.Append( breath );
 					}
 					// If the breath was too shallow to really qualify as a full breath, append it to the previous breath. 
-					else if( breath.Range <= 5 && lastBreath != null && lastBreath.TotalCycleTime < 10.0 )
+					else if( breath.Range <= 10 && lastBreath != null && lastBreath.TotalCycleTime < 10.0 )
 					{
 						lastBreath.Append( breath );
 					}
