@@ -4,8 +4,6 @@ using System.Linq;
 
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Interactivity;
-using Avalonia.LogicalTree;
 
 using cpap_app.Helpers;
 using cpap_app.ViewModels;
@@ -21,13 +19,6 @@ public partial class StatisticsView : UserControl
 	public StatisticsView()
 	{
 		InitializeComponent();
-	}
-
-	protected override void OnLoaded( RoutedEventArgs e )
-	{
-		base.OnLoaded( e );
-
-		DataContext = BuildStatisticsViewModel();
 	}
 
 	protected override void OnPropertyChanged( AvaloniaPropertyChangedEventArgs change )
@@ -60,20 +51,61 @@ public partial class StatisticsView : UserControl
 		var history = HistoryViewModel.GetHistory( profileID, start, end );
 		var groups  = byMonth ? GroupDaysByMonth( history.Days, start, end ) : GroupDaysStandard( history.Days, start, end );
 
-		var viewModel = new TherapyStatisticsViewModel
-		{
-			Headers = groups,
-		};
+		var viewModel = new TherapyStatisticsViewModel();
+		viewModel.Sections.Add( BuildCpapSection( groups ) );
 
-		viewModel.Groups.Add( BuildCPAPUsageStats( groups ) );
-		viewModel.Groups.Add( BuildEventsStats( groups ) );
-		viewModel.Groups.Add( BuildLeakStats( groups ) );
-		viewModel.Groups.Add( BuildPressureStats( groups ) );
+		var showPulseOximetry = history.Days.Any( day => day.Sessions.Any( session => session.SourceType == SourceType.PulseOximetry ) );
+		if( showPulseOximetry )
+		{
+			viewModel.Sections.Add( BuildOximetrySection( groups ) );
+		}
 
 		return viewModel;
 	}
 	
-	private TherapyStatisticsGroupViewModel BuildPressureStats( List<GroupedDays> groups )
+	private TherapyStatisticsSectionViewModel BuildOximetrySection( List<GroupedDays> groups )
+	{
+		var section = new TherapyStatisticsSectionViewModel
+		{
+			Label   = "Pulse Oximetry Statistics",
+			Headers = groups,
+		};
+
+		section.Groups.Add( BuildOxygenStats( groups ) );
+
+		return section;
+	}
+	
+	private TherapyStatisticsGroupViewModel BuildOxygenStats( List<GroupedDays> groups )
+	{
+		var group = new TherapyStatisticsGroupViewModel
+		{
+			Label = "Blood Oxygen Saturation",
+		};
+
+		group.Items.Add( CompileGroupAverages( "Average SpO2", groups, GetStatisticsValue( SignalNames.SpO2, stats => stats.Average ), value => $"{value:F2}%" ) );
+		group.Items.Add( CompileGroupAverages( "Min SpO2",     groups, GetStatisticsValue( SignalNames.SpO2, stats => stats.Minimum ), value => $"{value:F2}%" ) );
+
+		return group;
+	}
+
+	private TherapyStatisticsSectionViewModel BuildCpapSection( List<GroupedDays> groups )
+	{
+		var section = new TherapyStatisticsSectionViewModel
+		{
+			Label   = "CPAP Statistics",
+			Headers = groups,
+		};
+
+		section.Groups.Add( BuildCPAPUsageStats( groups ) );
+		section.Groups.Add( BuildEventsStats( groups ) );
+		section.Groups.Add( BuildLeakStats( groups ) );
+		section.Groups.Add( BuildPressureStats( groups ) );
+
+		return section;
+	}
+
+	private static TherapyStatisticsGroupViewModel BuildPressureStats( List<GroupedDays> groups )
 	{
 		var group = new TherapyStatisticsGroupViewModel
 		{

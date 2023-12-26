@@ -15,10 +15,11 @@ public class SleepStagesViewModel
 
 	public bool IsEmpty { get => Sessions.Count == 0; }
 
-	public TimeSpan TotalTime       { get; private set; }
-	public TimeSpan TimeAsleep      { get; private set; }
-	public TimeSpan TimeAwake       { get; private set; }
-	public double   SleepEfficiency { get; private set; }
+	public TimeSpan TotalTime        { get; private set; }
+	public TimeSpan TimeAsleep       { get; private set; }
+	public TimeSpan TimeAwake        { get; private set; }
+	public double   SleepEfficiency  { get; private set; }
+	public double   SleepTransitions { get; private set; }
 
 	public ObservableCollection<SleepStageSummaryItemViewModel> StageSummaries { get; set; }
 	public ObservableCollection<Session>                        Sessions       { get; set; } = new();
@@ -51,9 +52,10 @@ public class SleepStagesViewModel
 	{
 		Dictionary<SleepStage, double> timeInStage = new Dictionary<SleepStage, double>();
 
-		double totalTime  = 0;
-		double timeAwake  = 0;
-		double timeAsleep = 0;
+		double totalTime   = 0;
+		double timeAwake   = 0;
+		double timeAsleep  = 0;
+		int    transitions = 0;
 		
 		foreach( var session in Sessions )
 		{
@@ -61,10 +63,17 @@ public class SleepStagesViewModel
 
 			var signal   = session.GetSignalByName( SignalNames.SleepStages );
 			var interval = 1.0 / (60 * signal.FrequencyInHz);
+
+			SleepStage? lastStage = null;
 			
 			foreach( var value in signal.Samples )
 			{
 				var stage = (SleepStage)value;
+
+				if( lastStage != null && stage != lastStage.Value )
+				{
+					transitions += 1;
+				}
 				
 				if( stage > SleepStage.Awake )
 				{
@@ -79,6 +88,8 @@ public class SleepStagesViewModel
 				{
 					timeInStage[ stage ] += interval;
 				}
+
+				lastStage = stage;
 			}
 		}
 
@@ -87,10 +98,11 @@ public class SleepStagesViewModel
 		UpdateSummary( StageSummaries[ 2 ], SleepStage.Light );
 		UpdateSummary( StageSummaries[ 3 ], SleepStage.Deep );
 
-		TotalTime       = TimeSpan.FromMinutes( (int)Math.Ceiling( totalTime ) );
-		TimeAsleep      = TimeSpan.FromMinutes( (int)Math.Ceiling( timeAsleep ) );
-		TimeAwake       = TimeSpan.FromMinutes( (int)Math.Ceiling( timeAwake ) );
-		SleepEfficiency = TimeAsleep / TotalTime;
+		TotalTime        = TimeSpan.FromMinutes( (int)Math.Ceiling( totalTime ) );
+		TimeAsleep       = TimeSpan.FromMinutes( (int)Math.Ceiling( timeAsleep ) );
+		TimeAwake        = TimeSpan.FromMinutes( (int)Math.Ceiling( timeAwake ) );
+		SleepEfficiency  = TimeAsleep / TotalTime;
+		SleepTransitions = transitions;
 
 		void UpdateSummary( SleepStageSummaryItemViewModel summary, SleepStage stage )
 		{
