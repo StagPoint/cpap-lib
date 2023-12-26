@@ -72,6 +72,7 @@ public partial class StatisticsView : UserControl
 		};
 
 		section.Groups.Add( BuildOxygenStats( groups ) );
+		section.Groups.Add( BuildPulseStats( groups ) );
 
 		return section;
 	}
@@ -83,8 +84,30 @@ public partial class StatisticsView : UserControl
 			Label = "Blood Oxygen Saturation",
 		};
 
-		group.Items.Add( CompileGroupAverages( "Average SpO2", groups, GetStatisticsValue( SignalNames.SpO2, stats => stats.Average ), value => $"{value:F2}%" ) );
-		group.Items.Add( CompileGroupAverages( "Min SpO2",     groups, GetStatisticsValue( SignalNames.SpO2, stats => stats.Minimum ), value => $"{value:F2}%" ) );
+		group.Items.Add( CompileGroupAverages( "Average SpO2",                        groups, GetStatisticsValue( SignalNames.SpO2, stats => stats.Average ), value => $"{value:F0}%" ) );
+		group.Items.Add( CompileGroupAverages( "Min SpO2",                            groups, GetStatisticsValue( SignalNames.SpO2, stats => stats.Minimum ), value => $"{value:F0}%" ) );
+		group.Items.Add( CompileGroupAverages( "Desaturation Index",                  groups, GetEventIndex( EventType.Desaturation ),                        value => $"{value:F2}" ) );
+		group.Items.Add( CompileGroupAverages( "Avg. Desaturation Duration",          groups, GetAverageEventDuration( EventType.Desaturation ),              FormatTimespan ) );
+		group.Items.Add( CompileGroupAverages( "Hypoxemia Index",                     groups, GetEventIndex( EventType.Hypoxemia ),                           value => $"{value:F2}" ) );
+		group.Items.Add( CompileGroupAverages( "Avg. Hypoxemia Duration",             groups, GetAverageEventDuration( EventType.Hypoxemia ),                 FormatTimespan ) );
+		group.Items.Add( CompileGroupAverages( "Time in Hypoxemia (% of total time)", groups, GetEventPercentage( EventType.Hypoxemia ),                      value => $"{value:P2}" ) );
+
+		return group;
+	}
+
+	private TherapyStatisticsGroupViewModel BuildPulseStats( List<GroupedDays> groups )
+	{
+		var group = new TherapyStatisticsGroupViewModel
+		{
+			Label = "Pulse Rate",
+		};
+
+		group.Items.Add( CompileGroupAverages( "Average Pulse",                 groups, GetStatisticsValue( SignalNames.Pulse, stats => stats.Average ), value => $"{value:F0}" ) );
+		group.Items.Add( CompileGroupAverages( "Min Pulse",                     groups, GetStatisticsValue( SignalNames.Pulse, stats => stats.Minimum ), value => $"{value:F0}" ) );
+		group.Items.Add( CompileGroupAverages( "Max Pulse",                     groups, GetStatisticsValue( SignalNames.Pulse, stats => stats.Maximum ), value => $"{value:F0}" ) );
+		group.Items.Add( CompileGroupAverages( "Rate Change Index",             groups, GetEventIndex( EventType.PulseRateChange ),                      value => $"{value:F2}" ) );
+		group.Items.Add( CompileGroupAverages( "Tachycardia (% of total time)", groups, GetEventPercentage( EventType.Tachycardia ),                     value => $"{value:P2}" ) );
+		group.Items.Add( CompileGroupAverages( "Bradycardia (% of total time)", groups, GetEventPercentage( EventType.Bradycardia ),                     value => $"{value:P2}" ) );
 
 		return group;
 	}
@@ -138,17 +161,41 @@ public partial class StatisticsView : UserControl
 		return group;
 	}
 
-	private static Func<DailyReport, double> GetEventPercentage( EventType eventType )
+	private static Func<DailyReport, double> GetTotalTimeInEvent( EventType eventType )
 	{
 		return day =>
 		{
-			var totalLeakTime = day.Events.Where( x => x.Type == eventType ).Sum( x => x.Duration.TotalMinutes );
-			if( totalLeakTime < float.Epsilon )
+			return day.Events.Where( x => x.Type == eventType ).Sum( x => x.Duration.TotalSeconds );
+		};
+	}
+
+	private static Func<DailyReport, double> GetAverageEventDuration( EventType eventType )
+	{
+		return day =>
+		{
+			var matchingEvents = day.Events.Where( x => x.Type == eventType ).ToArray();
+			
+			var totalEventDuration = matchingEvents.Sum( x => x.Duration.TotalSeconds );
+			if( totalEventDuration < float.Epsilon )
 			{
 				return 0;
 			}
 
-			return totalLeakTime / day.TotalSleepTime.TotalMinutes;
+			return totalEventDuration / matchingEvents.Length;
+		};
+	}
+
+	private static Func<DailyReport, double> GetEventPercentage( EventType eventType )
+	{
+		return day =>
+		{
+			var totalEventDuration = day.Events.Where( x => x.Type == eventType ).Sum( x => x.Duration.TotalSeconds );
+			if( totalEventDuration < float.Epsilon )
+			{
+				return 0;
+			}
+
+			return totalEventDuration / day.TotalSleepTime.TotalSeconds;
 		};
 	}
 
@@ -183,7 +230,7 @@ public partial class StatisticsView : UserControl
 		results.Add( new GroupedDays()
 		{
 			Label     = "Most Recent",
-			DateLabel = string.Empty,
+			DateLabel = $"{startDay:d}",
 			StartDate = endDay.Date,
 			EndDate   = endDay.Date,
 		} );
@@ -231,6 +278,7 @@ public partial class StatisticsView : UserControl
 		results.Add( new GroupedDays()
 		{
 			Label     = "Most Recent",
+			DateLabel = $"{startDay:d}",
 			StartDate = endDay.Date,
 			EndDate   = endDay.Date,
 		} );
@@ -280,22 +328,30 @@ public partial class StatisticsView : UserControl
 		return results;
 	}
 	
-	private TherapyStatisticsGroupViewModel BuildEventsStats( List<GroupedDays> groups )
+	private TherapyStatisticsGroupViewModel BuildEventsStats( List<GroupedDays> groupedDays )
 	{
 		var group = new TherapyStatisticsGroupViewModel
 		{
 			Label = "Respiratory Events",
 		};
 
-		group.Items.Add( CompileGroupAverages( "AHI",                                      groups, day => day.EventSummary.AHI ) );
-		group.Items.Add( CompileGroupAverages( "Obstructive Apnea Index",                  groups, day => day.EventSummary.ObstructiveApneaIndex ) );
-		group.Items.Add( CompileGroupAverages( "Hypopnea Index",                           groups, day => day.EventSummary.HypopneaIndex ) );
-		group.Items.Add( CompileGroupAverages( "Unclassified Apnea Index",                 groups, day => day.EventSummary.UnclassifiedApneaIndex ) );
-		group.Items.Add( CompileGroupAverages( "Central Apnea Index",                      groups, day => day.EventSummary.CentralApneaIndex ) );
-		group.Items.Add( CompileGroupAverages( "RERA Index",                               groups, day => day.EventSummary.RespiratoryArousalIndex ) );
-		// group.Items.Add( CompileGroupAverages( "Flow Reduction Index",                     groups, GetEventIndex( EventType.FlowReduction ), value => $"{value:F2}" ) );
-		group.Items.Add( CompileGroupAverages( "Total Time in Apnea",                      groups, GetTotalTimeInApnea,                      value => $"{TimeSpan.FromSeconds( value ):hh\\:mm\\:ss}" ) );
-		group.Items.Add( CompileGroupAverages( "Cheyne-Stokes Respiration (% total time)", groups, GetEventPercentage( EventType.CSR ),      value => $"{value:P2}" ) );
+		group.Items.Add( CompileGroupAverages( "AHI",                      groupedDays, day => day.EventSummary.AHI ) );
+		group.Items.Add( CompileGroupAverages( "Obstructive Apnea Index",  groupedDays, day => day.EventSummary.ObstructiveApneaIndex ) );
+		group.Items.Add( CompileGroupAverages( "Hypopnea Index",           groupedDays, day => day.EventSummary.HypopneaIndex ) );
+		group.Items.Add( CompileGroupAverages( "Unclassified Apnea Index", groupedDays, day => day.EventSummary.UnclassifiedApneaIndex ) );
+		group.Items.Add( CompileGroupAverages( "Central Apnea Index",      groupedDays, day => day.EventSummary.CentralApneaIndex ) );
+		group.Items.Add( CompileGroupAverages( "RERA Index",               groupedDays, day => day.EventSummary.RespiratoryArousalIndex ) );
+		group.Items.Add( CompileGroupAverages( "Flow Limit Index",         groupedDays, GetEventIndex( EventType.FlowLimitation ), value => $"{value:F2}" ) );
+		group.Items.Add( CompileGroupAverages( "Total Time in Apnea",      groupedDays, GetTotalTimeInApnea,                       FormatTimespan ) );
+
+		if( groupedDays.Any( x => x.Days.Any( day => day.Events.Any( evt => evt.Type == EventType.CSR ) ) ) )
+		{
+			group.Items.Add( CompileGroupAverages( "Cheyne-Stokes Resp. (% of total time)", groupedDays, GetEventPercentage( EventType.CSR ), value => $"{value:P2}" ) );
+		}
+		else if( groupedDays.Any( x => x.Days.Any( day => day.Events.Any( evt => evt.Type == EventType.PeriodicBreathing ) ) ) )
+		{
+			group.Items.Add( CompileGroupAverages( "Periodic Breathing (% of total time)", groupedDays, GetEventPercentage( EventType.PeriodicBreathing ), value => $"{value:P2}" ) );
+		}
 
 		return group;
 	}
@@ -352,6 +408,7 @@ public partial class StatisticsView : UserControl
 
 		group.Items.Add( CalculateCompliancePerPeriod( groups ) );
 		group.Items.Add( CalculateAverageUsagePerPeriod( groups ) );
+		group.Items.Add( CompileAverageSessionDuration( groups ) );
 		group.Items.Add( CompileAverageNumberOfSessions( groups ) );
 		group.Items.Add( CalculateAverageSleepEfficiency( groups ) );
 
@@ -380,6 +437,17 @@ public partial class StatisticsView : UserControl
 		};
 	}
 
+	private static TherapyStatisticsLineItemViewModel CompileAverageSessionDuration( List<GroupedDays> groups )
+	{
+		var averages = CompileGroupAverages( groups, day => day.Sessions.Where( x => x.SourceType == SourceType.CPAP ).Average( x => x.Duration.TotalSeconds ) );
+		
+		return new TherapyStatisticsLineItemViewModel
+		{
+			Label  = "Average Session Duration",
+			Values = averages.Select( FormatTimespan ).ToList()
+		};
+	}
+
 	private static TherapyStatisticsLineItemViewModel CalculateCompliancePerPeriod( List<GroupedDays> groups )
 	{
 		var complianceValues = new List<double>( groups.Count );
@@ -390,7 +458,7 @@ public partial class StatisticsView : UserControl
 
 		var complianceModel = new TherapyStatisticsLineItemViewModel
 		{
-			Label  = "Compliance (> 4 hours per day)",
+			Label  = "Compliance (\u2265 4 hours per day)",
 			Values = complianceValues.Select( x => $"{x:P0}" ).ToList()
 		};
 
@@ -417,6 +485,11 @@ public partial class StatisticsView : UserControl
 		return ( numberOfCompliantDays / numberOfGroupDays );
 	}
 	
+	private static string FormatTimespan( double value )
+	{
+		return $@"{TimeSpan.FromSeconds( value ):hh\:mm\:ss}";
+	}
+
 	private void ReportMode_SelectionChanged( object? sender, SelectionChangedEventArgs e )
 	{
 		if( StatsContainer != null )

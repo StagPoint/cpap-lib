@@ -63,7 +63,7 @@
                 </ItemsRepeater.Layout>
                 <ItemsRepeater.ItemTemplate>
                     <DataTemplate DataType="{x:Type viewModels:TherapyStatisticsSectionViewModel}">
-                        <StackPanel Orientation="Vertical" Margin="10 0 10 32">
+                        <StackPanel Orientation="Vertical" Margin="10 0 10 20">
 
                             <TextBlock Text="{Binding Label}" HorizontalAlignment="Center"
                                        Theme="{DynamicResource SubtitleTextBlockStyle}" Margin="0 0 0 10" />
