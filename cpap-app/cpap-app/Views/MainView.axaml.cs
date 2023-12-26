@@ -225,7 +225,7 @@ public partial class MainView : UserControl
 					
 					LoadTabPage( page, transition );
 
-					var closePaneWhenLoading = new[] { navDailyReport, navHistory };
+					var closePaneWhenLoading = new[] { navDailyReport, navHistory, navStatistics };
 
 					if( closePaneWhenLoading.Contains( NavView.SelectedItem ) )
 					{

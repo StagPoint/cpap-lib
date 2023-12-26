@@ -88,8 +88,10 @@ public partial class StatisticsView : UserControl
 		group.Items.Add( CompileGroupAverages( "Min SpO2",                            groups, GetStatisticsValue( SignalNames.SpO2, stats => stats.Minimum ), value => $"{value:F0}%" ) );
 		group.Items.Add( CompileGroupAverages( "Desaturation Index",                  groups, GetEventIndex( EventType.Desaturation ),                        value => $"{value:F2}" ) );
 		group.Items.Add( CompileGroupAverages( "Avg. Desaturation Duration",          groups, GetAverageEventDuration( EventType.Desaturation ),              FormatTimespan ) );
+		group.Items.Add( CompileGroupMaximums( "Max. Desaturation Duration",          groups, GetMaxEventDuration( EventType.Desaturation ),                  FormatTimespan ) );
 		group.Items.Add( CompileGroupAverages( "Hypoxemia Index",                     groups, GetEventIndex( EventType.Hypoxemia ),                           value => $"{value:F2}" ) );
 		group.Items.Add( CompileGroupAverages( "Avg. Hypoxemia Duration",             groups, GetAverageEventDuration( EventType.Hypoxemia ),                 FormatTimespan ) );
+		group.Items.Add( CompileGroupMaximums( "Max. Hypoxemia Duration",             groups, GetMaxEventDuration( EventType.Hypoxemia ),                     FormatTimespan ) );
 		group.Items.Add( CompileGroupAverages( "Time in Hypoxemia (% of total time)", groups, GetEventPercentage( EventType.Hypoxemia ),                      value => $"{value:P2}" ) );
 
 		return group;
@@ -122,17 +124,46 @@ public partial class StatisticsView : UserControl
 
 		section.Groups.Add( BuildCPAPUsageStats( groups ) );
 		section.Groups.Add( BuildEventsStats( groups ) );
-		section.Groups.Add( BuildLeakStats( groups ) );
 		section.Groups.Add( BuildPressureStats( groups ) );
+		section.Groups.Add( BuildLeakStats( groups ) );
+		section.Groups.Add( BuildRespirationStats( groups ) );
 
 		return section;
 	}
 
+	private TherapyStatisticsGroupViewModel BuildEventsStats( List<GroupedDays> groupedDays )
+	{
+		var group = new TherapyStatisticsGroupViewModel
+		{
+			Label = "Respiratory Events",
+		};
+
+		group.Items.Add( CompileGroupAverages( "AHI",                      groupedDays, day => day.EventSummary.AHI ) );
+		group.Items.Add( CompileGroupAverages( "Obstructive Apnea Index",  groupedDays, day => day.EventSummary.ObstructiveApneaIndex ) );
+		group.Items.Add( CompileGroupAverages( "Hypopnea Index",           groupedDays, day => day.EventSummary.HypopneaIndex ) );
+		group.Items.Add( CompileGroupAverages( "Unclassified Apnea Index", groupedDays, day => day.EventSummary.UnclassifiedApneaIndex ) );
+		group.Items.Add( CompileGroupAverages( "Central Apnea Index",      groupedDays, day => day.EventSummary.CentralApneaIndex ) );
+		group.Items.Add( CompileGroupAverages( "RERA Index",               groupedDays, day => day.EventSummary.RespiratoryArousalIndex ) );
+		group.Items.Add( CompileGroupAverages( "Flow Limit Index",         groupedDays, GetEventIndex( EventType.FlowLimitation ), value => $"{value:F2}" ) );
+		group.Items.Add( CompileGroupAverages( "Total Time in Apnea",      groupedDays, GetTotalTimeInApnea,                       FormatTimespan ) );
+
+		if( groupedDays.Any( x => x.Days.Any( day => day.Events.Any( evt => evt.Type == EventType.CSR ) ) ) )
+		{
+			group.Items.Add( CompileGroupAverages( "Cheyne-Stokes Resp. (% of total time)", groupedDays, GetEventPercentage( EventType.CSR ), value => $"{value:P2}" ) );
+		}
+		else if( groupedDays.Any( x => x.Days.Any( day => day.Events.Any( evt => evt.Type == EventType.PeriodicBreathing ) ) ) )
+		{
+			group.Items.Add( CompileGroupAverages( "Periodic Breathing (% of total time)", groupedDays, GetEventPercentage( EventType.PeriodicBreathing ), value => $"{value:P2}" ) );
+		}
+
+		return group;
+	}
+	
 	private static TherapyStatisticsGroupViewModel BuildPressureStats( List<GroupedDays> groups )
 	{
 		var group = new TherapyStatisticsGroupViewModel
 		{
-			Label = "Pressure Statistics",
+			Label = "Pressure",
 		};
 
 		group.Items.Add( CompileGroupAverages( "Average Pressure", groups, GetStatisticsValue( SignalNames.Pressure, stats => stats.Average ) ) );
@@ -150,13 +181,41 @@ public partial class StatisticsView : UserControl
 	{
 		var group = new TherapyStatisticsGroupViewModel
 		{
-			Label = "Leak Statistics",
+			Label = "Leak Rate",
 		};
 
 		group.Items.Add( CompileGroupAverages( "Median leak rate",             groups, GetStatisticsValue( SignalNames.LeakRate, stats => stats.Median ) ) );
 		group.Items.Add( CompileGroupAverages( "Average leak rate",            groups, GetStatisticsValue( SignalNames.LeakRate, stats => stats.Average ) ) );
 		group.Items.Add( CompileGroupAverages( "95th Percentile leak rate",    groups, GetStatisticsValue( SignalNames.LeakRate, stats => stats.Percentile95 ) ) );
 		group.Items.Add( CompileGroupAverages( "Large Leak (% of total time)", groups, GetEventPercentage( EventType.LargeLeak ), value => $"{value:P2}" ) );
+
+		return group;
+	}
+
+	private static TherapyStatisticsGroupViewModel BuildRespirationStats( List<GroupedDays> groups )
+	{
+		var group = new TherapyStatisticsGroupViewModel
+		{
+			Label = "Respiration",
+		};
+
+		group.Items.Add( CompileGroupAverages( "Median Respiration Rate",   groups, GetStatisticsValue( SignalNames.RespirationRate, stats => stats.Median ) ) );
+		group.Items.Add( CompileGroupAverages( "Median Tidal Volume",       groups, GetStatisticsValue( SignalNames.TidalVolume,     stats => stats.Median ) ) );
+		group.Items.Add( CompileGroupAverages( "Median Minute Ventilation", groups, GetStatisticsValue( SignalNames.MinuteVent,      stats => stats.Median ) ) );
+
+		return group;
+	}
+
+	private static TherapyStatisticsGroupViewModel BuildSignalStats( List<GroupedDays> groups, string label, string signalName )
+	{
+		var group = new TherapyStatisticsGroupViewModel
+		{
+			Label = label,
+		};
+
+		group.Items.Add( CompileGroupAverages( "Median",          groups, GetStatisticsValue( signalName, stats => stats.Median ) ) );
+		group.Items.Add( CompileGroupAverages( "Minimum",         groups, GetStatisticsValue( signalName, stats => stats.Minimum ) ) );
+		group.Items.Add( CompileGroupAverages( "95th Percentile", groups, GetStatisticsValue( signalName, stats => stats.Percentile95 ) ) );
 
 		return group;
 	}
@@ -182,6 +241,20 @@ public partial class StatisticsView : UserControl
 			}
 
 			return totalEventDuration / matchingEvents.Length;
+		};
+	}
+
+	private static Func<DailyReport, double> GetMaxEventDuration( EventType eventType )
+	{
+		return day =>
+		{
+			if( !day.Events.Any( evt => evt.Type == eventType ) )
+			{
+				return 0;
+			}
+			
+			var matchingEvents = day.Events.Where( evt => evt.Type == eventType );
+			return matchingEvents.Max( evt => evt.Duration.TotalSeconds );
 		};
 	}
 
@@ -223,6 +296,169 @@ public partial class StatisticsView : UserControl
 		};
 	}
 
+	private double GetTotalTimeInApnea( DailyReport day )
+	{
+		return day.Events
+			.Where( x => EventTypes.Apneas.Contains( x.Type ) )
+			.Sum( x => x.Duration.TotalSeconds );
+	}
+
+	private static TherapyStatisticsLineItemViewModel CompileGroupMaximums( string name, List<GroupedDays> groups, Func<DailyReport, double> averageFunc, Func<double, string>? conversionFunc = null )
+	{
+		var viewModel = new TherapyStatisticsLineItemViewModel() { Label = name };
+		var maximums  = CompileGroupMaximums( groups, averageFunc );
+
+		conversionFunc ??= ( value ) => $"{value:F2}";
+
+		foreach( var average in maximums )
+		{
+			viewModel.Values.Add( conversionFunc( average ) );
+		}
+
+		return viewModel;
+	}
+	
+	private static TherapyStatisticsLineItemViewModel CompileGroupAverages( string name, List<GroupedDays> groups, Func<DailyReport,double> averageFunc, Func<double, string>? conversionFunc = null )
+	{
+		var viewModel = new TherapyStatisticsLineItemViewModel() { Label = name };
+		var averages  = CompileGroupAverages( groups, averageFunc );
+
+		conversionFunc ??= ( value ) => $"{value:F2}";
+
+		foreach( var average in averages )
+		{
+			viewModel.Values.Add( conversionFunc( average ) );
+		}
+
+		return viewModel;
+	}
+
+	private static List<double> CompileGroupAverages( List<GroupedDays> groups, Func<DailyReport,double> func )
+	{
+		var result = new List<double>( groups.Count );
+
+		foreach( var group in groups )
+		{
+			double totalValue = 0;
+
+			foreach( var day in group.Days )
+			{
+				totalValue += func( day );
+			}
+
+			var average = group.Days.Count > 0 ? totalValue / group.Days.Count : 0.0;
+
+			result.Add( average );
+		}
+
+		return result;
+	}
+
+	private static List<double> CompileGroupMaximums( List<GroupedDays> groups, Func<DailyReport,double> func )
+	{
+		var result = new List<double>( groups.Count );
+
+		foreach( var group in groups )
+		{
+			double maxValue = 0;
+
+			foreach( var day in group.Days )
+			{
+				maxValue = Math.Max( maxValue, func( day ) );
+			}
+
+			result.Add( maxValue );
+		}
+
+		return result;
+	}
+
+	private static TherapyStatisticsGroupViewModel BuildCPAPUsageStats( List<GroupedDays> groups )
+	{
+		var group = new TherapyStatisticsGroupViewModel
+		{
+			Label  = "Therapy Time",
+		};
+
+		group.Items.Add( CalculateCompliancePerPeriod( groups ) );
+		group.Items.Add( CalculateAverageUsagePerPeriod( groups ) );
+		group.Items.Add( CompileAverageSessionDuration( groups ) );
+		group.Items.Add( CompileAverageNumberOfSessions( groups ) );
+		group.Items.Add( CalculateAverageSleepEfficiency( groups ) );
+
+		return group;
+	}
+	
+	private static TherapyStatisticsLineItemViewModel CalculateAverageSleepEfficiency( List<GroupedDays> groups )
+	{
+		var averages = CompileGroupAverages( groups, day => day.CalculateSleepEfficiency() );
+		
+		return new TherapyStatisticsLineItemViewModel
+		{
+			Label  = "Average sleep efficiency",
+			Values = averages.Select( x => $"{x:P1}" ).ToList()
+		};
+	}
+
+	private static TherapyStatisticsLineItemViewModel CompileAverageNumberOfSessions( List<GroupedDays> groups )
+	{
+		var averages = CompileGroupAverages( groups, day => day.Sessions.Count( x => x.SourceType == SourceType.CPAP ) );
+		
+		return new TherapyStatisticsLineItemViewModel
+		{
+			Label  = "Average number of sessions",
+			Values = averages.Select( x => $"{x:N0}" ).ToList()
+		};
+	}
+
+	private static TherapyStatisticsLineItemViewModel CompileAverageSessionDuration( List<GroupedDays> groups )
+	{
+		var averages = CompileGroupAverages( groups, day => day.Sessions.Where( x => x.SourceType == SourceType.CPAP ).Average( x => x.Duration.TotalSeconds ) );
+		
+		return new TherapyStatisticsLineItemViewModel
+		{
+			Label  = "Average Session Duration",
+			Values = averages.Select( FormatTimespan ).ToList()
+		};
+	}
+
+	private static TherapyStatisticsLineItemViewModel CalculateCompliancePerPeriod( List<GroupedDays> groups )
+	{
+		var complianceValues = new List<double>( groups.Count );
+		for( int i = 0; i < groups.Count; i++ )
+		{
+			complianceValues.Add( GetCompliancePercentage( groups[ i ] ) );
+		}
+
+		var complianceModel = new TherapyStatisticsLineItemViewModel
+		{
+			Label  = "Compliance (\u2265 4 hours per day)",
+			Values = complianceValues.Select( x => $"{x:P0}" ).ToList()
+		};
+
+		return complianceModel;
+	}
+
+	private static TherapyStatisticsLineItemViewModel CalculateAverageUsagePerPeriod( List<GroupedDays> groups )
+	{
+		var averageSleepTimes = CompileGroupAverages( groups, day => day.TotalSleepTime.TotalHours );
+		var averageUsageModel = new TherapyStatisticsLineItemViewModel
+		{
+			Label  = "Average usage per night",
+			Values = averageSleepTimes.Select( x => TimeSpan.FromHours( x ).ToString( @"h\:mm" ) ).ToList()
+		};
+
+		return averageUsageModel;
+	}
+
+	private static double GetCompliancePercentage( GroupedDays days, double complianceThreshold = 4 )
+	{
+		var numberOfCompliantDays = days.Days.Count( x => x.TotalSleepTime.TotalHours >= complianceThreshold );
+		var numberOfGroupDays     = (days.EndDate.Date - days.StartDate.Date).TotalDays + 1.0;
+
+		return ( numberOfCompliantDays / numberOfGroupDays );
+	}
+	
 	private static List<GroupedDays> GroupDaysByMonth( List<DailyReport> days, DateTime startDay, DateTime endDay )
 	{
 		var results = new List<GroupedDays>();
@@ -326,163 +562,6 @@ public partial class StatisticsView : UserControl
 		}
 		
 		return results;
-	}
-	
-	private TherapyStatisticsGroupViewModel BuildEventsStats( List<GroupedDays> groupedDays )
-	{
-		var group = new TherapyStatisticsGroupViewModel
-		{
-			Label = "Respiratory Events",
-		};
-
-		group.Items.Add( CompileGroupAverages( "AHI",                      groupedDays, day => day.EventSummary.AHI ) );
-		group.Items.Add( CompileGroupAverages( "Obstructive Apnea Index",  groupedDays, day => day.EventSummary.ObstructiveApneaIndex ) );
-		group.Items.Add( CompileGroupAverages( "Hypopnea Index",           groupedDays, day => day.EventSummary.HypopneaIndex ) );
-		group.Items.Add( CompileGroupAverages( "Unclassified Apnea Index", groupedDays, day => day.EventSummary.UnclassifiedApneaIndex ) );
-		group.Items.Add( CompileGroupAverages( "Central Apnea Index",      groupedDays, day => day.EventSummary.CentralApneaIndex ) );
-		group.Items.Add( CompileGroupAverages( "RERA Index",               groupedDays, day => day.EventSummary.RespiratoryArousalIndex ) );
-		group.Items.Add( CompileGroupAverages( "Flow Limit Index",         groupedDays, GetEventIndex( EventType.FlowLimitation ), value => $"{value:F2}" ) );
-		group.Items.Add( CompileGroupAverages( "Total Time in Apnea",      groupedDays, GetTotalTimeInApnea,                       FormatTimespan ) );
-
-		if( groupedDays.Any( x => x.Days.Any( day => day.Events.Any( evt => evt.Type == EventType.CSR ) ) ) )
-		{
-			group.Items.Add( CompileGroupAverages( "Cheyne-Stokes Resp. (% of total time)", groupedDays, GetEventPercentage( EventType.CSR ), value => $"{value:P2}" ) );
-		}
-		else if( groupedDays.Any( x => x.Days.Any( day => day.Events.Any( evt => evt.Type == EventType.PeriodicBreathing ) ) ) )
-		{
-			group.Items.Add( CompileGroupAverages( "Periodic Breathing (% of total time)", groupedDays, GetEventPercentage( EventType.PeriodicBreathing ), value => $"{value:P2}" ) );
-		}
-
-		return group;
-	}
-	
-	private double GetTotalTimeInApnea( DailyReport day )
-	{
-		return day.Events
-			.Where( x => EventTypes.Apneas.Contains( x.Type ) )
-			.Sum( x => x.Duration.TotalSeconds );
-	}
-
-	private static TherapyStatisticsLineItemViewModel CompileGroupAverages( string name, List<GroupedDays> groups, Func<DailyReport,double> averageFunc, Func<double, string>? conversionFunc = null )
-	{
-		var viewModel = new TherapyStatisticsLineItemViewModel() { Label = name };
-		var averages  = CompileGroupAverages( groups, averageFunc );
-
-		conversionFunc ??= ( value ) => $"{value:F2}";
-
-		foreach( var average in averages )
-		{
-			viewModel.Values.Add( conversionFunc( average ) );
-		}
-
-		return viewModel;
-	}
-
-	private static List<double> CompileGroupAverages( List<GroupedDays> groups, Func<DailyReport,double> func )
-	{
-		var result = new List<double>( groups.Count );
-
-		foreach( var group in groups )
-		{
-			double totalValue = 0;
-
-			foreach( var day in group.Days )
-			{
-				totalValue += func( day );
-			}
-
-			var average = group.Days.Count > 0 ? totalValue / group.Days.Count : 0.0;
-
-			result.Add( average );
-		}
-
-		return result;
-	}
-
-	private static TherapyStatisticsGroupViewModel BuildCPAPUsageStats( List<GroupedDays> groups )
-	{
-		var group = new TherapyStatisticsGroupViewModel
-		{
-			Label  = "Therapy Time",
-		};
-
-		group.Items.Add( CalculateCompliancePerPeriod( groups ) );
-		group.Items.Add( CalculateAverageUsagePerPeriod( groups ) );
-		group.Items.Add( CompileAverageSessionDuration( groups ) );
-		group.Items.Add( CompileAverageNumberOfSessions( groups ) );
-		group.Items.Add( CalculateAverageSleepEfficiency( groups ) );
-
-		return group;
-	}
-	
-	private static TherapyStatisticsLineItemViewModel CalculateAverageSleepEfficiency( List<GroupedDays> groups )
-	{
-		var averages = CompileGroupAverages( groups, day => day.CalculateSleepEfficiency() );
-		
-		return new TherapyStatisticsLineItemViewModel
-		{
-			Label  = "Average sleep efficiency",
-			Values = averages.Select( x => $"{x:P1}" ).ToList()
-		};
-	}
-
-	private static TherapyStatisticsLineItemViewModel CompileAverageNumberOfSessions( List<GroupedDays> groups )
-	{
-		var averages = CompileGroupAverages( groups, day => day.Sessions.Count( x => x.SourceType == SourceType.CPAP ) );
-		
-		return new TherapyStatisticsLineItemViewModel
-		{
-			Label  = "Average number of sessions",
-			Values = averages.Select( x => $"{x:N0}" ).ToList()
-		};
-	}
-
-	private static TherapyStatisticsLineItemViewModel CompileAverageSessionDuration( List<GroupedDays> groups )
-	{
-		var averages = CompileGroupAverages( groups, day => day.Sessions.Where( x => x.SourceType == SourceType.CPAP ).Average( x => x.Duration.TotalSeconds ) );
-		
-		return new TherapyStatisticsLineItemViewModel
-		{
-			Label  = "Average Session Duration",
-			Values = averages.Select( FormatTimespan ).ToList()
-		};
-	}
-
-	private static TherapyStatisticsLineItemViewModel CalculateCompliancePerPeriod( List<GroupedDays> groups )
-	{
-		var complianceValues = new List<double>( groups.Count );
-		for( int i = 0; i < groups.Count; i++ )
-		{
-			complianceValues.Add( GetCompliancePercentage( groups[ i ] ) );
-		}
-
-		var complianceModel = new TherapyStatisticsLineItemViewModel
-		{
-			Label  = "Compliance (\u2265 4 hours per day)",
-			Values = complianceValues.Select( x => $"{x:P0}" ).ToList()
-		};
-
-		return complianceModel;
-	}
-
-	private static TherapyStatisticsLineItemViewModel CalculateAverageUsagePerPeriod( List<GroupedDays> groups )
-	{
-		var averageSleepTimes = CompileGroupAverages( groups, day => day.TotalSleepTime.TotalHours );
-		var averageUsageModel = new TherapyStatisticsLineItemViewModel
-		{
-			Label  = "Average usage per night",
-			Values = averageSleepTimes.Select( x => TimeSpan.FromHours( x ).ToString( @"h\:mm" ) ).ToList()
-		};
-
-		return averageUsageModel;
-	}
-
-	private static double GetCompliancePercentage( GroupedDays days, double complianceThreshold = 4 )
-	{
-		var numberOfCompliantDays = days.Days.Count( x => x.TotalSleepTime.TotalHours >= complianceThreshold );
-		var numberOfGroupDays     = (days.EndDate.Date - days.StartDate.Date).TotalDays + 1.0;
-
-		return ( numberOfCompliantDays / numberOfGroupDays );
 	}
 	
 	private static string FormatTimespan( double value )
