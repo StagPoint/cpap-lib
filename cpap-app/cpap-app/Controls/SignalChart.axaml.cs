@@ -1667,6 +1667,12 @@ public partial class SignalChart : UserControl
 			var bounds    = flag.GetTimeBounds();
 			var startTime = (bounds.StartTime - _day.RecordingStartTime).TotalSeconds;
 			var endTime   = (bounds.EndTime - _day.RecordingStartTime).TotalSeconds;
+
+			if( Math.Abs( startTime - endTime ) < 0.1 )
+			{
+				startTime -= 0.5;
+				endTime   += 0.5;
+			}
 			
 			if( timeOffset >= startTime - highlightDistance && timeOffset <= endTime + highlightDistance )
 			{

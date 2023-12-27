@@ -432,7 +432,7 @@ public partial class SignalChartContainer : UserControl
 		}
 	}
 	
-	private List<SignalChartConfiguration> GetFilteredGraphConfigurations()
+	private static List<SignalChartConfiguration> GetFilteredGraphConfigurations()
 	{
 		// TODO: What is the best way to filter the list of available graphs according to the user's machine?
 		

@@ -71,12 +71,12 @@
                             <!-- MAIN COLUMN HEADERS -->
                             <Border Padding="2" Classes="ColumnHeader">
                                 <StackPanel Orientation="Horizontal">
-                                    <Grid Name="DetailsColumn" RowDefinitions="Auto,Auto" Classes="ColumnHeader">
+                                    <Grid Name="DetailsColumn" RowDefinitions="Auto,Auto" Classes="ColumnHeader" MinWidth="50">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto" SharedSizeGroup="StatsC0" />
                                         </Grid.ColumnDefinitions>
                                         <TextBlock Grid.Column="0" Grid.Row="0" Text="Details" HorizontalAlignment="Left"
-                                                   Margin="8 0 24 0" />
+                                                   Margin="8 0 24 0" MinWidth="250"/>
                                         <Rectangle Grid.Column="0" Grid.Row="0" Grid.RowSpan="2" Classes="HeaderSeparator2" />
                                     </Grid>
                                     <ItemsRepeater ItemsSource="{Binding Headers}" VerticalCacheLength="200">
@@ -85,7 +85,7 @@
                                         </ItemsRepeater.Layout>
                                         <ItemsRepeater.ItemTemplate>
                                             <DataTemplate DataType="{x:Type viewModels:GroupedDays}">
-                                                <Grid RowDefinitions="Auto,Auto" Margin="10 0" Classes="ColumnHeader">
+                                                <Grid RowDefinitions="Auto,Auto" Margin="10 0" Classes="ColumnHeader" MinWidth="50">
                                                     <Grid.ColumnDefinitions>
                                                         <ColumnDefinition Width="Auto" SharedSizeGroup="StatsC1"></ColumnDefinition>
                                                     </Grid.ColumnDefinitions>
@@ -126,7 +126,7 @@
                                                     <DataTemplate DataType="{x:Type viewModels:TherapyStatisticsLineItemViewModel}">
                                                         <Border Classes="SelectionRect">
                                                             <StackPanel Orientation="Horizontal">
-                                                                <Grid RowDefinitions="Auto" Classes="TableData">
+                                                                <Grid RowDefinitions="Auto" Classes="TableData" MinWidth="50">
                                                                     <Grid.ColumnDefinitions>
                                                                         <ColumnDefinition Width="Auto" SharedSizeGroup="StatsC0" />
                                                                     </Grid.ColumnDefinitions>
@@ -146,7 +146,7 @@
                                                                     <ItemsRepeater.ItemTemplate>
                                                                         <DataTemplate DataType="{x:Type system:String}">
                                                                             <Grid RowDefinitions="Auto" Classes="TableData"
-                                                                                  Margin="10 0">
+                                                                                  Margin="10 0" MinWidth="50">
                                                                                 <Grid.ColumnDefinitions>
                                                                                     <ColumnDefinition Width="Auto"
                                                                                         SharedSizeGroup="StatsC1" />

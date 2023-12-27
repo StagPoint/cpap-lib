@@ -196,17 +196,34 @@ namespace cpap_db
 		
 		#region Public functions (cpap-lib specific)
 
+		public List<EventType> GetStoredEventTypes( int profileID )
+		{
+			var eventMapping = GetMapping<ReportedEvent>();
+			var dayMapping   = GetMapping<DailyReport>();
+
+			var query = @$"
+SELECT DISTINCT {eventMapping.TableName}.Type 
+FROM {eventMapping.TableName} 
+WHERE {eventMapping.ForeignKey.ColumnName} IN (SELECT {dayMapping.PrimaryKey.ColumnName} FROM {dayMapping.TableName} WHERE {dayMapping.TableName}.{dayMapping.ForeignKey.ColumnName} = ?) 
+ORDER BY Type;";
+
+			return Connection.QueryScalars<EventType>( query, profileID );
+		}
+
 		public List<string> GetStoredSignalNames( int profileID )
 		{
-			const string sql = $@"
-SELECT DISTINCT signal.Name 
-    FROM signal 
-INNER JOIN session ON 
-    signal.SessionID = session.ID 
-    AND 
-    session.dayID IN (SELECT ID from day WHERE day.UserProfileID = ?)
+			var dayMapping     = GetMapping<DailyReport>();
+			var sessionMapping = GetMapping<Session>();
+			var signalMapping  = GetMapping<Signal>();
+			var userMapping    = GetMapping<UserProfile>();
+
+			var query = $@"SELECT DISTINCT {signalMapping.TableName}.Name FROM {userMapping.TableName}
+INNER JOIN {dayMapping.TableName} ON {dayMapping.TableName}.{dayMapping.ForeignKey.ColumnName} = {userMapping.TableName}.{userMapping.PrimaryKey.ColumnName}
+INNER JOIN {sessionMapping.TableName} ON {sessionMapping.TableName}.{sessionMapping.ForeignKey.ColumnName} = {dayMapping.TableName}.{dayMapping.PrimaryKey.ColumnName}
+INNER JOIN {signalMapping.TableName} ON {signalMapping.TableName}.{signalMapping.ForeignKey.ColumnName} = {sessionMapping.TableName}.{sessionMapping.PrimaryKey.ColumnName}
+WHERE {userMapping.TableName}.{userMapping.PrimaryKey.ColumnName} = ?
 ";
-			return Connection.QueryScalars<string>( sql, profileID );
+			return Connection.QueryScalars<string>( query, profileID );
 		}
 
 		public List<DailyReport> LoadDailyReportsForRange( int profileID, DateTime start, DateTime end, bool loadSignalData = true )

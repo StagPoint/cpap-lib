@@ -83,11 +83,14 @@ public partial class DailyEventsListView : UserControl
 			return;
 		}
 
+		var eventBounds = evt.GetTimeBounds();
+		var eventTime   = eventBounds.StartTime.AddSeconds( eventBounds.Duration.TotalSeconds * 0.5 );
+
 		var timeSelectedEventArgs = new DateTimeRoutedEventArgs
 		{
 			RoutedEvent = TimeSelection.TimeSelectedEvent,
 			Source      = sender,
-			DateTime    = evt.StartTime,
+			DateTime    = eventTime,
 		};
 			
 		RaiseEvent( timeSelectedEventArgs  );

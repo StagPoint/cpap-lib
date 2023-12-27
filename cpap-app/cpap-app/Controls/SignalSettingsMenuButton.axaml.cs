@@ -14,6 +14,8 @@ using cpap_app.Events;
 using cpap_app.Helpers;
 using cpap_app.ViewModels;
 
+using cpap_db;
+
 using cpaplib;
 
 using FluentAvalonia.UI.Controls;
@@ -59,6 +61,9 @@ public partial class SignalSettingsMenuButton : UserControl
 
 	private SignalChartConfiguration? _chartConfiguration;
 	private ColorPickerFlyout?        _flyout;
+
+	private static long            _lastEventTypeRetrieval = -1;
+	private static List<EventType> _userEventTypes         = new List<EventType>();
 
 	#endregion 
 	
@@ -139,11 +144,8 @@ public partial class SignalSettingsMenuButton : UserControl
 	private void UpdateEventMenu( SignalChartConfiguration config )
 	{
 		EventOverlays.Items.Clear();
-		
-		var allEventTypes = EventTypes.RespiratoryDisturbance.Concat( EventTypes.OxygenSaturation.Concat( EventTypes.Pulse ) );
-		
-		var userEventTypes = EventMarkerConfigurationStore.GetUserEventTypes( UserProfileStore.GetActiveUserProfile().UserProfileID );
-		userEventTypes.Sort();
+
+		var allEventTypes = GetEventTypes();
 		
 		foreach( var eventType in allEventTypes )
 		{
@@ -168,6 +170,25 @@ public partial class SignalSettingsMenuButton : UserControl
 
 			EventOverlays.Items.Add( new CheckMarkMenuItem() { DataContext = item } );
 		}
+	}
+
+	private static List<EventType> GetEventTypes()
+	{
+		if( Environment.TickCount - _lastEventTypeRetrieval < 1000 )
+		{
+			Debug.WriteLine( $"Returning cached event types at {Environment.TickCount}" );
+			return _userEventTypes;
+		}
+		
+		_userEventTypes         = EventTypes.RespiratoryDisturbance.Concat( EventTypes.OxygenSaturation.Concat( EventTypes.Pulse ) ).ToList();
+		_lastEventTypeRetrieval = Environment.TickCount;
+		
+		var storedEventTypes = StorageService.Connect().GetStoredEventTypes( UserProfileStore.GetActiveUserProfile().UserProfileID );
+		storedEventTypes.RemoveAll( x => _userEventTypes.Contains( x ) );
+
+		_userEventTypes.AddRange( storedEventTypes );
+
+		return _userEventTypes;
 	}
 
 	private void ConfigureSignalColor_OnClick( object? sender, RoutedEventArgs e )
