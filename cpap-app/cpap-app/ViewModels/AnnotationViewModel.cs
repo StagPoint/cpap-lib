@@ -5,6 +5,8 @@ using System.Runtime.CompilerServices;
 
 using cpaplib;
 
+using Color = System.Drawing.Color;
+
 namespace cpap_app.ViewModels;
 
 public class AnnotationViewModel : INotifyPropertyChanged
@@ -47,6 +49,12 @@ public class AnnotationViewModel : INotifyPropertyChanged
 		set => SetField( ref _notes, value );
 	}
 
+	public Color Color
+	{
+		get => _color;
+		set => SetField( ref _color, value );
+	}
+
 	#endregion
 
 	#region Private fields
@@ -57,6 +65,7 @@ public class AnnotationViewModel : INotifyPropertyChanged
 	private DateTime _startTime;
 	private DateTime _endTime;
 	private bool     _showMarker;
+	private Color    _color;
 
 	#endregion
 
@@ -66,6 +75,7 @@ public class AnnotationViewModel : INotifyPropertyChanged
 	{
 		_signal = string.Empty;
 		_notes  = string.Empty;
+		_color  = Color.Yellow;
 	}
 
 	public AnnotationViewModel( Annotation value )
@@ -76,6 +86,7 @@ public class AnnotationViewModel : INotifyPropertyChanged
 		_endTime      = value.EndTime;
 		_showMarker   = value.ShowMarker;
 		_notes        = value.Notes;
+		_color        = value.Color ?? Color.Yellow;
 	}
 
 	#endregion
@@ -96,7 +107,8 @@ public class AnnotationViewModel : INotifyPropertyChanged
 			StartTime    = viewModel._startTime,
 			EndTime      = viewModel._endTime,
 			ShowMarker   = viewModel._showMarker,
-			Notes        = viewModel._notes
+			Notes        = viewModel._notes,
+			Color        = viewModel._color,
 		};
 	}
 

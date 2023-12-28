@@ -218,13 +218,9 @@ namespace cpaplib
 			var sessions    = Sessions.Where( x => x.SourceType == SourceType.CPAP ).ToArray();
 			var maskOffTime = TimeSpan.Zero;
 
-			if( sessions.Length == 0 )
+			if( sessions.Length <= 1 )
 			{
-				return 0;
-			}
-			else if( sessions.Length == 1 )
-			{
-				return 1;
+				return sessions.Length;
 			}
 
 			for( int i = 1; i < sessions.Length; i++ )
@@ -232,7 +228,7 @@ namespace cpaplib
 				maskOffTime += sessions[ i ].StartTime - sessions[ i - 1 ].EndTime;
 			}
 
-			return 1.0 - maskOffTime.TotalMinutes / sessions.Sum( x => x.Duration.TotalMinutes );
+			return 1.0 - Math.Min( maskOffTime.TotalMinutes / sessions.Sum( x => x.Duration.TotalMinutes ), 1.0 );
 		}
 
 		/// <summary>

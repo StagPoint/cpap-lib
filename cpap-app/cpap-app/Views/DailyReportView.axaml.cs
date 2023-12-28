@@ -313,6 +313,8 @@ public partial class DailyReportView : UserControl
 			},
 			XamlRoot = (Visual)VisualRoot!,
 		};
+
+		input.CloseButtonPressed += ( sender, args ) => dialog.Hide( TaskDialogStandardResult.OK );
 		
 		var task = dialog.ShowAsync();
 		Dispatcher.UIThread.Post( () =>
@@ -365,6 +367,8 @@ public partial class DailyReportView : UserControl
 			XamlRoot = (Visual)VisualRoot!,
 		};
 		
+		input.CloseButtonPressed += ( sender, args ) => dialog.Hide( TaskDialogStandardResult.OK );
+
 		var task = dialog.ShowAsync();
 		Dispatcher.UIThread.Post( () =>
 		{

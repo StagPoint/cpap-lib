@@ -2045,7 +2045,7 @@ public partial class SignalChart : UserControl
 			}
 			
 			var marker = Chart.Plot.AddRectangle( startOffset, endOffset, currentBottom, currentTop );
-			marker.Color = Color.Yellow;
+			marker.Color = annotation.Color ?? Color.Yellow;
 				
 			_annotationMarkers.Add( marker );
 			Chart.Plot.MoveFirst( marker );

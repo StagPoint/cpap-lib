@@ -62,8 +62,8 @@ public partial class SignalSettingsMenuButton : UserControl
 	private SignalChartConfiguration? _chartConfiguration;
 	private ColorPickerFlyout?        _flyout;
 
-	private static long            _lastEventTypeRetrieval = -1;
-	private static List<EventType> _userEventTypes         = new List<EventType>();
+	private static long            _lastEventCacheReloadTime = -1;
+	private static List<EventType> _cachedUserEventTypes         = new List<EventType>();
 
 	#endregion 
 	
@@ -174,21 +174,19 @@ public partial class SignalSettingsMenuButton : UserControl
 
 	private static List<EventType> GetEventTypes()
 	{
-		if( Environment.TickCount - _lastEventTypeRetrieval < 1000 )
+		if( Environment.TickCount - _lastEventCacheReloadTime < 30000 )
 		{
-			Debug.WriteLine( $"Returning cached event types at {Environment.TickCount}" );
-			return _userEventTypes;
+			return _cachedUserEventTypes;
 		}
 		
-		_userEventTypes         = EventTypes.RespiratoryDisturbance.Concat( EventTypes.OxygenSaturation.Concat( EventTypes.Pulse ) ).ToList();
-		_lastEventTypeRetrieval = Environment.TickCount;
+		_cachedUserEventTypes     = EventTypes.RespiratoryDisturbance.Concat( EventTypes.OxygenSaturation.Concat( EventTypes.Pulse ) ).ToList();
+		_lastEventCacheReloadTime = Environment.TickCount;
 		
 		var storedEventTypes = StorageService.Connect().GetStoredEventTypes( UserProfileStore.GetActiveUserProfile().UserProfileID );
-		storedEventTypes.RemoveAll( x => _userEventTypes.Contains( x ) );
 
-		_userEventTypes.AddRange( storedEventTypes );
+		_cachedUserEventTypes.AddRange( storedEventTypes.Where( x => !_cachedUserEventTypes.Contains( x ) ) );
 
-		return _userEventTypes;
+		return _cachedUserEventTypes;
 	}
 
 	private void ConfigureSignalColor_OnClick( object? sender, RoutedEventArgs e )

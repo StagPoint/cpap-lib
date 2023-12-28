@@ -84,15 +84,18 @@ public partial class StatisticsView : UserControl
 			Label = "Blood Oxygen Saturation",
 		};
 
-		group.Items.Add( CompileGroupAverages( "Average SpO2",                        groups, GetStatisticsValue( SignalNames.SpO2, stats => stats.Average ), value => $"{value:F0}%" ) );
-		group.Items.Add( CompileGroupAverages( "Min SpO2",                            groups, GetStatisticsValue( SignalNames.SpO2, stats => stats.Minimum ), value => $"{value:F0}%" ) );
-		group.Items.Add( CompileGroupAverages( "Desaturation Index",                  groups, GetEventIndex( EventType.Desaturation ),                        value => $"{value:F2}" ) );
-		group.Items.Add( CompileGroupAverages( "Avg. Desaturation Duration",          groups, GetAverageEventDuration( EventType.Desaturation ),              FormatTimespan ) );
-		group.Items.Add( CompileGroupMaximums( "Max. Desaturation Duration",          groups, GetMaxEventDuration( EventType.Desaturation ),                  FormatTimespan ) );
-		group.Items.Add( CompileGroupAverages( "Hypoxemia Index",                     groups, GetEventIndex( EventType.Hypoxemia ),                           value => $"{value:F2}" ) );
-		group.Items.Add( CompileGroupAverages( "Avg. Hypoxemia Duration",             groups, GetAverageEventDuration( EventType.Hypoxemia ),                 FormatTimespan ) );
-		group.Items.Add( CompileGroupMaximums( "Max. Hypoxemia Duration",             groups, GetMaxEventDuration( EventType.Hypoxemia ),                     FormatTimespan ) );
-		group.Items.Add( CompileGroupAverages( "Time in Hypoxemia (% of total time)", groups, GetEventPercentage( EventType.Hypoxemia ),                      value => $"{value:P2}" ) );
+		group.Items.Add( CompileGroupAverages( "Average SpO2",               groups, GetStatisticsValue( SignalNames.SpO2, stats => stats.Average ), value => $"{value:F0}%" ) );
+
+		group.Items.Add( CompileGroupAverages( "Min SpO2",                   groups, GetStatisticsValue( SignalNames.SpO2, stats => stats.Minimum ), value => $"{value:F0}%" ) );
+		group.Items.Add( CompileGroupAverages( "Desaturation Index",         groups, GetEventIndex( EventType.Desaturation ),                        value => $"{value:F2}" ) );
+		group.Items.Add( CompileGroupAverages( "Avg. Desaturation Duration", groups, GetAverageEventDuration( EventType.Desaturation ),              FormatTimespan ) );
+		group.Items.Add( CompileGroupMaximums( "Max. Desaturation Duration", groups, GetMaxEventDuration( EventType.Desaturation ), FormatTimespan ) );
+		
+		group.Items.Add( CompileGroupAverages( "Hypoxemia Index",         groups, GetEventIndex( EventType.Hypoxemia ),           value => $"{value:F2}" ) );
+		group.Items.Add( CompileGroupAverages( "Avg. Hypoxemia Duration", groups, GetAverageEventDuration( EventType.Hypoxemia ), FormatTimespan ) );
+		group.Items.Add( CompileGroupMaximums( "Max. Hypoxemia Duration", groups, GetMaxEventDuration( EventType.Hypoxemia ), FormatTimespan ) );
+		
+		group.Items.Add( CompileGroupAverages( "Time in Hypoxemia (% of total time)", groups, GetEventPercentage( EventType.Hypoxemia ), value => $"{value:P2}" ) );
 
 		return group;
 	}
@@ -321,7 +324,7 @@ public partial class StatisticsView : UserControl
 	private static TherapyStatisticsLineItemViewModel CompileGroupAverages( string name, List<GroupedDays> groups, Func<DailyReport,double> averageFunc, Func<double, string>? conversionFunc = null )
 	{
 		var viewModel = new TherapyStatisticsLineItemViewModel() { Label = name };
-		var averages  = CompileGroupAverages( groups, averageFunc );
+		var averages  = CompileGroupAverages( groups, averageFunc, true );
 
 		conversionFunc ??= ( value ) => $"{value:F2}";
 
@@ -333,20 +336,31 @@ public partial class StatisticsView : UserControl
 		return viewModel;
 	}
 
-	private static List<double> CompileGroupAverages( List<GroupedDays> groups, Func<DailyReport,double> func )
+	private static List<double> CompileGroupAverages( List<GroupedDays> groups, Func<DailyReport,double> func, bool existingDaysOnly = true )
 	{
 		var result = new List<double>( groups.Count );
 
 		foreach( var group in groups )
 		{
 			double totalValue = 0;
+			int    totalCount = existingDaysOnly ? 0 : group.Days.Count;
 
 			foreach( var day in group.Days )
 			{
-				totalValue += func( day );
+				var dailyValue = func( day );
+
+				if( existingDaysOnly && dailyValue > 0 )
+				{
+					totalValue += dailyValue;
+					totalCount += 1;
+				}
+				else
+				{
+					totalValue += dailyValue;
+				}
 			}
 
-			var average = group.Days.Count > 0 ? totalValue / group.Days.Count : 0.0;
+			var average = totalCount > 0 ? totalValue / totalCount : 0.0;
 
 			result.Add( average );
 		}

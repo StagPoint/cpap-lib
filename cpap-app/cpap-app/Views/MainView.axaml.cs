@@ -753,6 +753,7 @@ public partial class MainView : UserControl
 
 					for( var loop = minDate; loop <= maxDate; loop = loop.AddDays( 1 ) )
 					{
+						// ReSharper disable once AccessToModifiedClosure
 						if( operationWasCancelled )
 						{
 							break;
@@ -889,6 +890,7 @@ public partial class MainView : UserControl
 			}
 		};
 
+		DataContext = null;
 		DataContext = viewModel;
 	}
 

@@ -21,6 +21,11 @@ public static class ColorExtensions
 		return System.Drawing.Color.FromArgb( color.A, color.R, color.G, color.B );
 	}
 
+	public static Avalonia.Media.Color ToAvaloniaColor( this System.Drawing.Color color )
+	{
+		return Avalonia.Media.Color.FromArgb( color.A, color.R, color.G, color.B );
+	}
+
 	public static System.Drawing.Color ToColor( this ScottPlot.SharedColor color )
 	{
 		return Color.FromArgb( color.A, color.R, color.G, color.B );

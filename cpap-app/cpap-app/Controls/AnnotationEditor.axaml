@@ -3,11 +3,15 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:cpap_app.ViewModels"
+             xmlns:converters="clr-namespace:cpap_app.Converters"
              mc:Ignorable="d" 
              Width="400" 
              MinHeight="200"
              x:Class="cpap_app.Controls.AnnotationEditor"
              x:DataType="viewModels:AnnotationViewModel">
+    <UserControl.Resources>
+        <converters:AvaloniaColorConverter x:Key="ColorConverter" />
+    </UserControl.Resources>
     <UserControl.Styles>
         <Style Selector="#Form > TextBlock">
             <Setter Property="Theme" Value="{DynamicResource BodyStrongTextBlockStyle}" />
@@ -21,7 +25,7 @@
             <Setter Property="BorderThickness" Value="0" />
         </Style>
     </UserControl.Styles>
-    <Grid Name="Form" ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,20,Auto,*" VerticalAlignment="Top" Margin="8">
+    <Grid Name="Form" ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,20,Auto,*" VerticalAlignment="Top" Margin="8">
         
         <TextBlock Grid.Column="0" Grid.Row="0" Text="Signal" />
         <ComboBox Grid.Column="1" Grid.Row="0" Name="cboSignalName" Width="200" SelectedValue="{Binding Signal}" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="0 0 0 4" />
@@ -39,8 +43,12 @@
         <TextBlock Grid.Column="0" Grid.Row="3" Text="Show Marker" />
         <ToggleSwitch Grid.Column="1" Grid.Row="3" Name="ShowMarker" IsChecked="{Binding ShowMarker}" HorizontalAlignment="Left" Margin="0"/>
         
-        <TextBlock Grid.Column="0" Grid.Row="5" Text="Notes" HorizontalAlignment="Left" Margin="0 0 0 4" />
-        <TextBox Grid.Column="0" Grid.Row="6" Grid.ColumnSpan="2" Name="Notes" MaxLength="255" Text="{Binding Notes}" HorizontalAlignment="Stretch" Height="75" Watermark="Use this text entry field to write any notes that you'd like to have saved about the specified time period." TextWrapping="Wrap" AcceptsReturn="True" AcceptsTab="True">
+        <TextBlock Grid.Column="0" Grid.Row="4" Text="Color" IsVisible="{Binding ShowMarker}" />
+        <ColorPicker Grid.Column="1" Grid.Row="4" HorizontalAlignment="Left" Color="{Binding Color, Converter={StaticResource ColorConverter}}" Width="100" IsVisible="{Binding ShowMarker}" />
+        
+        <TextBlock Grid.Column="0" Grid.Row="6" Text="Notes" HorizontalAlignment="Left" Margin="0 0 0 4" />
+        <TextBox Grid.Column="0" Grid.Row="7" Grid.ColumnSpan="2" Name="Notes" MaxLength="255" Text="{Binding Notes}" HorizontalAlignment="Stretch" Height="75" TextWrapping="Wrap" AcceptsReturn="True">
+            <TextBox.Watermark>Use this text entry field to write any notes that you'd like to have saved about the specified time period.</TextBox.Watermark>
         </TextBox>
     </Grid>
 </UserControl>

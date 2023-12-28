@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 
 namespace cpaplib
 {
@@ -31,6 +32,11 @@ namespace cpaplib
 		/// Indicates whether to show a marker on the <see cref="Signal"/> graph for this <see cref="Annotation"/>
 		/// </summary>
 		public bool ShowMarker { get; set; }
+
+		/// <summary>
+		/// The color of the marker, if shown
+		/// </summary>
+		public Color? Color { get; set; } = null;
 
 		/// <summary>
 		/// A description and any notes supplied by the user for this <see cref="Annotation"/>

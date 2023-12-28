@@ -134,12 +134,21 @@
                 <controls:SessionsListView Name="DailySessionsList" SessionSourceType="CPAP" />
             </Expander>
 
-            <Button HorizontalAlignment="Stretch" Margin="1 12" Click="ReimportCurrentDate">
-                <StackPanel Orientation="Horizontal" Spacing="12" Margin="-16 0 0 0">
-                    <fui:SymbolIcon Symbol="Refresh" />
-                    <TextBlock Text="{Binding ReportDate, Mode=OneWay, StringFormat={}Re-Import {0:D}}" />
-                </StackPanel>
-            </Button>
+            <StackPanel Orientation="Vertical" Margin="1 12" Spacing="4">
+                <Button HorizontalAlignment="Stretch" Click="ReimportCurrentDate">
+                    <StackPanel Orientation="Horizontal" Spacing="12" Margin="-16 0 0 0">
+                        <fui:SymbolIcon Symbol="Refresh" />
+                        <TextBlock Text="{Binding ReportDate, Mode=OneWay, StringFormat={}Re-Import {0:D}}" />
+                    </StackPanel>
+                </Button>
+                
+                <Button HorizontalAlignment="Stretch" Click="DeleteCurrentDate">
+                    <StackPanel Orientation="Horizontal" Spacing="12" Margin="-16 0 0 0">
+                        <fui:SymbolIcon Symbol="Delete" />
+                        <TextBlock Text="{Binding ReportDate, Mode=OneWay, StringFormat={}Delete {0:D}}" />
+                    </StackPanel>
+                </Button>
+            </StackPanel>
         </StackPanel>
     </ScrollViewer>
 </UserControl>
