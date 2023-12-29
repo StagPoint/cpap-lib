@@ -26,6 +26,7 @@
         <PackageReference Include="FluentIcons.FluentAvalonia" Version="1.1.223" />
         <PackageReference Include="MessageBox.Avalonia" Version="3.1.5.1" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+        <PackageReference Include="QuestPDF" Version="2023.12.1" />
         <PackageReference Include="ScottPlot.Avalonia" Version="4.1.68" />
     </ItemGroup>
 

@@ -1,16 +1,28 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Drawing;
 using System.Linq;
+using System.Threading.Tasks;
 
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Interactivity;
+using Avalonia.Platform.Storage;
+using Avalonia.Threading;
 
 using cpap_app.Helpers;
+using cpap_app.Importers;
 using cpap_app.ViewModels;
 
 using cpap_db;
 
 using cpaplib;
+
+using QuestPDF.Fluent;
+using QuestPDF.Helpers;
+using QuestPDF.Infrastructure;
+using QuestPDF.Previewer;
 
 namespace cpap_app.Views;
 
@@ -596,5 +608,199 @@ public partial class StatisticsView : UserControl
 		{
 			Grid.SetIsSharedSizeScope( StatsContainer, true );
 		}
+	}
+	
+	private async Task<string?> GetSaveFilename()
+	{
+		var sp = TopLevel.GetTopLevel( this )?.StorageProvider;
+		if( sp == null )
+		{
+			throw new Exception( $"Failed to get a reference to a {nameof( IStorageProvider )} instance." );
+		}
+
+		var filePicker = await sp.SaveFilePickerAsync( new FilePickerSaveOptions()
+		{
+			Title                  = $"Save to PDF File",
+			SuggestedStartLocation = null,
+			DefaultExtension       = ".pdf",
+			ShowOverwritePrompt    = true,
+		} );
+
+		return filePicker?.Path.LocalPath;
+	}
+	
+	private async void PrintReport_OnClick( object? sender, RoutedEventArgs e )
+	{
+		if( DataContext is not TherapyStatisticsViewModel viewModel )
+		{
+			throw new InvalidOperationException();
+		}
+
+		var saveFilePath = await GetSaveFilename();
+		if( string.IsNullOrEmpty( saveFilePath ) )
+		{
+			return;
+		}
+
+		var userName = UserProfileStore.GetActiveUserProfile().UserName;
+		
+		var pdfDocument = Document.Create( document =>
+		{
+			foreach( var section in viewModel.Sections )
+			{
+				document.Page( page =>
+				{
+					page.Size( PageSizes.Letter.Landscape() );
+					page.Margin( 8, Unit.Point );
+					page.PageColor( Colors.White );
+					page.DefaultTextStyle( x => x.FontSize( 8 ) );
+
+					page.Header()
+					    .AlignCenter()
+					    .Text( section.Label )
+					    .SemiBold().FontSize( 12 ).FontColor( Colors.Blue.Medium );
+
+                    PrintSection( document, page, section );
+                    
+					page.Footer()
+					    .AlignCenter()
+					    .Table( table =>
+					    {
+						    table.ColumnsDefinition( columns =>
+						    {
+							    columns.RelativeColumn();
+							    columns.RelativeColumn( 3 );
+							    columns.RelativeColumn();
+						    });
+							    
+							table.Cell().Column( 1 )
+						    .Text( x =>
+						    {
+							    x.Span( "Page " );
+							    x.CurrentPageNumber();
+						    } );
+
+							table.Cell().Column( 2 )
+							     .AlignCenter()
+							     .Text( $"Printed on {DateTime.Today:d} at {DateTime.Now:t}" );
+
+							table.Cell().Column( 3 )
+							     .AlignRight()
+							     .Text( $"Use Profile: {userName}" );
+					    });
+				} );
+			}
+		} );
+		
+		pdfDocument.GeneratePdf( saveFilePath );
+		
+		Process process = new Process();
+		process.StartInfo = new ProcessStartInfo(saveFilePath) { UseShellExecute = true };
+		process.Start();
+		await process.WaitForExitAsync();
+	}
+
+	private static void PrintSection( IDocumentContainer document, PageDescriptor page, TherapyStatisticsSectionViewModel section )
+	{
+		page.Content()
+		    .PaddingVertical( 6, Unit.Point )
+		    .Table(table =>
+		    {
+			    table.ColumnsDefinition(columns =>
+			    {
+				    columns.RelativeColumn( 2 );
+		   
+				    for( int i = 0; i < section.Headers.Count; i++ )
+				    {
+					    columns.RelativeColumn();
+				    }
+			    });
+		   
+			    table.Cell().Column( 0 ).Row( 0 ).Element( PrimaryColumnHeader ).AlignLeft().Text( "Details" ).SemiBold();
+		   
+			    uint columnIndex = 2;
+			    foreach( var header in section.Headers )
+			    {
+					table.Cell()
+					     .Row( 0 )
+					     .Column( columnIndex )
+					     .Element( PrimaryColumnHeader )
+					     .AlignCenter()
+					     .Text( header.Label )
+					     .SemiBold()
+					     .FontColor( Colors.Black )
+					     .WrapAnywhere( false );
+					
+				    columnIndex += 1;
+			    }
+
+			    uint groupRowIndex = 2;
+			    foreach( var group in section.Groups )
+			    {
+				    table.Cell()
+				         .Column( 0 )
+				         .Row( groupRowIndex )
+				         .ColumnSpan( (uint)section.Headers.Count + 1 )
+				         .Element( SectionHeader )
+				         .Text( group.Label )
+				         .SemiBold()
+					    ;
+
+				    foreach( var item in group.Items )
+				    {
+					    groupRowIndex += 1;
+
+					    table.Cell()
+					         .Column( 0 )
+					         .Row( groupRowIndex )
+					         .PaddingLeft( 4, Unit.Point )
+					         .Text( item.Label );
+
+					    uint valueColumnIndex = 2;
+
+					    foreach( var value in item.Values )
+					    {
+						    table.Cell()
+						         .Column( valueColumnIndex )
+						         .Row( groupRowIndex )
+						         .PaddingLeft( 4, Unit.Point )
+						         .Text( value );
+
+						    valueColumnIndex += 1;
+					    }
+				    }
+
+				    table.Cell()
+				         .Column( 1 )
+				         .Row( ++groupRowIndex )
+				         .ColumnSpan( (uint)section.Headers.Count + 1 )
+				         .PaddingLeft( 4, Unit.Point )
+				         .Text( string.Empty );
+
+				    groupRowIndex += 1;
+			    }
+
+			    return;
+
+			    static IContainer SectionHeader( IContainer container )
+			    {
+				    return container
+				           .Border( 0.5f )
+				           .Background( Colors.Grey.Lighten2 )
+				           .PaddingLeft( 2, Unit.Point )
+				           .PaddingRight( 2, Unit.Point )
+				           .AlignTop();
+			    }
+
+			    static IContainer PrimaryColumnHeader( IContainer container )
+			    {
+				    return container
+				           .Border( 0.5f )
+				           .Background( Colors.Grey.Lighten1 )
+				           .PaddingLeft( 2, Unit.Point )
+				           .PaddingRight( 2, Unit.Point )
+				           .AlignTop();
+			    }
+		    });
 	}
 }

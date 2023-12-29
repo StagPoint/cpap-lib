@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:cpap_app.ViewModels"
              xmlns:system="clr-namespace:System;assembly=System.Runtime"
+             xmlns:controls="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
              mc:Ignorable="d"
              d:DesignWidth="1440"
              d:DesignHeight="750"
@@ -38,7 +39,7 @@
         </Style>
     </UserControl.Styles>
     <DockPanel>
-        <Grid DockPanel.Dock="Bottom" ColumnDefinitions="Auto,Auto,24,Auto,Auto,12,Auto,Auto,8,Auto,24,Auto,*" Background="{DynamicResource SolidBackgroundFillColorSecondaryBrush}">
+        <Grid DockPanel.Dock="Bottom" ColumnDefinitions="Auto,Auto,*" Background="{DynamicResource SolidBackgroundFillColorSecondaryBrush}">
             <Grid.Styles>
                 <Style Selector="TextBlock">
                     <Setter Property="VerticalAlignment" Value="Center" />
@@ -50,6 +51,12 @@
                 <ComboBoxItem Content="Standard"/>
                 <ComboBoxItem Content="Monthly" />
             </ComboBox>
+            <Button Name="PrintReport" Grid.Column="2" HorizontalAlignment="Right" Margin="10 0" Click="PrintReport_OnClick">
+                <StackPanel Orientation="Horizontal">
+                    <controls:SymbolIcon Symbol="Print" FontSize="18" Margin="0 -2 10 0"/>
+                    <TextBlock>Print</TextBlock>
+                </StackPanel>
+            </Button>
         </Grid>
         
         <Separator DockPanel.Dock="Bottom" Background="{DynamicResource FocusStrokeColorOuterBrush}" />

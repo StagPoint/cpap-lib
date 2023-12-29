@@ -6,6 +6,8 @@ using cpap_app.Views;
 
 using cpap_db;
 
+using QuestPDF.Infrastructure;
+
 namespace cpap_app;
 
 public partial class App : Application
@@ -15,6 +17,7 @@ public partial class App : Application
 		AvaloniaXamlLoader.Load( this );
 
 		StorageService.InitializeDatabase( StorageService.GetApplicationDatabasePath() );
+		QuestPDF.Settings.License = LicenseType.Community;
 	}
 
 	public override void OnFrameworkInitializationCompleted()
