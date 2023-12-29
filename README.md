@@ -1,7 +1,5 @@
 [![GitHub issues](https://img.shields.io/github/issues/StagPoint/cpap-lib.svg)](https://GitHub.com/StagPoint/cpap-lib/issues/)
 [![GitHub license](https://img.shields.io/github/license/StagPoint/cpap-lib.svg)](https://github.com/StagPoint/cpap-lib/blob/master/LICENSE)
-![GitHub release (with filter)](https://img.shields.io/github/v/release/StagPoint/cpap-lib)
-![GitHub all releases](https://img.shields.io/github/downloads/StagPoint/cpap-lib/total)
 [![GitLab last commit](https://badgen.net/github/last-commit/StagPoint/cpap-lib/)](https://github.com/StagPoint/cpap-lib/-/commits)
 
 <!-- TOC -->
