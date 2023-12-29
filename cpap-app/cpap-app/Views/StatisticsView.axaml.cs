@@ -141,14 +141,14 @@ public partial class StatisticsView : UserControl
 			Label = "Respiratory Events",
 		};
 
-		group.Items.Add( CompileGroupAverages( "AHI",                      groupedDays, day => day.EventSummary.AHI ) );
-		group.Items.Add( CompileGroupAverages( "Obstructive Apnea Index",  groupedDays, day => day.EventSummary.ObstructiveApneaIndex ) );
-		group.Items.Add( CompileGroupAverages( "Hypopnea Index",           groupedDays, day => day.EventSummary.HypopneaIndex ) );
-		group.Items.Add( CompileGroupAverages( "Unclassified Apnea Index", groupedDays, day => day.EventSummary.UnclassifiedApneaIndex ) );
-		group.Items.Add( CompileGroupAverages( "Central Apnea Index",      groupedDays, day => day.EventSummary.CentralApneaIndex ) );
-		group.Items.Add( CompileGroupAverages( "RERA Index",               groupedDays, day => day.EventSummary.RespiratoryArousalIndex ) );
-		group.Items.Add( CompileGroupAverages( "Flow Limit Index",         groupedDays, GetEventIndex( EventType.FlowLimitation ), value => $"{value:F2}" ) );
-		group.Items.Add( CompileGroupAverages( "Total Time in Apnea",      groupedDays, GetTotalTimeInApnea,                       FormatTimespan ) );
+		group.Items.Add( CompileGroupAverages( "AHI",                           groupedDays, day => day.EventSummary.AHI ) );
+		group.Items.Add( CompileGroupAverages( "Obstructive Apnea Index",       groupedDays, day => day.EventSummary.ObstructiveApneaIndex ) );
+		group.Items.Add( CompileGroupAverages( "Hypopnea Index",                groupedDays, day => day.EventSummary.HypopneaIndex ) );
+		group.Items.Add( CompileGroupAverages( "Unclassified Apnea Index",      groupedDays, day => day.EventSummary.UnclassifiedApneaIndex ) );
+		group.Items.Add( CompileGroupAverages( "Central Apnea Index",           groupedDays, day => day.EventSummary.CentralApneaIndex ) );
+		group.Items.Add( CompileGroupAverages( "RERA Index",                    groupedDays, day => day.EventSummary.RespiratoryArousalIndex ) );
+		group.Items.Add( CompileGroupAverages( "Flow Limit Index",              groupedDays, GetEventIndex( EventType.FlowLimitation ), value => $"{value:F2}" ) );
+		group.Items.Add( CompileGroupAverages( "Total Time in Apnea (Average)", groupedDays, GetTotalTimeInApnea,                       FormatTimespan ) );
 
 		if( groupedDays.Any( x => x.Days.Any( day => day.Events.Any( evt => evt.Type == EventType.CSR ) ) ) )
 		{
@@ -202,9 +202,10 @@ public partial class StatisticsView : UserControl
 			Label = "Respiration",
 		};
 
-		group.Items.Add( CompileGroupAverages( "Median Respiration Rate",   groups, GetStatisticsValue( SignalNames.RespirationRate, stats => stats.Median ) ) );
-		group.Items.Add( CompileGroupAverages( "Median Tidal Volume",       groups, GetStatisticsValue( SignalNames.TidalVolume,     stats => stats.Median ) ) );
-		group.Items.Add( CompileGroupAverages( "Median Minute Ventilation", groups, GetStatisticsValue( SignalNames.MinuteVent,      stats => stats.Median ) ) );
+		group.Items.Add( CompileGroupAverages( "Median Respiration Rate",    groups, GetStatisticsValue( SignalNames.RespirationRate, stats => stats.Median ) ) );
+		group.Items.Add( CompileGroupAverages( "Average Respiration Rate",   groups, GetStatisticsValue( SignalNames.RespirationRate, stats => stats.Average ) ) );
+		group.Items.Add( CompileGroupAverages( "Median Tidal Volume",        groups, GetStatisticsValue( SignalNames.TidalVolume,     stats => stats.Median ) ) );
+		group.Items.Add( CompileGroupAverages( "Median Minute Ventilation",  groups, GetStatisticsValue( SignalNames.MinuteVent,      stats => stats.Median ) ) );
 
 		return group;
 	}
