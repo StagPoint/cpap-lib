@@ -10,7 +10,9 @@
 
 # Summary
 
-**cpap-lib** allows client applications to read and explore CPAP machine data. Currently the only fully supported CPAP machine is the **ResMed AirSense 10**, because that is the machine I have and therefore the data files I have available to test with.  
+**cpap-lib** is a managed (C#/.NET) library that allows client applications to read, explore, and analyze the data recorded by a CPAP machine. It can read the CPAP data stored on the SD Card and extract all of the waveform, event, and settings data into an easy to use data model that allows for detailed analysis of everything the CPAP machine is capable of recording. 
+
+Currently the only fully supported CPAP machine is the **ResMed AirSense 10**, because that is the machine I have and therefore the data files I have available to test with.  
 
 I have done some limited testing of the ResMed AirCurve 10 ASV as well, but don't have extensive sample data to test with. Other ResMed Series 10 models may be supported, and Series 11 models may also be at least partially supported. 
 
