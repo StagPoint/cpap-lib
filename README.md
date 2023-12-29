@@ -6,19 +6,15 @@
 
 <!-- TOC -->
 * [Summary](#summary)
-* [Binary Distribution](#binary-distribution)
-* [SD Card Files and Folder Structure](#sd-card-files-and-folder-structure)
-    * [Example](#example)
-    * [Identification.tgt](#identificationtgt)
-    * [STR.edf](#stredf)
-    * [DATALOG Folder](#datalog-folder)
+* [Dependencies](#dependencies-)
+* [Included Data Viewer](#included-data-viewer)
 <!-- TOC -->
 
 # Summary
 
 **cpap-lib** allows client applications to read and explore CPAP machine data. Currently supports only the **ResMed AirSense 10**, because that is the machine I have and therefore the data files I have available to test with. There is also very limited "proof of concept" support for the Philips Respironics System One model 560P, but other Philips Respironics models are almost certainly not supported. 
 
-# Dependencies 
+# Dependencies ~~~~
 
 This library uses [StagPoint.EuropeanDataFormat.Net](https://github.com/StagPoint/StagPoint.EuropeanDataFormat.Net/) to read the EDF files that contain the CPAP data. 
 
