@@ -22,3 +22,4 @@
 ![SettingsView-Light.jpg](Screenshots%2FSettingsView-Light.jpg)
 ![SettingsView-Dark.jpg](Screenshots%2FSettingsView-Dark.jpg)
 
+[README.md](..%2FREADME.md)
