@@ -12,15 +12,19 @@
 
 # Summary
 
-**cpap-lib** allows client applications to read and explore CPAP machine data. Currently supports only the **ResMed AirSense 10**, because that is the machine I have and therefore the data files I have available to test with. There is also very limited "proof of concept" support for the Philips Respironics System One model 560P, but other Philips Respironics models are almost certainly not supported. 
+**cpap-lib** allows client applications to read and explore CPAP machine data. Currently the only fully supported CPAP machine is the **ResMed AirSense 10**, because that is the machine I have and therefore the data files I have available to test with.  
 
-# Dependencies ~~~~
+I have done some limited testing of the ResMed AirCurve 10 ASV as well, but don't have extensive sample data to test with. Other ResMed Series 10 models may be supported, and Series 11 models may also be at least partially supported. 
+
+There is also very limited "proof of concept" support for the Philips Respironics System One model 560P, but other Philips Respironics models are almost certainly not supported. 
+
+# Dependencies
 
 This library uses [StagPoint.EuropeanDataFormat.Net](https://github.com/StagPoint/StagPoint.EuropeanDataFormat.Net/) to read the EDF files that contain the CPAP data. 
 
 # Included Data Viewer
 
-There is an included Data Viewer application project written in C# and using the Avalonia UI library to display the data imported by cpap-lib.
+There is an included [Data Viewer application project](https://github.com/StagPoint/cpap-lib/tree/master/cpap-app) written in C# and using the Avalonia UI library to display the data imported by cpap-lib.
 
 This viewer application is also open source, and is being actively developed.  
 
