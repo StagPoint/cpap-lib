@@ -9,6 +9,7 @@
 	public class EventSummary
 	{
 		public double AHI                      { get; set; }
+		public double PeakAHI                  { get; set; }
 		public double ApneaIndex               { get; set; }
 		public double HypopneaIndex            { get; set; }
 		public double ObstructiveApneaIndex    { get; set; }

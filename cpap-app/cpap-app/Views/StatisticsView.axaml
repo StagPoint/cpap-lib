@@ -86,7 +86,7 @@
                                                    Margin="8 0 24 0" MinWidth="250"/>
                                         <Rectangle Grid.Column="0" Grid.Row="0" Grid.RowSpan="2" Classes="HeaderSeparator2" />
                                     </Grid>
-                                    <ItemsRepeater ItemsSource="{Binding Headers}" VerticalCacheLength="200">
+                                    <ItemsRepeater ItemsSource="{Binding Headers}" VerticalCacheLength="200" HorizontalCacheLength="200">
                                         <ItemsRepeater.Layout>
                                             <StackLayout Orientation="Horizontal" DisableVirtualization="True" />
                                         </ItemsRepeater.Layout>
@@ -140,7 +140,7 @@
                                                                     <TextBlock Text="{Binding Label}" Padding="16 0 48 0" />
                                                                 </Grid>
                                                                 <ItemsRepeater ItemsSource="{Binding Values}" Margin="0 2 0 0"
-                                                                               VerticalCacheLength="200">
+                                                                               VerticalCacheLength="200" HorizontalCacheLength="200">
                                                                     <ItemsRepeater.Layout>
                                                                         <StackLayout Orientation="Horizontal"
                                                                                      DisableVirtualization="True" />

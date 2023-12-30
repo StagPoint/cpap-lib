@@ -149,7 +149,8 @@ public partial class StatisticsView : UserControl
 		};
 
 		group.Items.Add( CompileGroupAverages( "AHI",                           groupedDays, day => day.EventSummary.AHI ) );
-		group.Items.Add( CompileGroupAverages( "Peak AHI",                      groupedDays, CalculatePeakAHI ) );
+		group.Items.Add( CompileGroupAverages( "Peak AHI",                      groupedDays, day => day.EventSummary.PeakAHI ) );
+		group.Items.Add( CompileGroupAverages( "Peak RDI",                      groupedDays, CalculatePeakRDI ) );
 		group.Items.Add( CompileGroupAverages( "Obstructive Apnea Index",       groupedDays, day => day.EventSummary.ObstructiveApneaIndex ) );
 		group.Items.Add( CompileGroupAverages( "Hypopnea Index",                groupedDays, day => day.EventSummary.HypopneaIndex ) );
 		group.Items.Add( CompileGroupAverages( "Unclassified Apnea Index",      groupedDays, day => day.EventSummary.UnclassifiedApneaIndex ) );
@@ -170,10 +171,10 @@ public partial class StatisticsView : UserControl
 		return group;
 	}
 	
-	private double CalculatePeakAHI( DailyReport day )
+	private double CalculatePeakRDI( DailyReport day )
 	{
-		var events    = day.Events.Where( x => EventTypes.Apneas.Contains( x.Type ) ).ToArray();
-		var window    = new List<DateTime>( events.Length );
+		var events    = day.Events.Where( x => EventTypes.RespiratoryDisturbance.Contains( x.Type ) );
+		var window    = new List<DateTime>( 128 );
 		var peakCount = 0;
 
 		foreach( var e in events )

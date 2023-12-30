@@ -3,12 +3,15 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Media.Imaging;
+using Avalonia.Platform;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
@@ -281,13 +284,15 @@ public partial class MainView : UserControl
 		var appWindow = TopLevel.GetTopLevel( this ) as AppWindow;
 		appWindow?.PlatformFeatures.SetTaskBarProgressBarState( TaskBarProgressBarState.Indeterminate );
 
+		await using var iconStream = AssetLoader.Open( new Uri( $"avares://{Assembly.GetExecutingAssembly().FullName}/Assets/google_fit_icon.png" ) );
+
 		var progressDialog = new TaskDialog
 		{
 			XamlRoot        = appWindow,
 			Title           = $"Sync with Google Fit",
 			MinWidth        = 500,
 			ShowProgressBar = true,
-			IconSource      = new SymbolIconSource { Symbol = Symbol.Upload },
+			IconSource      = new ImageIconSource() { Source = new Bitmap( iconStream ) },
 			SubHeader       = "Importing sleep information from Google Fit",
 			Content         = "Please wait while your data is imported. This may take a while.",
 			Buttons =

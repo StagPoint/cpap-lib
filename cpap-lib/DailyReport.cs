@@ -110,15 +110,42 @@ namespace cpaplib
 		public void UpdateEventSummary()
 		{
 			var tst = TotalSleepTime.TotalHours;
+
+			var apneaEvents = Events.Where( x => EventTypes.Apneas.Contains( x.Type ) ).ToArray();
 			
-			EventSummary.AHI                      = Events.Count( x => EventTypes.Apneas.Contains( x.Type ) ) / tst;
-			EventSummary.ApneaIndex               = EventSummary.AHI;
+			EventSummary.AHI                      = apneaEvents.Length / tst;
+			EventSummary.PeakAHI                  = calculatePeakAHI();
+			EventSummary.ApneaIndex               = apneaEvents.Count( x => x.Type != EventType.Hypopnea );
 			EventSummary.HypopneaIndex            = Events.Count( x => x.Type == EventType.Hypopnea ) / tst;
 			EventSummary.ObstructiveApneaIndex    = Events.Count( x => x.Type == EventType.ObstructiveApnea ) / tst;
 			EventSummary.CentralApneaIndex        = Events.Count( x => x.Type == EventType.ClearAirway ) / tst;
 			EventSummary.UnclassifiedApneaIndex   = Events.Count( x => x.Type == EventType.UnclassifiedApnea ) / tst;
 			EventSummary.RespiratoryArousalIndex  = Events.Count( x => x.Type == EventType.RERA ) / tst;
 			EventSummary.CheynesStokesRespiration = Events.Count( x => x.Type == EventType.CSR ) / tst;
+
+			return;
+			
+			double calculatePeakAHI()
+			{
+				var window    = new List<DateTime>( apneaEvents.Length );
+				var peakCount = 0;
+
+				foreach( var e in apneaEvents )
+				{
+					var currentTime = e.StartTime;
+					window.Add( currentTime );
+
+					var thresholdTime = currentTime.AddHours( -1 );
+					while( window.Count > 0 && window[ 0 ] < thresholdTime )
+					{
+						window.RemoveAt( 0 );	
+					}
+
+					peakCount = Math.Max( peakCount, window.Count );
+				}
+
+				return peakCount;
+			}
 		}
 
 		/// <summary>

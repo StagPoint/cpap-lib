@@ -506,10 +506,10 @@ namespace cpaplib
 				// Remove all events that do not occur within a Session's timeframe. It seems that my AirSense 10 AutoSet
 				// will sometimes flag a Hypopnea *immediately after* the session completes. Since the event does not occur
 				// within the times bounded by any of the Session's Signals, it is invalid and needs to be removed. 
-				if( 0 < day.Events.RemoveAll( evt => !day.Sessions.Any( sess => sess.StartTime <= evt.StartTime && sess.EndTime >= evt.StartTime ) ) )
-				{
-					day.UpdateEventSummary();
-				}
+				day.Events.RemoveAll( evt => !day.Sessions.Any( sess => sess.StartTime <= evt.StartTime && sess.EndTime >= evt.StartTime ) );
+				
+				// Recalculate the EventSummary for the day
+				day.UpdateEventSummary();
 
 				// Generate events that are of interest which are not reported by the ResMed machine
 				CustomEventGenerator.GenerateEvents( day );
