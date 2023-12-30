@@ -126,7 +126,7 @@
                                     <TextBlock Text="Dependencies" Theme="{DynamicResource SubtitleTextBlockStyle}" />
                                     <TextBlock TextWrapping="Wrap"
                                                Foreground="{DynamicResource TextFillColorPrimaryBrush}">
-                                        This application is licensed under the MIT license
+                                        This application was made publicly available under the MIT license
                                     </TextBlock>
                                     <TextBlock TextWrapping="Wrap"
                                                Foreground="{DynamicResource TextFillColorPrimaryBrush}">
@@ -158,7 +158,7 @@
                                 </StackPanel>
                             </Border>
                             <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorSecondaryBrush}">
-                                StagPoint and this application are not affiliated with and not endorsed by any CPAP equipment manufacturer or retailer.
+                                StagPoint and this application are not affiliated with nor endorsed by any CPAP equipment manufacturer or retailer.
                             </TextBlock>
                         </StackPanel>
                     </controls:SettingsExpanderItem>

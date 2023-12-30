@@ -238,9 +238,10 @@ public partial class SignalChart : UserControl
 			}
 			case Key.PageUp or Key.PageDown:
 			{
-				var  axisLimits   = Chart.Plot.GetAxisLimits();
-				var  startTime    = axisLimits.XMin;
-				var  endTime      = axisLimits.XMax;
+				var axisLimits = Chart.Plot.GetAxisLimits();
+				var startTime  = axisLimits.XMin;
+				var endTime    = axisLimits.XMax;
+				var range      = axisLimits.XSpan;
 
 				// If the ALT key is down, scroll by the entire visible timeframe. 
 				// Otherwise, if the SHIFT key is down, scroll by 25% of the visible timeframe.
@@ -250,12 +251,12 @@ public partial class SignalChart : UserControl
 				if( args.Key == Key.PageUp )
 				{
 					startTime = Math.Max( startTime - amount, 0 );
-					endTime   = startTime + axisLimits.XSpan;
+					endTime   = startTime + range;
 				}
 				else
 				{
 					endTime   = Math.Min( endTime + amount, _day.TotalTimeSpan.TotalSeconds );
-					startTime = endTime - axisLimits.XSpan;
+					startTime = endTime - range;
 				}
 			
 				Chart.Plot.SetAxisLimits( startTime, endTime );

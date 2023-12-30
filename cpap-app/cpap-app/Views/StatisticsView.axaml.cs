@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Drawing;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -9,20 +8,16 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
-using Avalonia.Threading;
 
 using cpap_app.Helpers;
-using cpap_app.Importers;
 using cpap_app.ViewModels;
 
 using cpap_db;
-
 using cpaplib;
 
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
-using QuestPDF.Previewer;
 
 namespace cpap_app.Views;
 
@@ -154,6 +149,7 @@ public partial class StatisticsView : UserControl
 		};
 
 		group.Items.Add( CompileGroupAverages( "AHI",                           groupedDays, day => day.EventSummary.AHI ) );
+		group.Items.Add( CompileGroupAverages( "Peak AHI",                      groupedDays, CalculatePeakAHI ) );
 		group.Items.Add( CompileGroupAverages( "Obstructive Apnea Index",       groupedDays, day => day.EventSummary.ObstructiveApneaIndex ) );
 		group.Items.Add( CompileGroupAverages( "Hypopnea Index",                groupedDays, day => day.EventSummary.HypopneaIndex ) );
 		group.Items.Add( CompileGroupAverages( "Unclassified Apnea Index",      groupedDays, day => day.EventSummary.UnclassifiedApneaIndex ) );
@@ -174,6 +170,29 @@ public partial class StatisticsView : UserControl
 		return group;
 	}
 	
+	private double CalculatePeakAHI( DailyReport day )
+	{
+		var events    = day.Events.Where( x => EventTypes.Apneas.Contains( x.Type ) ).ToArray();
+		var window    = new List<DateTime>( events.Length );
+		var peakCount = 0;
+
+		foreach( var e in events )
+		{
+			var currentTime = e.StartTime;
+			window.Add( currentTime );
+
+			var thresholdTime = currentTime.AddHours( -1 );
+			while( window.Count > 0 && window[ 0 ] < thresholdTime )
+			{
+				window.RemoveAt( 0 );	
+			}
+
+			peakCount = Math.Max( peakCount, window.Count );
+		}
+
+		return peakCount;
+	}
+
 	private static TherapyStatisticsGroupViewModel BuildPressureStats( List<GroupedDays> groups )
 	{
 		var group = new TherapyStatisticsGroupViewModel
@@ -658,7 +677,7 @@ public partial class StatisticsView : UserControl
 					page.Header()
 					    .AlignCenter()
 					    .Text( section.Label )
-					    .SemiBold().FontSize( 12 ).FontColor( Colors.Blue.Medium );
+					    .SemiBold().FontSize( 12 ).FontColor( Colors.Grey.Darken2 );
 
                     PrintSection( document, page, section );
                     
@@ -786,7 +805,7 @@ public partial class StatisticsView : UserControl
 			    {
 				    return container
 				           .Border( 0.5f )
-				           .Background( Colors.Grey.Lighten2 )
+				           .Background( Colors.Grey.Lighten3 )
 				           .PaddingLeft( 2, Unit.Point )
 				           .PaddingRight( 2, Unit.Point )
 				           .AlignTop();
@@ -796,7 +815,7 @@ public partial class StatisticsView : UserControl
 			    {
 				    return container
 				           .Border( 0.5f )
-				           .Background( Colors.Grey.Lighten1 )
+				           .Background( Colors.Grey.Lighten2 )
 				           .PaddingLeft( 2, Unit.Point )
 				           .PaddingRight( 2, Unit.Point )
 				           .AlignTop();
