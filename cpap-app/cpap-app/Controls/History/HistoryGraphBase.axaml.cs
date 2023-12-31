@@ -804,7 +804,7 @@ public partial class HistoryGraphBase : UserControl
 			FlowDirection.LeftToRight,
 			new Typeface( fontFamily ),
 			emSize,
-			Brushes.Black
+			null
 		);
 
 		return (float)Math.Ceiling( formatted.Width );

@@ -52,6 +52,12 @@
                 <ComboBoxItem Content="Monthly" />
             </ComboBox>
             <Button Name="PrintReport" Grid.Column="2" HorizontalAlignment="Right" Margin="10 0" Click="PrintReport_OnClick">
+                <Button.ContextFlyout>
+                    <MenuFlyout Placement="Top">
+                        <MenuItem Header="Print to PDF" Tag="{Binding}" Click="PrintToPDF" />
+                        <MenuItem Header="Save as JPG" Tag="{Binding}" Click="PrintToJPG"/>
+                    </MenuFlyout>                
+                </Button.ContextFlyout>
                 <StackPanel Orientation="Horizontal">
                     <controls:SymbolIcon Symbol="Print" FontSize="18" Margin="0 -2 10 0"/>
                     <TextBlock>Print</TextBlock>

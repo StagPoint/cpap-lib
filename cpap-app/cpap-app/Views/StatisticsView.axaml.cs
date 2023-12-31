@@ -6,7 +6,9 @@ using System.Threading.Tasks;
 
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Shapes;
 using Avalonia.Interactivity;
+using Avalonia.Media;
 using Avalonia.Platform.Storage;
 
 using cpap_app.Helpers;
@@ -18,6 +20,11 @@ using cpaplib;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
+using QuestPDF.Previewer;
+
+using Colors = QuestPDF.Helpers.Colors;
+using FontWeight = Avalonia.Media.FontWeight;
+using Path = System.IO.Path;
 
 namespace cpap_app.Views;
 
@@ -174,7 +181,7 @@ public partial class StatisticsView : UserControl
 	private double CalculatePeakRDI( DailyReport day )
 	{
 		var events    = day.Events.Where( x => EventTypes.RespiratoryDisturbance.Contains( x.Type ) );
-		var window    = new List<DateTime>( 128 );
+		var window    = new List<DateTime>();
 		var peakCount = 0;
 
 		foreach( var e in events )
@@ -183,7 +190,7 @@ public partial class StatisticsView : UserControl
 			window.Add( currentTime );
 
 			var thresholdTime = currentTime.AddHours( -1 );
-			while( window.Count > 0 && window[ 0 ] < thresholdTime )
+			while( window.Count > 0 && window[ 0 ] <= thresholdTime )
 			{
 				window.RemoveAt( 0 );	
 			}
@@ -630,7 +637,7 @@ public partial class StatisticsView : UserControl
 		}
 	}
 	
-	private async Task<string?> GetSaveFilename()
+	private async Task<string?> GetSaveFilename( string format )
 	{
 		var sp = TopLevel.GetTopLevel( this )?.StorageProvider;
 		if( sp == null )
@@ -640,31 +647,83 @@ public partial class StatisticsView : UserControl
 
 		var filePicker = await sp.SaveFilePickerAsync( new FilePickerSaveOptions()
 		{
-			Title                  = $"Save to PDF File",
+			Title                  = $"Save to {format} file",
 			SuggestedStartLocation = null,
-			DefaultExtension       = ".pdf",
+			DefaultExtension       = format,
 			ShowOverwritePrompt    = true,
 		} );
 
 		return filePicker?.Path.LocalPath;
 	}
 	
-	private async void PrintReport_OnClick( object? sender, RoutedEventArgs e )
+	private void PrintReport_OnClick( object? sender, RoutedEventArgs e )
+	{
+		if( sender is Button button )
+		{
+			button.ContextFlyout!.ShowAt( button );
+		}
+	}
+
+	private async void PrintToJPG( object? sender, RoutedEventArgs e )
 	{
 		if( DataContext is not TherapyStatisticsViewModel viewModel )
 		{
 			throw new InvalidOperationException();
 		}
 
-		var saveFilePath = await GetSaveFilename();
+		var saveFilePath = await GetSaveFilename( "JPG" );
+		if( string.IsNullOrEmpty( saveFilePath ) )
+		{
+			return;
+		}
+
+		var saveFolder = Path.GetDirectoryName( saveFilePath );
+		Debug.Assert( saveFolder != null, nameof( saveFolder ) + " != null" );
+
+		var baseFilename = Path.GetFileNameWithoutExtension( saveFilePath );
+		
+		saveFilePath = Path.Combine( saveFolder, baseFilename );
+
+		var userName = UserProfileStore.GetActiveUserProfile().UserName;
+
+		var pdfDocument = GeneratePdfDocument( viewModel, userName );
+		
+		//await pdfDocument.ShowInPreviewerAsync();
+
+		pdfDocument.GenerateImages( index => $"{saveFilePath}-{index}.jpg" );
+		
+		Process process = new Process();
+		process.StartInfo = new ProcessStartInfo( saveFolder ) { UseShellExecute = true };
+		process.Start();
+	}
+
+	private async void PrintToPDF( object? sender, RoutedEventArgs e )
+	{
+		if( DataContext is not TherapyStatisticsViewModel viewModel )
+		{
+			throw new InvalidOperationException();
+		}
+
+		var saveFilePath = await GetSaveFilename( "PDF" );
 		if( string.IsNullOrEmpty( saveFilePath ) )
 		{
 			return;
 		}
 
 		var userName = UserProfileStore.GetActiveUserProfile().UserName;
-		
-		var pdfDocument = Document.Create( document =>
+
+		var pdfDocument = GeneratePdfDocument( viewModel, userName );
+
+		pdfDocument.GeneratePdf( saveFilePath );
+
+		Process process = new Process();
+		process.StartInfo = new ProcessStartInfo( saveFilePath ) { UseShellExecute = true };
+		process.Start();
+	}
+
+	private static Document GeneratePdfDocument( TherapyStatisticsViewModel viewModel, string userName )
+	{
+		return Document.Create( document =>
 		{
 			foreach( var section in viewModel.Sections )
 			{
@@ -673,14 +732,14 @@ public partial class StatisticsView : UserControl
 					page.Size( PageSizes.Letter.Landscape() );
 					page.Margin( 8, Unit.Point );
 					page.PageColor( Colors.White );
-					page.DefaultTextStyle( x => x.FontSize( 8 ) );
+					page.DefaultTextStyle( x => x.FontSize( 8 ).FontFamily( Fonts.SegoeUI ) );
 
 					page.Header()
 					    .AlignCenter()
 					    .Text( section.Label )
 					    .SemiBold().FontSize( 12 ).FontColor( Colors.Grey.Darken2 );
 
-                    PrintSection( document, page, section );
+					PrintSection( document, page, section );
                     
 					page.Footer()
 					    .AlignCenter()
@@ -693,31 +752,24 @@ public partial class StatisticsView : UserControl
 							    columns.RelativeColumn();
 						    });
 							    
-							table.Cell().Column( 1 )
-						    .Text( x =>
-						    {
-							    x.Span( "Page " );
-							    x.CurrentPageNumber();
-						    } );
+						    table.Cell().Column( 1 )
+						         .Text( x =>
+						         {
+							         x.Span( "Page " );
+							         x.CurrentPageNumber();
+						         } );
 
-							table.Cell().Column( 2 )
-							     .AlignCenter()
-							     .Text( $"Printed on {DateTime.Today:d} at {DateTime.Now:t}" );
+						    table.Cell().Column( 2 )
+						         .AlignCenter()
+						         .Text( $"Printed on {DateTime.Today:d} at {DateTime.Now:t}" );
 
-							table.Cell().Column( 3 )
-							     .AlignRight()
-							     .Text( $"Use Profile: {userName}" );
+						    table.Cell().Column( 3 )
+						         .AlignRight()
+						         .Text( $"Use Profile: {userName}" );
 					    });
 				} );
 			}
 		} );
-		
-		pdfDocument.GeneratePdf( saveFilePath );
-		
-		Process process = new Process();
-		process.StartInfo = new ProcessStartInfo(saveFilePath) { UseShellExecute = true };
-		process.Start();
-		await process.WaitForExitAsync();
 	}
 
 	private static void PrintSection( IDocumentContainer document, PageDescriptor page, TherapyStatisticsSectionViewModel section )
@@ -726,12 +778,16 @@ public partial class StatisticsView : UserControl
 		    .PaddingVertical( 6, Unit.Point )
 		    .Table(table =>
 		    {
+			    var typeFace = new Typeface( Fonts.SegoeUI, FontStyle.Normal, FontWeight.SemiBold );
+			    
 			    table.ColumnsDefinition(columns =>
 			    {
-				    columns.RelativeColumn( 2 );
-		   
+				    columns.RelativeColumn( 3 );
+
 				    for( int i = 0; i < section.Headers.Count; i++ )
 				    {
+					    // var columnWidth = PdfHelper.MeasureText( typeFace, section.Headers[ i ].Label, 8 );
+					    // columns.ConstantColumn( columnWidth + 4, Unit.Point );
 					    columns.RelativeColumn();
 				    }
 			    });
@@ -819,8 +875,10 @@ public partial class StatisticsView : UserControl
 				           .Background( Colors.Grey.Lighten2 )
 				           .PaddingLeft( 2, Unit.Point )
 				           .PaddingRight( 2, Unit.Point )
-				           .AlignTop();
+				           .AlignMiddle()
+				           .AlignLeft();
 			    }
 		    });
 	}
+	
 }

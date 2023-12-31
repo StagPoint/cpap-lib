@@ -851,7 +851,7 @@ public partial class EventGraph : UserControl
 			FlowDirection.LeftToRight,
 			new Typeface( fontFamily ),
 			emSize,
-			Brushes.Black
+			null
 		);
 
 		return (float)Math.Ceiling( formatted.Width );

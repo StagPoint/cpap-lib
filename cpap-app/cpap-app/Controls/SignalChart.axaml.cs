@@ -2229,7 +2229,7 @@ public partial class SignalChart : UserControl
 			FlowDirection.LeftToRight,
 			new Typeface( fontFamily ),
 			emSize,
-			Brushes.Black
+			null
 		);
 
 		return (float)Math.Ceiling( formatted.Width );
