@@ -21,18 +21,18 @@ public class PulseOximetryImportOptionsStore
 		StorageService.Connect().CreateTable<PulseOximetryImportOptions>();
 	}
 
-	public static PulseOximetryImportOptions GetImportOptions( int userProfileID, string deviceID )
+	public static PulseOximetryImportOptions GetImportOptions( int userProfileID, string deviceType )
 	{
 		using var store = StorageService.Connect();
 
 		var savedOptions  = store.SelectByForeignKey<PulseOximetryImportOptions>( userProfileID );
-		var deviceOptions = savedOptions.FirstOrDefault( x => string.Compare( x.DeviceType, deviceID, StringComparison.OrdinalIgnoreCase ) == 0 );
+		var deviceOptions = savedOptions.FirstOrDefault( x => string.Compare( x.DeviceType, deviceType, StringComparison.OrdinalIgnoreCase ) == 0 );
 
 		if( deviceOptions == null )
 		{
 			deviceOptions = new PulseOximetryImportOptions
 			{
-				DeviceType = deviceID,
+				DeviceType = deviceType,
 			};
 
 			deviceOptions.ID = store.Insert( deviceOptions, foreignKeyValue: userProfileID );

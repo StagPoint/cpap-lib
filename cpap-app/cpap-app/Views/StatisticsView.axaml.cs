@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.Shapes;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
@@ -786,9 +785,9 @@ public partial class StatisticsView : UserControl
 
 				    for( int i = 0; i < section.Headers.Count; i++ )
 				    {
-					    // var columnWidth = PdfHelper.MeasureText( typeFace, section.Headers[ i ].Label, 8 );
-					    // columns.ConstantColumn( columnWidth + 4, Unit.Point );
-					    columns.RelativeColumn();
+					    var columnWidth = PdfHelper.MeasureText( typeFace, section.Headers[ i ].Label, 8 );
+					    columns.ConstantColumn( columnWidth + 4, Unit.Point );
+					    //columns.RelativeColumn();
 				    }
 			    });
 		   
@@ -804,8 +803,7 @@ public partial class StatisticsView : UserControl
 					     .AlignCenter()
 					     .Text( header.Label )
 					     .SemiBold()
-					     .FontColor( Colors.Black )
-					     .WrapAnywhere( false );
+					     .FontColor( Colors.Black );
 					
 				    columnIndex += 1;
 			    }
@@ -819,8 +817,7 @@ public partial class StatisticsView : UserControl
 				         .ColumnSpan( (uint)section.Headers.Count + 1 )
 				         .Element( SectionHeader )
 				         .Text( group.Label )
-				         .SemiBold()
-					    ;
+				         .SemiBold();
 
 				    foreach( var item in group.Items )
 				    {
