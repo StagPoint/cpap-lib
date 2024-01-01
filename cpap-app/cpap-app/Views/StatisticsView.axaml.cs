@@ -7,22 +7,19 @@ using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
-using Avalonia.Media;
 using Avalonia.Platform.Storage;
 
 using cpap_app.Helpers;
+using cpap_app.Printing;
 using cpap_app.ViewModels;
 
 using cpap_db;
+
 using cpaplib;
 
 using QuestPDF.Fluent;
-using QuestPDF.Helpers;
-using QuestPDF.Infrastructure;
 using QuestPDF.Previewer;
 
-using Colors = QuestPDF.Helpers.Colors;
-using FontWeight = Avalonia.Media.FontWeight;
 using Path = System.IO.Path;
 
 namespace cpap_app.Views;
@@ -75,7 +72,7 @@ public partial class StatisticsView : UserControl
 
 		return viewModel;
 	}
-	
+
 	private TherapyStatisticsSectionViewModel BuildOximetrySection( List<GroupedDays> groups )
 	{
 		var section = new TherapyStatisticsSectionViewModel
@@ -89,7 +86,7 @@ public partial class StatisticsView : UserControl
 
 		return section;
 	}
-	
+
 	private TherapyStatisticsGroupViewModel BuildOxygenStats( List<GroupedDays> groups )
 	{
 		var group = new TherapyStatisticsGroupViewModel
@@ -97,17 +94,17 @@ public partial class StatisticsView : UserControl
 			Label = "Blood Oxygen Saturation",
 		};
 
-		group.Items.Add( CompileGroupAverages( "Average SpO2",               groups, GetStatisticsValue( SignalNames.SpO2, stats => stats.Average ), value => $"{value:F0}%" ) );
+		group.Items.Add( CompileGroupAverages( "Average SpO2", groups, GetStatisticsValue( SignalNames.SpO2, stats => stats.Average ), value => $"{value:F0}%" ) );
 
 		group.Items.Add( CompileGroupAverages( "Min SpO2",                   groups, GetStatisticsValue( SignalNames.SpO2, stats => stats.Minimum ), value => $"{value:F0}%" ) );
 		group.Items.Add( CompileGroupAverages( "Desaturation Index",         groups, GetEventIndex( EventType.Desaturation ),                        value => $"{value:F2}" ) );
 		group.Items.Add( CompileGroupAverages( "Avg. Desaturation Duration", groups, GetAverageEventDuration( EventType.Desaturation ),              FormatTimespan ) );
 		group.Items.Add( CompileGroupMaximums( "Max. Desaturation Duration", groups, GetMaxEventDuration( EventType.Desaturation ), FormatTimespan ) );
-		
+
 		group.Items.Add( CompileGroupAverages( "Hypoxemia Index",         groups, GetEventIndex( EventType.Hypoxemia ),           value => $"{value:F2}" ) );
 		group.Items.Add( CompileGroupAverages( "Avg. Hypoxemia Duration", groups, GetAverageEventDuration( EventType.Hypoxemia ), FormatTimespan ) );
 		group.Items.Add( CompileGroupMaximums( "Max. Hypoxemia Duration", groups, GetMaxEventDuration( EventType.Hypoxemia ), FormatTimespan ) );
-		
+
 		group.Items.Add( CompileGroupAverages( "Time in Hypoxemia (% of total time)", groups, GetEventPercentage( EventType.Hypoxemia ), value => $"{value:P2}" ) );
 
 		return group;
@@ -176,7 +173,7 @@ public partial class StatisticsView : UserControl
 
 		return group;
 	}
-	
+
 	private double CalculatePeakRDI( DailyReport day )
 	{
 		var events    = day.Events.Where( x => EventTypes.RespiratoryDisturbance.Contains( x.Type ) );
@@ -191,7 +188,7 @@ public partial class StatisticsView : UserControl
 			var thresholdTime = currentTime.AddHours( -1 );
 			while( window.Count > 0 && window[ 0 ] <= thresholdTime )
 			{
-				window.RemoveAt( 0 );	
+				window.RemoveAt( 0 );
 			}
 
 			peakCount = Math.Max( peakCount, window.Count );
@@ -207,13 +204,13 @@ public partial class StatisticsView : UserControl
 			Label = "Pressure",
 		};
 
-		group.Items.Add( CompileGroupAverages( "Average Pressure", groups, GetStatisticsValue( SignalNames.Pressure, stats => stats.Average ) ) );
-		group.Items.Add( CompileGroupAverages( "Min Pressure", groups, GetStatisticsValue( SignalNames.Pressure, stats => stats.Minimum ) ) );
-		group.Items.Add( CompileGroupAverages( "Max Pressure", groups, GetStatisticsValue( SignalNames.Pressure, stats => stats.Maximum ) ) );
+		group.Items.Add( CompileGroupAverages( "Average Pressure",         groups, GetStatisticsValue( SignalNames.Pressure, stats => stats.Average ) ) );
+		group.Items.Add( CompileGroupAverages( "Min Pressure",             groups, GetStatisticsValue( SignalNames.Pressure, stats => stats.Minimum ) ) );
+		group.Items.Add( CompileGroupAverages( "Max Pressure",             groups, GetStatisticsValue( SignalNames.Pressure, stats => stats.Maximum ) ) );
 		group.Items.Add( CompileGroupAverages( "95th Percentile Pressure", groups, GetStatisticsValue( SignalNames.Pressure, stats => stats.Percentile95 ) ) );
-		group.Items.Add( CompileGroupAverages( "Average EPAP", groups, GetStatisticsValue( SignalNames.EPAP, stats => stats.Average ) ) );
-		group.Items.Add( CompileGroupAverages( "Min EPAP", groups, GetStatisticsValue( SignalNames.EPAP, stats => stats.Minimum ) ) );
-		group.Items.Add( CompileGroupAverages( "Max EPAP", groups, GetStatisticsValue( SignalNames.EPAP, stats => stats.Maximum ) ) );
+		group.Items.Add( CompileGroupAverages( "Average EPAP",             groups, GetStatisticsValue( SignalNames.EPAP,     stats => stats.Average ) ) );
+		group.Items.Add( CompileGroupAverages( "Min EPAP",                 groups, GetStatisticsValue( SignalNames.EPAP,     stats => stats.Minimum ) ) );
+		group.Items.Add( CompileGroupAverages( "Max EPAP",                 groups, GetStatisticsValue( SignalNames.EPAP,     stats => stats.Maximum ) ) );
 
 		return group;
 	}
@@ -240,10 +237,10 @@ public partial class StatisticsView : UserControl
 			Label = "Respiration",
 		};
 
-		group.Items.Add( CompileGroupAverages( "Median Respiration Rate",    groups, GetStatisticsValue( SignalNames.RespirationRate, stats => stats.Median ) ) );
-		group.Items.Add( CompileGroupAverages( "Average Respiration Rate",   groups, GetStatisticsValue( SignalNames.RespirationRate, stats => stats.Average ) ) );
-		group.Items.Add( CompileGroupAverages( "Median Tidal Volume",        groups, GetStatisticsValue( SignalNames.TidalVolume,     stats => stats.Median ) ) );
-		group.Items.Add( CompileGroupAverages( "Median Minute Ventilation",  groups, GetStatisticsValue( SignalNames.MinuteVent,      stats => stats.Median ) ) );
+		group.Items.Add( CompileGroupAverages( "Median Respiration Rate",   groups, GetStatisticsValue( SignalNames.RespirationRate, stats => stats.Median ) ) );
+		group.Items.Add( CompileGroupAverages( "Average Respiration Rate",  groups, GetStatisticsValue( SignalNames.RespirationRate, stats => stats.Average ) ) );
+		group.Items.Add( CompileGroupAverages( "Median Tidal Volume",       groups, GetStatisticsValue( SignalNames.TidalVolume,     stats => stats.Median ) ) );
+		group.Items.Add( CompileGroupAverages( "Median Minute Ventilation", groups, GetStatisticsValue( SignalNames.MinuteVent,      stats => stats.Median ) ) );
 
 		return group;
 	}
@@ -275,7 +272,7 @@ public partial class StatisticsView : UserControl
 		return day =>
 		{
 			var matchingEvents = day.Events.Where( x => x.Type == eventType ).ToArray();
-			
+
 			var totalEventDuration = matchingEvents.Sum( x => x.Duration.TotalSeconds );
 			if( totalEventDuration < float.Epsilon )
 			{
@@ -294,7 +291,7 @@ public partial class StatisticsView : UserControl
 			{
 				return 0;
 			}
-			
+
 			var matchingEvents = day.Events.Where( evt => evt.Type == eventType );
 			return matchingEvents.Max( evt => evt.Duration.TotalSeconds );
 		};
@@ -341,8 +338,8 @@ public partial class StatisticsView : UserControl
 	private double GetTotalTimeInApnea( DailyReport day )
 	{
 		return day.Events
-			.Where( x => EventTypes.Apneas.Contains( x.Type ) )
-			.Sum( x => x.Duration.TotalSeconds );
+		          .Where( x => EventTypes.Apneas.Contains( x.Type ) )
+		          .Sum( x => x.Duration.TotalSeconds );
 	}
 
 	private static TherapyStatisticsLineItemViewModel CompileGroupMaximums( string name, List<GroupedDays> groups, Func<DailyReport, double> averageFunc, Func<double, string>? conversionFunc = null )
@@ -359,8 +356,8 @@ public partial class StatisticsView : UserControl
 
 		return viewModel;
 	}
-	
-	private static TherapyStatisticsLineItemViewModel CompileGroupAverages( string name, List<GroupedDays> groups, Func<DailyReport,double> averageFunc, Func<double, string>? conversionFunc = null )
+
+	private static TherapyStatisticsLineItemViewModel CompileGroupAverages( string name, List<GroupedDays> groups, Func<DailyReport, double> averageFunc, Func<double, string>? conversionFunc = null )
 	{
 		var viewModel = new TherapyStatisticsLineItemViewModel() { Label = name };
 		var averages  = CompileGroupAverages( groups, averageFunc, true );
@@ -375,7 +372,7 @@ public partial class StatisticsView : UserControl
 		return viewModel;
 	}
 
-	private static List<double> CompileGroupAverages( List<GroupedDays> groups, Func<DailyReport,double> func, bool existingDaysOnly = true )
+	private static List<double> CompileGroupAverages( List<GroupedDays> groups, Func<DailyReport, double> func, bool existingDaysOnly = true )
 	{
 		var result = new List<double>( groups.Count );
 
@@ -407,7 +404,7 @@ public partial class StatisticsView : UserControl
 		return result;
 	}
 
-	private static List<double> CompileGroupMaximums( List<GroupedDays> groups, Func<DailyReport,double> func )
+	private static List<double> CompileGroupMaximums( List<GroupedDays> groups, Func<DailyReport, double> func )
 	{
 		var result = new List<double>( groups.Count );
 
@@ -430,7 +427,7 @@ public partial class StatisticsView : UserControl
 	{
 		var group = new TherapyStatisticsGroupViewModel
 		{
-			Label  = "Therapy Time",
+			Label = "Therapy Time",
 		};
 
 		group.Items.Add( CalculateCompliancePerPeriod( groups ) );
@@ -441,11 +438,11 @@ public partial class StatisticsView : UserControl
 
 		return group;
 	}
-	
+
 	private static TherapyStatisticsLineItemViewModel CalculateAverageSleepEfficiency( List<GroupedDays> groups )
 	{
 		var averages = CompileGroupAverages( groups, day => day.CalculateSleepEfficiency() );
-		
+
 		return new TherapyStatisticsLineItemViewModel
 		{
 			Label  = "Average sleep efficiency",
@@ -456,7 +453,7 @@ public partial class StatisticsView : UserControl
 	private static TherapyStatisticsLineItemViewModel CompileAverageNumberOfSessions( List<GroupedDays> groups )
 	{
 		var averages = CompileGroupAverages( groups, day => day.Sessions.Count( x => x.SourceType == SourceType.CPAP ) );
-		
+
 		return new TherapyStatisticsLineItemViewModel
 		{
 			Label  = "Average number of sessions",
@@ -467,7 +464,7 @@ public partial class StatisticsView : UserControl
 	private static TherapyStatisticsLineItemViewModel CompileAverageSessionDuration( List<GroupedDays> groups )
 	{
 		var averages = CompileGroupAverages( groups, day => day.Sessions.Where( x => x.SourceType == SourceType.CPAP ).Average( x => x.Duration.TotalSeconds ) );
-		
+
 		return new TherapyStatisticsLineItemViewModel
 		{
 			Label  = "Average Session Duration",
@@ -509,9 +506,9 @@ public partial class StatisticsView : UserControl
 		var numberOfCompliantDays = days.Days.Count( x => x.TotalSleepTime.TotalHours >= complianceThreshold );
 		var numberOfGroupDays     = (days.EndDate.Date - days.StartDate.Date).TotalDays + 1.0;
 
-		return ( numberOfCompliantDays / numberOfGroupDays );
+		return (numberOfCompliantDays / numberOfGroupDays);
 	}
-	
+
 	private static List<GroupedDays> GroupDaysByMonth( List<DailyReport> days, DateTime startDay, DateTime endDay )
 	{
 		var results = new List<GroupedDays>();
@@ -527,7 +524,7 @@ public partial class StatisticsView : UserControl
 		var lastMonthStart = new DateTime( endDay.Year, endDay.Month, 1 ).AddMonths( 1 );
 
 		// TODO: Only the first and last months should have their start and/or end times adjusted. All others should span the full month. 
-		
+
 		for( int i = 0; i < 12; i++ )
 		{
 			var monthStart = lastMonthStart.AddMonths( -1 );
@@ -556,10 +553,10 @@ public partial class StatisticsView : UserControl
 		{
 			group.Days.AddRange( days.Where( x => x.ReportDate.Date >= group.StartDate && x.ReportDate.Date <= group.EndDate ) );
 		}
-		
+
 		return results;
 	}
-	
+
 	private static List<GroupedDays> GroupDaysStandard( List<DailyReport> days, DateTime startDay, DateTime endDay )
 	{
 		var results = new List<GroupedDays>();
@@ -610,13 +607,13 @@ public partial class StatisticsView : UserControl
 			{
 				group.DateLabel = $"{group.StartDate:d} - {group.EndDate:d}";
 			}
-			
+
 			group.Days.AddRange( days.Where( x => x.ReportDate.Date >= group.StartDate && x.ReportDate.Date <= group.EndDate ) );
 		}
-		
+
 		return results;
 	}
-	
+
 	private static string FormatTimespan( double value )
 	{
 		return $@"{TimeSpan.FromSeconds( value ):hh\:mm\:ss}";
@@ -635,7 +632,7 @@ public partial class StatisticsView : UserControl
 			Grid.SetIsSharedSizeScope( StatsContainer, true );
 		}
 	}
-	
+
 	private async Task<string?> GetSaveFilename( string format )
 	{
 		var sp = TopLevel.GetTopLevel( this )?.StorageProvider;
@@ -654,13 +651,26 @@ public partial class StatisticsView : UserControl
 
 		return filePicker?.Path.LocalPath;
 	}
-	
+
 	private void PrintReport_OnClick( object? sender, RoutedEventArgs e )
 	{
 		if( sender is Button button )
 		{
 			button.ContextFlyout!.ShowAt( button );
 		}
+	}
+
+	private async void PrintToPreviewer( object? sender, RoutedEventArgs e )
+	{
+		if( DataContext is not TherapyStatisticsViewModel viewModel )
+		{
+			throw new InvalidOperationException();
+		}
+
+		var activeUser  = UserProfileStore.GetActiveUserProfile();
+		var pdfDocument = new StatisticsDocument( activeUser, viewModel );
+
+		await pdfDocument.ShowInPreviewerAsync();
 	}
 
 	private async void PrintToJPG( object? sender, RoutedEventArgs e )
@@ -680,17 +690,14 @@ public partial class StatisticsView : UserControl
 		Debug.Assert( saveFolder != null, nameof( saveFolder ) + " != null" );
 
 		var baseFilename = Path.GetFileNameWithoutExtension( saveFilePath );
-		
+
 		saveFilePath = Path.Combine( saveFolder, baseFilename );
 
-		var userName = UserProfileStore.GetActiveUserProfile().UserName;
-
-		var pdfDocument = GeneratePdfDocument( viewModel, userName );
-		
-		//await pdfDocument.ShowInPreviewerAsync();
+		var activeUser  = UserProfileStore.GetActiveUserProfile();
+		var pdfDocument = new StatisticsDocument( activeUser, viewModel );
 
 		pdfDocument.GenerateImages( index => $"{saveFilePath}-{index}.jpg" );
-		
+
 		Process process = new Process();
 		process.StartInfo = new ProcessStartInfo( saveFolder ) { UseShellExecute = true };
 		process.Start();
@@ -709,9 +716,8 @@ public partial class StatisticsView : UserControl
 			return;
 		}
 
-		var userName = UserProfileStore.GetActiveUserProfile().UserName;
-
-		var pdfDocument = GeneratePdfDocument( viewModel, userName );
+		var activeUser  = UserProfileStore.GetActiveUserProfile();
+		var pdfDocument = new StatisticsDocument( activeUser, viewModel );
 
 		pdfDocument.GeneratePdf( saveFilePath );
 
@@ -719,163 +725,4 @@ public partial class StatisticsView : UserControl
 		process.StartInfo = new ProcessStartInfo( saveFilePath ) { UseShellExecute = true };
 		process.Start();
 	}
-
-	private static Document GeneratePdfDocument( TherapyStatisticsViewModel viewModel, string userName )
-	{
-		return Document.Create( document =>
-		{
-			foreach( var section in viewModel.Sections )
-			{
-				document.Page( page =>
-				{
-					page.Size( PageSizes.Letter.Landscape() );
-					page.Margin( 8, Unit.Point );
-					page.PageColor( Colors.White );
-					page.DefaultTextStyle( x => x.FontSize( 8 ).FontFamily( Fonts.SegoeUI ) );
-
-					page.Header()
-					    .AlignCenter()
-					    .Text( section.Label )
-					    .SemiBold().FontSize( 12 ).FontColor( Colors.Grey.Darken2 );
-
-					PrintSection( document, page, section );
-                    
-					page.Footer()
-					    .AlignCenter()
-					    .Table( table =>
-					    {
-						    table.ColumnsDefinition( columns =>
-						    {
-							    columns.RelativeColumn();
-							    columns.RelativeColumn( 3 );
-							    columns.RelativeColumn();
-						    });
-							    
-						    table.Cell().Column( 1 )
-						         .Text( x =>
-						         {
-							         x.Span( "Page " );
-							         x.CurrentPageNumber();
-						         } );
-
-						    table.Cell().Column( 2 )
-						         .AlignCenter()
-						         .Text( $"Printed on {DateTime.Today:d} at {DateTime.Now:t}" );
-
-						    table.Cell().Column( 3 )
-						         .AlignRight()
-						         .Text( $"Use Profile: {userName}" );
-					    });
-				} );
-			}
-		} );
-	}
-
-	private static void PrintSection( IDocumentContainer document, PageDescriptor page, TherapyStatisticsSectionViewModel section )
-	{
-		page.Content()
-		    .PaddingVertical( 6, Unit.Point )
-		    .Table(table =>
-		    {
-			    var typeFace = new Typeface( Fonts.SegoeUI, FontStyle.Normal, FontWeight.SemiBold );
-			    
-			    table.ColumnsDefinition(columns =>
-			    {
-				    columns.RelativeColumn( 3 );
-
-				    for( int i = 0; i < section.Headers.Count; i++ )
-				    {
-					    var columnWidth = PdfHelper.MeasureText( typeFace, section.Headers[ i ].Label, 8 );
-					    columns.ConstantColumn( columnWidth + 4, Unit.Point );
-					    //columns.RelativeColumn();
-				    }
-			    });
-		   
-			    table.Cell().Column( 0 ).Row( 0 ).Element( PrimaryColumnHeader ).AlignLeft().Text( "Details" ).SemiBold();
-		   
-			    uint columnIndex = 2;
-			    foreach( var header in section.Headers )
-			    {
-					table.Cell()
-					     .Row( 0 )
-					     .Column( columnIndex )
-					     .Element( PrimaryColumnHeader )
-					     .AlignCenter()
-					     .Text( header.Label )
-					     .SemiBold()
-					     .FontColor( Colors.Black );
-					
-				    columnIndex += 1;
-			    }
-
-			    uint groupRowIndex = 2;
-			    foreach( var group in section.Groups )
-			    {
-				    table.Cell()
-				         .Column( 0 )
-				         .Row( groupRowIndex )
-				         .ColumnSpan( (uint)section.Headers.Count + 1 )
-				         .Element( SectionHeader )
-				         .Text( group.Label )
-				         .SemiBold();
-
-				    foreach( var item in group.Items )
-				    {
-					    groupRowIndex += 1;
-
-					    table.Cell()
-					         .Column( 0 )
-					         .Row( groupRowIndex )
-					         .PaddingLeft( 4, Unit.Point )
-					         .Text( item.Label );
-
-					    uint valueColumnIndex = 2;
-
-					    foreach( var value in item.Values )
-					    {
-						    table.Cell()
-						         .Column( valueColumnIndex )
-						         .Row( groupRowIndex )
-						         .PaddingLeft( 4, Unit.Point )
-						         .Text( value );
-
-						    valueColumnIndex += 1;
-					    }
-				    }
-
-				    table.Cell()
-				         .Column( 1 )
-				         .Row( ++groupRowIndex )
-				         .ColumnSpan( (uint)section.Headers.Count + 1 )
-				         .PaddingLeft( 4, Unit.Point )
-				         .Text( string.Empty );
-
-				    groupRowIndex += 1;
-			    }
-
-			    return;
-
-			    static IContainer SectionHeader( IContainer container )
-			    {
-				    return container
-				           .Border( 0.5f )
-				           .Background( Colors.Grey.Lighten3 )
-				           .PaddingLeft( 2, Unit.Point )
-				           .PaddingRight( 2, Unit.Point )
-				           .AlignTop();
-			    }
-
-			    static IContainer PrimaryColumnHeader( IContainer container )
-			    {
-				    return container
-				           .Border( 0.5f )
-				           .Background( Colors.Grey.Lighten2 )
-				           .PaddingLeft( 2, Unit.Point )
-				           .PaddingRight( 2, Unit.Point )
-				           .AlignMiddle()
-				           .AlignLeft();
-			    }
-		    });
-	}
-	
 }
