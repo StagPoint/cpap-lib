@@ -696,8 +696,6 @@ public partial class MainView : UserControl
 					{
 						await using var file = File.OpenRead( fileItem.Path.LocalPath );
 
-						// TODO: The import options should be retrieved from the database. Perhaps on a per-device basis? 
-						var importOptions        = new PulseOximetryImportOptions() { TimeAdjust = -60, CalibrationAdjust = -2 };
 						var eventGeneratorConfig = new OximetryEventGeneratorConfig();
 
 						foreach( var importer in importers )
@@ -707,7 +705,9 @@ public partial class MainView : UserControl
 							{
 								break;
 							}
-							
+
+							var importOptions = PulseOximetryImportOptionsStore.GetImportOptions( ActiveUserProfile.UserProfileID, importer.Source );
+
 							var data = importer.Load( fileItem.Name, file, importOptions, eventGeneratorConfig );
 							if( data is { Sessions.Count: > 0 } )
 							{

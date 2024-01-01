@@ -2,9 +2,11 @@
 
 public class PulseOximetryImportOptions
 {
-	public int DeviceID { get; set; }
+	public int ID { get; set; }
+
+	public string DeviceType { get; set; } = "UNKNOWN";
 
 	public double CalibrationAdjust { get; set; } = 0;
 	public double TimeAdjust        { get; set; } = 0;
-	public bool   GenerateEvents { get; set; } = true;
+	public bool   GenerateEvents    { get; set; } = true;
 }
