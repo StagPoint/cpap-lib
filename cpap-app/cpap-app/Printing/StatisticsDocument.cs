@@ -1,5 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 
+using Avalonia.Media;
+
+using cpap_app.Helpers;
 using cpap_app.ViewModels;
 
 using cpaplib;
@@ -7,6 +12,9 @@ using cpaplib;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
+
+using Colors = QuestPDF.Helpers.Colors;
+using FontWeight = Avalonia.Media.FontWeight;
 
 namespace cpap_app.Printing;
 
@@ -25,8 +33,19 @@ public class StatisticsDocument: IDocument
 	{
 		document.Page( page =>
 		{
-			page.Size( PageSizes.Letter.Landscape() );
-			page.Margin( 8, Unit.Point );
+			var columnHeaders = CalculateColumnWidths( Fonts.SegoeUI, 8 );
+
+			// Switch to Landscape mode if necessary 
+			// ReSharper disable once ConvertIfStatementToConditionalTernaryExpression
+			if( columnHeaders.TotalWidth + 150 >= PageSizes.Letter.Width )
+			{
+				page.Size( PageSizes.Letter.Landscape() );
+			}
+			else
+			{
+				page.Size( PageSizes.Letter );
+			}
+			
 			page.PageColor( Colors.White );
 			page.DefaultTextStyle( x => x.FontSize( 8 ).FontFamily( Fonts.SegoeUI ) );
 
@@ -34,7 +53,7 @@ public class StatisticsDocument: IDocument
 			{
 				foreach( var section in ViewModel.Sections )
 				{
-					ComposeSection( column, section );
+					ComposeSection( column, section, columnHeaders );
 				}
 			});
 
@@ -69,9 +88,51 @@ public class StatisticsDocument: IDocument
 		} );
 	}
 	
-	private static void ComposeSection( ColumnDescriptor container, TherapyStatisticsSectionViewModel section )
+	private ColumnHeaderList CalculateColumnWidths( string fontFamily, float fontSize )
 	{
-		container.Item().ShowEntire().Column( column =>
+		var typeFace = new Typeface( fontFamily, FontStyle.Normal, FontWeight.SemiBold );
+		
+		var headers = ViewModel.Headers;
+		var widths  = new List<uint>( headers.Count + 1 ) { 50 };
+		var labels  = new List<string>( headers.Count + 1 ) { "Details" };
+		
+		for( int i = 0; i < headers.Count; i++ )
+		{
+			labels.Add( headers[ i ].Label );
+			widths.Add( (uint)Math.Ceiling( PdfHelper.MeasureText( typeFace, headers[ i ].Label, fontSize ) ) );
+		}
+
+		foreach( var section in ViewModel.Sections )
+		{
+			foreach( var group in section.Groups )
+			{
+				foreach( var item in group.Items )
+				{
+					var values = item.Values;
+					Debug.Assert( values.Count == headers.Count, "Item count mismatch" );
+
+					var itemLabelWidth = (uint)Math.Ceiling( PdfHelper.MeasureText( typeFace, item.Label, fontSize ) );
+					widths[ 0 ] = Math.Max( widths[ 0 ], itemLabelWidth );
+
+					for( int i = 0; i < headers.Count; i++ )
+					{
+						var valueWidth = (uint)Math.Ceiling( PdfHelper.MeasureText( typeFace, values[ i ], fontSize ) );
+						widths[ i + 1 ] = Math.Max( widths[ i + 1 ], valueWidth );
+					}
+				}
+			}
+		}
+
+		return new ColumnHeaderList
+		{
+			HeaderLabels = labels,
+			HeaderWidths = widths
+		};
+	}
+
+	private static void ComposeSection( ColumnDescriptor container, TherapyStatisticsSectionViewModel section, ColumnHeaderList columnHeaders )
+	{
+		container.Item().AlignCenter().ShrinkHorizontal().ShowEntire().PaddingTop( 8 ).Column( column =>
 		{
 			column.Spacing( 8 );
   
@@ -80,61 +141,71 @@ public class StatisticsDocument: IDocument
 				.ShowEntire()
 				.AlignCenter()
 				.Text( section.Label )
-				.SemiBold().FontSize( 12 ).FontColor( Colors.Grey.Darken3 );
+				.SemiBold().FontSize( 14 ).FontColor( Colors.Grey.Darken3 );
 
 			column.Item().Table( table =>
 			{
 				table.ColumnsDefinition( columns =>
 				{
-					columns.RelativeColumn( 3 );
-
-					for( int i = 0; i < section.Headers.Count; i++ )
+					for( int i = 0; i < columnHeaders.Count; i++ )
 					{
-						columns.RelativeColumn();
+						int padding = (i == 0) ? 20 : 8;
+						columns.ConstantColumn( columnHeaders.HeaderWidths[ i ] + padding );
 					}
 				} );
 
-				table.Cell().Element( PrimaryColumnHeader ).AlignLeft().Text( "Details" ).SemiBold();
-
-				foreach( var header in section.Headers )
+				for( int i = 0; i < columnHeaders.Count; i++ )
 				{
 					table.Cell()
 					     .Element( PrimaryColumnHeader )
 					     .AlignLeft()
-					     .Text( header.Label )
+					     .Text( columnHeaders.HeaderLabels[ i ] )
 					     .SemiBold()
 					     .FontColor( Colors.Black );
 				}
 
 				foreach( var group in section.Groups )
 				{
-					table.Cell()
-					     .ColumnSpan( (uint)section.Headers.Count + 1 )
-					     .Element( SectionHeader )
-					     .Text( group.Label )
-					     .SemiBold();
+					// The group header spans all columns
+					table
+						.Cell()
+						.ColumnSpan( columnHeaders.Count )
+						.Element( SectionHeader )
+						.Text( group.Label )
+						.SemiBold();
 
+					int rowIndex = 0;
 					foreach( var item in group.Items )
 					{
-						table.Cell()
-						     .PaddingLeft( 4, Unit.Point )
-						     .Text( item.Label );
+						var background = (rowIndex % 2 != 0) ? Colors.Grey.Lighten4 : Colors.White;
+						
+						table
+							.Cell()
+							.Background( background )
+							.PaddingLeft( 4, Unit.Point )
+							.Text( item.Label );
 
 						foreach( var value in item.Values )
 						{
-							table.Cell()
-							     .PaddingLeft( 4, Unit.Point )
-							     .Text( value );
+							table
+								.Cell()
+								.Background( background )
+								.PaddingLeft( 4, Unit.Point )
+								.Text( value );
 						}
+
+						rowIndex += 1;
 					}
 
+					// Add some margin space after every group
 					table.Cell()
-					     .ColumnSpan( (uint)section.Headers.Count + 1 )
-					     .PaddingLeft( 4, Unit.Point )
-					     .Text( string.Empty );
+					     .ColumnSpan( columnHeaders.Count )
+					     .Height( 6 )
+					     .LineHorizontal( 1 )
+					     .LineColor( Colors.White );
 				}
-
 			});
+
 		} );
 
 		return;
@@ -157,6 +228,31 @@ public class StatisticsDocument: IDocument
 			       .PaddingLeft( 2, Unit.Point )
 			       .PaddingRight( 2, Unit.Point )
 			       .AlignTop();
+		}
+	}
+
+	private class ColumnHeaderList
+	{
+		public required List<string> HeaderLabels { get; init; }
+		public required List<uint>   HeaderWidths { get; init; }
+
+		public int TotalWidth
+		{
+			get
+			{
+				int total = 0;
+				foreach( var width in HeaderWidths )
+				{
+					total += (int)width;
+				}
+
+				return total;
+			}
+		}
+
+		public uint Count
+		{
+			get => (uint)HeaderLabels.Count;
 		}
 	}
 }

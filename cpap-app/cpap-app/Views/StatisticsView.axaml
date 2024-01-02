@@ -54,9 +54,9 @@
             <Button Name="PrintReport" Grid.Column="2" HorizontalAlignment="Right" Margin="10 0" Click="PrintReport_OnClick">
                 <Button.ContextFlyout>
                     <MenuFlyout Placement="Top">
-                        <MenuItem Header="Print to PDF" Tag="{Binding}" Click="PrintToPDF" />
-                        <MenuItem Header="Save as JPG" Tag="{Binding}" Click="PrintToJPG"/>
-                        <MenuItem Header="View in Previewer" Tag="{Binding}" Click="PrintToPreviewer"/>
+                        <MenuItem Header="Print to PDF" Click="PrintToPDF" />
+                        <MenuItem Header="Save as JPG" Click="PrintToJPG"/>
+                        <MenuItem Header="View in Previewer" Click="PrintToPreviewer"/>
                     </MenuFlyout>                
                 </Button.ContextFlyout>
                 <StackPanel Orientation="Horizontal">
@@ -93,7 +93,7 @@
                                                    Margin="8 0 24 0" MinWidth="250"/>
                                         <Rectangle Grid.Column="0" Grid.Row="0" Grid.RowSpan="2" Classes="HeaderSeparator2" />
                                     </Grid>
-                                    <ItemsRepeater ItemsSource="{Binding Headers}" VerticalCacheLength="200" HorizontalCacheLength="200">
+                                    <ItemsRepeater ItemsSource="{Binding $parent[ItemsRepeater].((viewModels:TherapyStatisticsViewModel)DataContext).Headers}" VerticalCacheLength="200" HorizontalCacheLength="200">
                                         <ItemsRepeater.Layout>
                                             <StackLayout Orientation="Horizontal" DisableVirtualization="True" />
                                         </ItemsRepeater.Layout>

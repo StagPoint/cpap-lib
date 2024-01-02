@@ -61,7 +61,11 @@ public partial class StatisticsView : UserControl
 		var history = HistoryViewModel.GetHistory( profileID, start, end );
 		var groups  = byMonth ? GroupDaysByMonth( history.Days, start, end ) : GroupDaysStandard( history.Days, start, end );
 
-		var viewModel = new TherapyStatisticsViewModel();
+		var viewModel = new TherapyStatisticsViewModel()
+		{
+			Headers = groups,
+		};
+		
 		viewModel.Sections.Add( BuildCpapSection( groups ) );
 
 		var showPulseOximetry = history.Days.Any( day => day.Sessions.Any( session => session.SourceType == SourceType.PulseOximetry ) );
@@ -78,7 +82,6 @@ public partial class StatisticsView : UserControl
 		var section = new TherapyStatisticsSectionViewModel
 		{
 			Label   = "Pulse Oximetry Statistics",
-			Headers = groups,
 		};
 
 		section.Groups.Add( BuildOxygenStats( groups ) );
@@ -132,7 +135,6 @@ public partial class StatisticsView : UserControl
 		var section = new TherapyStatisticsSectionViewModel
 		{
 			Label   = "CPAP Statistics",
-			Headers = groups,
 		};
 
 		section.Groups.Add( BuildCPAPUsageStats( groups ) );
@@ -511,15 +513,16 @@ public partial class StatisticsView : UserControl
 
 	private static List<GroupedDays> GroupDaysByMonth( List<DailyReport> days, DateTime startDay, DateTime endDay )
 	{
-		var results = new List<GroupedDays>();
-
-		results.Add( new GroupedDays()
+		var results = new List<GroupedDays>
 		{
-			Label     = "Most Recent",
-			DateLabel = $"{startDay:d}",
-			StartDate = endDay.Date,
-			EndDate   = endDay.Date,
-		} );
+			new GroupedDays()
+			{
+				Label     = "Most Recent",
+				DateLabel = $"{startDay:d}",
+				StartDate = endDay.Date,
+				EndDate   = endDay.Date,
+			},
+		};
 
 		var lastMonthStart = new DateTime( endDay.Year, endDay.Month, 1 ).AddMonths( 1 );
 
@@ -559,15 +562,16 @@ public partial class StatisticsView : UserControl
 
 	private static List<GroupedDays> GroupDaysStandard( List<DailyReport> days, DateTime startDay, DateTime endDay )
 	{
-		var results = new List<GroupedDays>();
-
-		results.Add( new GroupedDays()
+		var results = new List<GroupedDays>
 		{
-			Label     = "Most Recent",
-			DateLabel = $"{startDay:d}",
-			StartDate = endDay.Date,
-			EndDate   = endDay.Date,
-		} );
+			new GroupedDays()
+			{
+				Label     = "Most Recent",
+				DateLabel = $"{startDay:d}",
+				StartDate = endDay.Date,
+				EndDate   = endDay.Date,
+			},
+		};
 
 		var groupStartDate = DateHelper.Max( startDay, endDay.Date.AddDays( -6 ) );
 		results.Add( new GroupedDays()
@@ -616,7 +620,7 @@ public partial class StatisticsView : UserControl
 
 	private static string FormatTimespan( double value )
 	{
-		return $@"{TimeSpan.FromSeconds( value ):hh\:mm\:ss}";
+		return $@"{TimeSpan.FromSeconds( value ):h\:mm\:ss}";
 	}
 
 	private void ReportMode_SelectionChanged( object? sender, SelectionChangedEventArgs e )
@@ -660,7 +664,7 @@ public partial class StatisticsView : UserControl
 		}
 	}
 
-	private async void PrintToPreviewer( object? sender, RoutedEventArgs e )
+	private void PrintToPreviewer( object? sender, RoutedEventArgs e )
 	{
 		if( DataContext is not TherapyStatisticsViewModel viewModel )
 		{
@@ -670,7 +674,9 @@ public partial class StatisticsView : UserControl
 		var activeUser  = UserProfileStore.GetActiveUserProfile();
 		var pdfDocument = new StatisticsDocument( activeUser, viewModel );
 
-		await pdfDocument.ShowInPreviewerAsync();
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+		pdfDocument.ShowInPreviewerAsync();
+#pragma warning restore CS4014
 	}
 
 	private async void PrintToJPG( object? sender, RoutedEventArgs e )

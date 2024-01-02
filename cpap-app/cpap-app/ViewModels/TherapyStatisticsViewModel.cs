@@ -25,13 +25,13 @@ public class GroupedDays
 
 public class TherapyStatisticsViewModel
 {
+	public List<GroupedDays>                       Headers  { get; set; } = new();
 	public List<TherapyStatisticsSectionViewModel> Sections { get; set; } = new();
 }
 
 public class TherapyStatisticsSectionViewModel
 {
 	public required string                                Label   { get; set; }
-	public          List<GroupedDays>                     Headers { get; set; } = new();
 	public          List<TherapyStatisticsGroupViewModel> Groups  { get; set; } = new();
 }
 
