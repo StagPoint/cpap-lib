@@ -95,6 +95,9 @@
                         <!-- Child menu items will be inserted here by the code-behind -->
                     </MenuItem>
                     
+                    <Separator/>
+                    
+                    <MenuItem Name="ShowHelp" Header="Hotkeys and Mouse Actions" Click="ShowHelp_OnClick"/>
                 </MenuFlyout>
             </Button.Flyout>
             <fui:SymbolIcon Symbol="Settings" />

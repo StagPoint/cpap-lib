@@ -1,0 +1,85 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             x:Class="cpap_app.Views.SignalGraphHotkeysView">
+    <UserControl.Styles>
+        <Style Selector="Grid > TextBlock.Header">
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Padding" Value="0 0 20 0" />
+        </Style>
+    </UserControl.Styles>
+    <StackPanel Orientation="Vertical" Margin="12" Spacing="12" >
+        <Grid ColumnDefinitions="Auto, Auto">
+            <Grid.RowDefinitions>
+                <RowDefinition />
+                <RowDefinition />
+                <RowDefinition />
+                <RowDefinition />
+            </Grid.RowDefinitions>
+            <TextBlock Grid.Column="0" Grid.Row="0" Text="Left-Click and Drag" Classes="Header" />
+            <TextBlock Grid.Column="1" Grid.Row="0" Text="Select region (ESC to cancel selection)" />
+
+            <TextBlock Grid.Column="0" Grid.Row="1" Text="Shift and Left-Click" Classes="Header" />
+            <TextBlock Grid.Column="1" Grid.Row="1" Text="Zoom in to 3 minute window around click position" />
+
+            <TextBlock Grid.Column="0" Grid.Row="2" Text="Right-Click and Drag" Classes="Header" />
+            <TextBlock Grid.Column="1" Grid.Row="2" Text="Pan left or right" />
+
+            <TextBlock Grid.Column="0" Grid.Row="3" Text="Control and Scroll Wheel" Classes="Header" />
+            <TextBlock Grid.Column="1" Grid.Row="3" Text="Zoom in or out (depending on direction of wheel scroll)" />
+
+        </Grid>
+        <Grid ColumnDefinitions="Auto, Auto">
+            <Grid.RowDefinitions>
+                <RowDefinition />
+                <RowDefinition />
+                <RowDefinition />
+                <RowDefinition />
+                <RowDefinition />
+                <RowDefinition />
+                <RowDefinition />
+                <RowDefinition />
+            </Grid.RowDefinitions>
+            <TextBlock Grid.Column="0" Grid.Row="0" Text="Home Key" Classes="Header"/>
+            <TextBlock Grid.Column="1" Grid.Row="0" Text="Pan to the beginning"/>
+            
+            <TextBlock Grid.Column="0" Grid.Row="1" Text="End Key" Classes="Header"/>
+            <TextBlock Grid.Column="1" Grid.Row="1" Text="Pan to the end"/>
+            
+            <TextBlock Grid.Column="0" Grid.Row="2" Text="Page Up Key" Classes="Header"/>
+            <TextBlock Grid.Column="1" Grid.Row="2" Text="Pan left one page"/>
+            
+            <TextBlock Grid.Column="0" Grid.Row="3" Text="Page Down Key" Classes="Header"/>
+            <TextBlock Grid.Column="1" Grid.Row="3" Text="Pan right one page"/>
+            
+            <TextBlock Grid.Column="0" Grid.Row="4" Text="Up Arrow Key" Classes="Header"/>
+            <TextBlock Grid.Column="1" Grid.Row="4" Text="Zoom in"/>
+            
+            <TextBlock Grid.Column="0" Grid.Row="5" Text="Down Arrow Key" Classes="Header"/>
+            <TextBlock Grid.Column="1" Grid.Row="5" Text="Zoom out"/>
+            
+            <TextBlock Grid.Column="0" Grid.Row="6" Text="Left Arrow Key" Classes="Header"/>
+            <TextBlock Grid.Column="1" Grid.Row="6" Text="Pan left (hold Shift first to increase speed)"/>
+            
+            <TextBlock Grid.Column="0" Grid.Row="7" Text="Right Arrow Key" Classes="Header"/>
+            <TextBlock Grid.Column="1" Grid.Row="7" Text="Pan right (hold Shift first to increase speed)"/>
+        </Grid>
+        <Grid ColumnDefinitions="Auto, Auto">
+            <Grid.RowDefinitions>
+                <RowDefinition />
+                <RowDefinition />
+                <RowDefinition />
+                <RowDefinition />
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Column="0" Grid.Row="0" Text="A Key" Classes="Header" />
+            <TextBlock Grid.Column="1" Grid.Row="0" Text="Create an Annotation at the mouse position or mouse selection" />
+
+            <TextBlock Grid.Column="0" Grid.Row="1" Text="ESC Key" Classes="Header" />
+            <TextBlock Grid.Column="1" Grid.Row="1" Text="Cancel any active mouse selection" />
+
+        </Grid>
+    </StackPanel>
+</UserControl>

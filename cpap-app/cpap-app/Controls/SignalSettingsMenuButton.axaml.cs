@@ -13,6 +13,7 @@ using cpap_app.Configuration;
 using cpap_app.Events;
 using cpap_app.Helpers;
 using cpap_app.ViewModels;
+using cpap_app.Views;
 
 using cpap_db;
 
@@ -338,6 +339,20 @@ public partial class SignalSettingsMenuButton : UserControl
 		}
 		
 		RaiseChangedEvent( propertyName );
+	}
+	
+	private async void ShowHelp_OnClick( object? sender, RoutedEventArgs e )
+	{
+		var dialog = new TaskDialog()
+		{
+			Title = $"Hot Keys and Mouse Actions",
+			Buttons = { TaskDialogButton.CloseButton },
+			XamlRoot = (Visual)VisualRoot!,
+			Content  = new SignalGraphHotkeysView(),
+			MaxWidth = 800,
+		};
+		
+		var dialogResult = await dialog.ShowAsync();
 	}
 }
 

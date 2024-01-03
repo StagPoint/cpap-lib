@@ -22,7 +22,6 @@ using cpaplib;
 using ScottPlot;
 using ScottPlot.Avalonia;
 using ScottPlot.Control;
-using ScottPlot.MarkerShapes;
 using ScottPlot.Plottable;
 
 using Color = System.Drawing.Color;
