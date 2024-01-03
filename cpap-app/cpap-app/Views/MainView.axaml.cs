@@ -696,7 +696,7 @@ public partial class MainView : UserControl
 					{
 						await using var file = File.OpenRead( fileItem.Path.LocalPath );
 
-						var eventGeneratorConfig = new OximetryEventGeneratorConfig();
+						var eventGeneratorConfig = OximetryEventGeneratorConfigStore.GetImportOptions( ActiveUserProfile.UserProfileID );
 
 						foreach( var importer in importers )
 						{

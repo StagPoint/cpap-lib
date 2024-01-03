@@ -1,7 +1,5 @@
 ﻿using System.Diagnostics;
 using System.Drawing;
-using System.Linq.Expressions;
-using System.Numerics;
 using System.Reflection;
 
 using cpap_db.Converters;
@@ -18,8 +16,8 @@ public class KeyColumn
 
 	protected KeyColumn( string name, Type type )
 	{
-		ColumnName = !string.IsNullOrEmpty( name ) ? name : throw new ArgumentNullException( "Name argument cannot be null or empty " );
-		Type       = type ?? throw new ArgumentNullException( $"Type argument cannot be null" );
+		ColumnName = !string.IsNullOrEmpty( name ) ? name : throw new ArgumentNullException( nameof( name ) );
+		Type       = type ?? throw new ArgumentNullException( nameof( type ) );
 		DbType     = DatabaseMapping.GetSqlType( type );
 	}
 }
@@ -127,6 +125,33 @@ public class ColumnMapping
 	public override string ToString()
 	{
 		return _property.ToString();
+	}
+	
+	internal string GetDefaultValue( object defaultObject )
+	{
+		var defaultValue = GetValue( defaultObject );
+		
+		if( Type == typeof( string ) )
+		{
+			return $"'{defaultValue}'";
+		}
+		
+		if( Type == typeof( bool ) )
+		{
+			return (bool)defaultValue ? "1" : "0";
+		}
+
+		if( Type.IsEnum )
+		{
+			return $"{(int)defaultValue}";
+		}
+
+		if( Type == typeof( DateTime ) || Type == typeof( TimeSpan ) || Type == typeof( DateTimeOffset ) )
+		{
+			return "0";
+		}
+
+		return $"{defaultValue}";
 	}
 }
 

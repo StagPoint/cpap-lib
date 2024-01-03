@@ -161,6 +161,10 @@ public class DatabaseMapping
 			return false;
 		}
 
+		// Because all types that can be stored in the database must have a default parameterless constructor,
+		// we can obtain access to the default values for every field simply by creating a new instance of the type.
+		var defaultObject = Activator.CreateInstance( ObjectType );
+
 		bool tableAltered = false;
 
 		// If the mapping contains columns that do not (yet) exist in the database, we will
@@ -179,7 +183,8 @@ public class DatabaseMapping
 
 					if( !column.IsNullable )
 					{
-						string defaultValue = column.Type == typeof( string ) ? "''" : "0";
+						var defaultValue = column.GetDefaultValue( defaultObject );
+						
 						sql += $" NOT NULL DEFAULT ({defaultValue})";
 					}
 
@@ -385,6 +390,10 @@ public class DatabaseMapping
 		builder.Append( $"CREATE TABLE IF NOT EXISTS [{TableName}] (\n" );
 
 		var first = true;
+		
+		// Because all types that can be stored in the database must have a default parameterless constructor,
+		// we can obtain access to the default values for every field simply by creating a new instance of the type.
+		var defaultObject = Activator.CreateInstance( ObjectType );
 
 		if( PrimaryKey != null )
 		{
@@ -443,7 +452,9 @@ public class DatabaseMapping
 
 			if( !column.IsNullable )
 			{
-				builder.Append( " NOT NULL" );
+				var defaultValue = column.GetDefaultValue( defaultObject );
+
+				builder.Append( $" DEFAULT ({defaultValue}) NOT NULL" );
 			}
 
 			if( column.IsUnique )
