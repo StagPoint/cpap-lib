@@ -19,6 +19,8 @@ using cpap_db;
 
 using cpaplib;
 
+using QuestPDF.Helpers;
+
 namespace cpap_app.Views;
 
 public partial class HistoryView : UserControl
@@ -247,6 +249,36 @@ public partial class HistoryView : UserControl
 		public double MaxValue          { get; set; }
 	}
 	
+	#endregion
+	
+	#region Printing 
+	
+	private void PrintReport_OnClick( object? sender, RoutedEventArgs e )
+	{
+		if( sender is Button button )
+		{
+			button.ContextFlyout!.ShowAt( button );
+		}
+	}
+	
+	private void PrintToPDF( object? sender, RoutedEventArgs e )
+	{
+		throw new NotImplementedException();
+	}
+	
+	private void PrintToJPG( object? sender, RoutedEventArgs e )
+	{
+		throw new NotImplementedException();
+	}
+
+	private void PrintToPreviewer( object? sender, RoutedEventArgs e )
+	{
+		var chart = _charts[ 0 ];
+		var size  = new PixelSize( (int)PageSizes.Letter.Width * 4, (int)chart.Bounds.Height );
+		
+		var image = _charts[ 0 ].PrintToBitmap( size, new Vector( 128, 128 ) );
+	}
+
 	#endregion
 }
 

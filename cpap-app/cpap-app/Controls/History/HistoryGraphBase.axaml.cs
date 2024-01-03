@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 
 using Avalonia;
@@ -9,6 +10,7 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
 
 using cpap_app.Events;
 using cpap_app.Styling;
@@ -22,6 +24,8 @@ using ScottPlot.Avalonia;
 using ScottPlot.Control;
 using ScottPlot.MarkerShapes;
 using ScottPlot.Plottable;
+
+using Color = System.Drawing.Color;
 
 namespace cpap_app.Controls;
 
@@ -37,7 +41,7 @@ public partial class HistoryGraphBase : UserControl
 	public static readonly StyledProperty<int>    ColorIndexProperty               = AvaloniaProperty.Register<SignalStatisticGraph, int>( nameof( ColorIndex ) );
 
 	#endregion
-	
+
 	#region Public properties
 
 	public IBrush ChartForeground
@@ -69,7 +73,7 @@ public partial class HistoryGraphBase : UserControl
 		get => GetValue( ChartBorderColorProperty );
 		set => SetValue( ChartBorderColorProperty, value );
 	}
-	
+
 	public int ColorIndex
 	{
 		get => GetValue( ColorIndexProperty );
@@ -77,7 +81,7 @@ public partial class HistoryGraphBase : UserControl
 	}
 
 	#endregion
-	
+
 	#region Private fields
 
 	// Don't allow the user to zoom in to any time frame smaller than two weeks. 
@@ -99,10 +103,10 @@ public partial class HistoryGraphBase : UserControl
 	protected DateTime?            _hoveredDate           = null;
 	protected ContextMenu?         _contextMenu           = null;
 
-	#endregion 
-	
-	#region Constructor 
-	
+	#endregion
+
+	#region Constructor
+
 	// ReSharper disable once MemberCanBeProtected.Global
 	public HistoryGraphBase()
 	{
@@ -120,14 +124,14 @@ public partial class HistoryGraphBase : UserControl
 		LostFocus           += OnLostFocus;
 	}
 
-	#endregion 
-	
-	#region Base class overrides 
-	
+	#endregion
+
+	#region Base class overrides
+
 	protected override void OnApplyTemplate( TemplateAppliedEventArgs e )
 	{
 		base.OnApplyTemplate( e );
-	
+
 		if( !_chartInitialized )
 		{
 			InitializeChartProperties( Chart );
@@ -138,7 +142,7 @@ public partial class HistoryGraphBase : UserControl
 			ShowNoDataAvailable();
 			return;
 		}
-		
+
 		LoadData( _history );
 	}
 
@@ -191,10 +195,10 @@ public partial class HistoryGraphBase : UserControl
 					endTime   += amount;
 					startTime =  endTime - axisLimits.XSpan;
 				}
-			
+
 				UpdateVisibleRange( startTime, endTime );
 				OnAxesChanged( this, EventArgs.Empty );
-				
+
 				_selectionSpan!.IsVisible = false;
 				ToolTip.SetIsOpen( this, false );
 
@@ -205,12 +209,12 @@ public partial class HistoryGraphBase : UserControl
 			{
 				double increment = ((args.KeyModifiers & KeyModifiers.Shift) != 0) ? 0.35 : 0.2;
 				double amount    = (args.Key == Key.Up ? 1.0 : -1.0) * increment + 1.0;
-			
+
 				Chart.Plot.AxisZoom( amount, 1.0 );
-				
+
 				RenderGraph( false );
 				OnAxesChanged( this, EventArgs.Empty );
-				
+
 				_selectionSpan!.IsVisible = false;
 				ToolTip.SetIsOpen( this, false );
 
@@ -227,11 +231,11 @@ public partial class HistoryGraphBase : UserControl
 			}
 		}
 	}
-	
+
 	#endregion
-	
-	#region Event handlers 
-	
+
+	#region Event handlers
+
 	protected void OnPointerMoved( object? sender, PointerEventArgs eventArgs )
 	{
 		if( DataContext == null || !IsEnabled )
@@ -248,7 +252,7 @@ public partial class HistoryGraphBase : UserControl
 		{
 			return;
 		}
-		
+
 		// ReSharper disable once SwitchStatementHandlesSomeKnownEnumValuesWithDefault
 		switch( _interactionMode )
 		{
@@ -256,7 +260,7 @@ public partial class HistoryGraphBase : UserControl
 			{
 				// TODO: This still allows selecting areas of the Signal that are not in the graph's visible area. Leave it?
 				_selectionEndTime = Math.Max( 0, Math.Min( timeOffset, _history.TotalDays ) );
-				
+
 				if( timeOffset < _selectionStartTime )
 				{
 					_selectionSpan!.X1 = _selectionEndTime;
@@ -270,19 +274,19 @@ public partial class HistoryGraphBase : UserControl
 
 				eventArgs.Handled = true;
 				ToolTip.SetIsOpen( this, false );
-			
+
 				RenderGraph( false );
-			
+
 				return;
 			}
 			case GraphInteractionMode.Panning:
 			{
 				var position  = eventArgs.GetCurrentPoint( this ).Position;
 				var panAmount = (_pointerDownPosition.X - position.X) / Chart.Plot.XAxis.Dims.PxPerUnit;
-			
+
 				double start = 0;
 				double end   = 0;
-			
+
 				if( position.X < _pointerDownPosition.X )
 				{
 					start = Math.Max( 0, _pointerDownAxisLimits.XMin + panAmount );
@@ -293,31 +297,31 @@ public partial class HistoryGraphBase : UserControl
 					end   = Math.Min( _history.TotalDays, _pointerDownAxisLimits.XMax + panAmount );
 					start = end - _pointerDownAxisLimits.XSpan;
 				}
-				
+
 				UpdateVisibleRange( start, end );
 				OnAxesChanged( this, EventArgs.Empty );
-			
+
 				eventArgs.Handled = true;
 				ToolTip.SetIsOpen( this, false );
-				
+
 				return;
 			}
 			case GraphInteractionMode.None:
 			{
 				var point    = eventArgs.GetCurrentPoint( this );
 				var dataRect = GetDataAreaBounds();
-				
+
 				if( !dataRect.Contains( point.Position ) )
 				{
 					// Since we'll be handling the tooltips in a custom manner, set an insanely long time
 					// before Avalonia attempts to show the tooltip itself. 
 					ToolTip.SetShowDelay( this, int.MaxValue );
 					ToolTip.SetIsOpen( this, false );
-					
+
 					return;
 				}
-		
-				(double mousePosX, _)     = Chart.GetMouseCoordinates();
+
+				(double mousePosX, _) = Chart.GetMouseCoordinates();
 
 				var hoveredDayIndex = (int)(mousePosX + 0.5);
 				var hoveredDate     = _history.Start.AddDays( hoveredDayIndex );
@@ -325,10 +329,10 @@ public partial class HistoryGraphBase : UserControl
 				_selectionSpan.X1        = hoveredDayIndex - 0.5;
 				_selectionSpan.X2        = hoveredDayIndex + 0.5;
 				_selectionSpan.IsVisible = true;
-				
+
 				RenderGraph( true );
 				OnHover( point, hoveredDayIndex, hoveredDate );
-				
+
 				break;
 			}
 		}
@@ -343,10 +347,10 @@ public partial class HistoryGraphBase : UserControl
 		{
 			return;
 		}
-		
+
 		_selectionSpan.IsVisible = false;
 		//EventTooltip.IsVisible   = false;
-		
+
 		if( _pointerDownButton == MouseButton.Left )
 		{
 			// ReSharper disable once SwitchStatementMissingSomeEnumCasesNoDefault
@@ -380,7 +384,7 @@ public partial class HistoryGraphBase : UserControl
 		{
 			return;
 		}
-		
+
 		var point = eventArgs.GetCurrentPoint( this );
 		if( point.Properties.IsMiddleButtonPressed )
 		{
@@ -394,7 +398,7 @@ public partial class HistoryGraphBase : UserControl
 
 		_selectionStartTime = 0;
 		_selectionEndTime   = 0;
-		
+
 		// We will want to do different things depending on where the PointerPressed happens, such 
 		// as within the data area of the graph versus on the chart title, etc. 
 		var dataRect = GetDataAreaBounds();
@@ -402,7 +406,7 @@ public partial class HistoryGraphBase : UserControl
 		{
 			return;
 		}
-		
+
 		// ReSharper disable once SwitchStatementHandlesSomeKnownEnumValuesWithDefault
 		switch( eventArgs.KeyModifiers )
 		{
@@ -416,7 +420,7 @@ public partial class HistoryGraphBase : UserControl
 				_interactionMode     = GraphInteractionMode.Selecting;
 				_pointerDownPosition = point.Position;
 				_pointerDownButton   = MouseButton.Left;
-			
+
 				eventArgs.Handled = true;
 				break;
 			default:
@@ -427,7 +431,7 @@ public partial class HistoryGraphBase : UserControl
 					{
 						Focus();
 					}
-			
+
 					_pointerDownPosition     = point.Position;
 					_pointerDownAxisLimits   = Chart.Plot.GetAxisLimits();
 					_pointerDownButton       = MouseButton.Right;
@@ -440,11 +444,11 @@ public partial class HistoryGraphBase : UserControl
 			}
 		}
 	}
-	
+
 	protected void OnPointerExited( object? sender, PointerEventArgs e )
 	{
 		ToolTip.SetIsOpen( this, false );
-		
+
 		CancelSelectionMode();
 
 		if( _selectionSpan != null )
@@ -453,12 +457,12 @@ public partial class HistoryGraphBase : UserControl
 			RenderGraph( true );
 		}
 	}
-	
+
 	protected void OnPointerEntered( object? sender, PointerEventArgs e )
 	{
-		Debug.WriteLine( "Pointer entered"  );
+		Debug.WriteLine( "Pointer entered" );
 	}
-	
+
 	protected void OnPointerWheelChanged( object? sender, PointerWheelEventArgs args )
 	{
 		ToolTip.SetIsOpen( this, false );
@@ -473,7 +477,7 @@ public partial class HistoryGraphBase : UserControl
 
 			var amount = Math.Max( args.Delta.Y * 0.25 + 1.0, 0.25 );
 			Chart.Plot.AxisZoom( amount, 1.0, x );
-			
+
 			// There is an "off by one" issue with Bar charts that allows zooming past the defined limits 
 			// when using AxisZoom(), so we need to force update the axis limits ourselves.
 			ForceUpdateAxisLimits();
@@ -482,9 +486,9 @@ public partial class HistoryGraphBase : UserControl
 
 			OnAxesChanged( this, EventArgs.Empty );
 			Focus();
-			
+
 			_selectionSpan!.IsVisible = false;
-		
+
 			RenderGraph( false );
 		}
 	}
@@ -501,8 +505,8 @@ public partial class HistoryGraphBase : UserControl
 		_hasInputFocus = true;
 	}
 
-	#endregion 
-	
+	#endregion
+
 	#region Public functions
 
 	public void UpdateVisibleRange( DateTime start, DateTime end )
@@ -512,7 +516,7 @@ public partial class HistoryGraphBase : UserControl
 
 		UpdateVisibleRange( startOffset, endOffset );
 	}
-	
+
 	public void UpdateVisibleRange( double start, double end )
 	{
 		Chart.Configuration.AxesChangedEventEnabled = false;
@@ -522,19 +526,35 @@ public partial class HistoryGraphBase : UserControl
 		}
 		Chart.Configuration.AxesChangedEventEnabled = true;
 	}
-	
+
 	public void RenderGraph( bool highQuality )
 	{
 		Chart.Configuration.AxesChangedEventEnabled = false;
 		Chart.Configuration.Quality                 = highQuality ? QualityMode.High : QualityMode.Low;
-		
+
 		Chart.RenderRequest();
-		
+
 		Chart.Configuration.AxesChangedEventEnabled = true;
 	}
 
+	public MemoryStream PrintToBitmap( PixelSize pageSize, Vector dpi )
+	{
+		var renderBitmap = new RenderTargetBitmap( pageSize, dpi );
+
+		// var wtf = Chart.Plot.Render( pageSize.Width, pageSize.Height );
+		// wtf.Save( @"D:\Temp\TestRender.jpg" );
+		
+		renderBitmap.Render( this );
+
+		var stream = new MemoryStream();
+		renderBitmap.Save( stream );
+		renderBitmap.Save( @"D:\Temp\TestRender.png" );
+
+		return stream;
+	}
+
 	#endregion
-	
+
 	#region Virtual functions
 
 	protected virtual void OnHover( PointerPoint mousePosition, int hoveredDayIndex, DateTime hoveredDate )
@@ -548,7 +568,7 @@ public partial class HistoryGraphBase : UserControl
 
 		// Enable/Disable the Context Menu according to whether there is a DailyReport available for that day. 
 		Chart.ContextMenu = (day != null) ? _contextMenu : null;
-		
+
 		var tooltip = ToolTip.GetTip( this ) as ToolTip;
 		Debug.Assert( tooltip != null, nameof( tooltip ) + " != null" );
 
@@ -566,7 +586,7 @@ public partial class HistoryGraphBase : UserControl
 		var tooltipWidth     = tooltip.Bounds.Width;
 		var tooltipPositionX = !onLeftSide ? mousePosition.Position.X - HORZ_OFFSET : mousePosition.Position.X + HORZ_OFFSET + tooltipWidth;
 		var tooltipPositionY = mousePosition.Position.Y - tooltip.Bounds.Height + VERT_OFFSET;
-		
+
 		tooltip.InvalidateVisual();
 		ToolTip.SetIsOpen( this, true );
 		ToolTip.SetPlacement( this, PlacementMode.LeftEdgeAlignedTop );
@@ -580,24 +600,23 @@ public partial class HistoryGraphBase : UserControl
 			Source      = this,
 		} );
 	}
-	
+
 	protected virtual object? BuildTooltipDataContext( DailyReport day )
 	{
 		return null;
 	}
-	
+
 	protected virtual void LoadData( HistoryViewModel viewModel )
 	{
-		
 	}
 
 	protected virtual void InitializeChartProperties( AvaPlot chart )
 	{
 		_chartInitialized = true;
 		_chartStyle       = new CustomChartStyle( ChartForeground, ChartBackground, ChartBorderColor, ChartGridLineColor );
-		
+
 		var plot = chart.Plot;
-		
+
 		// ReSharper disable once StringLiteralTypo
 		// Measure enough space for a vertical axis label, padding, and the longest anticipated tick label 
 		var maximumLabelWidth = MeasureText( "XXXXXXX", _chartStyle.TickLabelFontName, 12 );
@@ -614,7 +633,7 @@ public partial class HistoryGraphBase : UserControl
 
 		plot.Style( _chartStyle );
 		plot.Layout( 0, 0, 0, 8 );
-		
+
 		plot.XAxis.TickLabelFormat( TickFormatter );
 		plot.XAxis.MinimumTickSpacing( 1f );
 		plot.XAxis.TickDensity( 2f );
@@ -634,17 +653,17 @@ public partial class HistoryGraphBase : UserControl
 		plot.YAxis.SetBoundary( 0, 10 );
 		plot.YAxis.MajorGrid( true );
 		plot.YAxis.MinorGrid( false );
-		
+
 		chart.Configuration.LockVerticalAxis = true;
 
 		// These changes won't be valid until the graph is rendered, so just render it in low resolution for now
 		RenderGraph( false );
 	}
 
-	#endregion 
+	#endregion
 
-	#region Private functions 
-	
+	#region Private functions
+
 	private void InitializeContextMenu()
 	{
 		var menuItem = new MenuItem() { Header = "View" };
@@ -672,15 +691,15 @@ public partial class HistoryGraphBase : UserControl
 		{
 			CancelSelectionMode();
 
-			if( _hoveredDate == null ||!_history.Days.Any( x => x.ReportDate.Date == _hoveredDate ) )
+			if( _hoveredDate == null || !_history.Days.Any( x => x.ReportDate.Date == _hoveredDate ) )
 			{
 				menuItem.Header = "INVALID";
-				
+
 				// For some reason the CancelEventArgs isn't working, so we will also hide the menu item 
 				args.Cancel        = true;
 				menuItem.IsVisible = false;
 				_contextMenu.Close();
-				
+
 				return;
 			}
 
@@ -692,7 +711,7 @@ public partial class HistoryGraphBase : UserControl
 	protected void ShowNoDataAvailable()
 	{
 		Chart.Plot.Clear();
-		
+
 		NoDataLabel.IsVisible = true;
 		Chart.IsEnabled       = false;
 		this.IsEnabled        = false;
@@ -707,7 +726,7 @@ public partial class HistoryGraphBase : UserControl
 		}
 		Chart.Configuration.AxesChangedEventEnabled = true;
 	}
-	
+
 	protected void EndSelectionMode()
 	{
 		// Sanity check
@@ -715,7 +734,7 @@ public partial class HistoryGraphBase : UserControl
 		{
 			return;
 		}
-		
+
 		_interactionMode = GraphInteractionMode.None;
 
 		if( _selectionStartTime > _selectionEndTime )
@@ -724,7 +743,7 @@ public partial class HistoryGraphBase : UserControl
 		}
 
 		// Try to differentiate between a click or simple mousedown and the user intending to select a time range
-		var pixelDifference = Chart.Plot.XAxis.Dims.PxPerUnit * ( _selectionEndTime - _selectionStartTime );
+		var pixelDifference = Chart.Plot.XAxis.Dims.PxPerUnit * (_selectionEndTime - _selectionStartTime);
 		if( pixelDifference <= 5 || Math.Abs( _selectionEndTime - _selectionStartTime ) <= 1.0 )
 		{
 			_selectionSpan!.IsVisible = false;
@@ -740,7 +759,7 @@ public partial class HistoryGraphBase : UserControl
 			_selectionStartTime = center - MINIMUM_TIME_WINDOW / 2.0;
 			_selectionEndTime   = center + MINIMUM_TIME_WINDOW / 2.0;
 		}
-		
+
 		UpdateVisibleRange( _selectionStartTime, _selectionEndTime );
 		OnAxesChanged( this, EventArgs.Empty );
 	}
@@ -752,17 +771,17 @@ public partial class HistoryGraphBase : UserControl
 		var yDims       = Chart.Plot.YAxis.Dims;
 
 		double tickLengthY = Chart.Plot.YAxis.AxisTicks.MajorTickLength;
-		
+
 		var rect = new Rect(
-			(int)(chartBounds.X + xDims.DataOffsetPx + tickLengthY ),
+			(int)(chartBounds.X + xDims.DataOffsetPx + tickLengthY),
 			(int)(chartBounds.Y + yDims.DataOffsetPx),
-			(int)xDims.DataSizePx - tickLengthY, 
+			(int)xDims.DataSizePx - tickLengthY,
 			(int)yDims.DataSizePx
 		);
 
 		return rect;
 	}
-	
+
 	protected void OnAxesChanged( object? sender, EventArgs e )
 	{
 		if( DataContext == null || !IsEnabled )
@@ -771,7 +790,7 @@ public partial class HistoryGraphBase : UserControl
 		}
 
 		var limits = Chart.Plot.GetAxisLimits();
-		
+
 		var eventArgs = new DateTimeRangeRoutedEventArgs
 		{
 			RoutedEvent = GraphEvents.DisplayedRangeChangedEvent,
@@ -779,10 +798,10 @@ public partial class HistoryGraphBase : UserControl
 			StartTime   = _history.Start.AddDays( limits.XMin ),
 			EndTime     = _history.Start.AddDays( limits.XMax ),
 		};
-		
+
 		RaiseEvent( eventArgs );
 	}
-	
+
 	protected void CancelSelectionMode()
 	{
 		_interactionMode          = GraphInteractionMode.None;
@@ -795,7 +814,7 @@ public partial class HistoryGraphBase : UserControl
 
 		RenderGraph( true );
 	}
-	
+
 	protected static float MeasureText( string text, string fontFamily, float emSize )
 	{
 		FormattedText formatted = new FormattedText(
@@ -816,6 +835,5 @@ public partial class HistoryGraphBase : UserControl
 		return $"{date:d}";
 	}
 
-	#endregion 
+	#endregion
 }
-

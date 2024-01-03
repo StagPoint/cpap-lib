@@ -33,6 +33,19 @@
                 <controls1:SymbolIcon Symbol="Refresh" />
             </Button>
             <TextBlock Grid.Column="11" Name="CurrentDateSelection" Text="CURRENT DATE SELECTION HERE" />
+            <Button Name="PrintReport" Grid.Column="12" HorizontalAlignment="Right" Margin="10 0" Click="PrintReport_OnClick">
+                <Button.ContextFlyout>
+                    <MenuFlyout Placement="Top">
+                        <MenuItem Header="Print to PDF" Click="PrintToPDF" />
+                        <MenuItem Header="Save as JPG" Click="PrintToJPG"/>
+                        <MenuItem Header="View in Previewer" Click="PrintToPreviewer"/>
+                    </MenuFlyout>                
+                </Button.ContextFlyout>
+                <StackPanel Orientation="Horizontal">
+                    <controls1:SymbolIcon Symbol="Print" FontSize="18" Margin="0 -2 10 0"/>
+                    <TextBlock>Print</TextBlock>
+                </StackPanel>
+            </Button>
         </Grid>
         <Separator DockPanel.Dock="Bottom" Background="{DynamicResource FocusStrokeColorOuterBrush}" />
         <ScrollViewer
