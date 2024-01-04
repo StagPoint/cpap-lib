@@ -13,7 +13,7 @@ public class CustomChartStyle : ScottPlot.Styles.Default
 {
 	#region Static fields
 
-	public static readonly CustomChartStyle ChartPrintStyle = new CustomChartStyle( Color.Black, Color.White, Color.Black, Color.Gray.MultiplyAlpha( 0.5f ) );
+	public static readonly CustomChartStyle ChartPrintStyle = new CustomChartStyle( Color.Black, Color.White, Color.Black, Color.Gray.MultiplyAlpha( 0.25f ) );
 	
 	#endregion 
 	
@@ -49,9 +49,9 @@ public class CustomChartStyle : ScottPlot.Styles.Default
 		TitleFontColor = foreground;
 		TickLabelColor = foreground;
 
-		GridLineColor  = gridLineColor.MultiplyAlpha( 0.35f );
-		TickMajorColor = gridLineColor;
-		TickMinorColor = gridLineColor;
+		GridLineColor  = gridLineColor;
+		TickMajorColor = foreground;
+		TickMinorColor = foreground;
 
 		TickLabelFontName = fontName;
 		AxisLabelFontName = fontName;

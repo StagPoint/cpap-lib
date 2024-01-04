@@ -19,7 +19,10 @@ using cpap_db;
 
 using cpaplib;
 
+using QuestPDF.Fluent;
 using QuestPDF.Helpers;
+using QuestPDF.Infrastructure;
+using QuestPDF.Previewer;
 
 namespace cpap_app.Views;
 
@@ -39,7 +42,7 @@ public partial class HistoryView : UserControl
 		InitializeComponent();
 
 		AddHandler( GraphEvents.DisplayedRangeChangedEvent, OnGraphDisplayedRangeChanged );
-		AddHandler( TimeSelection.TimeSelectedEvent, OnDaySelected  );
+		AddHandler( TimeSelection.TimeSelectedEvent,        OnDaySelected );
 	}
 
 	#endregion
@@ -74,16 +77,16 @@ public partial class HistoryView : UserControl
 		var ignoredSignals = new[]
 		{
 			SignalNames.FlowRate,
-			SignalNames.EPAP, 
-			SignalNames.MaskPressureLow, 
-			SignalNames.MaskPressure, 
-			SignalNames.AHI, 
+			SignalNames.EPAP,
+			SignalNames.MaskPressureLow,
+			SignalNames.MaskPressure,
+			SignalNames.AHI,
 			SignalNames.SleepStages,
 			SignalNames.Movement,
 		};
 
 		const string sql = "SELECT DISTINCT signal.Name, signal.UnitOfMeasurement, signal.MinValue, signal.MaxValue FROM signal";
-		
+
 		using var store = StorageService.Connect();
 		StorageService.CreateMapping<SignalNamesAndUnits>();
 
@@ -100,7 +103,7 @@ public partial class HistoryView : UserControl
 			var signalDefaults = signalNamesAndUnits.FirstOrDefault( x => x.Name == config.SignalName );
 			Debug.Assert( signalDefaults != null, nameof( signalDefaults ) + " != null" );
 
-			var units = signalDefaults.UnitOfMeasurement ?? "";
+			var units = signalDefaults.UnitOfMeasurement;
 
 			double? minValue = config.AxisMinValue;
 			double? maxValue = config.AxisMaxValue;
@@ -128,7 +131,7 @@ public partial class HistoryView : UserControl
 
 			Graphs.Children.Add( graph );
 		}
-		
+
 		foreach( var control in Graphs.Children )
 		{
 			if( control is HistoryGraphBase graph )
@@ -146,14 +149,14 @@ public partial class HistoryView : UserControl
 	{
 		CurrentDateSelection.Text = $"{e.DateTime:D}";
 	}
-	
+
 	private void DateRangeCombo_SelectionChanged( object? sender, SelectionChangedEventArgs e )
 	{
 		if( sender is not ComboBox combo )
 		{
 			return;
 		}
-		
+
 		if( combo.SelectedItem is ComboBoxItem { Tag: string value } )
 		{
 			using var store = StorageService.Connect();
@@ -163,7 +166,7 @@ public partial class HistoryView : UserControl
 			{
 				return;
 			}
-			
+
 			var lastAvailableDate = store.GetMostRecentStoredDate( profileID );
 			if( lastAvailableDate <= DateHelper.UnixEpoch )
 			{
@@ -188,13 +191,13 @@ public partial class HistoryView : UserControl
 			}
 		}
 	}
-	
+
 	private void RefreshDateRange_OnClick( object? sender, RoutedEventArgs e )
 	{
 		DateRangeCombo.SelectedIndex = DateRangeCombo.ItemCount - 1;
 		DataContext                  = BuildDataContext();
 	}
-	
+
 	private void OnGraphDisplayedRangeChanged( object? sender, DateTimeRangeRoutedEventArgs e )
 	{
 		foreach( var graph in _charts )
@@ -204,7 +207,7 @@ public partial class HistoryView : UserControl
 				graph.UpdateVisibleRange( e.StartTime, e.EndTime );
 			}
 		}
-		
+
 		ResetRenderTimer();
 	}
 
@@ -217,7 +220,7 @@ public partial class HistoryView : UserControl
 		_renderTimer ??= new DispatcherTimer( TimeSpan.FromSeconds( 0.25 ), DispatcherPriority.Default, ( _, _ ) =>
 		{
 			_renderTimer!.Stop();
-			
+
 			foreach( var control in _charts )
 			{
 				control.RenderGraph( true );
@@ -227,7 +230,7 @@ public partial class HistoryView : UserControl
 		_renderTimer.Stop();
 		_renderTimer.Start();
 	}
-	
+
 	private HistoryViewModel BuildDataContext()
 	{
 		var start     = RangeStart.SelectedDate ?? DateTime.Today.AddDays( -90 );
@@ -238,7 +241,7 @@ public partial class HistoryView : UserControl
 	}
 
 	#endregion
-	
+
 	#region Nested types
 
 	private class SignalNamesAndUnits
@@ -248,11 +251,11 @@ public partial class HistoryView : UserControl
 		public double MinValue          { get; set; }
 		public double MaxValue          { get; set; }
 	}
-	
+
 	#endregion
-	
-	#region Printing 
-	
+
+	#region Printing
+
 	private void PrintReport_OnClick( object? sender, RoutedEventArgs e )
 	{
 		if( sender is Button button )
@@ -260,12 +263,12 @@ public partial class HistoryView : UserControl
 			button.ContextFlyout!.ShowAt( button );
 		}
 	}
-	
+
 	private void PrintToPDF( object? sender, RoutedEventArgs e )
 	{
 		throw new NotImplementedException();
 	}
-	
+
 	private void PrintToJPG( object? sender, RoutedEventArgs e )
 	{
 		throw new NotImplementedException();
@@ -273,12 +276,86 @@ public partial class HistoryView : UserControl
 
 	private void PrintToPreviewer( object? sender, RoutedEventArgs e )
 	{
-		var chart = _charts[ 0 ];
-		var size  = new PixelSize( (int)PageSizes.Letter.Width * 4, (int)chart.Bounds.Height );
+		var profile   = UserProfileStore.GetActiveUserProfile();
+		var graphSize = new PixelSize( 1280, 180 );
+
+		var pdfDocument = Document.Create( document =>
+		{
+			document.Page( page =>
+			{
+				page.Size( PageSizes.A4 );
+				page.PageColor( Colors.White );
+				page.DefaultTextStyle( x => x.FontSize( 8 ).FontFamily( Fonts.SegoeUI ) );
+
+				page.Content().Column( container =>
+				{
+					foreach( var chart in _charts )
+					{
+						container.Item().Table( table =>
+						{
+							table.ColumnsDefinition( columns =>
+							{
+								columns.ConstantColumn( 20 );
+								columns.RelativeColumn();
+							} );
+
+							table.Cell()
+							     .Element( GraphTitle )
+							     .Text( chart.GraphTitle.Text )
+							     .SemiBold()
+							     .FontColor( Colors.Grey.Darken3 );
+							
+							var imageStream = chart.RenderGraphToBitmap( graphSize );
+							table.Cell().PaddingRight( 8 ).AlignMiddle().Image( imageStream ).FitWidth();
+						} );
+					}
+					
+					page.Footer()
+					    .AlignCenter()
+					    .Table( table =>
+					    {
+						    table.ColumnsDefinition( columns =>
+						    {
+							    columns.RelativeColumn();
+							    columns.RelativeColumn( 3 );
+							    columns.RelativeColumn();
+						    } );
+					
+						    table.Cell()
+						         .Text( x =>
+						         {
+							         x.Span( "Page " );
+							         x.CurrentPageNumber();
+							         x.Span( " of " );
+							         x.TotalPages();
+						         } );
+					
+						    table.Cell()
+						         .AlignCenter()
+						         .Text( $"Printed on {DateTime.Today:D} at {DateTime.Now:t}" );
+					
+						    table.Cell()
+						         .AlignRight()
+						         .Text( $"User Profile: {profile.UserName}" );
+					    } );
+				} );
+			} );
+		} );
+			
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+		pdfDocument.ShowInPreviewerAsync();
+#pragma warning restore CS4014
+
+		return;
 		
-		var image = _charts[ 0 ].PrintToBitmap( size, new Vector( 128, 128 ) );
+		static IContainer GraphTitle( IContainer container )
+		{
+			return container
+			       .RotateLeft()
+			       .AlignCenter()
+			       .AlignBottom();
+		}
 	}
 
 	#endregion
 }
-

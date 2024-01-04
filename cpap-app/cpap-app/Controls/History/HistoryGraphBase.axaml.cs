@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Drawing.Imaging;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -537,43 +538,28 @@ public partial class HistoryGraphBase : UserControl
 		Chart.Configuration.AxesChangedEventEnabled = true;
 	}
 
-	public MemoryStream PrintToBitmap( PixelSize pageSize, Vector dpi )
+	public MemoryStream RenderGraphToBitmap( PixelSize pageSize )
 	{
-		return null;
+		var filename = @"D:\Temp\TestRender.png";
+		File.Delete( filename );
+
+		var chartBounds = Chart.Bounds;
 		
-		// var filename = @"D:\Temp\TestRender.png";
-		// File.Delete( filename );
-		//
-		// var renderBitmap = new RenderTargetBitmap( pageSize, dpi );
-		//
-		// var random = Random.Shared.Next( 0, 16 );
-		//
-		// var savedBackground = this.Background;
-		// this.Background = new SolidColorBrush( DataColors.GetDataColor( random++ ) );
-		//
-		// // Ensure that the chart has a print-friendly style applied
-		// Chart.Plot.Style( new CustomChartStyle( DataColors.GetDataColor( random++ ).ToDrawingColor(), DataColors.GetDataColor( random++ ).ToDrawingColor(), DataColors.GetDataColor( random++ ).ToDrawingColor(), DataColors.GetDataColor( random++ ).ToDrawingColor() ) );
-		// Chart.Plot.Render( false );
-		// Chart.Render( false );
-		//
-		// InvalidateVisual();
-		//
-		// renderBitmap.Render( this );
-		//
-		// var stream = new MemoryStream();
-		// renderBitmap.Save( stream );
-		// renderBitmap.Save( filename );
-		//
-		// // Restore the previous display style 
-		// // Chart.Plot.Style( _chartStyle );
-		// // Chart.Refresh();
-		// // this.Background = savedBackground;
-		//
-		// Process process = new Process();
-		// process.StartInfo = new ProcessStartInfo( filename ) { UseShellExecute = true };
-		// process.Start();
-		//
-		// return stream;
+		// Ensure that the chart has a print-friendly style applied
+		Chart.Plot.Style( CustomChartStyle.ChartPrintStyle );
+		
+		// Render the graph to an in-memory bitmap
+		var chartBitmap = Chart.Plot.Render( pageSize.Width, pageSize.Height, false, 2 );
+		
+		// Restore the previous display style 
+		Chart.Plot.Style( _chartStyle );
+
+		var stream = new MemoryStream();
+		chartBitmap.Save( stream, ImageFormat.Png );
+
+		stream.Position = 0;
+
+		return stream;
 	}
 
 	#endregion
