@@ -11,6 +11,12 @@ namespace cpap_app.Styling;
 
 public class CustomChartStyle : ScottPlot.Styles.Default
 {
+	#region Static fields
+
+	public static readonly CustomChartStyle ChartPrintStyle = new CustomChartStyle( Color.Black, Color.White, Color.Black, Color.Gray.MultiplyAlpha( 0.5f ) );
+	
+	#endregion 
+	
 	#region Public properties 
 	
 	public override Color FrameColor            { get; }
@@ -29,7 +35,28 @@ public class CustomChartStyle : ScottPlot.Styles.Default
 	
 	#endregion 
 	
-	#region Constructor 
+	#region Constructor
+
+	public CustomChartStyle( Color foreground, Color background, Color borderColor, Color gridLineColor )
+	{
+		var fontName = FontManager.Current.DefaultFontFamily.Name;
+		
+		FigureBackgroundColor = background;
+		DataBackgroundColor   = background;
+			
+		FrameColor     = borderColor;
+		AxisLabelColor = foreground;
+		TitleFontColor = foreground;
+		TickLabelColor = foreground;
+
+		GridLineColor  = gridLineColor.MultiplyAlpha( 0.35f );
+		TickMajorColor = gridLineColor;
+		TickMinorColor = gridLineColor;
+
+		TickLabelFontName = fontName;
+		AxisLabelFontName = fontName;
+		TitleFontName     = fontName;
+	}
 	
 	public CustomChartStyle( IBrush foreground, IBrush background, IBrush borderColor, IBrush gridLineColor )
 	{

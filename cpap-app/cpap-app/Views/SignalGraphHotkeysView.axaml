@@ -18,14 +18,14 @@
                 <RowDefinition />
                 <RowDefinition />
             </Grid.RowDefinitions>
-            <TextBlock Grid.Column="0" Grid.Row="0" Text="Left-Click and Drag" Classes="Header" />
+            <TextBlock Grid.Column="0" Grid.Row="0" Text="Left-Button and Drag" Classes="Header" />
             <TextBlock Grid.Column="1" Grid.Row="0" Text="Select region (ESC to cancel selection)" />
 
-            <TextBlock Grid.Column="0" Grid.Row="1" Text="Shift and Left-Click" Classes="Header" />
-            <TextBlock Grid.Column="1" Grid.Row="1" Text="Zoom in to 3 minute window around click position" />
+            <TextBlock Grid.Column="0" Grid.Row="1" Text="Right-Button and Drag" Classes="Header" />
+            <TextBlock Grid.Column="1" Grid.Row="1" Text="Pan left or right" />
 
-            <TextBlock Grid.Column="0" Grid.Row="2" Text="Right-Click and Drag" Classes="Header" />
-            <TextBlock Grid.Column="1" Grid.Row="2" Text="Pan left or right" />
+            <TextBlock Grid.Column="0" Grid.Row="2" Text="Shift and Left-Click" Classes="Header" />
+            <TextBlock Grid.Column="1" Grid.Row="2" Text="Zoom in to 3 minute window around click position" />
 
             <TextBlock Grid.Column="0" Grid.Row="3" Text="Control and Scroll Wheel" Classes="Header" />
             <TextBlock Grid.Column="1" Grid.Row="3" Text="Zoom in or out (depending on direction of wheel scroll)" />
@@ -55,10 +55,10 @@
             <TextBlock Grid.Column="1" Grid.Row="3" Text="Pan right one page"/>
             
             <TextBlock Grid.Column="0" Grid.Row="4" Text="Up Arrow Key" Classes="Header"/>
-            <TextBlock Grid.Column="1" Grid.Row="4" Text="Zoom in"/>
+            <TextBlock Grid.Column="1" Grid.Row="4" Text="Zoom in (also works with Plus key)"/>
             
             <TextBlock Grid.Column="0" Grid.Row="5" Text="Down Arrow Key" Classes="Header"/>
-            <TextBlock Grid.Column="1" Grid.Row="5" Text="Zoom out"/>
+            <TextBlock Grid.Column="1" Grid.Row="5" Text="Zoom out (also works with Minus key)"/>
             
             <TextBlock Grid.Column="0" Grid.Row="6" Text="Left Arrow Key" Classes="Header"/>
             <TextBlock Grid.Column="1" Grid.Row="6" Text="Pan left (hold Shift first to increase speed)"/>
@@ -79,6 +79,9 @@
 
             <TextBlock Grid.Column="0" Grid.Row="1" Text="ESC Key" Classes="Header" />
             <TextBlock Grid.Column="1" Grid.Row="1" Text="Cancel any active mouse selection" />
+
+            <TextBlock Grid.Column="0" Grid.Row="2" Text="1 to 9" Classes="Header" />
+            <TextBlock Grid.Column="1" Grid.Row="2" Text="Zoom in (number of minutes visible is same as pressed key)" />
 
         </Grid>
     </StackPanel>

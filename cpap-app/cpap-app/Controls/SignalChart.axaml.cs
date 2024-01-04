@@ -314,6 +314,7 @@ public partial class SignalChart : UserControl
 				if( _interactionMode == GraphInteractionMode.Selecting )
 				{
 					CancelSelectionMode();
+					args.Handled = true;
 				}
 				break;
 			}
@@ -326,15 +327,46 @@ public partial class SignalChart : UserControl
 					{
 						case GraphInteractionMode.Selecting:
 							AddAnnotationForCurrentSelection();
-							break;
+							args.Handled = true;
+						break;
 						case GraphInteractionMode.None when _selectionStartTime > 0:
 							_selectionEndTime = _selectionStartTime;
 							AddAnnotationForCurrentSelection();
-							break;
+							args.Handled = true;
+						break;
 					}
+
 				}
 				break;
 			}
+		}
+
+		if( args.Key is >= Key.D0 and <= Key.D9 )
+		{
+			int windowLength = 60 * ((args.Key == Key.D0) ? 10 : (int)args.Key - (int)Key.D0);
+			var axisLimits   = Chart.Plot.GetAxisLimits();
+			var startTime    = axisLimits.XMin;
+			var endTime      = axisLimits.XMax;
+			var midPoint     = startTime + (endTime - startTime) * 0.5f;
+
+			startTime = midPoint - windowLength * 0.5f;
+			endTime   = startTime + windowLength;
+
+			if( startTime < 0 )
+			{
+				startTime = 0;
+				endTime   = windowLength;
+			}
+			else if( endTime > axisLimits.XMax )
+			{
+				endTime   = axisLimits.XMax;
+				startTime = endTime - windowLength;
+			}
+
+			ZoomTo( startTime, endTime );
+			RenderGraph( false );
+
+			args.Handled = true;
 		}
 	}
 	

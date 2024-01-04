@@ -259,6 +259,33 @@ public partial class EventGraph : UserControl
 				break;
 			}
 		}
+		
+		if( args.Key is >= Key.D0 and <= Key.D9 )
+		{
+			int windowLength = 60 * ((args.Key == Key.D0) ? 10 : (int)args.Key - (int)Key.D0);
+
+			var range  = _rightOccluder!.X1 - _leftOccluder!.X2;
+			var center = _leftOccluder.X2 + range * 0.5;
+
+			var left  = center - windowLength * 0.5f;
+			var right = left + windowLength;
+
+			if( left < 0 )
+			{
+				left = 0;
+				right   = windowLength;
+			}
+			else if( right > _rightOccluder.X2 )
+			{
+				right = _rightOccluder.X2;
+				left  = right - windowLength;
+			}
+
+			UpdateVisibleRange( left, right );
+			OnAxesChanged( this, EventArgs.Empty );
+
+			args.Handled = true;
+		}
 	}
 	
 	protected override void OnPropertyChanged( AvaloniaPropertyChangedEventArgs change )

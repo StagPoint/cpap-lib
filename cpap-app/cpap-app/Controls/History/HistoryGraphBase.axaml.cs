@@ -13,6 +13,7 @@ using Avalonia.Media;
 using Avalonia.Media.Imaging;
 
 using cpap_app.Events;
+using cpap_app.Helpers;
 using cpap_app.Styling;
 using cpap_app.ViewModels;
 using cpap_app.Views;
@@ -538,18 +539,41 @@ public partial class HistoryGraphBase : UserControl
 
 	public MemoryStream PrintToBitmap( PixelSize pageSize, Vector dpi )
 	{
-		var renderBitmap = new RenderTargetBitmap( pageSize, dpi );
-
-		// var wtf = Chart.Plot.Render( pageSize.Width, pageSize.Height );
-		// wtf.Save( @"D:\Temp\TestRender.jpg" );
+		return null;
 		
-		renderBitmap.Render( this );
-
-		var stream = new MemoryStream();
-		renderBitmap.Save( stream );
-		renderBitmap.Save( @"D:\Temp\TestRender.png" );
-
-		return stream;
+		// var filename = @"D:\Temp\TestRender.png";
+		// File.Delete( filename );
+		//
+		// var renderBitmap = new RenderTargetBitmap( pageSize, dpi );
+		//
+		// var random = Random.Shared.Next( 0, 16 );
+		//
+		// var savedBackground = this.Background;
+		// this.Background = new SolidColorBrush( DataColors.GetDataColor( random++ ) );
+		//
+		// // Ensure that the chart has a print-friendly style applied
+		// Chart.Plot.Style( new CustomChartStyle( DataColors.GetDataColor( random++ ).ToDrawingColor(), DataColors.GetDataColor( random++ ).ToDrawingColor(), DataColors.GetDataColor( random++ ).ToDrawingColor(), DataColors.GetDataColor( random++ ).ToDrawingColor() ) );
+		// Chart.Plot.Render( false );
+		// Chart.Render( false );
+		//
+		// InvalidateVisual();
+		//
+		// renderBitmap.Render( this );
+		//
+		// var stream = new MemoryStream();
+		// renderBitmap.Save( stream );
+		// renderBitmap.Save( filename );
+		//
+		// // Restore the previous display style 
+		// // Chart.Plot.Style( _chartStyle );
+		// // Chart.Refresh();
+		// // this.Background = savedBackground;
+		//
+		// Process process = new Process();
+		// process.StartInfo = new ProcessStartInfo( filename ) { UseShellExecute = true };
+		// process.Start();
+		//
+		// return stream;
 	}
 
 	#endregion
