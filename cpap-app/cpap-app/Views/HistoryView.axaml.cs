@@ -303,8 +303,15 @@ public partial class HistoryView : UserControl
 
 		var activeUser  = UserProfileStore.GetActiveUserProfile();
 		var pdfDocument = CreatePrintDocument();
-
-		pdfDocument.GenerateImages( index => $"{saveFilePath}-{index}.jpg", ImageGenerationSettings.Default );
+		
+		var imageGenerationSettings = new ImageGenerationSettings
+		{
+			ImageFormat             = ImageFormat.Jpeg, 
+			ImageCompressionQuality = ImageCompressionQuality.Best,
+			RasterDpi               = 288 * 2,
+		};
+		
+		pdfDocument.GenerateImages( index => $"{saveFilePath}-{index}.jpg", imageGenerationSettings );
 
 		Process process = new Process();
 		process.StartInfo = new ProcessStartInfo( saveFolder ) { UseShellExecute = true };
@@ -322,19 +329,26 @@ public partial class HistoryView : UserControl
 
 	private Document CreatePrintDocument()
 	{
+		var pageWidth  = PageSizes.Letter.Width;
+		
 		var profile   = UserProfileStore.GetActiveUserProfile();
-		var graphSize = new PixelSize( 1280, 180 );
+		var graphSize = new PixelSize( (int)(pageWidth * 2), 200 );
 
 		var pdfDocument = Document.Create( document =>
 		{
 			document.Page( page =>
 			{
-				page.Size( PageSizes.A4 );
+				page.Size( PageSizes.Letter );
 				page.Margin( 8 );
 				page.PageColor( Colors.White );
 				page.DefaultTextStyle( x => x.FontSize( 8 ).FontFamily( Fonts.SegoeUI ) );
 
-				page.Header().AlignCenter().PaddingBottom( 8 ).Text( $"Historical Trends for {RangeStart.SelectedDate:d} to {RangeEnd.SelectedDate:d}" ).FontSize( 12 );
+				page
+					.Header()
+					.AlignCenter()
+					.PaddingBottom( 8 )
+					.Text( $"Historical Trends for {RangeStart.SelectedDate:d} to {RangeEnd.SelectedDate:d}" )
+					.FontSize( 12 );
 
 				page.Content().Column( container =>
 				{
@@ -354,7 +368,7 @@ public partial class HistoryView : UserControl
 							     .SemiBold()
 							     .FontColor( Colors.Grey.Darken3 );
 							
-							var imageStream = chart.RenderGraphToBitmap( graphSize );
+							using var imageStream = chart.RenderGraphToBitmap( graphSize );
 							table.Cell().PaddingRight( 8 ).AlignMiddle().Image( imageStream ).FitWidth();
 						} );
 					}
@@ -369,6 +383,23 @@ public partial class HistoryView : UserControl
 							    columns.RelativeColumn( 3 );
 							    columns.RelativeColumn();
 						    } );
+
+						    table
+							    .Cell()
+							    .ColumnSpan( 3 )
+							    .AlignCenter()
+							    .PaddingBottom( 4 )
+							    .Row( legendContainer =>
+							    {
+								    legendContainer.Spacing( 4 );
+								    
+								    legendContainer.AutoItem().Text( "Legend: " ).SemiBold();
+
+								    legendContainer.AutoItem().Border( 1 ).Background( DataColors.GetLightThemeColor( 0 ).ToHex() ).PaddingHorizontal( 4 ).AlignMiddle().Text( "Maximum " ).FontSize( 6 ).FontColor( Colors.White );
+								    legendContainer.AutoItem().Border( 1 ).Background( DataColors.GetLightThemeColor( 1 ).ToHex() ).PaddingHorizontal( 4 ).AlignMiddle().Text( "95th Percentile" ).FontSize( 6 ).FontColor( Colors.White );
+								    legendContainer.AutoItem().Border( 1 ).Background( DataColors.GetLightThemeColor( 2 ).ToHex() ).PaddingHorizontal( 4 ).AlignMiddle().Text( "Median" ).FontSize( 6 ).FontColor( Colors.White );
+								    legendContainer.AutoItem().Border( 1 ).Background( DataColors.GetLightThemeColor( 3 ).ToHex() ).PaddingHorizontal( 4 ).AlignMiddle().Text( "Minimum" ).FontSize( 6 ).FontColor( Colors.White );
+							    });
 					
 						    table.Cell()
 						         .Text( x =>

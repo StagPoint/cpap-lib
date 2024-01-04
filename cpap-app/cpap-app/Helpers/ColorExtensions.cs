@@ -6,6 +6,18 @@ namespace cpap_app.Helpers;
 
 public static class ColorExtensions
 {
+	public static string ToHex( this System.Drawing.Color c )
+		=> $"#{c.A:X2}{c.R:X2}{c.G:X2}{c.B:X2}";
+
+	public static string ToRGB( this System.Drawing.Color c )
+		=> $"RGB({c.R},{c.G},{c.B})";
+	
+	public static string ToHex( this Avalonia.Media.Color c )
+		=> $"#{c.A:X2}{c.R:X2}{c.G:X2}{c.B:X2}";
+
+	public static string ToRGB( this Avalonia.Media.Color c )
+		=> $"RGB({c.R},{c.G},{c.B})";
+	
 	public static Color2 ToColor2( this System.Drawing.Color color )
 	{
 		return new Color2( color.R, color.G, color.B, color.A );

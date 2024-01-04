@@ -549,7 +549,7 @@ public partial class HistoryGraphBase : UserControl
 		Chart.Plot.Style( CustomChartStyle.ChartPrintStyle );
 		
 		// Render the graph to an in-memory bitmap
-		var chartBitmap = Chart.Plot.Render( pageSize.Width, pageSize.Height, false, 2 );
+		using var chartBitmap = Chart.Plot.Render( pageSize.Width, pageSize.Height, false, 4 );
 		
 		// Restore the previous display style 
 		Chart.Plot.Style( _chartStyle );
@@ -557,8 +557,6 @@ public partial class HistoryGraphBase : UserControl
 		var stream = new MemoryStream();
 		chartBitmap.Save( stream, ImageFormat.Png );
 		
-		chartBitmap.Dispose();
-
 		stream.Position = 0;
 
 		return stream;
