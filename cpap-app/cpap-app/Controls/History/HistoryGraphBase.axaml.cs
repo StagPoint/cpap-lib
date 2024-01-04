@@ -556,6 +556,8 @@ public partial class HistoryGraphBase : UserControl
 
 		var stream = new MemoryStream();
 		chartBitmap.Save( stream, ImageFormat.Png );
+		
+		chartBitmap.Dispose();
 
 		stream.Position = 0;
 

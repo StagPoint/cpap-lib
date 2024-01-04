@@ -2,17 +2,21 @@
 using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
+using System.Threading.Tasks;
 
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Interactivity;
+using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 
 using cpap_app.Configuration;
 using cpap_app.Controls;
 using cpap_app.Events;
 using cpap_app.Helpers;
+using cpap_app.Printing;
 using cpap_app.ViewModels;
 
 using cpap_db;
@@ -264,17 +268,59 @@ public partial class HistoryView : UserControl
 		}
 	}
 
-	private void PrintToPDF( object? sender, RoutedEventArgs e )
+	private async void PrintToPDF( object? sender, RoutedEventArgs e )
 	{
-		throw new NotImplementedException();
+		var saveFilePath = await GetSaveFilename( "PDF" );
+		if( string.IsNullOrEmpty( saveFilePath ) )
+		{
+			return;
+		}
+
+		var activeUser  = UserProfileStore.GetActiveUserProfile();
+		var pdfDocument = CreatePrintDocument();
+
+		pdfDocument.GeneratePdf( saveFilePath );
+
+		Process process = new Process();
+		process.StartInfo = new ProcessStartInfo( saveFilePath ) { UseShellExecute = true };
+		process.Start();
 	}
 
-	private void PrintToJPG( object? sender, RoutedEventArgs e )
+	private async void PrintToJPG( object? sender, RoutedEventArgs e )
 	{
-		throw new NotImplementedException();
+		var saveFilePath = await GetSaveFilename( "JPG" );
+		if( string.IsNullOrEmpty( saveFilePath ) )
+		{
+			return;
+		}
+
+		var saveFolder = Path.GetDirectoryName( saveFilePath );
+		Debug.Assert( saveFolder != null, nameof( saveFolder ) + " != null" );
+
+		var baseFilename = Path.GetFileNameWithoutExtension( saveFilePath );
+
+		saveFilePath = Path.Combine( saveFolder, baseFilename );
+
+		var activeUser  = UserProfileStore.GetActiveUserProfile();
+		var pdfDocument = CreatePrintDocument();
+
+		pdfDocument.GenerateImages( index => $"{saveFilePath}-{index}.jpg", ImageGenerationSettings.Default );
+
+		Process process = new Process();
+		process.StartInfo = new ProcessStartInfo( saveFolder ) { UseShellExecute = true };
+		process.Start();
 	}
 
 	private void PrintToPreviewer( object? sender, RoutedEventArgs e )
+	{
+		var pdfDocument = CreatePrintDocument();
+		
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+		pdfDocument.ShowInPreviewerAsync();
+#pragma warning restore CS4014
+	}
+
+	private Document CreatePrintDocument()
 	{
 		var profile   = UserProfileStore.GetActiveUserProfile();
 		var graphSize = new PixelSize( 1280, 180 );
@@ -284,8 +330,11 @@ public partial class HistoryView : UserControl
 			document.Page( page =>
 			{
 				page.Size( PageSizes.A4 );
+				page.Margin( 8 );
 				page.PageColor( Colors.White );
 				page.DefaultTextStyle( x => x.FontSize( 8 ).FontFamily( Fonts.SegoeUI ) );
+
+				page.Header().AlignCenter().PaddingBottom( 8 ).Text( $"Historical Trends for {RangeStart.SelectedDate:d} to {RangeEnd.SelectedDate:d}" ).FontSize( 12 );
 
 				page.Content().Column( container =>
 				{
@@ -295,7 +344,7 @@ public partial class HistoryView : UserControl
 						{
 							table.ColumnsDefinition( columns =>
 							{
-								columns.ConstantColumn( 20 );
+								columns.ConstantColumn( 18 );
 								columns.RelativeColumn();
 							} );
 
@@ -341,20 +390,37 @@ public partial class HistoryView : UserControl
 				} );
 			} );
 		} );
-			
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-		pdfDocument.ShowInPreviewerAsync();
-#pragma warning restore CS4014
 
-		return;
+		return pdfDocument;
 		
 		static IContainer GraphTitle( IContainer container )
 		{
 			return container
+			       .PaddingBottom( 8 )
 			       .RotateLeft()
 			       .AlignCenter()
 			       .AlignBottom();
 		}
+	}
+
+	private async Task<string?> GetSaveFilename( string format )
+	{
+		var sp = TopLevel.GetTopLevel( this )?.StorageProvider;
+		if( sp == null )
+		{
+			throw new Exception( $"Failed to get a reference to a {nameof( IStorageProvider )} instance." );
+		}
+
+		var filePicker = await sp.SaveFilePickerAsync( new FilePickerSaveOptions()
+		{
+			Title                  = $"Save to {format} file",
+			SuggestedStartLocation = null,
+			SuggestedFileName      = $"Trends {RangeStart.SelectedDate:yyyy-MM-dd} to {RangeEnd.SelectedDate:yyyy-MM-dd}.{format}",
+			DefaultExtension       = format,
+			ShowOverwritePrompt    = true,
+		} );
+
+		return filePicker?.Path.LocalPath;
 	}
 
 	#endregion
