@@ -402,6 +402,14 @@ public partial class HistoryView : UserControl
 							    });
 					
 						    table.Cell()
+						         .AlignRight()
+						         .Text( $"User Profile: {profile.UserName}" );
+					
+						    table.Cell()
+						         .AlignCenter()
+						         .Text( $"Printed on {DateTime.Today:D} at {DateTime.Now:t}" );
+
+						    table.Cell()
 						         .Text( x =>
 						         {
 							         x.Span( "Page " );
@@ -409,14 +417,6 @@ public partial class HistoryView : UserControl
 							         x.Span( " of " );
 							         x.TotalPages();
 						         } );
-					
-						    table.Cell()
-						         .AlignCenter()
-						         .Text( $"Printed on {DateTime.Today:D} at {DateTime.Now:t}" );
-					
-						    table.Cell()
-						         .AlignRight()
-						         .Text( $"User Profile: {profile.UserName}" );
 					    } );
 				} );
 			} );

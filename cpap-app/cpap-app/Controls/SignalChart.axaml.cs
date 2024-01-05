@@ -339,6 +339,14 @@ public partial class SignalChart : UserControl
 				}
 				break;
 			}
+			case Key.R:
+			{
+				Chart.Plot.SetAxisLimitsX( 0, _day.TotalTimeSpan.TotalSeconds );
+				Chart.Refresh( true );
+				
+				args.Handled = true;
+				break;
+			}
 		}
 
 		if( args.Key is >= Key.D0 and <= Key.D9 )

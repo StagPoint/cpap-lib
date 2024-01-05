@@ -59,6 +59,7 @@ public class StatisticsDocument: IDocument
 
 			page.Footer()
 			    .AlignCenter()
+			    .Padding( 8 )
 			    .Table( table =>
 			    {
 				    table.ColumnsDefinition( columns =>
@@ -68,7 +69,15 @@ public class StatisticsDocument: IDocument
 					    columns.RelativeColumn();
 				    } );
 
-				    table.Cell().Column( 1 )
+				    table.Cell()
+				         .AlignRight()
+				         .Text( $"User Profile: {Profile.UserName}" );
+
+				    table.Cell()
+				         .AlignCenter()
+				         .Text( $"Printed on {DateTime.Today:D} at {DateTime.Now:t}" );
+
+				    table.Cell()
 				         .Text( x =>
 				         {
 					         x.Span( "Page " );
@@ -76,14 +85,6 @@ public class StatisticsDocument: IDocument
 					         x.Span( " of " );
 					         x.TotalPages();
 				         } );
-
-				    table.Cell().Column( 2 )
-				         .AlignCenter()
-				         .Text( $"Printed on {DateTime.Today:D} at {DateTime.Now:t}" );
-
-				    table.Cell().Column( 3 )
-				         .AlignRight()
-				         .Text( $"User Profile: {Profile.UserName}" );
 			    } );
 		} );
 	}
