@@ -24,7 +24,6 @@ using cpap_db;
 using cpaplib;
 
 using QuestPDF.Fluent;
-using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using QuestPDF.Previewer;
 
@@ -276,8 +275,12 @@ public partial class HistoryView : UserControl
 			return;
 		}
 
-		var activeUser  = UserProfileStore.GetActiveUserProfile();
-		var pdfDocument = CreatePrintDocument();
+		var pdfDocument = new HistoryDocument(
+			UserProfileStore.GetActiveUserProfile(),
+			_charts,
+			RangeStart.SelectedDate!.Value,
+			RangeEnd.SelectedDate!.Value
+		);
 
 		pdfDocument.GeneratePdf( saveFilePath );
 
@@ -301,9 +304,13 @@ public partial class HistoryView : UserControl
 
 		saveFilePath = Path.Combine( saveFolder, baseFilename );
 
-		var activeUser  = UserProfileStore.GetActiveUserProfile();
-		var pdfDocument = CreatePrintDocument();
-		
+		var pdfDocument = new HistoryDocument(
+			UserProfileStore.GetActiveUserProfile(),
+			_charts,
+			RangeStart.SelectedDate!.Value,
+			RangeEnd.SelectedDate!.Value
+		);
+
 		var imageGenerationSettings = new ImageGenerationSettings
 		{
 			ImageFormat             = ImageFormat.Jpeg, 
@@ -320,118 +327,16 @@ public partial class HistoryView : UserControl
 
 	private void PrintToPreviewer( object? sender, RoutedEventArgs e )
 	{
-		var pdfDocument = CreatePrintDocument();
+		var pdfDocument = new HistoryDocument(
+			UserProfileStore.GetActiveUserProfile(),
+			_charts,
+			RangeStart.SelectedDate!.Value,
+			RangeEnd.SelectedDate!.Value
+		);
 		
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
 		pdfDocument.ShowInPreviewerAsync();
 #pragma warning restore CS4014
-	}
-
-	private Document CreatePrintDocument()
-	{
-		var pageWidth  = PageSizes.Letter.Width;
-		
-		var profile   = UserProfileStore.GetActiveUserProfile();
-		var graphSize = new PixelSize( (int)(pageWidth * 2), 200 );
-
-		var pdfDocument = Document.Create( document =>
-		{
-			document.Page( page =>
-			{
-				page.Size( PageSizes.Letter );
-				page.Margin( 8 );
-				page.PageColor( Colors.White );
-				page.DefaultTextStyle( x => x.FontSize( 8 ).FontFamily( Fonts.SegoeUI ) );
-
-				page
-					.Header()
-					.AlignCenter()
-					.PaddingBottom( 8 )
-					.Text( $"Historical Trends for {RangeStart.SelectedDate:d} to {RangeEnd.SelectedDate:d}" )
-					.FontSize( 12 );
-
-				page.Content().Column( container =>
-				{
-					foreach( var chart in _charts )
-					{
-						container.Item().Table( table =>
-						{
-							table.ColumnsDefinition( columns =>
-							{
-								columns.ConstantColumn( 18 );
-								columns.RelativeColumn();
-							} );
-
-							table.Cell()
-							     .Element( GraphTitle )
-							     .Text( chart.GraphTitle.Text )
-							     .SemiBold()
-							     .FontColor( Colors.Grey.Darken3 );
-							
-							using var imageStream = chart.RenderGraphToBitmap( graphSize );
-							table.Cell().PaddingRight( 8 ).AlignMiddle().Image( imageStream ).FitWidth();
-						} );
-					}
-					
-					page.Footer()
-					    .AlignCenter()
-					    .Table( table =>
-					    {
-						    table.ColumnsDefinition( columns =>
-						    {
-							    columns.RelativeColumn();
-							    columns.RelativeColumn( 3 );
-							    columns.RelativeColumn();
-						    } );
-
-						    table
-							    .Cell()
-							    .ColumnSpan( 3 )
-							    .AlignCenter()
-							    .PaddingBottom( 4 )
-							    .Row( legendContainer =>
-							    {
-								    legendContainer.Spacing( 4 );
-								    
-								    legendContainer.AutoItem().Text( "Legend: " ).SemiBold();
-
-								    legendContainer.AutoItem().Border( 1 ).Background( DataColors.GetLightThemeColor( 0 ).ToHex() ).PaddingHorizontal( 4 ).AlignMiddle().Text( "Maximum " ).FontSize( 6 ).FontColor( Colors.White );
-								    legendContainer.AutoItem().Border( 1 ).Background( DataColors.GetLightThemeColor( 1 ).ToHex() ).PaddingHorizontal( 4 ).AlignMiddle().Text( "95th Percentile" ).FontSize( 6 ).FontColor( Colors.White );
-								    legendContainer.AutoItem().Border( 1 ).Background( DataColors.GetLightThemeColor( 2 ).ToHex() ).PaddingHorizontal( 4 ).AlignMiddle().Text( "Median" ).FontSize( 6 ).FontColor( Colors.White );
-								    legendContainer.AutoItem().Border( 1 ).Background( DataColors.GetLightThemeColor( 3 ).ToHex() ).PaddingHorizontal( 4 ).AlignMiddle().Text( "Minimum" ).FontSize( 6 ).FontColor( Colors.White );
-							    });
-					
-						    table.Cell()
-						         .AlignRight()
-						         .Text( $"User Profile: {profile.UserName}" );
-					
-						    table.Cell()
-						         .AlignCenter()
-						         .Text( $"Printed on {DateTime.Today:D} at {DateTime.Now:t}" );
-
-						    table.Cell()
-						         .Text( x =>
-						         {
-							         x.Span( "Page " );
-							         x.CurrentPageNumber();
-							         x.Span( " of " );
-							         x.TotalPages();
-						         } );
-					    } );
-				} );
-			} );
-		} );
-
-		return pdfDocument;
-		
-		static IContainer GraphTitle( IContainer container )
-		{
-			return container
-			       .PaddingBottom( 8 )
-			       .RotateLeft()
-			       .AlignCenter()
-			       .AlignBottom();
-		}
 	}
 
 	private async Task<string?> GetSaveFilename( string format )

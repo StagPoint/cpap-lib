@@ -147,7 +147,7 @@ public partial class EventGraph : UserControl
 		}
 	}
 
-	protected override void OnKeyDown( KeyEventArgs args )
+	protected override async void OnKeyDown( KeyEventArgs args )
 	{
 		if( _day == null )
 		{
@@ -263,6 +263,52 @@ public partial class EventGraph : UserControl
 				UpdateVisibleRange( 0, _day.TotalTimeSpan.TotalSeconds );
 				OnAxesChanged( this, EventArgs.Empty );
 				
+				args.Handled = true;
+				break;
+			}
+			case Key.D:
+			{
+				Debug.Assert( _leftOccluder != null,  nameof( _leftOccluder ) + " != null" );
+				Debug.Assert( _rightOccluder != null, nameof( _rightOccluder ) + " != null" );
+				
+				var windowLengthInSeconds = await InputDialog.InputInteger(
+					TopLevel.GetTopLevel( this )!,
+					"Specify Viewport Duration",
+					"Enter number of minutes",
+					30,
+					1,
+					60 * 60
+				);
+
+				if( windowLengthInSeconds == null )
+				{
+					return;
+				}
+
+				// Convert duration to seconds 
+				windowLengthInSeconds *= 60;
+
+				var startTime  = _leftOccluder.X2;
+				var endTime    = _rightOccluder.X1;
+				var midPoint   = startTime + (endTime - startTime) * 0.5f;
+
+				startTime = midPoint - windowLengthInSeconds.Value * 0.5f;
+				endTime   = startTime + windowLengthInSeconds.Value;
+
+				if( startTime < 0 )
+				{
+					startTime = 0;
+					endTime   = windowLengthInSeconds.Value;
+				}
+				else if( endTime > _rightOccluder.X2 )
+				{
+					endTime   = _rightOccluder.X2;
+					startTime = endTime - windowLengthInSeconds.Value;
+				}
+
+				UpdateVisibleRange( startTime, endTime );
+				OnAxesChanged( this, EventArgs.Empty );
+
 				args.Handled = true;
 				break;
 			}

@@ -18,7 +18,7 @@ using FontWeight = Avalonia.Media.FontWeight;
 
 namespace cpap_app.Printing;
 
-public class StatisticsDocument: IDocument
+public class StatisticsDocument : IDocument
 {
 	public UserProfile                Profile   { get; set; }
 	public TherapyStatisticsViewModel ViewModel { get; set; }
@@ -70,7 +70,7 @@ public class StatisticsDocument: IDocument
 				    } );
 
 				    table.Cell()
-				         .AlignRight()
+				         .AlignLeft()
 				         .Text( $"User Profile: {Profile.UserName}" );
 
 				    table.Cell()
@@ -78,6 +78,7 @@ public class StatisticsDocument: IDocument
 				         .Text( $"Printed on {DateTime.Today:D} at {DateTime.Now:t}" );
 
 				    table.Cell()
+				         .AlignRight()
 				         .Text( x =>
 				         {
 					         x.Span( "Page " );

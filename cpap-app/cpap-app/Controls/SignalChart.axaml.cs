@@ -12,6 +12,7 @@ using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Styling;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 
 using cpap_app.Configuration;
 using cpap_app.Converters;
@@ -195,7 +196,7 @@ public partial class SignalChart : UserControl
 		}
 	}
 
-	protected override void OnKeyDown( KeyEventArgs args )
+	protected override async void OnKeyDown( KeyEventArgs args )
 	{
 		Debug.Assert( ChartConfiguration != null, nameof( ChartConfiguration ) + " != null" );
 		if( _day == null )
@@ -347,6 +348,50 @@ public partial class SignalChart : UserControl
 				args.Handled = true;
 				break;
 			}
+			case Key.D:
+			{
+				var windowLengthInSeconds = await InputDialog.InputInteger(
+					TopLevel.GetTopLevel( this )!,
+					"Specify Viewport Duration",
+					"Enter number of minutes",
+					30,
+					1,
+					60 * 60
+				);
+
+				if( windowLengthInSeconds == null )
+				{
+					return;
+				}
+
+				// Convert duration to seconds 
+				windowLengthInSeconds *= 60;
+				
+				var axisLimits = Chart.Plot.GetAxisLimits();
+				var startTime  = axisLimits.XMin;
+				var endTime    = axisLimits.XMax;
+				var midPoint   = startTime + (endTime - startTime) * 0.5f;
+
+				startTime = midPoint - windowLengthInSeconds.Value * 0.5f;
+				endTime   = startTime + windowLengthInSeconds.Value;
+
+				if( startTime < 0 )
+				{
+					startTime = 0;
+					endTime   = windowLengthInSeconds.Value;
+				}
+				else if( endTime > axisLimits.XMax )
+				{
+					endTime   = axisLimits.XMax;
+					startTime = endTime - windowLengthInSeconds.Value;
+				}
+
+				ZoomTo( startTime, endTime );
+				Chart.Refresh( false );
+
+				args.Handled = true;
+				break;
+			}
 		}
 
 		if( args.Key is >= Key.D0 and <= Key.D9 )
@@ -372,7 +417,7 @@ public partial class SignalChart : UserControl
 			}
 
 			ZoomTo( startTime, endTime );
-			RenderGraph( false );
+			Chart.Refresh( false );
 
 			args.Handled = true;
 		}
