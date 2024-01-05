@@ -5,16 +5,16 @@ namespace cpaplib
 	public static class SignalNames
 	{
 		public const string FlowRate        = "Flow Rate";
+		public const string Pressure        = "Pressure";
+		public const string LeakRate        = "Leak Rate";
+		public const string FlowLimit       = "Flow Limit";
 		public const string MaskPressure    = "Mask Pressure";
 		public const string MaskPressureLow = "Mask Pressure (Low)";
-		public const string Pressure        = "Pressure";
 		public const string EPAP            = "EPAP";
-		public const string LeakRate        = "Leak Rate";
 		public const string TotalLeak       = "Total Leak";
 		public const string TidalVolume     = "Tidal Volume";
 		public const string MinuteVent      = "Minute Vent";
 		public const string TargetVent      = "Target Ventilation";
-		public const string FlowLimit       = "Flow Limit";
 		public const string RespirationRate = "Respiration Rate";
 		public const string InspirationTime = "Inspiration Time";
 		public const string ExpirationTime  = "Expiration Time";

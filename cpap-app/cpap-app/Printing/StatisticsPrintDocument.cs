@@ -18,12 +18,12 @@ using FontWeight = Avalonia.Media.FontWeight;
 
 namespace cpap_app.Printing;
 
-public class StatisticsDocument : IDocument
+public class StatisticsPrintDocument : IDocument
 {
 	public UserProfile                Profile   { get; set; }
 	public TherapyStatisticsViewModel ViewModel { get; set; }
 
-	public StatisticsDocument( UserProfile user, TherapyStatisticsViewModel viewModel )
+	public StatisticsPrintDocument( UserProfile user, TherapyStatisticsViewModel viewModel )
 	{
 		Profile   = user;
 		ViewModel = viewModel;

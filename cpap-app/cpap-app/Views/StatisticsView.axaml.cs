@@ -65,7 +65,7 @@ public partial class StatisticsView : UserControl
 		{
 			Headers = groups,
 		};
-		
+
 		viewModel.Sections.Add( BuildCpapSection( groups ) );
 
 		var showPulseOximetry = history.Days.Any( day => day.Sessions.Any( session => session.SourceType == SourceType.PulseOximetry ) );
@@ -77,11 +77,11 @@ public partial class StatisticsView : UserControl
 		return viewModel;
 	}
 
-	private TherapyStatisticsSectionViewModel BuildOximetrySection( List<GroupedDays> groups )
+	private static TherapyStatisticsSectionViewModel BuildOximetrySection( List<GroupedDays> groups )
 	{
 		var section = new TherapyStatisticsSectionViewModel
 		{
-			Label   = "Pulse Oximetry Statistics",
+			Label = "Pulse Oximetry Statistics",
 		};
 
 		section.Groups.Add( BuildOxygenStats( groups ) );
@@ -90,7 +90,7 @@ public partial class StatisticsView : UserControl
 		return section;
 	}
 
-	private TherapyStatisticsGroupViewModel BuildOxygenStats( List<GroupedDays> groups )
+	private static TherapyStatisticsGroupViewModel BuildOxygenStats( List<GroupedDays> groups )
 	{
 		var group = new TherapyStatisticsGroupViewModel
 		{
@@ -98,10 +98,11 @@ public partial class StatisticsView : UserControl
 		};
 
 		group.Items.Add( CompileGroupAverages( "Average SpO2", groups, GetStatisticsValue( SignalNames.SpO2, stats => stats.Average ), value => $"{value:F0}%" ) );
+		group.Items.Add( CompileGroupAverages( "Min SpO2",     groups, GetStatisticsValue( SignalNames.SpO2, stats => stats.Minimum ), value => $"{value:F0}%" ) );
 
-		group.Items.Add( CompileGroupAverages( "Min SpO2",                   groups, GetStatisticsValue( SignalNames.SpO2, stats => stats.Minimum ), value => $"{value:F0}%" ) );
-		group.Items.Add( CompileGroupAverages( "Desaturation Index",         groups, GetEventIndex( EventType.Desaturation ),                        value => $"{value:F2}" ) );
-		group.Items.Add( CompileGroupAverages( "Avg. Desaturation Duration", groups, GetAverageEventDuration( EventType.Desaturation ),              FormatTimespan ) );
+		group.Items.Add( CompileGroupAverages( "Desaturation Index (ODI3)",  groups, GetEventIndex( EventType.Desaturation ),           value => $"{value:F2}" ) );
+		group.Items.Add( CompileGroupAverages( "Total Desaturations",        groups, GetEventCount( EventType.Desaturation ),           value => $"{value:N0}" ) );
+		group.Items.Add( CompileGroupAverages( "Avg. Desaturation Duration", groups, GetAverageEventDuration( EventType.Desaturation ), FormatTimespan ) );
 		group.Items.Add( CompileGroupMaximums( "Max. Desaturation Duration", groups, GetMaxEventDuration( EventType.Desaturation ), FormatTimespan ) );
 
 		group.Items.Add( CompileGroupAverages( "Hypoxemia Index",         groups, GetEventIndex( EventType.Hypoxemia ),           value => $"{value:F2}" ) );
@@ -113,7 +114,7 @@ public partial class StatisticsView : UserControl
 		return group;
 	}
 
-	private TherapyStatisticsGroupViewModel BuildPulseStats( List<GroupedDays> groups )
+	private static TherapyStatisticsGroupViewModel BuildPulseStats( List<GroupedDays> groups )
 	{
 		var group = new TherapyStatisticsGroupViewModel
 		{
@@ -134,7 +135,7 @@ public partial class StatisticsView : UserControl
 	{
 		var section = new TherapyStatisticsSectionViewModel
 		{
-			Label   = "CPAP Statistics",
+			Label = "CPAP Statistics",
 		};
 
 		section.Groups.Add( BuildCPAPUsageStats( groups ) );
@@ -310,6 +311,14 @@ public partial class StatisticsView : UserControl
 			}
 
 			return totalEventDuration / day.TotalSleepTime.TotalSeconds;
+		};
+	}
+
+	private static Func<DailyReport, double> GetEventCount( EventType eventType )
+	{
+		return day =>
+		{
+			return day.Events.Count( x => x.Type == eventType );
 		};
 	}
 
@@ -645,12 +654,16 @@ public partial class StatisticsView : UserControl
 			throw new Exception( $"Failed to get a reference to a {nameof( IStorageProvider )} instance." );
 		}
 
+		var activeUser        = UserProfileStore.GetActiveUserProfile();
+		var lastAvailableDate = StorageService.Connect().GetMostRecentStoredDate( activeUser.UserProfileID );
+
 		var filePicker = await sp.SaveFilePickerAsync( new FilePickerSaveOptions()
 		{
 			Title                  = $"Save to {format} file",
 			SuggestedStartLocation = null,
 			DefaultExtension       = format,
 			ShowOverwritePrompt    = true,
+			SuggestedFileName      = $"Statistics {lastAvailableDate:yyyy-MM-dd}",
 		} );
 
 		return filePicker?.Path.LocalPath;
@@ -672,7 +685,7 @@ public partial class StatisticsView : UserControl
 		}
 
 		var activeUser  = UserProfileStore.GetActiveUserProfile();
-		var pdfDocument = new StatisticsDocument( activeUser, viewModel );
+		var pdfDocument = new StatisticsPrintDocument( activeUser, viewModel );
 
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
 		pdfDocument.ShowInPreviewerAsync();
@@ -700,7 +713,7 @@ public partial class StatisticsView : UserControl
 		saveFilePath = Path.Combine( saveFolder, baseFilename );
 
 		var activeUser  = UserProfileStore.GetActiveUserProfile();
-		var pdfDocument = new StatisticsDocument( activeUser, viewModel );
+		var pdfDocument = new StatisticsPrintDocument( activeUser, viewModel );
 
 		pdfDocument.GenerateImages( index => $"{saveFilePath}-{index}.jpg" );
 
@@ -723,7 +736,7 @@ public partial class StatisticsView : UserControl
 		}
 
 		var activeUser  = UserProfileStore.GetActiveUserProfile();
-		var pdfDocument = new StatisticsDocument( activeUser, viewModel );
+		var pdfDocument = new StatisticsPrintDocument( activeUser, viewModel );
 
 		pdfDocument.GeneratePdf( saveFilePath );
 

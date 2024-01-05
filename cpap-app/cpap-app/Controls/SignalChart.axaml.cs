@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing.Imaging;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 
 using Avalonia;
@@ -2318,6 +2320,29 @@ public partial class SignalChart : UserControl
 		);
 
 		return (float)Math.Ceiling( formatted.Width );
+	}
+
+	public MemoryStream RenderGraphToBitmap( PixelSize pageSize )
+	{
+		// Ensure that the chart has a print-friendly style applied
+		Chart.Plot.Style( CustomChartStyle.ChartPrintStyle );
+		
+		var lastQualityMode = Chart.Configuration.Quality;
+		Chart.Configuration.Quality = ScottPlot.Control.QualityMode.High;
+
+		// Render the graph to an in-memory bitmap
+		using var chartBitmap = Chart.Plot.Render( pageSize.Width, pageSize.Height, false, 4 );
+		
+		// Restore the previous display style 
+		Chart.Configuration.Quality = lastQualityMode;
+		Chart.Plot.Style( _chartStyle );
+
+		var stream = new MemoryStream();
+		chartBitmap.Save( stream, ImageFormat.Png );
+		
+		stream.Position = 0;
+
+		return stream;
 	}
 
 	#endregion 

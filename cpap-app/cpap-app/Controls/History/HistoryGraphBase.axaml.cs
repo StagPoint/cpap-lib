@@ -540,18 +540,17 @@ public partial class HistoryGraphBase : UserControl
 
 	public MemoryStream RenderGraphToBitmap( PixelSize pageSize )
 	{
-		var filename = @"D:\Temp\TestRender.png";
-		File.Delete( filename );
-
-		var chartBounds = Chart.Bounds;
-		
 		// Ensure that the chart has a print-friendly style applied
 		Chart.Plot.Style( CustomChartStyle.ChartPrintStyle );
 		
+		var lastQualityMode = Chart.Configuration.Quality;
+		Chart.Configuration.Quality = ScottPlot.Control.QualityMode.High;
+
 		// Render the graph to an in-memory bitmap
 		using var chartBitmap = Chart.Plot.Render( pageSize.Width, pageSize.Height, false, 4 );
 		
 		// Restore the previous display style 
+		Chart.Configuration.Quality = lastQualityMode;
 		Chart.Plot.Style( _chartStyle );
 
 		var stream = new MemoryStream();

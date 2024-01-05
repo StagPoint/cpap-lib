@@ -14,7 +14,7 @@ public class OximetryEventGeneratorConfig
 {
 	public double EventScanDelay { get; set; } = 300;
 
-	public double HypoxemiaThreshold       { get; set; } = 88;
+	public double HypoxemiaThreshold       { get; set; } = 89;
 	public double HypoxemiaMinimumDuration { get; set; } = 8;
 
 	public double DesaturationThreshold       { get; set; } = 3;

@@ -1,21 +1,29 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 
 using cpap_app.Configuration;
 using cpap_app.Controls;
 using cpap_app.Events;
+using cpap_app.Printing;
 using cpap_app.ViewModels;
 
 using cpap_db;
 
 using cpaplib;
+
+using QuestPDF.Fluent;
+using QuestPDF.Infrastructure;
+using QuestPDF.Previewer;
 
 namespace cpap_app.Views;
 
@@ -462,7 +470,7 @@ public partial class SignalChartContainer : UserControl
 		}
 
 		_charts.Add( chart );
-		_charts.Sort( ChartOrderComparison);
+		_charts.Sort( ChartOrderComparison );
 
 		InsertInto( config.IsPinned ? PinnedCharts.Children : UnPinnedCharts.Children, chart );
 	}
@@ -530,6 +538,127 @@ public partial class SignalChartContainer : UserControl
 			
 			chart.ChartConfiguration = configurations.First( x => x.ID == chart.ChartConfiguration.ID );
 		}
+	}
+
+	#endregion
+	
+	#region Print functions 
+	
+	private void PrintReport_OnClick( object? sender, RoutedEventArgs e )
+	{
+		if( sender is Button button )
+		{
+			button.ContextFlyout!.ShowAt( button );
+		}
+	}
+	
+	private async void PrintToPDF( object? sender, RoutedEventArgs e )
+	{
+		if( DataContext is not DailyReport day )
+		{
+			throw new InvalidOperationException();
+		}
+		
+		var saveFilePath = await GetSaveFilename( "PDF" );
+		if( string.IsNullOrEmpty( saveFilePath ) )
+		{
+			return;
+		}
+
+		var pdfDocument = new DailyReportPrintDocument(
+			UserProfileStore.GetActiveUserProfile(),
+			_charts,
+			day
+		);
+
+		pdfDocument.GeneratePdf( saveFilePath );
+
+		Process process = new Process();
+		process.StartInfo = new ProcessStartInfo( saveFilePath ) { UseShellExecute = true };
+		process.Start();
+	}
+	
+	private async void PrintToJPG( object? sender, RoutedEventArgs e )
+	{
+		if( DataContext is not DailyReport day )
+		{
+			throw new InvalidOperationException();
+		}
+		
+		var saveFilePath = await GetSaveFilename( "JPG" );
+		if( string.IsNullOrEmpty( saveFilePath ) )
+		{
+			return;
+		}
+
+		var saveFolder = Path.GetDirectoryName( saveFilePath );
+		Debug.Assert( saveFolder != null, nameof( saveFolder ) + " != null" );
+
+		var baseFilename = Path.GetFileNameWithoutExtension( saveFilePath );
+
+		saveFilePath = Path.Combine( saveFolder, baseFilename );
+
+		var pdfDocument = new DailyReportPrintDocument(
+			UserProfileStore.GetActiveUserProfile(),
+			_charts,
+			day
+		);
+
+		var imageGenerationSettings = new ImageGenerationSettings
+		{
+			ImageFormat             = ImageFormat.Jpeg, 
+			ImageCompressionQuality = ImageCompressionQuality.Best,
+			RasterDpi               = 288 * 2,
+		};
+		
+		pdfDocument.GenerateImages( index => $"{saveFilePath}-{index}.jpg", imageGenerationSettings );
+
+		Process process = new Process();
+		process.StartInfo = new ProcessStartInfo( saveFolder ) { UseShellExecute = true };
+		process.Start();
+	}
+	
+	private void PrintToPreviewer( object? sender, RoutedEventArgs e )
+	{
+		if( DataContext is not DailyReport day )
+		{
+			throw new InvalidOperationException();
+		}
+		
+		var pdfDocument = new DailyReportPrintDocument(
+			UserProfileStore.GetActiveUserProfile(),
+			_charts,
+			day
+		);
+
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+		pdfDocument.ShowInPreviewerAsync();
+#pragma warning restore CS4014
+	}
+
+	private async Task<string?> GetSaveFilename( string format )
+	{
+		if( DataContext is not DailyReport day )
+		{
+			throw new InvalidOperationException();
+		}
+		
+		var sp = TopLevel.GetTopLevel( this )?.StorageProvider;
+		if( sp == null )
+		{
+			throw new Exception( $"Failed to get a reference to a {nameof( IStorageProvider )} instance." );
+		}
+
+		var filePicker = await sp.SaveFilePickerAsync( new FilePickerSaveOptions()
+		{
+			Title                  = $"Save to {format} file",
+			SuggestedStartLocation = null,
+			SuggestedFileName      = $"Daily Report {day.ReportDate.Date:yyyy-MM-dd}.{format}",
+			DefaultExtension       = format,
+			ShowOverwritePrompt    = true,
+		} );
+
+		return filePicker?.Path.LocalPath;
 	}
 
 	#endregion

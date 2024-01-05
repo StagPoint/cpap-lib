@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 
 using Avalonia;
-using Avalonia.Media;
 
 using cpap_app.Controls;
 using cpap_app.Helpers;
@@ -16,18 +14,17 @@ using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 
 using Colors = QuestPDF.Helpers.Colors;
-using FontWeight = Avalonia.Media.FontWeight;
 
 namespace cpap_app.Printing;
 
-public class HistoryDocument : IDocument
+public class HistoryPrintDocument : IDocument
 {
 	public UserProfile            Profile    { get; set; }
 	public List<HistoryGraphBase> Graphs     { get; set; }
 	public DateTime               RangeStart { get; set; }
 	public DateTime               RangeEnd   { get; set; }
 
-	public HistoryDocument( UserProfile user, List<HistoryGraphBase> graphs, DateTime rangeStart, DateTime rangeEnd )
+	public HistoryPrintDocument( UserProfile user, List<HistoryGraphBase> graphs, DateTime rangeStart, DateTime rangeEnd )
 	{
 		Profile    = user;
 		Graphs     = graphs;
@@ -39,7 +36,6 @@ public class HistoryDocument : IDocument
 	{
 		var pageWidth = PageSizes.Letter.Width;
 
-		var profile   = UserProfileStore.GetActiveUserProfile();
 		var graphSize = new PixelSize( (int)(pageWidth * 2), 200 );
 
 		document.Page( page =>
@@ -110,7 +106,7 @@ public class HistoryDocument : IDocument
 
 					    table.Cell()
 					         .AlignLeft()
-					         .Text( $"User Profile: {profile.UserName}" );
+					         .Text( $"User Profile: {Profile.UserName}" );
 
 					    table.Cell()
 					         .AlignCenter()

@@ -179,7 +179,7 @@ public partial class HistoryView : UserControl
 			// If a set number of days is defined, show only that number of days (from the last available date)
 			if( int.TryParse( value, out int amount ) )
 			{
-				RangeStart.SelectedDate = lastAvailableDate.AddDays( -amount );
+				RangeStart.SelectedDate = lastAvailableDate.AddDays( -amount + 1 );
 				RangeEnd.SelectedDate   = lastAvailableDate;
 
 				DataContext = BuildDataContext();
@@ -275,7 +275,7 @@ public partial class HistoryView : UserControl
 			return;
 		}
 
-		var pdfDocument = new HistoryDocument(
+		var pdfDocument = new HistoryPrintDocument(
 			UserProfileStore.GetActiveUserProfile(),
 			_charts,
 			RangeStart.SelectedDate!.Value,
@@ -304,7 +304,7 @@ public partial class HistoryView : UserControl
 
 		saveFilePath = Path.Combine( saveFolder, baseFilename );
 
-		var pdfDocument = new HistoryDocument(
+		var pdfDocument = new HistoryPrintDocument(
 			UserProfileStore.GetActiveUserProfile(),
 			_charts,
 			RangeStart.SelectedDate!.Value,
@@ -327,7 +327,7 @@ public partial class HistoryView : UserControl
 
 	private void PrintToPreviewer( object? sender, RoutedEventArgs e )
 	{
-		var pdfDocument = new HistoryDocument(
+		var pdfDocument = new HistoryPrintDocument(
 			UserProfileStore.GetActiveUserProfile(),
 			_charts,
 			RangeStart.SelectedDate!.Value,
