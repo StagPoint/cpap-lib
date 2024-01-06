@@ -2,7 +2,7 @@
 
 public class ApplicationSettings
 {
-	public ApplicationThemeType Theme               { get; set; }
+	public ApplicationThemeType Theme { get; set; }
 }
 
 public class StoredNumericSetting

@@ -58,16 +58,16 @@ public class DailyReportPrintDocument : IDocument
 				{
 					outerTable.ColumnsDefinition( columns =>
 					{
-						columns.ConstantColumn( 200 );
+						columns.ConstantColumn( 180 );
 						columns.RelativeColumn();
 					} );
-
+					
 					outerTable.Cell().Border( 0.5f ).BorderColor( Colors.Grey.Lighten2 ).PaddingHorizontal( 2 ).Column( detailsColumn =>
 					{
 						ComposeGeneralInfo( detailsColumn );
 						ComposeEventSummary( detailsColumn );
 						ComposeStatistics( detailsColumn );
-						ComposeSettings( detailsColumn );
+						ComposeDeviceSettings( detailsColumn );
 					} );
 
 					outerTable.Cell().Column( graphColumn =>
@@ -150,12 +150,13 @@ public class DailyReportPrintDocument : IDocument
 		}
 	}
 
-	private void ComposeSettings( ColumnDescriptor column )
+	private void ComposeDeviceSettings( ColumnDescriptor column )
 	{
 		var viewModel = MachineSettingsViewModel.Generate( Day );
 
 		column
 			.Item()
+			.StopPaging()
 			.PaddingTop( 12 )
 			.PaddingBottom( 2 )
 			.Element( PrimaryColumnHeader )
@@ -173,8 +174,8 @@ public class DailyReportPrintDocument : IDocument
 			
 			foreach( var setting in viewModel.Settings )
 			{
-				indexTable.Cell().PaddingRight( 8 ).PaddingLeft( 2 ).Text( setting.Name );
-				indexTable.Cell().PaddingLeft( 2 ).Text( $"{setting.Value} {setting.Units}" );
+				indexTable.Cell().StopPaging().PaddingRight( 8 ).PaddingLeft( 2 ).Text( setting.Name );
+				indexTable.Cell().StopPaging().PaddingLeft( 2 ).Text( $"{setting.Value} {setting.Units}" );
 			}
 		});
 	}

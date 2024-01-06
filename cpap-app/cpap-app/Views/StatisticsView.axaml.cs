@@ -18,6 +18,7 @@ using cpap_db;
 using cpaplib;
 
 using QuestPDF.Fluent;
+using QuestPDF.Infrastructure;
 using QuestPDF.Previewer;
 
 using Path = System.IO.Path;
@@ -648,23 +649,35 @@ public partial class StatisticsView : UserControl
 
 	private async Task<string?> GetSaveFilename( string format )
 	{
+		var activeUser        = UserProfileStore.GetActiveUserProfile();
+		var lastAvailableDate = StorageService.Connect().GetMostRecentStoredDate( activeUser.UserProfileID );
+
 		var sp = TopLevel.GetTopLevel( this )?.StorageProvider;
 		if( sp == null )
 		{
 			throw new Exception( $"Failed to get a reference to a {nameof( IStorageProvider )} instance." );
 		}
+		
+		var myDocumentsFolder = Environment.GetFolderPath( Environment.SpecialFolder.MyDocuments );
+		var defaultFolder     = ApplicationSettingsStore.GetStringSetting( ApplicationSettingNames.PrintExportPath, myDocumentsFolder );
+		var startFolder       = await sp.TryGetFolderFromPathAsync( defaultFolder );
 
-		var activeUser        = UserProfileStore.GetActiveUserProfile();
-		var lastAvailableDate = StorageService.Connect().GetMostRecentStoredDate( activeUser.UserProfileID );
+		var suggestedFileName = $"Statistics {lastAvailableDate:yyyy-MM-dd}";
 
 		var filePicker = await sp.SaveFilePickerAsync( new FilePickerSaveOptions()
 		{
 			Title                  = $"Save to {format} file",
-			SuggestedStartLocation = null,
+			SuggestedStartLocation = startFolder,
+			SuggestedFileName      = suggestedFileName,
 			DefaultExtension       = format,
 			ShowOverwritePrompt    = true,
-			SuggestedFileName      = $"Statistics {lastAvailableDate:yyyy-MM-dd}",
 		} );
+
+		if( filePicker != null )
+		{
+			var newStartFolder = Path.GetDirectoryName( filePicker.Path.LocalPath );
+			ApplicationSettingsStore.SaveStringSetting( ApplicationSettingNames.PrintExportPath, newStartFolder );
+		}
 
 		return filePicker?.Path.LocalPath;
 	}
@@ -715,7 +728,14 @@ public partial class StatisticsView : UserControl
 		var activeUser  = UserProfileStore.GetActiveUserProfile();
 		var pdfDocument = new StatisticsPrintDocument( activeUser, viewModel );
 
-		pdfDocument.GenerateImages( index => $"{saveFilePath}-{index}.jpg" );
+		var imageGenerationSettings = new ImageGenerationSettings
+		{
+			ImageFormat             = ImageFormat.Jpeg, 
+			ImageCompressionQuality = ImageCompressionQuality.Best,
+			RasterDpi               = 288,
+		};
+		
+		pdfDocument.GenerateImages( index => $"{saveFilePath} Page {index + 1}.jpg", imageGenerationSettings );
 
 		Process process = new Process();
 		process.StartInfo = new ProcessStartInfo( saveFolder ) { UseShellExecute = true };

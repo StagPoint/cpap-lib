@@ -27,6 +27,8 @@ using QuestPDF.Fluent;
 using QuestPDF.Infrastructure;
 using QuestPDF.Previewer;
 
+using SettingNames = cpaplib.SettingNames;
+
 namespace cpap_app.Views;
 
 public partial class HistoryView : UserControl
@@ -317,8 +319,8 @@ public partial class HistoryView : UserControl
 			ImageCompressionQuality = ImageCompressionQuality.Best,
 			RasterDpi               = 288 * 2,
 		};
-		
-		pdfDocument.GenerateImages( index => $"{saveFilePath}-{index}.jpg", imageGenerationSettings );
+
+		pdfDocument.GenerateImages( index => $"{saveFilePath} Page {index + 1}.jpg", imageGenerationSettings );
 
 		Process process = new Process();
 		process.StartInfo = new ProcessStartInfo( saveFolder ) { UseShellExecute = true };
@@ -346,15 +348,27 @@ public partial class HistoryView : UserControl
 		{
 			throw new Exception( $"Failed to get a reference to a {nameof( IStorageProvider )} instance." );
 		}
+		
+		var myDocumentsFolder = Environment.GetFolderPath( Environment.SpecialFolder.MyDocuments );
+		var defaultFolder     = ApplicationSettingsStore.GetStringSetting( ApplicationSettingNames.PrintExportPath, myDocumentsFolder );
+		var startFolder       = await sp.TryGetFolderFromPathAsync( defaultFolder );
+
+		var suggestedFileName = $"Trends {RangeStart.SelectedDate:yyyy-MM-dd} to {RangeEnd.SelectedDate:yyyy-MM-dd}.{format}";
 
 		var filePicker = await sp.SaveFilePickerAsync( new FilePickerSaveOptions()
 		{
 			Title                  = $"Save to {format} file",
-			SuggestedStartLocation = null,
-			SuggestedFileName      = $"Trends {RangeStart.SelectedDate:yyyy-MM-dd} to {RangeEnd.SelectedDate:yyyy-MM-dd}.{format}",
+			SuggestedStartLocation = startFolder,
+			SuggestedFileName      = suggestedFileName,
 			DefaultExtension       = format,
 			ShowOverwritePrompt    = true,
 		} );
+
+		if( filePicker != null )
+		{
+			var newStartFolder = Path.GetDirectoryName( filePicker.Path.LocalPath );
+			ApplicationSettingsStore.SaveStringSetting( ApplicationSettingNames.PrintExportPath, newStartFolder );
+		}
 
 		return filePicker?.Path.LocalPath;
 	}

@@ -10,6 +10,11 @@ using cpap_db;
 
 namespace cpap_app.ViewModels;
 
+public static class ApplicationSettingNames
+{
+	public static readonly string PrintExportPath = "Print Export Path";
+}
+
 public class ApplicationSettingsStore
 {
 	static ApplicationSettingsStore()

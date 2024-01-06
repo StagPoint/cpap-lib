@@ -613,7 +613,7 @@ public partial class SignalChartContainer : UserControl
 			RasterDpi               = 288,
 		};
 		
-		pdfDocument.GenerateImages( index => $"{saveFilePath}-{index}.jpg", imageGenerationSettings );
+		pdfDocument.GenerateImages( index => $"{saveFilePath} Page {index + 1}.jpg", imageGenerationSettings );
 
 		Process process = new Process();
 		process.StartInfo = new ProcessStartInfo( saveFolder ) { UseShellExecute = true };
@@ -651,15 +651,27 @@ public partial class SignalChartContainer : UserControl
 		{
 			throw new Exception( $"Failed to get a reference to a {nameof( IStorageProvider )} instance." );
 		}
+		
+		var myDocumentsFolder = Environment.GetFolderPath( Environment.SpecialFolder.MyDocuments );
+		var defaultFolder     = ApplicationSettingsStore.GetStringSetting( ApplicationSettingNames.PrintExportPath, myDocumentsFolder );
+		var startFolder       = await sp.TryGetFolderFromPathAsync( defaultFolder );
+
+		var suggestedFileName = $"Daily Report {day.ReportDate.Date:yyyy-MM-dd}.{format}";
 
 		var filePicker = await sp.SaveFilePickerAsync( new FilePickerSaveOptions()
 		{
 			Title                  = $"Save to {format} file",
-			SuggestedStartLocation = null,
-			SuggestedFileName      = $"Daily Report {day.ReportDate.Date:yyyy-MM-dd}.{format}",
+			SuggestedStartLocation = startFolder,
+			SuggestedFileName      = suggestedFileName,
 			DefaultExtension       = format,
 			ShowOverwritePrompt    = true,
 		} );
+
+		if( filePicker != null )
+		{
+			var newStartFolder = Path.GetDirectoryName( filePicker.Path.LocalPath );
+			ApplicationSettingsStore.SaveStringSetting( ApplicationSettingNames.PrintExportPath, newStartFolder );
+		}
 
 		return filePicker?.Path.LocalPath;
 	}
