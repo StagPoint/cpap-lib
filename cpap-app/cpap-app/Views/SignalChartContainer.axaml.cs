@@ -608,7 +608,7 @@ public partial class SignalChartContainer : UserControl
 		{
 			ImageFormat             = ImageFormat.Jpeg, 
 			ImageCompressionQuality = ImageCompressionQuality.Best,
-			RasterDpi               = 288 * 2,
+			RasterDpi               = 288,
 		};
 		
 		pdfDocument.GenerateImages( index => $"{saveFilePath}-{index}.jpg", imageGenerationSettings );

@@ -12,9 +12,9 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
 using Avalonia.Styling;
 using Avalonia.Threading;
-using Avalonia.VisualTree;
 
 using cpap_app.Configuration;
 using cpap_app.Converters;
@@ -32,7 +32,6 @@ using ScottPlot.Plottable;
 
 using Annotation = cpaplib.Annotation;
 using Application = Avalonia.Application;
-using Brushes = Avalonia.Media.Brushes;
 using Color = System.Drawing.Color;
 using Point = Avalonia.Point;
 using Cursor = Avalonia.Input.Cursor;
@@ -2322,23 +2321,41 @@ public partial class SignalChart : UserControl
 		return (float)Math.Ceiling( formatted.Width );
 	}
 
-	public MemoryStream RenderGraphToBitmap( PixelSize pageSize )
+	public MemoryStream RenderGraphToBitmap( PixelSize renderSize )
 	{
 		// Ensure that the chart has a print-friendly style applied
 		Chart.Plot.Style( CustomChartStyle.ChartPrintStyle );
 		
+		// Ensure that the chart is rendered in high quality
 		var lastQualityMode = Chart.Configuration.Quality;
 		Chart.Configuration.Quality = ScottPlot.Control.QualityMode.High;
-
-		// Render the graph to an in-memory bitmap
-		using var chartBitmap = Chart.Plot.Render( pageSize.Width, pageSize.Height, false, 4 );
 		
-		// Restore the previous display style 
+		// Render the graph to an in-memory bitmap
+		using var chartBitmap = Chart.Plot.Render( renderSize.Width, renderSize.Height, false, 4 );
+
+		var stream = new MemoryStream();
+		chartBitmap.Save( stream, ImageFormat.Jpeg );
+
+		if( false )
+		{
+			var size      = Chart.Bounds.Size;
+			var pixelSize = new PixelSize( (int)size.Width, (int)size.Height );
+			var dpiVector = new Vector( 96, 96 );
+
+			using var renderBitmap = new RenderTargetBitmap( renderSize, dpiVector );
+			
+			Chart.Measure( size );
+			Chart.Arrange( new Rect( size ) );
+				
+			renderBitmap.Render( Chart );
+			renderBitmap.Save( stream );
+		}
+
+		// Restore the previous style 
 		Chart.Configuration.Quality = lastQualityMode;
 		Chart.Plot.Style( _chartStyle );
 
-		var stream = new MemoryStream();
-		chartBitmap.Save( stream, ImageFormat.Png );
+		//chartBitmap.Save( $@"D:\Temp\{Guid.NewGuid().ToString()}.png", ImageFormat.Png );
 		
 		stream.Position = 0;
 

@@ -11,10 +11,8 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
-using Avalonia.Media.Imaging;
 
 using cpap_app.Events;
-using cpap_app.Helpers;
 using cpap_app.Styling;
 using cpap_app.ViewModels;
 using cpap_app.Views;
@@ -25,8 +23,6 @@ using ScottPlot;
 using ScottPlot.Avalonia;
 using ScottPlot.Control;
 using ScottPlot.Plottable;
-
-using Color = System.Drawing.Color;
 
 namespace cpap_app.Controls;
 
