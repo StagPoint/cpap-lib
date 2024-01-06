@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing.Imaging;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 
 using Avalonia;
@@ -936,6 +938,33 @@ public partial class EventGraph : UserControl
 		);
 
 		return (float)Math.Ceiling( formatted.Width );
+	}
+
+	public MemoryStream RenderGraphToBitmap( PixelSize renderSize )
+	{
+		// Ensure that the chart has a print-friendly style applied
+		Chart.Plot.Style( CustomChartStyle.ChartPrintStyle );
+		
+		// Ensure that the chart is rendered in high quality
+		var lastQualityMode = Chart.Configuration.Quality;
+		Chart.Configuration.Quality = ScottPlot.Control.QualityMode.High;
+		
+		// Render the graph to an in-memory bitmap
+		using var chartBitmap = Chart.Plot.Render( renderSize.Width, renderSize.Height, false, 4 );
+
+		// Write the image to an in-memory stream 
+		var stream = new MemoryStream();
+		chartBitmap.Save( stream, ImageFormat.Jpeg );
+
+		// Restore the previous style 
+		Chart.Configuration.Quality = lastQualityMode;
+		Chart.Plot.Style( _chartStyle );
+
+		//chartBitmap.Save( $@"D:\Temp\{Guid.NewGuid().ToString()}.png", ImageFormat.Png );
+		
+		stream.Position = 0;
+
+		return stream;
 	}
 
 	#endregion

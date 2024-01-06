@@ -2333,23 +2333,9 @@ public partial class SignalChart : UserControl
 		// Render the graph to an in-memory bitmap
 		using var chartBitmap = Chart.Plot.Render( renderSize.Width, renderSize.Height, false, 4 );
 
+		// Write the image to an in-memory stream 
 		var stream = new MemoryStream();
 		chartBitmap.Save( stream, ImageFormat.Jpeg );
-
-		if( false )
-		{
-			var size      = Chart.Bounds.Size;
-			var pixelSize = new PixelSize( (int)size.Width, (int)size.Height );
-			var dpiVector = new Vector( 96, 96 );
-
-			using var renderBitmap = new RenderTargetBitmap( renderSize, dpiVector );
-			
-			Chart.Measure( size );
-			Chart.Arrange( new Rect( size ) );
-				
-			renderBitmap.Render( Chart );
-			renderBitmap.Save( stream );
-		}
 
 		// Restore the previous style 
 		Chart.Configuration.Quality = lastQualityMode;

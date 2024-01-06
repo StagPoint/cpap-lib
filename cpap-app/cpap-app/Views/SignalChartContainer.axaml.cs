@@ -567,6 +567,7 @@ public partial class SignalChartContainer : UserControl
 
 		var pdfDocument = new DailyReportPrintDocument(
 			UserProfileStore.GetActiveUserProfile(),
+			_eventGraph!,
 			_charts,
 			day
 		);
@@ -600,6 +601,7 @@ public partial class SignalChartContainer : UserControl
 
 		var pdfDocument = new DailyReportPrintDocument(
 			UserProfileStore.GetActiveUserProfile(),
+			_eventGraph!,
 			_charts,
 			day
 		);
@@ -627,6 +629,7 @@ public partial class SignalChartContainer : UserControl
 		
 		var pdfDocument = new DailyReportPrintDocument(
 			UserProfileStore.GetActiveUserProfile(),
+			_eventGraph!,
 			_charts,
 			day
 		);

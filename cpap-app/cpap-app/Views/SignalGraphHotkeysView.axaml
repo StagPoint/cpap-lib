@@ -73,6 +73,7 @@
                 <RowDefinition />
                 <RowDefinition />
                 <RowDefinition />
+                <RowDefinition />
             </Grid.RowDefinitions>
 
             <TextBlock Grid.Column="0" Grid.Row="0" Text="A Key" Classes="Header" />
@@ -89,6 +90,9 @@
 
             <TextBlock Grid.Column="0" Grid.Row="4" Text="1 to 9" Classes="Header" />
             <TextBlock Grid.Column="1" Grid.Row="4" Text="Zoom in (number of minutes visible is same as pressed key)" />
+
+            <TextBlock Grid.Column="0" Grid.Row="5" Text="CTRL-G" Classes="Header" />
+            <TextBlock Grid.Column="1" Grid.Row="5" Text="Zoom in to a specified time (entered via a dialog box)" />
 
         </Grid>
     </StackPanel>

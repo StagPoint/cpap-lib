@@ -112,7 +112,7 @@
                 <Expander.Header>
                     <StackPanel Orientation="Horizontal">
                         <fui:FontIcon Glyph="&#xE713;" FontSize="24" FontFamily="{DynamicResource SymbolThemeFontFamily}" FontWeight="Normal" FontStyle="Normal" Margin="0 0 10 0"/>
-                        <TextBlock Text="Settings" FontSize="16" Theme="{DynamicResource BodyStrongTextBlockStyle}"/>
+                        <TextBlock Text="Device Settings" FontSize="16" Theme="{DynamicResource BodyStrongTextBlockStyle}"/>
                     </StackPanel>
                 </Expander.Header>
                 <views:DailySettingsView DataContext="{Binding $parent[Control].DataContext, Mode=OneWay}" Name="DailySettingsView" />

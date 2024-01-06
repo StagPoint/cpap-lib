@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 using Avalonia;
 
 using cpap_app.Controls;
-using cpap_app.Converters;
 using cpap_app.Helpers;
 using cpap_app.ViewModels;
 
@@ -15,30 +15,28 @@ using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 
-using SQLite;
-
 using Colors = QuestPDF.Helpers.Colors;
 
 namespace cpap_app.Printing;
 
 public class DailyReportPrintDocument : IDocument
 {
-	public UserProfile       Profile { get; set; }
-	public List<SignalChart> Graphs  { get; set; }
-	public DailyReport       Day     { get; set; }
+	public UserProfile       Profile      { get; set; }
+	public EventGraph        EventGraph   { get; set; }
+	public List<SignalChart> SignalCharts { get; set; }
+	public DailyReport       Day          { get; set; }
 
-	public DailyReportPrintDocument( UserProfile user, List<SignalChart> charts, DailyReport day )
+	public DailyReportPrintDocument( UserProfile user, EventGraph eventGraph, List<SignalChart> charts, DailyReport day )
 	{
-		Profile = user;
-		Graphs  = charts;
-		Day     = day;
+		Profile      = user;
+		EventGraph   = eventGraph;
+		SignalCharts = charts;
+		Day          = day;
 	}
 	
 	public void Compose( IDocumentContainer document )
 	{
-		var pageWidth = PageSizes.Letter.Width;
-
-		var graphSize = new PixelSize( 1280, 180 );
+		var graphSize = new PixelSize( 1280, 200 );
 
 		document.Page( page =>
 		{
@@ -52,7 +50,7 @@ public class DailyReportPrintDocument : IDocument
 				.AlignCenter()
 				.PaddingBottom( 8 )
 				.Text( $"Detail View for {Day.ReportDate.Date:D}" )
-				.FontSize( 12 );
+				.FontSize( 10 );
 
 			page.Content().Column( container =>
 			{
@@ -64,35 +62,24 @@ public class DailyReportPrintDocument : IDocument
 						columns.RelativeColumn();
 					} );
 
-					outerTable.Cell().Border( 0.5f ).BorderColor( Colors.Grey.Lighten2 ).PaddingHorizontal( 4 ).Column( detailsColumn =>
+					outerTable.Cell().Border( 0.5f ).BorderColor( Colors.Grey.Lighten2 ).PaddingHorizontal( 2 ).Column( detailsColumn =>
 					{
 						ComposeGeneralInfo( detailsColumn );
 						ComposeEventSummary( detailsColumn );
 						ComposeStatistics( detailsColumn );
+						ComposeSettings( detailsColumn );
 					} );
 
 					outerTable.Cell().Column( graphColumn =>
 					{
-						foreach( var chart in Graphs )
+						ComposeSignalGraph( graphColumn, "Events", EventGraph.RenderGraphToBitmap( graphSize) );
+						
+						foreach( var chart in SignalCharts )
 						{
-							graphColumn.Item().Border( 0.5f ).BorderColor( Colors.Grey.Lighten2 ).Table( table =>
-							{
-								table.ColumnsDefinition( columns =>
-								{
-									columns.ConstantColumn( 18 );
-									columns.RelativeColumn();
-								} );
-
-								table.Cell()
-								     .Element( GraphTitle )
-								     .Text( chart.ChartLabel.Text )
-								     .FontSize( 8 )
-								     .SemiBold()
-								     .FontColor( Colors.Grey.Darken3 );
-
-								using var imageStream = chart.RenderGraphToBitmap( graphSize );
-								table.Cell().PaddingRight( 8 ).AlignMiddle().Image( imageStream ).FitWidth();
-							} );
+							using var imageStream = chart.RenderGraphToBitmap( graphSize );
+							var       graphLabel  = chart.ChartLabel.Text;
+							
+							ComposeSignalGraph( graphColumn, graphLabel, imageStream );
 						}
 					} );
 				} );
@@ -129,7 +116,28 @@ public class DailyReportPrintDocument : IDocument
 				    } );
 			} );
 		} );
+	}
+	
+	private static void ComposeSignalGraph( ColumnDescriptor container, string? label, Stream image )
+	{
+		container.Item().Border( 0.5f ).BorderColor( Colors.Grey.Lighten2 ).Table( table =>
+		{
+			table.ColumnsDefinition( columns =>
+			{
+				columns.ConstantColumn( 18 );
+				columns.RelativeColumn();
+			} );
 
+			table.Cell()
+			     .Element( GraphTitle )
+			     .Text( label )
+			     .FontSize( 8 )
+			     .SemiBold()
+			     .FontColor( Colors.Grey.Darken3 );
+
+			table.Cell().PaddingRight( 8 ).AlignMiddle().Image( image ).FitWidth();
+		} );
+		
 		return;
 
 		static IContainer GraphTitle( IContainer container )
@@ -142,14 +150,44 @@ public class DailyReportPrintDocument : IDocument
 		}
 	}
 
-	private void ComposeStatistics( ColumnDescriptor column )
+	private void ComposeSettings( ColumnDescriptor column )
 	{
+		var viewModel = MachineSettingsViewModel.Generate( Day );
+
 		column
 			.Item()
 			.PaddingTop( 12 )
 			.PaddingBottom( 2 )
-			.Background( Colors.Grey.Lighten2 )
-			.PaddingHorizontal( 2 )
+			.Element( PrimaryColumnHeader )
+			.Text( "Device Settings" )
+			.FontSize( 8 )
+			.SemiBold();
+		
+		column.Item().StopPaging().Table( indexTable =>
+		{
+			indexTable.ColumnsDefinition( columns =>
+			{
+				columns.RelativeColumn();
+				columns.RelativeColumn();
+			});
+			
+			foreach( var setting in viewModel.Settings )
+			{
+				indexTable.Cell().PaddingRight( 8 ).PaddingLeft( 2 ).Text( setting.Name );
+				indexTable.Cell().PaddingLeft( 2 ).Text( $"{setting.Value} {setting.Units}" );
+			}
+		});
+	}
+	
+	private void ComposeStatistics( ColumnDescriptor column )
+	{
+		var viewModel = new DailyStatisticsViewModel( Day );
+		
+		column
+			.Item()
+			.PaddingTop( 12 )
+			.PaddingBottom( 2 )
+			.Element( PrimaryColumnHeader )
 			.Text( "Statistics" )
 			.FontSize( 8 )
 			.SemiBold();
@@ -169,7 +207,7 @@ public class DailyReportPrintDocument : IDocument
 			table.Cell().Element( PrimaryColumnHeader ).Text( "Median" ).SemiBold();
 			table.Cell().Element( PrimaryColumnHeader ).Text( "95%" ).SemiBold();
 
-			foreach( var stat in Day.Statistics )
+			foreach( var stat in viewModel.Statistics )
 			{
 				table.Cell().PaddingLeft( 2 ).Text( stat.SignalName );
 				table.Cell().PaddingLeft( 2 ).Text( $"{stat.Minimum:F2}" );
@@ -186,8 +224,7 @@ public class DailyReportPrintDocument : IDocument
 		column
 			.Item()
 			.PaddingBottom( 2 )
-			.Background( Colors.Grey.Lighten2 )
-			.PaddingHorizontal( 2 )
+			.Element( PrimaryColumnHeader )
 			.Text( "Reported Events" )
 			.FontSize( 8 )
 			.SemiBold();
@@ -204,8 +241,8 @@ public class DailyReportPrintDocument : IDocument
 			foreach( var index in viewModel.Indexes )
 			{
 				indexTable.Cell().PaddingRight( 8 ).Text( index.Name ).SemiBold();
-				indexTable.Cell().Text( $"{index.IndexValue:F2}" ).SemiBold();
-				indexTable.Cell().Text( index.IndexValue > 0 ? $"{index.TotalTime:hh\\:mm\\:ss}" : "" ).SemiBold();
+				indexTable.Cell().PaddingLeft( 2 ).Text( $"{index.IndexValue:F2}" ).SemiBold();
+				indexTable.Cell().PaddingLeft( 2 ).Text( index.IndexValue > 0 ? $"{index.TotalTime:hh\\:mm\\:ss}" : "" ).SemiBold();
 			}
 		});
 
@@ -231,7 +268,7 @@ public class DailyReportPrintDocument : IDocument
 				table.Cell().PaddingLeft( 2 ).Text( NiceNames.Format( summary.Type.ToString() ) );
 				table.Cell().PaddingLeft( 2 ).Text( $"{summary.IndexValue:F2}" );
 				table.Cell().PaddingLeft( 2 ).Text( $"{summary.TotalCount:N0}" );
-				table.Cell().PaddingLeft( 2 ).Text( $"{summary.TotalTime:hh\\:mm\\:ss}" );
+				table.Cell().PaddingLeft( 2 ).Text( summary.TotalTime.TotalSeconds > 0 ? $"{summary.TotalTime:hh\\:mm\\:ss}" : "" );
 			}
 		});
 	}
@@ -284,10 +321,11 @@ public class DailyReportPrintDocument : IDocument
 		       .AlignTop();
 	}
 
-	static IContainer PrimaryColumnHeader( IContainer container )
+	private static IContainer PrimaryColumnHeader( IContainer container )
 	{
 		return container
 		       .Border( 0.5f )
+		       .BorderColor( Colors.Grey.Lighten1 )
 		       .Background( Colors.Grey.Lighten2 )
 		       .PaddingLeft( 2, Unit.Point )
 		       .PaddingRight( 2, Unit.Point )
