@@ -72,8 +72,11 @@ public class DailyReportPrintDocument : IDocument
 
 					outerTable.Cell().Column( graphColumn =>
 					{
-						ComposeSignalGraph( graphColumn, "Events", EventGraph.RenderGraphToBitmap( graphSize) );
-						
+						if( EventGraph is { IsVisible: true } )
+						{
+							ComposeSignalGraph( graphColumn, "Events", EventGraph.RenderGraphToBitmap( graphSize ) );
+						}
+
 						foreach( var chart in SignalCharts )
 						{
 							using var imageStream = chart.RenderGraphToBitmap( graphSize );
