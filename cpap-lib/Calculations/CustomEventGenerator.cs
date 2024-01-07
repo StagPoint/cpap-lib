@@ -18,7 +18,8 @@ namespace cpaplib
 			const double MINIMUM_EVENT_DURATION   = 8.0; // Only flag flow reductions that last this number of seconds or more
 			const double FLOW_REDUCTION_THRESHOLD = 0.5; // Flag flow reductions of 50% or more
 			const int    WINDOW_LENGTH            = 120; // Two minutes, per 2007 AASM Manual
-
+			const double MIN_TIME_SINCE_RECOVERY  = 30;  // Wait a minimum of 30 seconds after an anomalous "very large breath" (or recovery breath) 
+			
 			foreach( var session in day.Sessions )
 			{
 				var signal = session.GetSignalByName( SignalNames.FlowRate );
@@ -31,10 +32,11 @@ namespace cpaplib
 				var filteredFlow = ButterworthFilter.Filter( absFlow, signal.FrequencyInHz, 1 );
 				var calc         = new MovingAverageCalculator( (int)(WINDOW_LENGTH * signal.FrequencyInHz) );
 
-				var interval   = 1.0 / signal.FrequencyInHz;
-				var state      = 0;
-				var startIndex = 0;
-				var threshold  = 0.0;
+				var interval     = 1.0 / signal.FrequencyInHz;
+				var state        = 0;
+				var startIndex   = 0;
+				var threshold    = 0.0;
+				var lastRecovery = 0;
 
 				for( int i = 0; i < signal.Samples.Count; i++ )
 				{
@@ -49,11 +51,16 @@ namespace cpaplib
 
 					var rms = calc.Average + calc.StandardDeviation;
 
+					if( sample >= rms * 2 )
+					{
+						lastRecovery = i;
+					}
+
 					switch( state )
 					{
 						case 0:
 							threshold = rms * FLOW_REDUCTION_THRESHOLD;
-							if( sample <= threshold )
+							if( sample <= threshold && (i - lastRecovery) * interval >= MIN_TIME_SINCE_RECOVERY )
 							{
 								startIndex = i;
 								state      = 1;
