@@ -283,7 +283,7 @@ public static class OximetryEventGenerator
 						var eventEnd   = time - (1.0 - t) * timeInterval;
 
 						eventDuration = eventEnd - eventStart;
-
+						
 						if( eventDuration >= config.DesaturationMinimumDuration )
 						{
 							var annotation = new ReportedEvent
@@ -293,7 +293,11 @@ public static class OximetryEventGenerator
 								Duration  = TimeSpan.FromSeconds( eventDuration )
 							};
 
-							events.Add( annotation );
+							// TODO: Still conflicted on whether a Desaturation and a Hypoxemia event should be allowed to overlap 
+							//if( !events.Any( x => x.Type == EventType.Desaturation && ReportedEvent.TimesOverlap( x, annotation ) ) )
+							{
+								events.Add( annotation );
+							}
 						}
 
 						state = 0;

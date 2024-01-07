@@ -569,7 +569,8 @@ public partial class SignalChartContainer : UserControl
 			UserProfileStore.GetActiveUserProfile(),
 			_eventGraph!,
 			_charts,
-			day
+			day,
+			_charts.First().GetDisplayedRange()
 		);
 
 		pdfDocument.GeneratePdf( saveFilePath );
@@ -603,7 +604,8 @@ public partial class SignalChartContainer : UserControl
 			UserProfileStore.GetActiveUserProfile(),
 			_eventGraph!,
 			_charts,
-			day
+			day,
+			_charts.First().GetDisplayedRange()
 		);
 
 		var imageGenerationSettings = new ImageGenerationSettings
@@ -631,7 +633,8 @@ public partial class SignalChartContainer : UserControl
 			UserProfileStore.GetActiveUserProfile(),
 			_eventGraph!,
 			_charts,
-			day
+			day,
+			_charts.First().GetDisplayedRange()
 		);
 
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed

@@ -861,6 +861,18 @@ public partial class SignalChart : UserControl
 		Chart.Configuration.AxesChangedEventEnabled = true;
 	}
 
+	public TimeSpan GetDisplayedRange()
+	{
+		if( _day == null )
+		{
+			return TimeSpan.Zero;
+		}
+
+		var limits = Chart.Plot.GetAxisLimits();
+
+		return TimeSpan.FromSeconds( limits.XSpan );
+	}
+
 	public void SetDisplayedRange( DateTime startTime, DateTime endTime )
 	{
 		if( _day == null )

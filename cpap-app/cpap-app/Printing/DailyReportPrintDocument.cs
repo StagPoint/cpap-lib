@@ -6,6 +6,7 @@ using System.Linq;
 using Avalonia;
 
 using cpap_app.Controls;
+using cpap_app.Converters;
 using cpap_app.Helpers;
 using cpap_app.ViewModels;
 
@@ -21,17 +22,19 @@ namespace cpap_app.Printing;
 
 public class DailyReportPrintDocument : IDocument
 {
-	public UserProfile       Profile      { get; set; }
-	public EventGraph        EventGraph   { get; set; }
-	public List<SignalChart> SignalCharts { get; set; }
-	public DailyReport       Day          { get; set; }
+	public UserProfile       Profile         { get; set; }
+	public EventGraph        EventGraph      { get; set; }
+	public List<SignalChart> SignalCharts    { get; set; }
+	public DailyReport       Day             { get; set; }
+	public TimeSpan?         SelectionLength { get; set; }
 
-	public DailyReportPrintDocument( UserProfile user, EventGraph eventGraph, List<SignalChart> charts, DailyReport day )
+	public DailyReportPrintDocument( UserProfile user, EventGraph eventGraph, List<SignalChart> charts, DailyReport day, TimeSpan? selection )
 	{
-		Profile      = user;
-		EventGraph   = eventGraph;
-		SignalCharts = charts;
-		Day          = day;
+		Profile        = user;
+		EventGraph     = eventGraph;
+		SignalCharts   = charts;
+		Day            = day;
+		SelectionLength = selection;
 	}
 	
 	public void Compose( IDocumentContainer document )
@@ -304,7 +307,7 @@ public class DailyReportPrintDocument : IDocument
 		column.Item().Text( text =>
 		{
 			text.DefaultTextStyle( x => x.FontSize( 7 ).SemiBold() );
-			
+
 			text.Line( $"Device: {Day.MachineInfo.ProductName}" );
 			text.Line( $"Model: {Day.MachineInfo.ModelNumber}" );
 			text.Line( "" ).FontSize( 4 );
@@ -312,6 +315,16 @@ public class DailyReportPrintDocument : IDocument
 			text.Line( $"Start Time: {Day.RecordingStartTime:g}" );
 			text.Line( $"End Time: {Day.RecordingEndTime:g}" );
 			text.Line( $"Total Sleep Time: {Day.TotalSleepTime:g}" );
+
+			if( SelectionLength != null )
+			{
+				var window = SelectionLength.Value.TrimSeconds();
+
+				if( window.TotalMinutes < Day.TotalSleepTime.TotalMinutes )
+				{
+					text.Line( $"Selected Time: {FormattedTimespanConverter.FormatTimeSpan( window, TimespanFormatType.Short, true )}" );
+				}
+			}
 		} );
 	}
 	
