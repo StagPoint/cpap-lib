@@ -535,7 +535,7 @@ public partial class StatisticsView : UserControl
 			new GroupedDays()
 			{
 				Label     = "Most Recent",
-				DateLabel = $"{startDay:d}",
+				DateLabel = $"{endDay:d}",
 				StartDate = endDay.Date,
 				EndDate   = endDay.Date,
 			},
@@ -584,7 +584,7 @@ public partial class StatisticsView : UserControl
 			new GroupedDays()
 			{
 				Label     = "Most Recent",
-				DateLabel = $"{startDay:d}",
+				DateLabel = $"{endDay:d}",
 				StartDate = endDay.Date,
 				EndDate   = endDay.Date,
 			},

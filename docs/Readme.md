@@ -1,7 +1,7 @@
 ﻿## Home Screen
 ![HomeView-Dark.jpg](Screenshots%2FHomeView-Dark.jpg)
 Importing CPAP and Pulse Oximetry Data (Click to play YouTube video):
-[![Quick Demonstration](https://img.youtube.com/vi/AgufkrzgytQ/maxresdefault.jpg)](https://youtu.be/AgufkrzgytQ)
+[![Importing CPAP and Pulse Oximetry Data](https://img.youtube.com/vi/AgufkrzgytQ/maxresdefault.jpg)](https://youtu.be/AgufkrzgytQ)
 
 ## Daily Report View
 ![DailyReportView-Light.jpg](Screenshots%2FDailyReportView-Light.jpg)
@@ -12,13 +12,14 @@ Importing CPAP and Pulse Oximetry Data (Click to play YouTube video):
 
 ## Trends View
 ![TrendsView-Light.jpg](Screenshots%2FTrendsView-Light.jpg)
-![TrendsView-Dark.jpg](Screenshots%2FTrendsView-Dark.jpg)
+Trends View (Click to play YouTube video):
+[![Quick Demonstration](https://img.youtube.com/vi/VQoEm01X36g/maxresdefault.jpg)](https://youtu.be/VQoEm01X36g)
 
 ## Statistics View
 ![StatisticsView-CPAP-Light.jpg](Screenshots%2FStatisticsView-CPAP-Light.jpg)
-![StatisticsView-Oximetry-Light.jpg](Screenshots%2FStatisticsView-Oximetry-Light.jpg)
-![StatisticsView-Dark.jpg](Screenshots%2FStatisticsView-Dark.jpg)
-
+Statistics View (Click to play YouTube video):
+[![Quick Demonstration](https://img.youtube.com/vi/Bjh376hU6ws/maxresdefault.jpg)](https://youtu.be/Bjh376hU6ws)
+~~~~
 ## Settings Page
 ![SettingsView-Light.jpg](Screenshots%2FSettingsView-Light.jpg)
 ![SettingsView-Dark.jpg](Screenshots%2FSettingsView-Dark.jpg)
