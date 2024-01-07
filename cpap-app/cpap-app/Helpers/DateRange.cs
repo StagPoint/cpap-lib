@@ -6,6 +6,8 @@ public class DateRange
 {
 	public DateTime Start { get; set; }
 	public DateTime End   { get; set; }
+	
+	public TimeSpan Duration { get => (End - Start); }
 
 	public bool Overlaps( DateRange other )
 	{

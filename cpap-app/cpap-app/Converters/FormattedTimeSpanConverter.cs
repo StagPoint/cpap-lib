@@ -69,7 +69,7 @@ public class FormattedTimespanConverter : IValueConverter
 			switch( format )
 			{
 				case TimespanFormatType.Abbreviated:
-					return "0 s";
+					return "0s";
 				case TimespanFormatType.Short:
 					return "0 sec";
 				case TimespanFormatType.Long:
@@ -88,7 +88,7 @@ public class FormattedTimespanConverter : IValueConverter
 			switch( format )
 			{
 				case TimespanFormatType.Abbreviated:
-					return $"{seconds} s";
+					return $"{seconds}s";
 				case TimespanFormatType.Short:
 					return $"{seconds} sec";
 				case TimespanFormatType.Long:
@@ -123,7 +123,7 @@ public class FormattedTimespanConverter : IValueConverter
 			switch( format )
 			{
 				case TimespanFormatType.Abbreviated:
-					return $"{minutes} m";
+					return $"{minutes}m";
 				case TimespanFormatType.Short:
 					return $"{minutes} Min";
 				case TimespanFormatType.Long:
@@ -140,7 +140,7 @@ public class FormattedTimespanConverter : IValueConverter
 			switch( format )
 			{
 				case TimespanFormatType.Abbreviated:
-					return $"{hours} h";
+					return $"{hours}h";
 				case TimespanFormatType.Short:
 					return $"{hours} hr";
 				case TimespanFormatType.Long:

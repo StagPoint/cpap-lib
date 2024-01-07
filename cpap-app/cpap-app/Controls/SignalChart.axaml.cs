@@ -12,7 +12,6 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
-using Avalonia.Media.Imaging;
 using Avalonia.Styling;
 using Avalonia.Threading;
 
@@ -172,7 +171,7 @@ public partial class SignalChart : UserControl
 		Chart.AxesChanged += OnAxesChanged;
 
 		// TODO: Replace the default ScottPlot context menu with a bespoke version 
-		//Chart.ContextMenu = null;
+		Chart.ContextMenu = null;
 		
 		ChartLabel.PointerPressed     += ChartLabelOnPointerPressed;
 		ChartLabel.PointerReleased    += ChartLabelOnPointerReleased;
@@ -861,16 +860,23 @@ public partial class SignalChart : UserControl
 		Chart.Configuration.AxesChangedEventEnabled = true;
 	}
 
-	public TimeSpan GetDisplayedRange()
+	public DateRange GetDisplayedRange()
 	{
 		if( _day == null )
 		{
-			return TimeSpan.Zero;
+			throw new InvalidOperationException();
 		}
 
 		var limits = Chart.Plot.GetAxisLimits();
 
-		return TimeSpan.FromSeconds( limits.XSpan );
+		var startTime = _day.RecordingStartTime.AddSeconds( Math.Round( limits.XMin ) );
+		var endTime   = _day.RecordingStartTime.AddSeconds( Math.Round( limits.XMax ) );
+
+		return new DateRange()
+		{
+			Start = startTime,
+			End   = endTime,
+		};
 	}
 
 	public void SetDisplayedRange( DateTime startTime, DateTime endTime )

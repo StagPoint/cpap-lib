@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 
@@ -17,24 +18,25 @@ using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 
 using Colors = QuestPDF.Helpers.Colors;
+using IContainer = QuestPDF.Infrastructure.IContainer;
 
 namespace cpap_app.Printing;
 
 public class DailyReportPrintDocument : IDocument
 {
-	public UserProfile       Profile         { get; set; }
-	public EventGraph        EventGraph      { get; set; }
-	public List<SignalChart> SignalCharts    { get; set; }
-	public DailyReport       Day             { get; set; }
-	public TimeSpan?         SelectionLength { get; set; }
+	public UserProfile       Profile      { get; set; }
+	public EventGraph        EventGraph   { get; set; }
+	public List<SignalChart> SignalCharts { get; set; }
+	public DailyReport       Day          { get; set; }
+	public DateRange         Selection    { get; set; }
 
-	public DailyReportPrintDocument( UserProfile user, EventGraph eventGraph, List<SignalChart> charts, DailyReport day, TimeSpan? selection )
+	public DailyReportPrintDocument( UserProfile user, EventGraph eventGraph, List<SignalChart> charts, DailyReport day, DateRange selection )
 	{
-		Profile        = user;
-		EventGraph     = eventGraph;
-		SignalCharts   = charts;
-		Day            = day;
-		SelectionLength = selection;
+		Profile      = user;
+		EventGraph   = eventGraph;
+		SignalCharts = charts;
+		Day          = day;
+		Selection    = selection;
 	}
 	
 	public void Compose( IDocumentContainer document )
@@ -51,9 +53,18 @@ public class DailyReportPrintDocument : IDocument
 			page
 				.Header()
 				.AlignCenter()
-				.PaddingBottom( 8 )
-				.Text( $"Detail View for {Day.ReportDate.Date:D}" )
-				.FontSize( 10 );
+				.Text( headerText =>
+				{
+					headerText.Line( $"Detail View for {Day.ReportDate.Date:D}" ).FontSize( 10 );
+					
+					if( Selection.Duration.TotalMinutes < Day.TotalSleepTime.TotalMinutes )
+					{
+						var duration      = FormattedTimespanConverter.FormatTimeSpan( Selection.Duration, TimespanFormatType.Abbreviated, false );
+						var selectionText = $"Showing selection of {duration} from {Selection.Start:g} to {Selection.End:g}";
+						
+						headerText.Line( selectionText ).FontSize( 6 );
+					}
+				} );
 
 			page.Content().Column( container =>
 			{
@@ -316,6 +327,7 @@ public class DailyReportPrintDocument : IDocument
 			text.Line( $"End Time: {Day.RecordingEndTime:g}" );
 			text.Line( $"Total Sleep Time: {Day.TotalSleepTime:g}" );
 
+			/*
 			if( SelectionLength != null )
 			{
 				var window = SelectionLength.Value.TrimSeconds();
@@ -325,6 +337,7 @@ public class DailyReportPrintDocument : IDocument
 					text.Line( $"Selected Time: {FormattedTimespanConverter.FormatTimeSpan( window, TimespanFormatType.Short, true )}" );
 				}
 			}
+			*/
 		} );
 	}
 	

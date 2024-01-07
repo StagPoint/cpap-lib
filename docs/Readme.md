@@ -19,7 +19,7 @@ Trends View (Click to play YouTube video):
 ![StatisticsView-CPAP-Light.jpg](Screenshots%2FStatisticsView-CPAP-Light.jpg)
 Statistics View (Click to play YouTube video):
 [![Quick Demonstration](https://img.youtube.com/vi/Bjh376hU6ws/maxresdefault.jpg)](https://youtu.be/Bjh376hU6ws)
-~~~~
+
 ## Settings Page
 ![SettingsView-Light.jpg](Screenshots%2FSettingsView-Light.jpg)
 ![SettingsView-Dark.jpg](Screenshots%2FSettingsView-Dark.jpg)
