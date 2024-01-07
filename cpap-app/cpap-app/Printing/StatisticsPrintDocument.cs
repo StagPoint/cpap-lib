@@ -100,8 +100,10 @@ public class StatisticsPrintDocument : IDocument
 		
 		for( int i = 0; i < headers.Count; i++ )
 		{
-			labels.Add( headers[ i ].Label );
-			widths.Add( (uint)Math.Ceiling( PdfHelper.MeasureText( typeFace, headers[ i ].Label, fontSize ) ) );
+			var label = $"{headers[ i ].Label}\n{headers[i].DateLabel}";
+			
+			labels.Add( label );
+			widths.Add( (uint)Math.Ceiling( PdfHelper.MeasureText( typeFace, label, fontSize ) ) );
 		}
 
 		foreach( var section in ViewModel.Sections )

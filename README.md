@@ -1,10 +1,13 @@
 [![GitHub issues](https://img.shields.io/github/issues/StagPoint/cpap-lib.svg)](https://GitHub.com/StagPoint/cpap-lib/issues/)
 [![GitHub license](https://img.shields.io/github/license/StagPoint/cpap-lib.svg)](https://github.com/StagPoint/cpap-lib/blob/master/LICENSE)
 [![GitLab last commit](https://badgen.net/github/last-commit/StagPoint/cpap-lib/)](https://github.com/StagPoint/cpap-lib/-/commits)
+[![Nuget](https://img.shields.io/nuget/v/https://www.nuget.org/packages/cpap-lib/1.0.0)](https://www.nuget.org/packages/https://www.nuget.org/packages/cpap-lib/1.0.0/)
+[![Nuget](https://img.shields.io/nuget/dt/https://www.nuget.org/packages/cpap-lib/1.0.0)](https://www.nuget.org/packages/https://www.nuget.org/packages/cpap-lib/1.0.0/)
 
 <!-- TOC -->
 * [Summary](#summary)
-* [Dependencies](#dependencies-)
+* [Dependencies](#dependencies)
+* [Binary Distribution](#binary-distribution)
 * [Included Data Viewer](#included-data-viewer)
 <!-- TOC -->
 
@@ -20,7 +23,13 @@ There is also very limited "proof of concept" support for the Philips Respironic
 
 # Dependencies
 
-This library uses [StagPoint.EuropeanDataFormat.Net](https://github.com/StagPoint/StagPoint.EuropeanDataFormat.Net/) to read the EDF files that contain the CPAP data. 
+This library uses [StagPoint.EuropeanDataFormat.Net](https://github.com/StagPoint/StagPoint.EuropeanDataFormat.Net/) to read the EDF files that contain the CPAP data.
+
+# Binary Distribution
+
+The easiest way to make use of this library in your own project is to add the [Nuget Package](https://www.nuget.org/packages/cpap-lib/1.0.0) using your IDE's package manager.
+
+---
 
 # Included Data Viewer
 

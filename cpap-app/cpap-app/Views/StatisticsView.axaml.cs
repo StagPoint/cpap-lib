@@ -109,6 +109,7 @@ public partial class StatisticsView : UserControl
 		group.Items.Add( CompileGroupAverages( "Hypoxemia Index",         groups, GetEventIndex( EventType.Hypoxemia ),           value => $"{value:F2}" ) );
 		group.Items.Add( CompileGroupAverages( "Avg. Hypoxemia Duration", groups, GetAverageEventDuration( EventType.Hypoxemia ), FormatTimespan ) );
 		group.Items.Add( CompileGroupMaximums( "Max. Hypoxemia Duration", groups, GetMaxEventDuration( EventType.Hypoxemia ), FormatTimespan ) );
+		group.Items.Add( CompileGroupAverages( "Avg. Time in Hypoxemia", groups, GetTotalEventDuration( EventType.Hypoxemia ), FormatTimespan ) );
 
 		group.Items.Add( CompileGroupAverages( "Time in Hypoxemia (% of total time)", groups, GetEventPercentage( EventType.Hypoxemia ), value => $"{value:P2}" ) );
 
@@ -263,14 +264,6 @@ public partial class StatisticsView : UserControl
 		return group;
 	}
 
-	private static Func<DailyReport, double> GetTotalTimeInEvent( EventType eventType )
-	{
-		return day =>
-		{
-			return day.Events.Where( x => x.Type == eventType ).Sum( x => x.Duration.TotalSeconds );
-		};
-	}
-
 	private static Func<DailyReport, double> GetAverageEventDuration( EventType eventType )
 	{
 		return day =>
@@ -284,6 +277,20 @@ public partial class StatisticsView : UserControl
 			}
 
 			return totalEventDuration / matchingEvents.Length;
+		};
+	}
+
+	private static Func<DailyReport, double> GetTotalEventDuration( EventType eventType )
+	{
+		return day =>
+		{
+			if( !day.Events.Any( evt => evt.Type == eventType ) )
+			{
+				return 0;
+			}
+
+			var matchingEvents = day.Events.Where( evt => evt.Type == eventType );
+			return matchingEvents.Sum( evt => evt.Duration.TotalSeconds );
 		};
 	}
 

@@ -3,7 +3,7 @@
     <PropertyGroup>
         <ImplicitUsings>disable</ImplicitUsings>
         <Nullable>disable</Nullable>
-        <Copyright>Copyright 2023 Jonah Stagner (StagPoint)</Copyright>
+        <Copyright>Copyright 2023-2024 Jonah Stagner (StagPoint)</Copyright>
         <Company>StagPoint</Company>
         <RootNamespace>cpap-lib</RootNamespace>
         <AssemblyVersion>0.9</AssemblyVersion>
@@ -18,9 +18,10 @@
         <PackageLicenseUrl>https://github.com/StagPoint/cpap-lib/blob/master/LICENSE</PackageLicenseUrl>
         <RepositoryUrl>https://github.com/StagPoint/cpap-lib</RepositoryUrl>
         <RepositoryType>GitHub</RepositoryType>
-        <PackageTags>CPAP sleep apnea ResMed AirSense</PackageTags>
+        <PackageTags>CPAP sleep apnea ResMed AirSense OSA data analysis</PackageTags>
         <PackageReleaseNotes>Initial Release</PackageReleaseNotes>
         <Product>cpap-lib</Product>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
