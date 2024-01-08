@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using StagPoint.EDF.Net;
+// ReSharper disable CanSimplifyDictionaryTryGetValueWithGetValueOrDefault
 
 // ReSharper disable ConvertToUsingDeclaration
 

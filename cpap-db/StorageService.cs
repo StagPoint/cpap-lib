@@ -28,9 +28,10 @@ namespace cpap_db
 		public const string SignalStatistics  = "signal_stats";
 		public const string Annotation        = "annotations";
 		
-		public const string MachineSettings = "machine_settings";
-		public const string MachineInfo     = "machine_info";
-		public const string UserProfiles    = "user_profile";
+		public const string MachineSettings    = "machine_settings";
+		public const string MachineInfo        = "machine_info";
+		public const string UserProfiles       = "user_profile";
+		public const string CpapImportSettings = "cpap_import_settings";
 	}
 	
 	[SuppressMessage( "ReSharper", "ConvertToUsingDeclaration" )]
@@ -97,6 +98,9 @@ namespace cpap_db
 			machineSettingsMapping.PrimaryKey = new PrimaryKeyColumn( "id", typeof( int ), true );
 			machineSettingsMapping.ForeignKey = new ForeignKeyColumn( dayMapping );
 			machineSettingsMapping.Columns.Add( settingsValuesBlobMapping );
+
+			var cpapImportSettingsMapping = CreateMapping<CpapImportSettings>( TableNames.CpapImportSettings );
+			cpapImportSettingsMapping.PrimaryKey = new PrimaryKeyColumn( "id", typeof( int ), true );
 
 			#endregion
 		}
