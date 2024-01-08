@@ -2045,7 +2045,7 @@ public partial class SignalChart : UserControl
 				}
 			}
 
-			graph.LineWidth   = 1.1;
+			graph.LineWidth   = 1;
 			graph.OffsetX     = offset;
 			graph.MarkerSize  = 0;
 			graph.UseParallel = true;

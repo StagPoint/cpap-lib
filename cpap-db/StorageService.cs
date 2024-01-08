@@ -31,13 +31,6 @@ namespace cpap_db
 		public const string MachineSettings = "machine_settings";
 		public const string MachineInfo     = "machine_info";
 		public const string UserProfiles    = "user_profile";
-		
-		// All of the following classes will likely be eliminated at some point, but for now...
-		public const string EprSettings     = "epr_settings";
-		public const string CpapSettings    = "cpap_settings";
-		public const string AutoSetSettings = "auto_settings";
-		public const string AsvSettings     = "asv_settings";
-		public const string AvapSettings    = "avaps_settings";
 	}
 	
 	[SuppressMessage( "ReSharper", "ConvertToUsingDeclaration" )]
@@ -104,21 +97,6 @@ namespace cpap_db
 			machineSettingsMapping.PrimaryKey = new PrimaryKeyColumn( "id", typeof( int ), true );
 			machineSettingsMapping.ForeignKey = new ForeignKeyColumn( dayMapping );
 			machineSettingsMapping.Columns.Add( settingsValuesBlobMapping );
-
-			var eprMapping = CreateMapping<EprSettings>( TableNames.EprSettings );
-			eprMapping.ForeignKey = new ForeignKeyColumn( machineSettingsMapping );
-
-			var cpapMapping = CreateMapping<CpapSettings>( TableNames.CpapSettings );
-			cpapMapping.ForeignKey = new ForeignKeyColumn( machineSettingsMapping );
-
-			var autosetMapping = CreateMapping<AutoSetSettings>( TableNames.AutoSetSettings );
-			autosetMapping.ForeignKey = new ForeignKeyColumn( machineSettingsMapping );
-
-			var asvMapping = CreateMapping<AsvSettings>( TableNames.AsvSettings );
-			asvMapping.ForeignKey = new ForeignKeyColumn( machineSettingsMapping );
-
-			var avapMapping = CreateMapping<AvapSettings>( TableNames.AvapSettings );
-			avapMapping.ForeignKey = new ForeignKeyColumn( machineSettingsMapping );
 
 			#endregion
 		}

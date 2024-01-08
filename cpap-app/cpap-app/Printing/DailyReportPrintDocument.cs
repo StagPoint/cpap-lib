@@ -258,7 +258,7 @@ public class DailyReportPrintDocument : IDocument
 			
 			foreach( var index in viewModel.Indexes )
 			{
-				indexTable.Cell().PaddingRight( 8 ).Text( index.Name ).SemiBold();
+				indexTable.Cell().PaddingLeft( 2 ).PaddingRight( 8 ).Text( index.Name ).SemiBold();
 				indexTable.Cell().PaddingLeft( 2 ).Text( $"{index.IndexValue:F2}" ).SemiBold();
 				indexTable.Cell().PaddingLeft( 2 ).Text( index.IndexValue > 0 ? $"{index.TotalTime:hh\\:mm\\:ss}" : "" ).SemiBold();
 			}
