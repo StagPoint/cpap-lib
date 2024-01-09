@@ -242,8 +242,8 @@ public partial class StatisticsView : UserControl
 			Label = "Respiration",
 		};
 
-		group.Items.Add( CompileGroupAverages( "Median Respiration Rate",   groups, GetStatisticsValue( SignalNames.RespirationRate, stats => stats.Median ) ) );
 		group.Items.Add( CompileGroupAverages( "Average Respiration Rate",  groups, GetStatisticsValue( SignalNames.RespirationRate, stats => stats.Average ) ) );
+		group.Items.Add( CompileGroupAverages( "Median Respiration Rate",   groups, GetStatisticsValue( SignalNames.RespirationRate, stats => stats.Median ) ) );
 		group.Items.Add( CompileGroupAverages( "Median Tidal Volume",       groups, GetStatisticsValue( SignalNames.TidalVolume,     stats => stats.Median ) ) );
 		group.Items.Add( CompileGroupAverages( "Median Minute Ventilation", groups, GetStatisticsValue( SignalNames.MinuteVent,      stats => stats.Median ) ) );
 

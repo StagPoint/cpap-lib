@@ -294,7 +294,7 @@ public static class OximetryEventGenerator
 							};
 
 							// TODO: Still conflicted on whether a Desaturation and a Hypoxemia event should be allowed to overlap 
-							//if( !events.Any( x => x.Type == EventType.Desaturation && ReportedEvent.TimesOverlap( x, annotation ) ) )
+							if( !events.Any( x => x.Type == EventType.Desaturation && ReportedEvent.TimesOverlap( x, annotation ) ) )
 							{
 								events.Add( annotation );
 							}

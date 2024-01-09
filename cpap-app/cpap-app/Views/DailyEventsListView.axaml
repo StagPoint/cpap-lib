@@ -51,6 +51,11 @@
                     </TreeDataTemplate>
                     <TreeDataTemplate DataType="cpaplib:ReportedEvent">
                         <Grid Background="Transparent">
+                            <Grid.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem Name="MarkAsFalse" Header="Mark as False Positive" Tag="{Binding}" Click="MarkAsFalse_OnClick"/>
+                                </ContextMenu>
+                            </Grid.ContextMenu>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" SharedSizeGroup="EventTreeView0" />
                                 <ColumnDefinition Width="24"/>

@@ -10,6 +10,9 @@ using Avalonia.Threading;
 
 using FluentAvalonia.UI.Controls;
 
+using MsBox.Avalonia;
+using MsBox.Avalonia.Enums;
+
 namespace cpap_app.Helpers;
 
 public class InputDialog
@@ -137,5 +140,13 @@ public class InputDialog
 		}
 
 		return input.Value;
+	}
+	
+	public static async Task<bool> GetConfirmation( Window owner, Icon icon, string title, string message )
+	{
+		var msgBox       = MessageBoxManager.GetMessageBoxStandard( title, message, ButtonEnum.YesNo, icon );
+		var dialogResult = await msgBox.ShowWindowDialogAsync( owner );
+
+		return (dialogResult == ButtonResult.Yes);
 	}
 }

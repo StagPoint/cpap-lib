@@ -96,11 +96,11 @@ namespace cpaplib
 		/// </summary>
 		PulseOximetryFault,
 		/// <summary>
-		/// Reserved for marking existing events as being false flags (ie: Happened when the patient was awake).
+		/// Reserved for marking existing events as being false positives (ie: Happened when the patient was awake).
 		/// This should be the last value in the <see cref="EventType"/> enumeration, and any new values added
 		/// to the enumeration should come before this value. 
 		/// </summary>
-		FalseFlag = 0xFFFF
+		FalsePositive = 0xFFFF
 	}
 
 	/// <summary>
