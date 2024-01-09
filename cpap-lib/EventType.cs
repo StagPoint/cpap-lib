@@ -95,6 +95,12 @@ namespace cpaplib
 		/// Pulse Oximeters from Viatom/Wellue/Lookee, Emay, etc. have flags to indicate when data is invalid.
 		/// </summary>
 		PulseOximetryFault,
+		/// <summary>
+		/// Reserved for marking existing events as being false flags (ie: Happened when the patient was awake).
+		/// This should be the last value in the <see cref="EventType"/> enumeration, and any new values added
+		/// to the enumeration should come before this value. 
+		/// </summary>
+		FalseFlag = 0xFFFF
 	}
 
 	/// <summary>

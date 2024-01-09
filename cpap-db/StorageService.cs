@@ -271,11 +271,9 @@ WHERE {userMapping.TableName}.{userMapping.PrimaryKey.ColumnName} = ?
 				// Delete any existing record first. This will not cause any exception if the record does
 				// not already exist, and there's no convenient way to update existing records with this 
 				// many nested dependencies, so just get rid of it if it already exists. 
-				var mapping = GetMapping<DailyReport>();
-				
-				//mapping.Delete( Connection, day.ID );
-				int numberOfRecordsDeleted = Connection.Execute( $"DELETE FROM [{mapping.TableName}] WHERE ReportDate = ?", day.ReportDate.Date );
-				Debug.WriteLine( $"DELETED {numberOfRecordsDeleted} records" );
+				var mapping       = GetMapping<DailyReport>();
+				var deleteCommand = $"DELETE FROM [{mapping.TableName}] WHERE ReportDate = ? AND [{mapping.ForeignKey.ColumnName}] = ?";
+				Connection.Execute( deleteCommand, day.ReportDate.Date, profileID );
 
 				Insert( day, foreignKeyValue: profileID );
 
@@ -360,6 +358,7 @@ WHERE {userMapping.TableName}.{userMapping.PrimaryKey.ColumnName} = ?
 			day.Sessions.RemoveAll( x => x.SourceType == SourceType.PulseOximetry );
 			day.Statistics.RemoveAll( x => signalNames.Contains( x.SignalName ) );
 			
+			day.UpdateEventSummary();
 			day.RefreshTimeRange();
 			
 			SaveDailyReport( profileID, day );
@@ -383,6 +382,7 @@ WHERE {userMapping.TableName}.{userMapping.PrimaryKey.ColumnName} = ?
 			day.Sessions.RemoveAll( x => x.SourceType == type );
 			day.Statistics.RemoveAll( x => signalNames.Contains( x.SignalName ) );
 			
+			day.UpdateEventSummary();
 			day.RefreshTimeRange();
 			
 			SaveDailyReport( profileID, day );

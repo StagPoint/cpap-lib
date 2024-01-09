@@ -17,7 +17,7 @@ namespace cpaplib
 		#region Public properties 
 		
 		/// <summary>
-		/// The descriptive name of the event being flagged 
+		/// The type of event being flagged 
 		/// </summary>
 		public EventType Type { get; set; }
 		
@@ -27,13 +27,22 @@ namespace cpaplib
 		public SourceType SourceType { get; set; }
 
 		/// <summary>
-		/// Gets or sets whether the Event's position occurs logically before or after the Duration 
+		/// Indicates whether the Event's <see cref="Duration"/> refers to the period before or after
+		/// the <see cref="StartTime"/>.
+		/// For example, for all apnea type events the <see cref="StartTime"/> property refers to the
+		/// point where the event ends and the <see cref="Duration"/> property refers to the time period
+		/// before the event, whereas with a <see cref="EventType.PeriodicBreathing"/> event the
+		/// <see cref="StartTime"/> defines the point at which the event starts and the <see cref="Duration"/>
+		/// property defines how long the event continues. 
 		/// </summary>
-		internal EventMarkerPosition MarkerPosition { get => GetOnsetPositionType( Type ); }
+		internal EventMarkerPosition MarkerPosition { get => ReportedEvent.GetOnsetPositionType( Type ); }
 
 		/// <summary>
-		/// The time when the event occurred 
+		/// The time when the event occurred. See <see cref="MarkerPosition"/> for more details about
+		/// how to interpret this field, or use the <see cref="GetTimeBounds"/> function to remove
+		/// any ambiguity.
 		/// </summary>
+		/// TODO: This property should be renamed to MarkerTime or something better than the current name
 		public DateTime StartTime { get; set; }
 
 		/// <summary>
@@ -69,7 +78,7 @@ namespace cpaplib
 
 		public TimeRange GetTimeBounds()
 		{
-			var markerPosition = GetOnsetPositionType( Type );
+			var markerPosition = ReportedEvent.GetOnsetPositionType( Type );
 
 			if( markerPosition == EventMarkerPosition.AfterDuration )
 			{
@@ -107,7 +116,7 @@ namespace cpaplib
 			return flag;
 		}
 
-		private EventMarkerPosition GetOnsetPositionType( EventType eventType )
+		private static EventMarkerPosition GetOnsetPositionType( EventType eventType )
 		{
 			EventMarkerPosition markerPosition = EventMarkerPosition.BeforeDuration;
 
@@ -174,7 +183,8 @@ namespace cpaplib
 		private static Dictionary<string, EventType> _textToEventTypeMap = new Dictionary<string, EventType>()
 		{
 			// NOTE: The order of keys is important for "Type to name" operations when there is more than one 
-			// key that maps to a given EventType, such as RERA and Arousal both mapping to the same value. 
+			// key that maps to a given EventType, such as RERA and Arousal both mapping to the same value on
+			// ResMed devices. 
 			{ "Hypopnea", EventType.Hypopnea },
 			{ "Recording starts", EventType.RecordingStarts },
 			{ "Recording ends", EventType.RecordingEnds },

@@ -988,6 +988,7 @@ public partial class SignalChart : UserControl
 			btnSettings.Visualizations.Add( new SignalMenuItem( "Highlight Centerline", VisualizeCenterline ) );
 			btnSettings.Visualizations.Add( new SignalMenuItem( "Mark Respirations",    VisualizeRespirations ) );
 			btnSettings.Visualizations.Add( new SignalMenuItem( "Show Noise Filter",    VisualizeNoiseFilter ) );
+			btnSettings.Visualizations.Add( new SignalMenuItem( "Average Signed Flow",  VisualizeTotalFlow ) );
 		}
 		else
 		{
@@ -1064,6 +1065,60 @@ public partial class SignalChart : UserControl
 		RenderGraph( true );
 	}
 
+	private async void VisualizeTotalFlow()
+	{
+		var windowLengthInSeconds = await InputDialog.InputInteger(
+			TopLevel.GetTopLevel( this )!,
+			"Average Signed Flow",
+			"Enter the length of the window, in seconds",
+			120,
+			2,
+			60 * 60 * 60
+		);
+
+		if( windowLengthInSeconds == null )
+		{
+			return;
+		}
+		
+		bool first = true;
+
+		
+		foreach( var signal in _signals )
+		{
+			var calc     = new MovingAverageCalculator( (int)(windowLengthInSeconds * signal.FrequencyInHz) );
+			var output   = new double[ signal.Samples.Count ];
+			var interval = 1.0 / signal.FrequencyInHz;
+			var range    = (signal.MaxValue - signal.MinValue);
+
+			for( int i = 0; i < signal.Samples.Count; i++ )
+			{
+				var sample = signal[ i ] * interval;
+				
+				calc.AddObservation( sample );
+
+				if( !calc.HasFullPeriod )
+				{
+					output[ i ] = 0;
+					continue;
+				}
+
+				output[ i ] = calc.Average * range;
+			}
+
+			var graph = Chart.Plot.AddSignal( output, signal.FrequencyInHz, Color.Magenta, first ? "FVR" : null );
+			graph.OffsetX    = (signal.StartTime - _day.RecordingStartTime).TotalSeconds;
+			graph.LineStyle  = LineStyle.Solid;
+			graph.MarkerSize = 0;
+
+			_visualizations.Add( graph );
+
+			first = false;
+		}
+		
+		RenderGraph( true );
+	}
+	
 	private async void VisualizeRMS()
 	{
 		var windowLengthInSeconds = await InputDialog.InputInteger(

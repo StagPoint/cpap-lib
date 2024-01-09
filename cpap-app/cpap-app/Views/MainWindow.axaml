@@ -10,6 +10,6 @@
         Width="1440"
         Height="1024"
         Icon="/Assets/cpap-sd-card-256.png"
-        Title="Open Source CPAP Viewer">
+        Title="CPAP Data Viewer">
         <views:MainView />
 </Window>

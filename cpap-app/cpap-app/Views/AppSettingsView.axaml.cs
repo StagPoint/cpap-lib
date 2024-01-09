@@ -74,7 +74,7 @@ public partial class AppSettingsView : UserControl
 
 	private async void SettingsExpander_OnClick( object? sender, RoutedEventArgs e )
 	{
-		if( e.Source is not SettingsExpander setting )
+		if( e.Handled || e.Source is not SettingsExpander setting )
 		{
 			return;
 		}
@@ -110,12 +110,26 @@ public partial class AppSettingsView : UserControl
 		GoogleFitSignOut.IsEnabled = false;
 		
 		msgBox = MessageBoxManager.GetMessageBoxStandard(
-			"Sign out of Google Fit?",
+			"Signed out of Google Fit",
 			"You have been signed out of Google Fit.",
 			ButtonEnum.Ok,
 			Icon.Info );
 		
 		await msgBox.ShowWindowDialogAsync( this.FindAncestorOfType<Window>() );
+	}
+	
+	private async void ImportOptions_OnClick( object? sender, RoutedEventArgs e )
+	{
+		e.Handled = true;
+		
+		var msgBox = MessageBoxManager.GetMessageBoxStandard(
+			"Application Settings",
+			"This functionality has not yet been implemented.\nIt is the next priority, so it should be coming soon ;)",
+			ButtonEnum.Ok,
+			Icon.Info );
+
+		await msgBox.ShowWindowDialogAsync( this.FindAncestorOfType<Window>() );
+
 	}
 }
 

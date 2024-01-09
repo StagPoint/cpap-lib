@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 
-using Microsoft.Win32;
 // ReSharper disable ConvertIfStatementToSwitchStatement
 
 namespace cpaplib

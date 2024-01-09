@@ -49,12 +49,11 @@
                 </controls:SettingsExpander>
                 <controls:SettingsExpander Header="Import Options"
                                            Description="Set import options for CPAP and Pulse Oximetry devices"
-                                           IsClickEnabled="False"
+                                           IsClickEnabled="True"
                                            IconSource="Upload"
-                                           ActionIconSource="ChevronRight">
-                    <controls:SettingsExpanderItem>
-                        <views:ImportSettingsView />
-                    </controls:SettingsExpanderItem>
+                                           ActionIconSource="ChevronRight"
+                                           Name="ImportOptions"
+                                           Click="ImportOptions_OnClick">
                 </controls:SettingsExpander>
                 <controls:SettingsExpander Header="Events"
                                            Description="Set display options for reported events"

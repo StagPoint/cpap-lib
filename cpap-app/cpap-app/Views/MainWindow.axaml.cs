@@ -27,7 +27,7 @@ public partial class MainWindow : AppWindow
 
 		UserProfileStore.UserProfileActivated += ( sender, profile ) =>
 		{
-			Title = $"Open Source CPAP Viewer - {profile.UserName}";
+			Title = $"CPAP Data Viewer - {profile.UserName}";
 		};
 
 		#if DEBUG
