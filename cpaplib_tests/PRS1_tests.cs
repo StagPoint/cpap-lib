@@ -5,6 +5,7 @@ using cpap_app.Converters;
 using cpap_app.Helpers;
 
 using cpaplib;
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
 
 // ReSharper disable UseIndexFromEndExpression
 
@@ -386,7 +387,7 @@ public class PRS1_tests
 
 		Debug.Assert( numSignals == 1, "Unexpected number of signals" );
 		
-		DataChunk previousChunk = null;
+		DataChunk? previousChunk = null;
 		foreach( var chunk in chunks )
 		{
 			// If there is a gap between chunks, then we need to fill it
@@ -421,6 +422,7 @@ public class PRS1_tests
 				}
 			}
 
+			Debug.Assert( chunk.BlockData != null, "chunk.BlockData != null" );
 			samples.AddRange( chunk.BlockData );
 			previousChunk = chunk;
 		}
@@ -479,19 +481,15 @@ public class PRS1_tests
 	{
 		private const double SCALE = 0.1;
 		
-		public HeaderRecord Header    { get; set; }
-		public byte[]       BlockData { get; set; }
-		public ushort       Checksum  { get; set; }
+		public HeaderRecord? Header    { get; set; }
+		public byte[]?       BlockData { get; set; }
+		public ushort        Checksum  { get; set; }
 
-		public static DataChunk? Read( BinaryReader reader )
+		public static DataChunk Read( BinaryReader reader )
 		{
 			var startPosition = (int)reader.BaseStream.Position;
 
 			var header = HeaderRecord.Read( reader );
-			if( header == null )
-			{
-				return null;
-			}
 
 			var chunk = new DataChunk()
 			{
@@ -527,13 +525,14 @@ public class PRS1_tests
 			return chunk;
 		}
 		
-		public EventImportData ReadEvents( HeaderRecord header )
+		public EventImportData ReadEvents( HeaderRecord? header )
 		{
 			var events     = new List<ReportedEvent>();
 			var statistics = new List<ValueAtTime>();
 			
 			var timestamp = header.Timestamp;
 
+			Debug.Assert( BlockData != null, nameof( BlockData ) + " != null" );
 			using var reader = new BinaryReader( new MemoryStream( BlockData ) );
 
 			while( reader.BaseStream.Position < reader.BaseStream.Length )
@@ -773,7 +772,7 @@ public class PRS1_tests
 			};
 		}
 		
-		public ParsedSettings ReadSummary( HeaderRecord header )
+		public ParsedSettings ReadSummary( HeaderRecord? header )
 		{
 			var timestamp = header.Timestamp;
 
@@ -784,6 +783,7 @@ public class PRS1_tests
 			var       startTime  = timestamp;
 			var       endTime    = timestamp;
 
+			Debug.Assert( BlockData != null, nameof( BlockData ) + " != null" );
 			using var reader = new BinaryReader( new MemoryStream( BlockData ) );
 			
 			while( reader.BaseStream.Position < reader.BaseStream.Length )
@@ -868,6 +868,7 @@ public class PRS1_tests
 			// Unknown meaning for this byte
 			reader.ReadByte();
 			
+			// ReSharper disable UnusedVariable
 			var mode                = ReadOperatingMode( reader );
 			var minPressure         = reader.ReadByte() * SCALE;
 			var maxPressure         = reader.ReadByte() * SCALE;
@@ -892,6 +893,7 @@ public class PRS1_tests
 			var showAHIEnabled      = (generalFlags & 0x02) != 0;
 			var unknown2            = reader.ReadByte();
 			var autoTrialDuration   = reader.ReadByte();
+			// ReSharper enable UnusedVariable
 
 			settings[ SettingNames.Mode ]               = mode;
 			settings[ SettingNames.MinPressure ]        = minPressure;
@@ -904,7 +906,7 @@ public class PRS1_tests
 			settings[ SettingNames.FlexMode ]           = flexMode.Mode;
 			settings[ SettingNames.FlexLock ]           = flexMode.Locked;
 			settings[ SettingNames.FlexLevel ]          = flexMode.Level;
-			settings[ SettingNames.HumidifierAttached ]         = humidifierSettings.HumidifierPresent;
+			settings[ SettingNames.HumidifierAttached ] = humidifierSettings.HumidifierPresent;
 			settings[ SettingNames.HumidifierMode ]     = humidifierSettings.Mode;
 			settings[ SettingNames.HumidityLevel ]      = humidifierSettings.HumidityLevel;
 			settings[ SettingNames.MaskResist ]         = maskResistanceLevel;
@@ -1094,7 +1096,7 @@ public class PRS1_tests
 			}
 		}
 
-		public static HeaderRecord? Read( BinaryReader reader )
+		public static HeaderRecord Read( BinaryReader reader )
 		{
 			var startPosition = reader.BaseStream.Position;
 
@@ -1243,9 +1245,9 @@ public class PRS1_tests
 
 	public class ValueAtTime
 	{
-		public DateTime Timestamp { get; set; }
-		public string   Name      { get; set; }
-		public double   Value     { get; set; }
+		public required DateTime Timestamp { get; set; }
+		public required string   Name      { get; set; }
+		public required double   Value     { get; set; }
 
 		public override string ToString()
 		{

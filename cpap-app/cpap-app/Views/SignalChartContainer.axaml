@@ -15,7 +15,7 @@
         <Grid DockPanel.Dock="Bottom" Background="{DynamicResource SolidBackgroundFillColorSecondaryBrush}">
            <Grid ColumnDefinitions="Auto,*">
                 <Button Grid.Column="0" Name="VisibleGraphMenuButton" HorizontalAlignment="Left" BorderThickness="2" CornerRadius="0"
-                        Padding="8 2" Margin="8 4">
+                        Padding="12 2" Margin="8 4">
                     <Button.Styles>
                         <Style Selector="controls|CheckMarkMenuItem">
                             <!-- NOTE: Without the negative margins, the menu items have too much space between them and

@@ -682,7 +682,7 @@ public partial class StatisticsView : UserControl
 
 		if( filePicker != null )
 		{
-			var newStartFolder = Path.GetDirectoryName( filePicker.Path.LocalPath );
+			var newStartFolder = Path.GetDirectoryName( filePicker.Path.LocalPath ) ?? myDocumentsFolder;
 			ApplicationSettingsStore.SaveStringSetting( ApplicationSettingNames.PrintExportPath, newStartFolder );
 		}
 

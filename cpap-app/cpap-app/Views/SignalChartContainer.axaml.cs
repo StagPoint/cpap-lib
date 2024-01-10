@@ -319,8 +319,16 @@ public partial class SignalChartContainer : UserControl
 		
 		menu.Items.Clear();
 		
-		List<SignalChartConfiguration> signalConfigs = SignalChartConfigurationStore.GetSignalConfigurations();
-		List<EventMarkerConfiguration> eventConfigs  = EventMarkerConfigurationStore.GetEventMarkerConfigurations();
+		List<SignalChartConfiguration> signalConfigs      = SignalChartConfigurationStore.GetSignalConfigurations();
+		List<EventMarkerConfiguration> eventConfigs       = EventMarkerConfigurationStore.GetEventMarkerConfigurations();
+
+		// Remove any Signals that the user has never encountered (this keeps the list clear of things like TargetVent when 
+		// the user is not using a Bilevel or ASV machine, for example)
+		List<string> encounteredSignals = StorageService.Connect().GetStoredSignalNames( UserProfileStore.GetActiveUserProfile().UserProfileID );
+		signalConfigs.RemoveAll( x => !encounteredSignals.Contains( x.SignalName ) );
+		
+		// Remove any Signals that are already included as a Secondary Signal in another graph
+		signalConfigs.RemoveAll( x => signalConfigs.Any( config => config.SecondarySignalName == x.SignalName ) );
 
 		int totalConfigs   = 1;
 		int visibleConfigs = _eventGraph!.IsVisible ? 1 : 0;
