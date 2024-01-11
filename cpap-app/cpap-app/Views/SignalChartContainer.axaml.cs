@@ -576,7 +576,7 @@ public partial class SignalChartContainer : UserControl
 		var pdfDocument = new DailyReportPrintDocument(
 			UserProfileStore.GetActiveUserProfile(),
 			_eventGraph!,
-			_charts,
+			GetChartsInDisplayOrder(),
 			day,
 			_charts.First().GetDisplayedRange()
 		);
@@ -611,7 +611,7 @@ public partial class SignalChartContainer : UserControl
 		var pdfDocument = new DailyReportPrintDocument(
 			UserProfileStore.GetActiveUserProfile(),
 			_eventGraph!,
-			_charts,
+			GetChartsInDisplayOrder(),
 			day,
 			_charts.First().GetDisplayedRange()
 		);
@@ -636,11 +636,11 @@ public partial class SignalChartContainer : UserControl
 		{
 			throw new InvalidOperationException();
 		}
-		
+
 		var pdfDocument = new DailyReportPrintDocument(
 			UserProfileStore.GetActiveUserProfile(),
 			_eventGraph!,
-			_charts,
+			GetChartsInDisplayOrder(),
 			day,
 			_charts.First().GetDisplayedRange()
 		);
@@ -685,6 +685,14 @@ public partial class SignalChartContainer : UserControl
 		}
 
 		return filePicker?.Path.LocalPath;
+	}
+
+	private List<SignalChart> GetChartsInDisplayOrder()
+	{
+		var charts = PinnedCharts.Children.Where( x => x is SignalChart { IsVisible      : true } ).Cast<SignalChart>().ToList();
+		charts.AddRange( UnPinnedCharts.Children.Where( x => x is SignalChart { IsVisible: true } ).Cast<SignalChart>() );
+
+		return charts;
 	}
 
 	#endregion
