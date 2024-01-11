@@ -138,7 +138,7 @@ public partial class DailyEventsListView : UserControl
 		           """;
 
 		var owner     = this.FindAncestorOfType<Window>();
-		var confirmed = await InputDialog.GetConfirmation( owner, Icon.Warning, "Mark as False Positive?", msg );
+		var confirmed = await InputDialog.GetConfirmation( owner!, Icon.Warning, "Mark as False Positive?", msg );
 
 		if( !confirmed )
 		{

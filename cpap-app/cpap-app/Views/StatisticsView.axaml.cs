@@ -166,6 +166,8 @@ public partial class StatisticsView : UserControl
 		group.Items.Add( CompileGroupAverages( "RERA Index",                    groupedDays, day => day.EventSummary.RespiratoryArousalIndex ) );
 		group.Items.Add( CompileGroupAverages( "Flow Limit Index",              groupedDays, GetEventIndex( EventType.FlowLimitation ), value => $"{value:F2}" ) );
 		group.Items.Add( CompileGroupAverages( "Total Time in Apnea (Average)", groupedDays, GetTotalTimeInApnea,                       FormatTimespan ) );
+		
+		group.Items.Add( CompileGroupTotals( "Deleted Events", groupedDays, day => day.Events.Count( x => x.Type == EventType.FalsePositive ) ) );
 
 		if( groupedDays.Any( x => x.Days.Any( day => day.Events.Any( evt => evt.Type == EventType.CSR ) ) ) )
 		{
@@ -361,6 +363,21 @@ public partial class StatisticsView : UserControl
 		          .Sum( x => x.Duration.TotalSeconds );
 	}
 
+	private static TherapyStatisticsLineItemViewModel CompileGroupTotals( string name, List<GroupedDays> groups, Func<DailyReport, double> countFunc, Func<double, string>? conversionFunc = null )
+	{
+		var viewModel = new TherapyStatisticsLineItemViewModel() { Label = name };
+		var counts  = CompileGroupTotals( groups, countFunc );
+
+		conversionFunc ??= ( value ) => $"{value:N0}";
+
+		foreach( var average in counts )
+		{
+			viewModel.Values.Add( conversionFunc( average ) );
+		}
+
+		return viewModel;
+	}
+
 	private static TherapyStatisticsLineItemViewModel CompileGroupMaximums( string name, List<GroupedDays> groups, Func<DailyReport, double> averageFunc, Func<double, string>? conversionFunc = null )
 	{
 		var viewModel = new TherapyStatisticsLineItemViewModel() { Label = name };
@@ -434,6 +451,25 @@ public partial class StatisticsView : UserControl
 			foreach( var day in group.Days )
 			{
 				maxValue = Math.Max( maxValue, func( day ) );
+			}
+
+			result.Add( maxValue );
+		}
+
+		return result;
+	}
+
+	private static List<double> CompileGroupTotals( List<GroupedDays> groups, Func<DailyReport, double> func )
+	{
+		var result = new List<double>( groups.Count );
+
+		foreach( var group in groups )
+		{
+			double maxValue = 0;
+
+			foreach( var day in group.Days )
+			{
+				maxValue += func( day );
 			}
 
 			result.Add( maxValue );

@@ -5,12 +5,15 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform;
 using Avalonia.VisualTree;
 
 using cpap_app.ViewModels;
+
+using cpaplib;
 
 using FluentAvalonia.UI.Controls;
 
@@ -122,14 +125,24 @@ public partial class AppSettingsView : UserControl
 	{
 		e.Handled = true;
 		
-		var msgBox = MessageBoxManager.GetMessageBoxStandard(
-			"Application Settings",
-			"This functionality has not yet been implemented.\nIt is the next priority, so it should be coming soon ;)",
-			ButtonEnum.Ok,
-			Icon.Info );
+		var settingsView = new ImportSettingsView()
+		{
+			DataContext = new CpapImportSettings()
+		};
 
-		await msgBox.ShowWindowDialogAsync( this.FindAncestorOfType<Window>() );
-
+		var dialog = new TaskDialog()
+		{
+			Title = $"Edit Import Settings",
+			Buttons =
+			{
+				TaskDialogButton.OKButton,
+			},
+			XamlRoot = (Visual)VisualRoot!,
+			Content  = settingsView,
+			MaxWidth = 800,
+		};
+		
+		await dialog.ShowAsync();
 	}
 }
 

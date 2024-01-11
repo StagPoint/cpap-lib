@@ -1,17 +1,13 @@
 ﻿using System;
-using System.ComponentModel.DataAnnotations;
-using System.Diagnostics;
 
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
-using Avalonia.Markup.Xaml;
 
 namespace cpap_app.Controls;
 
 public partial class AnnotationEditor : UserControl
 {
-	public event EventHandler CloseButtonPressed;
+	public event EventHandler? CloseButtonPressed;
 	
 	public AnnotationEditor()
 	{

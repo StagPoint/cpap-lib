@@ -322,8 +322,8 @@ public partial class SignalChartContainer : UserControl
 		List<SignalChartConfiguration> signalConfigs      = SignalChartConfigurationStore.GetSignalConfigurations();
 		List<EventMarkerConfiguration> eventConfigs       = EventMarkerConfigurationStore.GetEventMarkerConfigurations();
 
-		// Remove any Signals that the user has never encountered (this keeps the list clear of things like TargetVent when 
-		// the user is not using a Bilevel or ASV machine, for example)
+		// Remove any Signals that the user has never encountered (this keeps the list clear of things like TargetVent when the 
+		// user is not using a Bilevel or ASV machine, or SpO2 when the user has never imported pulse oximetry data, for example)
 		List<string> encounteredSignals = StorageService.Connect().GetStoredSignalNames( UserProfileStore.GetActiveUserProfile().UserProfileID );
 		signalConfigs.RemoveAll( x => !encounteredSignals.Contains( x.SignalName ) );
 		
@@ -681,7 +681,7 @@ public partial class SignalChartContainer : UserControl
 		if( filePicker != null )
 		{
 			var newStartFolder = Path.GetDirectoryName( filePicker.Path.LocalPath );
-			ApplicationSettingsStore.SaveStringSetting( ApplicationSettingNames.PrintExportPath, newStartFolder );
+			ApplicationSettingsStore.SaveStringSetting( ApplicationSettingNames.PrintExportPath, newStartFolder ?? myDocumentsFolder );
 		}
 
 		return filePicker?.Path.LocalPath;

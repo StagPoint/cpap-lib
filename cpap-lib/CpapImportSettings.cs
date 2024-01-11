@@ -44,7 +44,7 @@ namespace cpaplib
 		/// <see cref="FlowReductionThreshold"/>, <see cref="FlowReductionMinimumDuration"/>, and
 		/// <see cref="FlowReductionWindowSize"/>
 		/// </summary>
-		public bool FlagFlowReductions { get; set; }
+		public bool FlagFlowReductions { get; set; } = true;
 
 		/// <summary>
 		/// Sets the minimum duration of a <see cref="EventType.FlowReduction"/> event. Events shorter than this

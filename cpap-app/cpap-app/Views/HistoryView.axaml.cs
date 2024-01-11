@@ -27,8 +27,6 @@ using QuestPDF.Fluent;
 using QuestPDF.Infrastructure;
 using QuestPDF.Previewer;
 
-using SettingNames = cpaplib.SettingNames;
-
 namespace cpap_app.Views;
 
 public partial class HistoryView : UserControl
@@ -367,7 +365,7 @@ public partial class HistoryView : UserControl
 		if( filePicker != null )
 		{
 			var newStartFolder = Path.GetDirectoryName( filePicker.Path.LocalPath );
-			ApplicationSettingsStore.SaveStringSetting( ApplicationSettingNames.PrintExportPath, newStartFolder );
+			ApplicationSettingsStore.SaveStringSetting( ApplicationSettingNames.PrintExportPath, newStartFolder ?? myDocumentsFolder );
 		}
 
 		return filePicker?.Path.LocalPath;
