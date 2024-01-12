@@ -16,6 +16,7 @@ public class OximetryEventGeneratorConfigStore
 		var userMapping = StorageService.GetMapping<UserProfile>();
 
 		var mapping = StorageService.CreateMapping<OximetryEventGeneratorConfig>( "oximetry_import_options" );
+		mapping.PrimaryKey = new PrimaryKeyColumn( "id", typeof( int ), true );
 		mapping.ForeignKey = new ForeignKeyColumn( userMapping );
 
 		StorageService.Connect().CreateTable<OximetryEventGeneratorConfig>();

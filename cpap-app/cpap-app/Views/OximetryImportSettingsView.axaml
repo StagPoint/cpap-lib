@@ -1,0 +1,188 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewModels="clr-namespace:cpap_app.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="600" 
+             x:DataType="viewModels:ImportOptionsViewModel"
+             x:Class="cpap_app.Views.OximetryImportSettingsView">
+    <Design.DataContext>
+        <viewModels:ImportOptionsViewModel />
+    </Design.DataContext>
+    <UserControl.Resources>
+        <GridLength x:Key="ColumnSpacing">20</GridLength>
+    </UserControl.Resources>
+    <UserControl.Styles>
+        <Style Selector="TextBlock.ColumnHeader">
+            <Setter Property="Background" Value="{DynamicResource DataGridColumnHeaderBackgroundBrush}" />
+            <!--
+            <Setter Property="BorderBrush" Value="{DynamicResource DataGridGridLinesBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            -->
+            <Setter Property="Theme" Value="{DynamicResource BodyStrongTextBlockStyle}" />
+            <Setter Property="Foreground" Value="{DynamicResource DataGridColumnHeaderForegroundBrush}" />
+            <Setter Property="Padding" Value="4 0 16 2"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Margin" Value="-8 -4 -32 4"/>
+        </Style>
+        <Style Selector="Border > Grid > StackPanel">
+            <Setter Property="Margin" Value="0 2"/>
+        </Style>
+    </UserControl.Styles>
+    <ScrollViewer MaxHeight="450">
+        <StackPanel Orientation="Vertical" Spacing="8" Grid.IsSharedSizeScope="True">
+            <Border Name="DeviceImportOptions" DataContext="{Binding PulseOximetrySettings}" Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}" BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1" Padding="8 4">
+                <Grid RowDefinitions="Auto, Auto, Auto" HorizontalAlignment="Left">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" SharedSizeGroup="OximetryImportSettingsC0"/>
+                        <ColumnDefinition Width="{DynamicResource ColumnSpacing}"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Device Time Adjustment" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    <StackPanel Grid.Row="0" Grid.Column="2" Orientation="Horizontal" Spacing="8" >
+                        <NumericUpDown HorizontalAlignment="Left" Value="{Binding TimeAdjust}" Increment="10.0" Minimum="-3600" Maximum="3600" ShowButtonSpinner="False"/>
+                        <TextBlock Text="seconds" VerticalAlignment="Center" IsEnabled="False"/>                    
+                    </StackPanel>
+                    
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Oxygen Saturation Adjustment" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    <StackPanel Grid.Row="1" Grid.Column="2" Orientation="Horizontal" Spacing="8" >
+                        <NumericUpDown HorizontalAlignment="Left" Value="{Binding CalibrationAdjust}" Increment="1.0" Minimum="-4" Maximum="4" ShowButtonSpinner="False"/>
+                        <TextBlock Text="%" VerticalAlignment="Center" IsEnabled="False"/>                    
+                    </StackPanel>
+                    
+                    <TextBlock Grid.Column="0" Grid.Row="2" Text="Flag Events" FontWeight="SemiBold" VerticalAlignment="Center" />
+                    <ToggleSwitch Grid.Column="2" Grid.Row="2" Name="GenerateEvents" IsChecked="{Binding GenerateEvents}" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0"/>
+                </Grid>
+            </Border>
+            <StackPanel Name="EventImportOptions" DataContext="{Binding OximetryEventSettings}" Orientation="Vertical" Spacing="8" IsEnabled="{Binding #GenerateEvents.IsChecked}">
+                <Border Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}" BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1" Padding="8 4">
+                    <Grid RowDefinitions="Auto,Auto,Auto" HorizontalAlignment="Left">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="OximetryImportSettingsC0"/>
+                            <ColumnDefinition Width="{DynamicResource ColumnSpacing}"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <TextBlock Grid.Column="0" Grid.Row="0" Text="Ignore all events for the first" FontWeight="SemiBold" VerticalAlignment="Center" />
+                        <StackPanel Grid.Row="0" Grid.Column="2" Orientation="Horizontal" Spacing="8" >
+                            <NumericUpDown HorizontalAlignment="Left" Value="{Binding EventScanDelay}" Increment="0.1" Minimum="0" Maximum="600" ShowButtonSpinner="False"/>
+                            <TextBlock Text="seconds" VerticalAlignment="Center" IsEnabled="False"/>                    
+                        </StackPanel>
+                    </Grid>
+                </Border>
+                
+                <Border Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}" BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1" Padding="8 4">
+                    <Grid RowDefinitions="Auto,Auto,Auto" HorizontalAlignment="Left">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="OximetryImportSettingsC1"/>
+                            <ColumnDefinition Width="{DynamicResource ColumnSpacing}"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Text="Hypoxemia Events" Classes="ColumnHeader"/>
+                        
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Flag when SaO2 is below" VerticalAlignment="Center" />
+                        <StackPanel Grid.Row="1" Grid.Column="2" Orientation="Horizontal" Spacing="8">
+                            <NumericUpDown Name="HypoxemiaThreshold" HorizontalAlignment="Left" Value="{Binding HypoxemiaThreshold}" Increment="1" Minimum="80" Maximum="90" ShowButtonSpinner="False"/>
+                        </StackPanel>
+                        
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding #HypoxemiaThreshold.Value, StringFormat='SaO2 must be below {0}% for at least'}" VerticalAlignment="Center" />
+                        <StackPanel Grid.Row="2" Grid.Column="2" Orientation="Horizontal" Spacing="8" >
+                            <NumericUpDown HorizontalAlignment="Left" Value="{Binding HypoxemiaMinimumDuration}" Increment="1" Minimum="0" Maximum="30" ShowButtonSpinner="False"/>
+                            <TextBlock Text="seconds" VerticalAlignment="Center" IsEnabled="False"/>                    
+                        </StackPanel>
+                        
+                    </Grid>
+                </Border>
+
+                <Border Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}" BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1" Padding="8 4">
+                    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto" HorizontalAlignment="Left">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="OximetryImportSettingsC1"/>
+                            <ColumnDefinition Width="{DynamicResource ColumnSpacing}"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Text="Desaturation Events" Classes="ColumnHeader"/>
+                        
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Flag when SaO2 falls below baseline by" VerticalAlignment="Center" />
+                        <StackPanel Grid.Row="1" Grid.Column="2" Orientation="Horizontal" Spacing="8">
+                            <NumericUpDown Name="DesaturationThreshold" HorizontalAlignment="Left" Value="{Binding DesaturationThreshold}" Increment="1" Minimum="80" Maximum="90" ShowButtonSpinner="False"/>
+                            <TextBlock Text="%" VerticalAlignment="Center" IsEnabled="False"/>                    
+                        </StackPanel>
+                        
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding #DesaturationThreshold.Value, StringFormat='SaO2 below {0}% below baseline longer than'}" VerticalAlignment="Center" />
+                        <StackPanel Grid.Row="2" Grid.Column="2" Classes="NumericInputField" Orientation="Horizontal" Spacing="8" >
+                            <NumericUpDown HorizontalAlignment="Left" Value="{Binding DesaturationMinimumDuration}" Increment="1" Minimum="0" Maximum="30" ShowButtonSpinner="False"/>
+                            <TextBlock Text="seconds" VerticalAlignment="Center" IsEnabled="False"/>                    
+                        </StackPanel>
+                        
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="The maximum duration of event is" VerticalAlignment="Center" />
+                        <StackPanel Grid.Row="3" Grid.Column="2" Orientation="Horizontal" Spacing="8" >
+                            <NumericUpDown HorizontalAlignment="Left" Value="{Binding DesaturationMaximumDuration}" Increment="1" Minimum="0" Maximum="30" ShowButtonSpinner="False"/>
+                            <TextBlock Text="seconds" VerticalAlignment="Center" IsEnabled="False"/>                    
+                        </StackPanel>
+                        
+                    </Grid>
+                </Border>
+
+                <Border Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}" BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1" Padding="8 4">
+                    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto" HorizontalAlignment="Left">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="OximetryImportSettingsC1"/>
+                            <ColumnDefinition Width="{DynamicResource ColumnSpacing}"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Text="Pulse Rate Events" Classes="ColumnHeader"/>
+                        
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Tachycardia Threshold" VerticalAlignment="Center" />
+                        <StackPanel Grid.Row="1" Grid.Column="2" Orientation="Horizontal" Spacing="8">
+                            <NumericUpDown HorizontalAlignment="Left" Value="{Binding TachycardiaThreshold}" Increment="1" Minimum="80" Maximum="90" ShowButtonSpinner="False"/>
+                            <TextBlock Text="bpm" VerticalAlignment="Center" IsEnabled="False"/>                    
+                        </StackPanel>
+                        
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Bradycardia Threshold" VerticalAlignment="Center" />
+                        <StackPanel Grid.Row="2" Grid.Column="2" Orientation="Horizontal" Spacing="8">
+                            <NumericUpDown HorizontalAlignment="Left" Value="{Binding BradycardiaThreshold}" Increment="1" Minimum="80" Maximum="90" ShowButtonSpinner="False"/>
+                            <TextBlock Text="bpm" VerticalAlignment="Center" IsEnabled="False"/>                    
+                        </StackPanel>
+                        
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="The minimum duration of an event is" VerticalAlignment="Center" />
+                        <StackPanel Grid.Row="3" Grid.Column="2" Orientation="Horizontal" Spacing="8" >
+                            <NumericUpDown HorizontalAlignment="Left" Value="{Binding PulseRateMinimumDuration}" Increment="1" Minimum="0" Maximum="30" ShowButtonSpinner="False"/>
+                            <TextBlock Text="seconds" VerticalAlignment="Center" IsEnabled="False"/>                    
+                        </StackPanel>
+                        
+                    </Grid>
+                </Border>
+
+                <Border Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}" BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1" Padding="8 4">
+                    <Grid RowDefinitions="Auto,Auto,Auto" HorizontalAlignment="Left">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="OximetryImportSettingsC1"/>
+                            <ColumnDefinition Width="{DynamicResource ColumnSpacing}"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Text="Pulse Change Events" Classes="ColumnHeader"/>
+                        
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Flag event when the rate changes by at least" VerticalAlignment="Center" />
+                        <StackPanel Grid.Row="1" Grid.Column="2" Orientation="Horizontal" Spacing="8">
+                            <NumericUpDown HorizontalAlignment="Left" Value="{Binding PulseChangeThreshold}" Increment="1" Minimum="80" Maximum="90" ShowButtonSpinner="False"/>
+                            <TextBlock Text="bpm" VerticalAlignment="Center" IsEnabled="False"/>                    
+                        </StackPanel>
+                        
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Compare the amount of change to the previous" VerticalAlignment="Center" />
+                        <StackPanel Grid.Row="2" Grid.Column="2" Orientation="Horizontal" Spacing="8">
+                            <NumericUpDown HorizontalAlignment="Left" Value="{Binding PulseChangeWindowLength}" Increment="1" Minimum="30" Maximum="600" ShowButtonSpinner="False"/>
+                            <TextBlock Text="seconds" VerticalAlignment="Center" IsEnabled="False"/>                    
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

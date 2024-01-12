@@ -11,8 +11,14 @@
     </Design.DataContext>
     <UserControl.Resources>
         <converters:NormalizedPercentConverter x:Key="PercentConverter" />
+        <converters:TimespanToSecondsConverter x:Key="TimespanToSeconds" />
         <GridLength x:Key="ColumnSpacing">20</GridLength>
     </UserControl.Resources>
+    <UserControl.Styles>
+        <Style Selector="Border > Grid > StackPanel">
+            <Setter Property="Margin" Value="0 2"/>
+        </Style>
+    </UserControl.Styles>
     <StackPanel Orientation="Vertical" Spacing="8" Grid.IsSharedSizeScope="True" x:DataType="cpaplib:CpapImportSettings">
         <Border Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}" BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1" Padding="8 4">
             <Grid RowDefinitions="Auto, Auto" HorizontalAlignment="Left">
@@ -21,8 +27,11 @@
                     <ColumnDefinition Width="{DynamicResource ColumnSpacing}"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
-                <TextBlock Grid.Row="0" Grid.Column="0" Text="CPAP Clock Drift" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                <MaskedTextBox Grid.Row="0" Grid.Column="2" Name="StartTime" Width="100" Mask="00:00:00" Watermark="00:00:00" HorizontalAlignment="Left" />
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="CPAP Time Adjustment" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                <StackPanel Grid.Row="0" Grid.Column="2" Orientation="Horizontal" Spacing="8" IsEnabled="{Binding #FlagLargeLeaks.IsChecked}" >
+                    <NumericUpDown HorizontalAlignment="Left" Value="{Binding ClockTimeAdjustment, Converter={StaticResource TimespanToSeconds}}" Increment="10.0" Minimum="-3600" Maximum="3600" ShowButtonSpinner="False"/>
+                    <TextBlock Text="seconds" VerticalAlignment="Center" IsEnabled="False"/>                    
+                </StackPanel>
             </Grid>
         </Border>
         <Border Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}" BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1" Padding="8 4">
@@ -60,7 +69,7 @@
                     <NumericUpDown Name="FlowLimitThreshold" HorizontalAlignment="Left" Value="{Binding FlowLimitThreshold}" Increment="0.1" Minimum="0" Maximum="1" ShowButtonSpinner="False"/>
                 </StackPanel>
                 
-                <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding #FlowLimitThreshold.Value, StringFormat='Flow Limitation must be above {0} for'}" VerticalAlignment="Center" IsEnabled="{Binding FlagFlowLimits}" />
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding #FlowLimitThreshold.Value, StringFormat='Flow Limitation must be above {0} for'}" VerticalAlignment="Center" />
                 <StackPanel Grid.Row="2" Grid.Column="2" Orientation="Horizontal" Spacing="8" IsEnabled="{Binding #FlagFlowLimitations.IsChecked}" >
                     <NumericUpDown HorizontalAlignment="Left" Value="{Binding FlowLimitMinimumDuration}" Increment="1" Minimum="0" Maximum="30" ShowButtonSpinner="False"/>
                     <TextBlock Text="seconds" VerticalAlignment="Center" IsEnabled="False"/>                    

@@ -622,7 +622,7 @@ public partial class EventGraph : UserControl
 		var eventCount         = _day.Events.Count( x => x.StartTime >= startTime && x.StartTime <= endTime && EventTypes.Apneas.Contains( x.Type ) );
 		var apneaHypopneaIndex = eventCount / Math.Max( 1, GetTotalSleepTime( startTime, endTime ).TotalHours );
 
-		CurrentValue.Text = $"{startTime:h:mm:ss tt} to {endTime:h:mm:ss tt}        Duration: {duration:c}        AHI: {apneaHypopneaIndex:F2}";
+		CurrentValue.Text = $"{startTime:h:mm:ss tt} to {endTime:h:mm:ss tt}        Zoom: {duration:c}        AHI: {apneaHypopneaIndex:F2}";
 
 		RenderGraph( false );
 	}

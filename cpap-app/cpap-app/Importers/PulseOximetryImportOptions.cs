@@ -6,7 +6,7 @@ public class PulseOximetryImportOptions
 
 	public string DeviceType { get; set; } = "UNKNOWN";
 
+	public double TimeAdjust { get; set; } = 0;
 	public double CalibrationAdjust { get; set; } = 0;
-	public double TimeAdjust        { get; set; } = 0;
 	public bool   GenerateEvents    { get; set; } = true;
 }

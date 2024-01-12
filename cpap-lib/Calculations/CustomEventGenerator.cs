@@ -145,7 +145,7 @@ namespace cpaplib
 			}
 		}
 
-		private static List<ReportedEvent> Annotate( EventType eventType, Signal signal, double minDuration, double redLine, bool interpolateSamples = true )
+		private static List<ReportedEvent> Annotate( EventType eventType, Signal signal, double minDuration, double redLine, bool interpolateSamples = true, double rampTime = 60 )
 		{
 			List<ReportedEvent> events = new List<ReportedEvent>();
 			
@@ -159,6 +159,12 @@ namespace cpaplib
 			{
 				var sample = sourceData[ i ];
 				var time   = i * sampleInterval;
+
+				// No events are generated during the first "Ramp Time" seconds of each Session. 
+				if( time < rampTime )
+				{
+					continue;
+				}
 
 				switch( state )
 				{

@@ -127,7 +127,7 @@ public partial class AppSettingsView : UserControl
 		
 		var settingsView = new ImportSettingsView()
 		{
-			DataContext = new CpapImportSettings()
+			DataContext = new ImportOptionsViewModel()
 		};
 
 		var dialog = new TaskDialog()
