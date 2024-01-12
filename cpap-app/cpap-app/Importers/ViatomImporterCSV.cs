@@ -50,7 +50,7 @@ public class ViatomImporterCSV : IOximetryImporter
 
 	#region Public functions
 
-	public ImportedData? Load( string filename, Stream stream, PulseOximetryImportOptions options, OximetryEventGeneratorConfig? eventConfig = null )
+	public ImportedData? Load( string filename, Stream stream, PulseOximetryImportOptions importOptions )
 	{
 		using var reader = new StreamReader( stream, Encoding.Default, leaveOpen: true );
 
@@ -137,7 +137,7 @@ public class ViatomImporterCSV : IOximetryImporter
 				return null;
 			}
 
-			currentDateTime = currentDateTime.AddSeconds( options.TimeAdjust );
+			currentDateTime = currentDateTime.AddSeconds( importOptions.TimeAdjust );
 
 			if( isStartRecord )
 			{
@@ -149,7 +149,7 @@ public class ViatomImporterCSV : IOximetryImporter
 
 			if( int.TryParse( lineData[ 1 ], out var oxy ) && oxy <= 100 )
 			{
-				oxygen.Samples.Add( oxy + options.CalibrationAdjust );
+				oxygen.Samples.Add( oxy + importOptions.CalibrationAdjust );
 				lastGoodOxy = oxy;
 
 				invalidDataFlag = null;
@@ -218,9 +218,9 @@ public class ViatomImporterCSV : IOximetryImporter
 			Sessions  = new List<Session>() { session },
 		};
 
-		if( options.GenerateEvents )
+		if( importOptions.GenerateEvents )
 		{
-			result.Events = OximetryEventGenerator.GenerateEvents( eventConfig ?? new OximetryEventGeneratorConfig(), oxygen, pulse );
+			result.Events = OximetryEventGenerator.GenerateEvents( importOptions, oxygen, pulse );
 		}
 
 		if( faultEvents.Count > 1 )

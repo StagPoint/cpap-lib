@@ -10,29 +10,9 @@ using MathUtil = cpap_app.Helpers.MathUtil;
 
 namespace cpap_app.Importers;
 
-public class OximetryEventGeneratorConfig
-{
-	public double EventScanDelay { get; set; } = 300;
-
-	public double HypoxemiaThreshold       { get; set; } = 89;
-	public double HypoxemiaMinimumDuration { get; set; } = 8;
-
-	public double DesaturationThreshold       { get; set; } = 3;
-	public double DesaturationWindowLength    { get; set; } = 600;
-	public double DesaturationMinimumDuration { get; set; } = 1;
-	public double DesaturationMaximumDuration { get; set; } = 120;
-
-	public double TachycardiaThreshold     { get; set; } = 100;
-	public double BradycardiaThreshold     { get; set; } = 50;
-	public double PulseRateMinimumDuration { get; set; } = 10;
-
-	public double PulseChangeThreshold    { get; set; } = 10;
-	public double PulseChangeWindowLength { get; set; } = 120;
-}
-
 public static class OximetryEventGenerator
 {
-	public static List<ReportedEvent> GenerateEvents( OximetryEventGeneratorConfig config, Signal oxygen, Signal pulse )
+	public static List<ReportedEvent> GenerateEvents( PulseOximetryImportOptions config, Signal oxygen, Signal pulse )
 	{
 		var events = new List<ReportedEvent>();
 
@@ -53,7 +33,7 @@ public static class OximetryEventGenerator
 		}
 	}
 
-	private static void GeneratePulseChangeEvents( OximetryEventGeneratorConfig config, Signal signal, List<ReportedEvent> events )
+	private static void GeneratePulseChangeEvents( PulseOximetryImportOptions config, Signal signal, List<ReportedEvent> events )
 	{
 		const double THRESHOLD     = 0.1;
 		const double PERSISTENCE   = 0.1;
@@ -101,7 +81,7 @@ public static class OximetryEventGenerator
 		}
 	}
 
-	private static void GeneratePulseRateEvents( OximetryEventGeneratorConfig config, Signal signal, List<ReportedEvent> events )
+	private static void GeneratePulseRateEvents( PulseOximetryImportOptions config, Signal signal, List<ReportedEvent> events )
 	{
 		if( signal.Samples.Count == 0 )
 		{
@@ -220,7 +200,7 @@ public static class OximetryEventGenerator
 		}
 	}
 
-	private static void GenerateDesaturationEvents( OximetryEventGeneratorConfig config, Signal signal, List<ReportedEvent> events )
+	private static void GenerateDesaturationEvents( PulseOximetryImportOptions config, Signal signal, List<ReportedEvent> events )
 	{
 		int    state        = 0;
 		int    windowSize   = (int)Math.Ceiling( config.DesaturationWindowLength * signal.FrequencyInHz );
@@ -307,7 +287,7 @@ public static class OximetryEventGenerator
 		}
 	}
 
-	private static void GenerateHypoxemiaEvents( OximetryEventGeneratorConfig config, Signal signal, List<ReportedEvent> events )
+	private static void GenerateHypoxemiaEvents( PulseOximetryImportOptions config, Signal signal, List<ReportedEvent> events )
 	{
 		if( signal.Samples.Count == 0 )
 		{

@@ -39,7 +39,7 @@ namespace cpap_db
 	{
 		#region Private fields
 
-		public SQLiteConnection Connection { get; private set; } = null;
+		public SQLiteConnection Connection { get; init; }
 
 		private static Dictionary<System.Type, DatabaseMapping> _mappings = new();
 		
@@ -74,7 +74,7 @@ namespace cpap_db
 			var sessionMapping = CreateMapping<Session>( TableNames.Session );
 			sessionMapping.ForeignKey = new ForeignKeyColumn( dayMapping );
 
-			var samplesBlobMapping = new ColumnMapping( "samples", "Samples", typeof( Signal ) )
+			var samplesBlobMapping = new ColumnMapping( nameof( Signal.Samples ).ToLowerInvariant(), nameof( Signal.Samples ), typeof( Signal ) )
 			{
 				Converter = new SignalDataBlobConverter(),
 			};
@@ -89,7 +89,7 @@ namespace cpap_db
 			var eventsMapping = CreateMapping<ReportedEvent>( TableNames.ReportedEvent );
 			eventsMapping.ForeignKey = new ForeignKeyColumn( dayMapping );
 
-			var settingsValuesBlobMapping = new ColumnMapping( "values", nameof( MachineSettings.Values ), typeof( MachineSettings ) )
+			var settingsValuesBlobMapping = new ColumnMapping( nameof( MachineSettings.Values ).ToLowerInvariant(), nameof( MachineSettings.Values ), typeof( MachineSettings ) )
 			{
 				Converter = new SettingDictionaryBlobConverter(),
 			};
@@ -100,7 +100,7 @@ namespace cpap_db
 			machineSettingsMapping.Columns.Add( settingsValuesBlobMapping );
 
 			var cpapImportSettingsMapping = CreateMapping<CpapImportSettings>( TableNames.CpapImportSettings );
-			cpapImportSettingsMapping.PrimaryKey = new PrimaryKeyColumn( "id", typeof( int ), true );
+			cpapImportSettingsMapping.ForeignKey = new ForeignKeyColumn( profileMapping );
 
 			#endregion
 		}
@@ -930,7 +930,6 @@ WHERE {userMapping.TableName}.{userMapping.PrimaryKey.ColumnName} = ?
 		public void Dispose()
 		{
 			Connection.Dispose();
-			Connection = null;
 		}
 		
 		#endregion 

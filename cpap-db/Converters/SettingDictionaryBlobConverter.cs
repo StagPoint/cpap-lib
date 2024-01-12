@@ -27,7 +27,7 @@ public class SettingDictionaryBlobConverter : IBlobTypeConverter
 		return buffer.ToArray();
 	}
 
-	public object ConvertFromBlob( byte[] data )
+	public object ConvertFromBlob( byte[]? data )
 	{
 		// TODO: This workaround was only intended to get me through data conversion, and needs to be removed
 		if( data == null )
@@ -55,7 +55,7 @@ public class SettingDictionaryBlobConverter : IBlobTypeConverter
 	
 	#region Private functions
 
-	private object? ReadValue( BinaryReader reader )
+	private static object? ReadValue( BinaryReader reader )
 	{
 		var code = (SerializedTypeCode)reader.ReadByte();
 		switch( code )

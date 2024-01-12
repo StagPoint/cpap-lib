@@ -48,7 +48,7 @@ public class ViatomDesktopImporterCSV : IOximetryImporter
 
 	#region Public functions
 
-	public ImportedData? Load( string filename, Stream stream, PulseOximetryImportOptions options, OximetryEventGeneratorConfig? eventConfig = null )
+	public ImportedData? Load( string filename, Stream stream, PulseOximetryImportOptions importOptions )
 	{
 		using var reader = new StreamReader( stream, Encoding.Default, leaveOpen: true );
 
@@ -141,7 +141,7 @@ public class ViatomDesktopImporterCSV : IOximetryImporter
 				return null;
 			}
 
-			currentDateTime = currentDateTime.AddSeconds( options.TimeAdjust );
+			currentDateTime = currentDateTime.AddSeconds( importOptions.TimeAdjust );
 
 			// Remove the quoted date column and leave the rest of the data (added 2 to skip the quote and the comma)
 			line = line.Substring( quoteIndex + 2 );
@@ -158,7 +158,7 @@ public class ViatomDesktopImporterCSV : IOximetryImporter
 
 			if( byte.TryParse( lineData[ 0 ], out var oxy ) && oxy <= 100 )
 			{
-				oxygen.Samples.Add( oxy + options.CalibrationAdjust );
+				oxygen.Samples.Add( oxy + importOptions.CalibrationAdjust );
 				lastGoodOxy = oxy;
 			}
 			else
@@ -225,9 +225,9 @@ public class ViatomDesktopImporterCSV : IOximetryImporter
 			Sessions  = new List<Session>() { session },
 		};
 
-		if( options.GenerateEvents )
+		if( importOptions.GenerateEvents )
 		{
-			result.Events = OximetryEventGenerator.GenerateEvents( eventConfig ?? new OximetryEventGeneratorConfig(), oxygen, pulse );
+			result.Events = OximetryEventGenerator.GenerateEvents( importOptions, oxygen, pulse );
 		}
 
 		if( faultEvents.Count > 1 )

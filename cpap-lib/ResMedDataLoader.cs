@@ -63,7 +63,7 @@ namespace cpaplib
 		};
 
 		private MachineIdentification _machineInfo    = new MachineIdentification();
-		private TimeSpan              _timeAdjustment = TimeSpan.Zero;
+		private CpapImportSettings    _importSettings = new CpapImportSettings();
 
 		#endregion
 
@@ -129,12 +129,9 @@ namespace cpaplib
 			return machineInfo;
 		}
 
-		public List<DailyReport> LoadFromFolder( string rootFolder, DateTime? minDate = null, DateTime? maxDate = null, TimeSpan? timeAdjustment = null )
+		public List<DailyReport> LoadFromFolder( string rootFolder, DateTime? minDate = null, DateTime? maxDate = null, CpapImportSettings importSettings = null )
 		{
-			if( timeAdjustment.HasValue )
-			{
-				_timeAdjustment = (TimeSpan)timeAdjustment;
-			}
+			_importSettings = importSettings ?? new CpapImportSettings();
 
 			EnsureCorrectFolderStructure( rootFolder );
 
@@ -341,7 +338,7 @@ namespace cpaplib
 							// because of differences in sampling rate, so we keep track of the start time and end
 							// time of each Signal separately. Note the addition of a time adjustment, which allows
 							// the user to calibrate for "drift" of the ResMed machine's internal clock.  
-							var startTime = header.StartTime.Value + _timeAdjustment;
+							var startTime = header.StartTime.Value + _importSettings.ClockTimeAdjustment;
 							var endTime   = startTime.AddSeconds( header.NumberOfDataRecords * header.DurationOfDataRecord );
 
 							// We need to see if the session already contains a signal by this name, so we know what to do with it. 
@@ -513,7 +510,7 @@ namespace cpaplib
 				day.UpdateEventSummary();
 
 				// Generate events that are of interest which are not reported by the ResMed machine
-				CustomEventGenerator.GenerateEvents( day );
+				CustomEventGenerator.GenerateEvents( day, _importSettings );
 			}
 		}
 
@@ -559,7 +556,7 @@ namespace cpaplib
 			foreach( var filename in filenames )
 			{
 				var file = EdfFile.Open( filename );
-				day.RecordingStartTime = file.Header.StartTime.Value + _timeAdjustment;
+				day.RecordingStartTime = file.Header.StartTime.Value + _importSettings.ClockTimeAdjustment;
 
 				foreach( var annotationSignal in file.AnnotationSignals )
 				{
@@ -618,7 +615,7 @@ namespace cpaplib
 			foreach( var filename in filenames )
 			{
 				var file = EdfFile.Open( filename );
-				day.RecordingStartTime = file.Header.StartTime.Value + _timeAdjustment;
+				day.RecordingStartTime = file.Header.StartTime.Value + _importSettings.ClockTimeAdjustment;
 
 				foreach( var annotationSignal in file.AnnotationSignals )
 				{
@@ -690,7 +687,7 @@ namespace cpaplib
 				if( day != null )
 				{
 					day.MachineInfo        =  _machineInfo;
-					day.RecordingStartTime += _timeAdjustment;
+					day.RecordingStartTime += _importSettings.ClockTimeAdjustment;
 
 					days.Add( day );
 				}
@@ -895,6 +892,7 @@ namespace cpaplib
 			{
 				var mode = (int)data.GetValue( "Mode" );
 
+				// ReSharper disable once ConvertIfStatementToConditionalTernaryExpression
 				if( s_modeMapping.TryGetValue( mode, out OperatingMode mappedMode ) )
 				{
 					operatingMode = mappedMode;

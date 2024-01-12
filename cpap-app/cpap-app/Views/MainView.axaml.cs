@@ -696,7 +696,7 @@ public partial class MainView : UserControl
 					{
 						await using var file = File.OpenRead( fileItem.Path.LocalPath );
 
-						var eventGeneratorConfig = OximetryEventGeneratorConfigStore.GetImportOptions( ActiveUserProfile.UserProfileID );
+						var importOptions = ImportOptionsStore.GetPulseOximetryImportOptions( ActiveUserProfile.UserProfileID );
 
 						foreach( var importer in importers )
 						{
@@ -706,9 +706,7 @@ public partial class MainView : UserControl
 								break;
 							}
 
-							var importOptions = PulseOximetryImportOptionsStore.GetImportOptions( ActiveUserProfile.UserProfileID, importer.Source );
-
-							var data = importer.Load( fileItem.Name, file, importOptions, eventGeneratorConfig );
+							var data = importer.Load( fileItem.Name, file, importOptions );
 							if( data is { Sessions.Count: > 0 } )
 							{
 								importedData.Add( data );
@@ -1150,6 +1148,9 @@ public partial class MainView : UserControl
 
 	private DateTime? ImportFrom( ICpapDataLoader loader, string folder, DateTime? startDate, DateTime? endDate )
 	{
+		var profileID      = ActiveUserProfile.UserProfileID;
+		var importSettings = ImportOptionsStore.GetCpapImportSettings( profileID );
+
 		using var storage = StorageService.Connect();
 		storage.Connection.BeginTransaction();
 
@@ -1157,12 +1158,10 @@ public partial class MainView : UserControl
 		{
 			int startTime = Environment.TickCount;
 
-			var profileID = ActiveUserProfile.UserProfileID;
-
 			var firstDay = startDate ?? storage.GetMostRecentStoredDate( profileID ).AddHours( 12 );
 			var lastDay  = endDate ?? DateTime.Today.AddDays( 1 );
 
-			var days = loader.LoadFromFolder( folder, firstDay, lastDay, TimeSpan.Zero );
+			var days = loader.LoadFromFolder( folder, firstDay, lastDay, importSettings );
 
 			if( days == null || days.Count == 0 )
 			{

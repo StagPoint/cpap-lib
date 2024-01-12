@@ -6,20 +6,15 @@ namespace cpaplib
 {
 	public class CustomEventGenerator
 	{
-		public static void GenerateEvents( DailyReport day )
+		public static void GenerateEvents( DailyReport day, CpapImportSettings importSettings )
 		{
-			GenerateFlowReductionEvents( day );
-			GenerateLeakEvents( day );
-			GenerateFlowLimitEvents( day );
+			GenerateFlowReductionEvents( day, importSettings );
+			GenerateLeakEvents( day, importSettings );
+			GenerateFlowLimitEvents( day, importSettings );
 		}
 
-		private static void GenerateFlowReductionEvents( DailyReport day )
+		private static void GenerateFlowReductionEvents( DailyReport day, CpapImportSettings importSettings )
 		{
-			const double MINIMUM_EVENT_DURATION   = 8.0; // Only flag flow reductions that last this number of seconds or more
-			const double FLOW_REDUCTION_THRESHOLD = 0.5; // Flag flow reductions of 50% or more
-			const int    WINDOW_LENGTH            = 120; // Two minutes, per 2007 AASM Manual
-			const double MIN_TIME_SINCE_RECOVERY  = 30;  // Wait a minimum of 30 seconds after an anomalous "very large breath" (or recovery breath) 
-			
 			foreach( var session in day.Sessions )
 			{
 				var signal = session.GetSignalByName( SignalNames.FlowRate );
@@ -30,7 +25,7 @@ namespace cpaplib
 
 				var absFlow      = signal.Samples.Select( Math.Abs ).ToArray();
 				var filteredFlow = ButterworthFilter.Filter( absFlow, signal.FrequencyInHz, 1 );
-				var calc         = new MovingAverageCalculator( (int)(WINDOW_LENGTH * signal.FrequencyInHz) );
+				var calc         = new MovingAverageCalculator( (int)(importSettings.FlowReductionWindowSize * signal.FrequencyInHz) );
 
 				var interval     = 1.0 / signal.FrequencyInHz;
 				var state        = 0;
@@ -59,8 +54,8 @@ namespace cpaplib
 					switch( state )
 					{
 						case 0:
-							threshold = rms * FLOW_REDUCTION_THRESHOLD;
-							if( sample <= threshold && (i - lastRecovery) * interval >= MIN_TIME_SINCE_RECOVERY )
+							threshold = rms * importSettings.FlowReductionThreshold;
+							if( sample <= threshold && (i - lastRecovery) * interval >= importSettings.FlowReductionArousalDelay )
 							{
 								startIndex = i;
 								state      = 1;
@@ -72,7 +67,7 @@ namespace cpaplib
 							{
 								var duration = (i - startIndex) * interval;
 
-								if( duration >= MINIMUM_EVENT_DURATION )
+								if( duration >= importSettings.FlowReductionMinimumDuration )
 								{
 									// Note that all machine-generated events "start" at the end of the event.
 									// TODO: It might be better to rename ReportedEvent.StartTime to ReportedEvent.MarkerTime
@@ -101,12 +96,8 @@ namespace cpaplib
 			}
 		}
 
-		private static void GenerateFlowLimitEvents( DailyReport day )
+		private static void GenerateFlowLimitEvents( DailyReport day, CpapImportSettings importSettings )
 		{
-			// TODO: Flow Limitation event parameters need to be a configurable value 
-			const double FlowLimitRedline = 0.3;
-			const int    MinEventDuration = 3;
-
 			List<ReportedEvent> flowLimitEvents = new List<ReportedEvent>();
 			
 			foreach( var session in day.Sessions )
@@ -114,7 +105,7 @@ namespace cpaplib
 				var signal = session.GetSignalByName( SignalNames.FlowLimit );
 				if( signal != null )
 				{
-					flowLimitEvents.AddRange( Annotate( EventType.FlowLimitation, signal, MinEventDuration, FlowLimitRedline, false ) );
+					flowLimitEvents.AddRange( Annotate( EventType.FlowLimitation, signal, importSettings.FlowLimitMinimumDuration, importSettings.FlowLimitThreshold, false ) );
 				}
 			}
 			
@@ -130,17 +121,14 @@ namespace cpaplib
 			}
 		}
 
-		private static void GenerateLeakEvents( DailyReport day )
+		private static void GenerateLeakEvents( DailyReport day, CpapImportSettings importSettings )
 		{
-			// TODO: Leak Redline needs to be a configurable value 
-			const double LeakRedline = 24;
-			
 			foreach( var session in day.Sessions )
 			{
 				var signal = session.GetSignalByName( SignalNames.LeakRate );
 				if( signal != null )
 				{
-					day.Events.AddRange( Annotate( EventType.LargeLeak, signal, 1, LeakRedline, false ) );
+					day.Events.AddRange( Annotate( EventType.LargeLeak, signal, 1, importSettings.LargeLeakThreshold, false ) );
 				}
 			}
 		}

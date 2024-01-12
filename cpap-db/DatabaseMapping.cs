@@ -189,7 +189,6 @@ public class DatabaseMapping
 					}
 
 					connection.Execute( sql );
-					tableAltered = true;
 				}
 			}
 

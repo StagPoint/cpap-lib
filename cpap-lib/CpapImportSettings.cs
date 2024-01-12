@@ -5,6 +5,11 @@ namespace cpaplib
 	public class CpapImportSettings
 	{
 		/// <summary>
+		/// Gets or sets a unique identifier for this instance
+		/// </summary>
+		public int ID { get; set; }
+		
+		/// <summary>
 		/// The amount of time to add to all timestamps in imported data. Use this to compensate for clock
 		/// drift or minor inaccuracies in the machine's reported time.
 		/// </summary>
@@ -65,11 +70,11 @@ namespace cpaplib
 		public double FlowReductionWindowSize { get; set; } = 120;
 
 		/// <summary>
-		/// Specifies the minimum amount of time after any "recovery breaths" (defined here as being two standard deviations
+		/// Specifies the minimum amount of time after any "arousal breaths" (defined here as being two standard deviations
 		/// larger than the sliding window mean of the absolute flow rate) that a <see cref="EventType.FlowReduction"/>
 		/// event will be generated. This value is used to reduce the number of false positives generated during "sleep wake junk"
 		/// arousal breathing.
 		/// </summary>
-		public double FlowReductionRecoveryDelay { get; set; } = 30.0;
+		public double FlowReductionArousalDelay { get; set; } = 30.0;
 	}
 }

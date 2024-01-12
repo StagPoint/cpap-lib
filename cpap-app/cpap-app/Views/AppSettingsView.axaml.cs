@@ -124,25 +124,33 @@ public partial class AppSettingsView : UserControl
 	private async void ImportOptions_OnClick( object? sender, RoutedEventArgs e )
 	{
 		e.Handled = true;
-		
+
+		var viewModel = new ImportOptionsViewModel( UserProfileStore.GetActiveUserProfile().UserProfileID );
+
 		var settingsView = new ImportSettingsView()
 		{
-			DataContext = new ImportOptionsViewModel()
+			DataContext = viewModel
 		};
 
 		var dialog = new TaskDialog()
 		{
 			Title = $"Edit Import Settings",
-			Buttons =
+			Buttons = 
 			{
-				TaskDialogButton.OKButton,
+				TaskDialogButton.CancelButton,
+				new TaskDialogButton( "Save", TaskDialogStandardResult.OK ),
 			},
 			XamlRoot = (Visual)VisualRoot!,
 			Content  = settingsView,
 			MaxWidth = 800,
 		};
 		
-		await dialog.ShowAsync();
+		var dialogResult = await dialog.ShowAsync();
+
+		if( (TaskDialogStandardResult)dialogResult == TaskDialogStandardResult.OK )
+		{
+			viewModel.SaveChanges();
+		}
 	}
 }
 

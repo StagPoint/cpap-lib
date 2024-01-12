@@ -6,7 +6,20 @@ namespace cpap_app.ViewModels;
 
 public class ImportOptionsViewModel
 {
-	public CpapImportSettings           CpapSettings          { get; set; } = new();
-	public PulseOximetryImportOptions   PulseOximetrySettings { get; set; } = new();
-	public OximetryEventGeneratorConfig OximetryEventSettings { get; set; } = new();
+	public int                        UserProfileID         { get; set; }
+	public CpapImportSettings         CpapSettings          { get; set; } = new();
+	public PulseOximetryImportOptions PulseOximetrySettings { get; set; } = new();
+
+	public ImportOptionsViewModel( int userProfileID )
+	{
+		UserProfileID         = userProfileID;
+		CpapSettings          = ImportOptionsStore.GetCpapImportSettings( userProfileID );
+		PulseOximetrySettings = ImportOptionsStore.GetPulseOximetryImportOptions( userProfileID );
+	}
+
+	public void SaveChanges()
+	{
+		ImportOptionsStore.UpdateCpapImportSettings( UserProfileID, CpapSettings );
+		ImportOptionsStore.UpdatePulseOximetryImportOptions( UserProfileID, PulseOximetrySettings );
+	}
 }

@@ -13,7 +13,7 @@ namespace cpaplib
 			string    rootFolder,
 			DateTime? minDate,
 			DateTime? maxDate,
-			TimeSpan? timeAdjustment 
+			CpapImportSettings importSettings 
 			);
 	}
 }
