@@ -13,7 +13,9 @@ using Avalonia.Threading;
 
 using cpap_app.Configuration;
 using cpap_app.Controls;
+using cpap_app.Converters;
 using cpap_app.Events;
+using cpap_app.Helpers;
 using cpap_app.Printing;
 using cpap_app.ViewModels;
 
@@ -308,6 +310,12 @@ public partial class SignalChartContainer : UserControl
 	private void UpdateVisibleRange( DateTime startTime, DateTime endTime )
 	{
 		_eventGraph!.UpdateVisibleRange( startTime, endTime );
+
+		var duration      = (endTime - startTime).TrimSeconds();
+		var durationText  = FormattedTimespanConverter.FormatTimeSpan( duration, TimespanFormatType.Abbreviated, false );
+		var selectionText = $"Showing selection of {durationText} from {startTime:T} to {endTime:T}";
+
+		DisplayedRange.Text = selectionText;
 	}
 
 	private void LoadSignalVisibilityMenu()

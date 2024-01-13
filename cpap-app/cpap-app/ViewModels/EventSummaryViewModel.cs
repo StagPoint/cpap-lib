@@ -48,7 +48,7 @@ public class EventSummaryViewModel
 		var events = new List<ReportedEvent>( day.Events );
 		events.Sort( (lhs, rhs ) => lhs.Type != rhs.Type ? lhs.Type.CompareTo( rhs.Type ) : lhs.StartTime.CompareTo( rhs.StartTime ) );
 		
-		var types  = events.Select( x => x.Type ).Distinct().Where( x => x != EventType.FalsePositive );
+		var types  = events.Select( x => x.Type ).Distinct().Where( x => x < EventType.FalsePositive );
 
 		// Calculate the total time (in hours) for each SourceType
 		var totalSleepTime = new Dictionary<SourceType, double>();

@@ -119,8 +119,14 @@ public class DailyReportViewModel : DailyReport, INotifyPropertyChanged
 			return;
 		}
 
+		// Ensure that a notation is made about this change 
+		Notes = Notes.TrimEnd() + $"\nDeleted '{session.Source}' session starting at {session.StartTime:g} and ending at {session.EndTime}\n";
+		
 		using var db = StorageService.Connect();
 		db.SaveDailyReport( UserProfile.UserProfileID, this );
+
+		PropertyChanged?.Invoke( this, new PropertyChangedEventArgs( nameof( Notes ) ) );
+		PropertyChanged?.Invoke( this, new PropertyChangedEventArgs( nameof( Sessions ) ) );
 
 		Reload();
 	}
@@ -131,6 +137,8 @@ public class DailyReportViewModel : DailyReport, INotifyPropertyChanged
 		
 		using var db = StorageService.Connect();
 		db.Update( (DailyReport)this );
+		
+		PropertyChanged?.Invoke( this, new PropertyChangedEventArgs( nameof( Notes ) ) );
 	}
 	
 	public void Reload()

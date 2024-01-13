@@ -977,6 +977,7 @@ public partial class SignalChart : UserControl
 			new SignalMenuItem( "Average (Entire series)",      VisualizeAverage ),
 			new SignalMenuItem( "Median (Entire series)",       VisualizeMedian ),
 			new SignalMenuItem( "95th Percentile",              VisualizePercentile95 ),
+			new SignalMenuItem( "Show Line At...",              VisualizeAddRedLine ),
 			new SignalMenuItem( "-",                            () => { } ),
 			new SignalMenuItem( "Respiration Rate",             VisualizeRespirationRate ),
 			new SignalMenuItem( "Tidal Volume",                 VisualizeTidalVolume ),
@@ -997,7 +998,7 @@ public partial class SignalChart : UserControl
 		btnSettings.Visualizations.Add( new SignalMenuItem( "-",                    () => { } ) );
 		btnSettings.Visualizations.Add( new SignalMenuItem( "Clear Visualizations", ClearVisualizations ) );
 	}
-	
+
 	private void VisualizeRespirationRate()
 	{
 		Debug.Assert( _day != null, nameof( _day ) + " != null" );
@@ -1250,6 +1251,25 @@ public partial class SignalChart : UserControl
 
 		var line = Chart.Plot.AddHorizontalLine( 0, Color.Red, 1f, LineStyle.Solid, "Baseline" );
 		Chart.Plot.MoveFirst( line );
+		
+		_visualizations.Add( line );
+		
+		RenderGraph( true );
+	}
+
+	private async void VisualizeAddRedLine()
+	{
+		Debug.Assert( _day != null,               nameof( _day ) + " != null" );
+		Debug.Assert( ChartConfiguration != null, nameof( ChartConfiguration ) + " != null" );
+
+		var yaxis = await InputDialog.InputDouble( TopLevel.GetTopLevel( this )!, "Add Horizontal Line", "Enter the Y-Axis value to show the line at", 0 );
+		if( yaxis == null )
+		{
+			return;
+		}
+		
+		var line = Chart.Plot.AddHorizontalLine( yaxis.Value, Color.Red, 1f, LineStyle.Solid, yaxis.Value.ToString( "F2" ) );
+		//Chart.Plot.MoveFirst( line );
 		
 		_visualizations.Add( line );
 		

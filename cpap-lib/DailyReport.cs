@@ -121,6 +121,7 @@ namespace cpaplib
 			EventSummary.UnclassifiedApneaIndex   = Events.Count( x => x.Type == EventType.UnclassifiedApnea ) / tst;
 			EventSummary.RespiratoryArousalIndex  = Events.Count( x => x.Type == EventType.RERA ) / tst;
 			EventSummary.CheynesStokesRespiration = Events.Count( x => x.Type == EventType.CSR ) / tst;
+			EventSummary.DeletedEvents            = Events.Count( x => x.Type >= EventType.FalsePositive );
 
 			return;
 			

@@ -16,11 +16,15 @@ public static class OximetryEventGenerator
 	{
 		var events = new List<ReportedEvent>();
 
-		GenerateHypoxemiaEvents( config, oxygen, events );
-		GenerateDesaturationEvents( config, oxygen, events );
-		GeneratePulseRateEvents( config, pulse, events );
-		GeneratePulseChangeEvents( config, pulse, events );
-		AssignEventSourceType( events );
+		if( config.GenerateEvents )
+		{
+			GenerateHypoxemiaEvents( config, oxygen, events );
+			GenerateDesaturationEvents( config, oxygen, events );
+			GeneratePulseRateEvents( config, pulse, events );
+			GeneratePulseChangeEvents( config, pulse, events );
+			
+			AssignEventSourceType( events );
+		}
 
 		return events;
 	}

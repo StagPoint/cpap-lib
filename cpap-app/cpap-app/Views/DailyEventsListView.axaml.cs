@@ -148,7 +148,11 @@ public partial class DailyEventsListView : UserControl
 		// Make sure a notation is made about this change
 		day.Notes = day.Notes.TrimEnd() + $"\nMarked {evt.Type.ToName()} event at {evt.StartTime:g} as a False Positive.\n";
 
-		evt.Type = EventType.FalsePositive;
+		// When an event is marked as a "false positive" instead of being deleted, we add the value of
+		// FalsePositive to the existing type in order to make the process reversible. All processes 
+		// that deal with events will need to ignore any event whose Type is EventType.FalsePositive or higher. 
+		evt.Type = EventType.FalsePositive + (int)evt.Type;
+		
 		day.UpdateEventSummary();
 
 		var userProfile = UserProfileStore.GetActiveUserProfile();

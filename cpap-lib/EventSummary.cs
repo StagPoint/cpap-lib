@@ -17,5 +17,6 @@
 		public double UnclassifiedApneaIndex   { get; set; }
 		public double RespiratoryArousalIndex  { get; set; }
 		public double CheynesStokesRespiration { get; set; }
+		public double DeletedEvents            { get; set; }
 	}
 }

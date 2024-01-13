@@ -8,9 +8,24 @@ namespace cpaplib
 	{
 		public static void GenerateEvents( DailyReport day, CpapImportSettings importSettings )
 		{
-			GenerateFlowReductionEvents( day, importSettings );
-			GenerateLeakEvents( day, importSettings );
-			GenerateFlowLimitEvents( day, importSettings );
+			// Some machines flag some of these events types internally, but our event flagging won't generate
+			// any events that overlap an existing event so we can still flag events with a custom threshold
+			// level without creating a conflict. 
+
+			if( importSettings.FlagFlowReductions )
+			{
+				GenerateFlowReductionEvents( day, importSettings );
+			}
+
+			if( importSettings.FlagLargeLeaks )
+			{
+				GenerateLeakEvents( day, importSettings );
+			}
+
+			if( importSettings.FlagFlowLimits )
+			{
+				GenerateFlowLimitEvents( day, importSettings );
+			}
 		}
 
 		private static void GenerateFlowReductionEvents( DailyReport day, CpapImportSettings importSettings )

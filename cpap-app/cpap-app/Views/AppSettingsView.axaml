@@ -51,7 +51,7 @@
                                            Description="Set import options for CPAP and Pulse Oximetry devices"
                                            IsClickEnabled="True"
                                            IconSource="Upload"
-                                           ActionIconSource="ChevronRight"
+                                           ActionIconSource="More"
                                            Name="ImportOptions"
                                            Click="ImportOptions_OnClick">
                 </controls:SettingsExpander>
