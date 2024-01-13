@@ -39,6 +39,7 @@ public partial class EventGraph : UserControl
 	public static readonly StyledProperty<IBrush> ChartGridLineColorProperty       = AvaloniaProperty.Register<SignalChart, IBrush>( nameof( ChartGridLineColor ) );
 	public static readonly StyledProperty<IBrush> ChartForegroundProperty          = AvaloniaProperty.Register<SignalChart, IBrush>( nameof( ChartForeground ) );
 	public static readonly StyledProperty<IBrush> ChartBorderColorProperty         = AvaloniaProperty.Register<SignalChart, IBrush>( nameof( ChartBorderColor ) );
+	public static readonly StyledProperty<IBrush> SessionBarColorProperty         = AvaloniaProperty.Register<SignalChart, IBrush>( nameof( SessionBarColor ) );
 
 	#endregion
 	
@@ -83,6 +84,12 @@ public partial class EventGraph : UserControl
 	{
 		get => GetValue( ChartBorderColorProperty );
 		set => SetValue( ChartBorderColorProperty, value );
+	}
+	
+	public IBrush SessionBarColor
+	{
+		get => GetValue( SessionBarColorProperty );
+		set => SetValue( SessionBarColorProperty, value );
 	}
 	
 	#endregion
@@ -784,6 +791,7 @@ public partial class EventGraph : UserControl
 		var labels    = new string[ eventTypes.Count ];
 
 		var alternateBackgroundColor = ((SolidColorBrush)ChartAlternateBackground).Color.ToDrawingColor().MultiplyAlpha( 0.5f );
+		var sessionBarColor = ((SolidColorBrush)SessionBarColor).Color.ToDrawingColor();
 
 		for( int i = 0; i < eventTypes.Count; i++ )
 		{
@@ -797,6 +805,18 @@ public partial class EventGraph : UserControl
 		}
 				
 		Chart.Plot.YAxis.ManualTickPositions( positions, labels );
+
+		foreach( var session in day.Sessions.Where( x => x.SourceType == SourceType.CPAP ) )
+		{
+			var left  = (session.StartTime - day.RecordingStartTime).TotalSeconds;
+			var right = (session.EndTime - day.RecordingStartTime).TotalSeconds;
+
+			var sessionBar = Chart.Plot.AddRectangle( left, right, 0.75, 1.0 );
+			
+			sessionBar.BorderLineWidth = 1;
+			sessionBar.BorderColor     = sessionBarColor;
+			sessionBar.Color           = sessionBarColor;
+		}
 
 		foreach( var evt in day.Events )
 		{

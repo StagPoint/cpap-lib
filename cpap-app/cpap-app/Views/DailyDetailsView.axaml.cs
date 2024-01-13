@@ -1,16 +1,18 @@
-﻿using Avalonia;
+﻿using System;
+
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.VisualTree;
 
 using cpap_app.Events;
+using cpap_app.Helpers;
 using cpap_app.ViewModels;
 
 using cpap_db;
 
 using cpaplib;
 
-using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
 
 namespace cpap_app.Views;
@@ -39,15 +41,14 @@ public partial class DailyDetailsView : UserControl
 			return;
 		}
 
-		var dialog = MessageBoxManager.GetMessageBoxStandard(
+		var confirmation = await InputDialog.GetConfirmation(
+			this.FindAncestorOfType<Window>() ?? throw new InvalidOperationException(),
+			Icon.Warning,
 			$"Delete Data for {day.ReportDate.Date:D}",
-			$"Are you sure you wish to delete all data for {day.ReportDate.Date:D}?\n\nThis cannot be undone. Proceed with extreme caution.",
-			ButtonEnum.YesNo,
-			Icon.Warning
+			$"Are you sure you wish to delete all data for {day.ReportDate.Date:D}?\n\nThis cannot be undone. Proceed with extreme caution."
 		);
 		
-		var dialogresult = await dialog.ShowWindowDialogAsync( this.FindAncestorOfType<Window>() );
-		if( dialogresult != ButtonResult.Yes )
+		if( !confirmation )
 		{
 			return;
 		}
@@ -73,15 +74,14 @@ public partial class DailyDetailsView : UserControl
 			return;
 		}
 
-		var dialog = MessageBoxManager.GetMessageBoxStandard(
+		var confirmation = await InputDialog.GetConfirmation(
+			this.FindAncestorOfType<Window>() ?? throw new InvalidOperationException(),
+			Icon.Warning,
 			$"Re-Import Data for {day.ReportDate.Date:D}",
-			$"Are you sure you wish to delete all data for {day.ReportDate.Date:D} and re-import it?\n\nIf re-import does not succeed, this data could be lost forever.\n\nProceed with extreme caution.",
-			ButtonEnum.YesNo,
-			Icon.Warning
+			$"Are you sure you wish to delete all data for {day.ReportDate.Date:D} and re-import it?\n\nIf re-import does not succeed, this data could be lost forever.\n\nProceed with extreme caution."
 		);
 		
-		var dialogresult = await dialog.ShowWindowDialogAsync( this.FindAncestorOfType<Window>() );
-		if( dialogresult != ButtonResult.Yes )
+		if( !confirmation )
 		{
 			return;
 		}

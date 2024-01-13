@@ -14,6 +14,7 @@
              ChartAlternateBackground="{DynamicResource ControlAltFillColorQuarternaryBrush}"
              ChartBorderColor="{DynamicResource ControlStrokeColorSecondaryBrush}"
              ChartGridLineColor="{DynamicResource TextFillColorSecondaryBrush}"
+             SessionBarColor="{DynamicResource ControlStrongFillColorDefaultBrush}"
              Background="{DynamicResource LayerFillColorDefaultBrush}"
              x:DataType="cpaplib:DailyReport"
              DataContext="{Binding $parent[Control].DataContext}">

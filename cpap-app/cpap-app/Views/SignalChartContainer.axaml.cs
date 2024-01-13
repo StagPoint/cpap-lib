@@ -421,7 +421,7 @@ public partial class SignalChartContainer : UserControl
 			menu.Items.Add( menuItem );
 		}
 
-		VisibleGraphMenuButton.Content = $"\ud83d\udcc8 {visibleConfigs} of {totalConfigs} Graphs";
+		VisibleGraphCount.Text = $"\ud83d\udcc8 {visibleConfigs} of {totalConfigs} Graphs";
 	}
 
 	private void LoadSignalGraphs()
