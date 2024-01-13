@@ -1,8 +1,6 @@
 [![GitHub issues](https://img.shields.io/github/issues/StagPoint/cpap-lib.svg)](https://GitHub.com/StagPoint/cpap-lib/issues/)
 [![GitHub license](https://img.shields.io/github/license/StagPoint/cpap-lib.svg)](https://github.com/StagPoint/cpap-lib/blob/master/LICENSE)
 [![GitLab last commit](https://badgen.net/github/last-commit/StagPoint/cpap-lib/)](https://github.com/StagPoint/cpap-lib/-/commits)
-[![Nuget](https://img.shields.io/nuget/v/cpap-lib/1.0.0)](https://www.nuget.org/packages/cpap-lib/1.0.0/)
-[![Nuget](https://img.shields.io/nuget/dt/cpap-lib/1.0.0)](https://www.nuget.org/packages/cpap-lib/1.0.0/)
 
 <!-- TOC -->
 * [Summary](#summary)
