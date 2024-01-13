@@ -19,9 +19,11 @@
         <RepositoryUrl>https://github.com/StagPoint/cpap-lib</RepositoryUrl>
         <RepositoryType>GitHub</RepositoryType>
         <PackageTags>CPAP sleep apnea ResMed AirSense OSA data analysis</PackageTags>
-        <PackageReleaseNotes>Initial Release</PackageReleaseNotes>
+        <PackageReleaseNotes>Added ability to control import options through the CpapImportSettings class  </PackageReleaseNotes>
         <Product>cpap-lib</Product>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <PackageIcon>cpap-sd-card-256.png</PackageIcon>
+        <Version>1.0.1</Version>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -36,6 +38,14 @@
 
     <ItemGroup>
       <PackageReference Include="StagPoint.EuropeanDataFormat.Net" Version="1.0.1" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="cpap-sd-card-256.png" />
+      <EmbeddedResource Include="cpap-sd-card-256.png">
+        <Pack>True</Pack>
+        <PackagePath></PackagePath>
+      </EmbeddedResource>
     </ItemGroup>
 
 

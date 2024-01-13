@@ -27,7 +27,7 @@ This library uses [StagPoint.EuropeanDataFormat.Net](https://github.com/StagPoin
 
 # Binary Distribution
 
-The easiest way to make use of this library in your own project is to add the [Nuget Package](https://www.nuget.org/packages/cpap-lib/1.0.0) using your IDE's package manager.
+The easiest way to make use of this library in your own project is to add the [Nuget Package](https://www.nuget.org/packages/cpap-lib/1.0.1) using your IDE's package manager.
 
 ---
 
