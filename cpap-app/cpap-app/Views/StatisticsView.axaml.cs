@@ -167,8 +167,6 @@ public partial class StatisticsView : UserControl
 		group.Items.Add( CompileGroupAverages( "Flow Limit Index",              groupedDays, GetEventIndex( EventType.FlowLimitation ), value => $"{value:F2}" ) );
 		group.Items.Add( CompileGroupAverages( "Total Time in Apnea (Average)", groupedDays, GetTotalTimeInApnea,                       FormatTimespan ) );
 		
-		group.Items.Add( CompileGroupTotals( "Deleted Events", groupedDays, day => day.Events.Count( x => x.Type >= EventType.FalsePositive ) ) );
-
 		if( groupedDays.Any( x => x.Days.Any( day => day.Events.Any( evt => evt.Type == EventType.CSR ) ) ) )
 		{
 			group.Items.Add( CompileGroupAverages( "Cheyne-Stokes Resp. (% of total time)", groupedDays, GetEventPercentage( EventType.CSR ), value => $"{value:P2}" ) );
@@ -176,6 +174,11 @@ public partial class StatisticsView : UserControl
 		else if( groupedDays.Any( x => x.Days.Any( day => day.Events.Any( evt => evt.Type == EventType.PeriodicBreathing ) ) ) )
 		{
 			group.Items.Add( CompileGroupAverages( "Periodic Breathing (% of total time)", groupedDays, GetEventPercentage( EventType.PeriodicBreathing ), value => $"{value:P2}" ) );
+		}
+
+		if( groupedDays.Any( x => x.Days.Any( day => day.Events.Any( evt => evt.Type >= EventType.FalsePositive ) ) ) )
+		{
+			group.Items.Add( CompileGroupTotals( "Deleted Events", groupedDays, day => day.Events.Count( x => x.Type >= EventType.FalsePositive ) ) );
 		}
 
 		return group;

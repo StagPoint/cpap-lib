@@ -31,6 +31,7 @@ using FluentAvalonia.UI.Media.Animation;
 using FluentAvalonia.UI.Windowing;
 
 using MsBox.Avalonia;
+using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
 
 using OAuth;
@@ -661,8 +662,12 @@ public partial class MainView : UserControl
 		var appWindow = TopLevel.GetTopLevel( this ) as AppWindow;
 		appWindow?.PlatformFeatures.SetTaskBarProgressBarState( TaskBarProgressBarState.Indeterminate );
 
-		bool dataWasImported       = false;
 		bool operationWasCancelled = false;
+
+		int totalDaysUpdated = 0;
+		int totalSessions    = 0;
+		int mergedSessions   = 0;
+		int failedSessions   = 0;
 
 		td.Opened += async ( _, _ ) =>
 		{
@@ -709,8 +714,18 @@ public partial class MainView : UserControl
 							var data = importer.Load( fileItem.Name, file, importOptions );
 							if( data is { Sessions.Count: > 0 } )
 							{
+								// Keep track of the total number of sessions imported
+								totalSessions += data.Sessions.Count;
+					
+								// Imported sessions will be added to a MetaSession object before merging
 								importedData.Add( data );
+								
 								break;
+							}
+							else
+							{
+								// Keep track of the number of sessions that could not be imported
+								failedSessions += 1;
 							}
 						}
 					}
@@ -743,14 +758,14 @@ public partial class MainView : UserControl
 						metaSession = new MetaSession();
 						metaSessions.Add( metaSession );
 					}
-							
+					
 					metaSession.Add( data );
 				}
 
 				if( metaSessions.Count > 0 )
 				{
 					metaSessions.Sort();
-
+					
 					var minDate = metaSessions.Min( x => x.StartTime.Date.AddDays( -1 ) );
 					var maxDate = metaSessions.Max( x => x.EndTime.Date.AddDays( 1 ) );
 
@@ -799,6 +814,9 @@ public partial class MainView : UserControl
 									{
 										// Add the Session to the Day's Session list. 
 										day.AddSession( session );
+										
+										// Keep track of the number of sessions that were successfully merged
+										mergedSessions += 1;
 
 										// Add only the events that happened during this Session. Note that In practice this 
 										// should be all of them, since at the time I wrote this all importers only generated
@@ -820,7 +838,7 @@ public partial class MainView : UserControl
 
 							db.SaveDailyReport( ActiveUserProfile.UserProfileID, day );
 
-							dataWasImported = true;
+							totalDaysUpdated += 1;
 						}
 					}
 				}
@@ -839,11 +857,10 @@ public partial class MainView : UserControl
 			operationWasCancelled = true;
 		}
 
-		if( metaSessions.Count == 0 || !dataWasImported )
+		if( metaSessions.Count == 0 || totalDaysUpdated < 1 )
 		{
 			const string upToDate  = "All pulse oximetry data was already up to date.";
 			const string cancelled = "The import operation was cancelled";
-			//const string noMatchFound = "One or more of the files you selected could not be matched to any existing CPAP sessions.";
 			
 			var dialog = MessageBoxManager.GetMessageBoxStandard(
 				$"Import from Pulse Oximetry File",
@@ -855,6 +872,8 @@ public partial class MainView : UserControl
 		}
 		else
 		{
+			showImportSummary();
+			
 			var profileID = ActiveUserProfile.UserProfileID;
 
 			switch( NavFrame.Content )
@@ -868,6 +887,32 @@ public partial class MainView : UserControl
 					homeView.DataContext = LoadDailyReport( profileID, null );
 					break;
 			}
+		}
+
+		return;
+
+		async void showImportSummary()
+		{
+			var summary = @$"Total files read: {totalSessions}
+Days updated: {totalDaysUpdated}
+Merged sessions: {mergedSessions}
+Duplicate sessions: {totalSessions - mergedSessions - failedSessions}
+Files not read: {failedSessions}";
+
+
+			var dialogParams = new MessageBoxStandardParams()
+			{
+				MinWidth              = 400,
+				ContentTitle          = "Pulse Oximetry Import summary",
+				ContentMessage        = summary,
+				ButtonDefinitions     = ButtonEnum.Ok,
+				Icon                  = Icon.Info,
+				WindowStartupLocation = WindowStartupLocation.CenterOwner,
+			};
+
+			var dialog = MessageBoxManager.GetMessageBoxStandard( dialogParams );
+			
+			await dialog.ShowWindowDialogAsync( this.FindAncestorOfType<Window>() );
 		}
 	}
 
@@ -959,7 +1004,7 @@ public partial class MainView : UserControl
 		
 			await Task.Run( async () =>
 			{
-				var mostRecentDay = ImportFrom( import.Loader, import.Folder, e.StartDate, e.EndDate );
+				var mostRecentDay = ImportFrom( import.Loader, import.Folder, e.StartDate, e.EndDate, out int numberOfDaysImported );
 		
 				// Sounds cheesy, but showing a progress bar for even a second serves to show 
 				// the user that the work was performed. It's otherwise often too fast for them 
@@ -975,7 +1020,7 @@ public partial class MainView : UserControl
 				{
 					td.Hide( TaskDialogStandardResult.OK );
 
-					if( mostRecentDay != null )
+					if( mostRecentDay != null && numberOfDaysImported > 0 )
 					{
 						// TODO: Because DailyReportView has its own flow for loading a DailyReport, this leaves open the possibility of bypassing things like event subscription, etc.
 						var importedDay = LoadDailyReport( profile.UserProfileID, mostRecentDay.Value );
@@ -987,6 +1032,11 @@ public partial class MainView : UserControl
 						profile.TherapyMode     = (OperatingMode)importedDay.Settings[ SettingNames.Mode ];
 						
 						UserProfileStore.Update( profile );
+
+						var dayUnit = numberOfDaysImported > 1 ? "days" : "day";
+						var dialog  = MessageBoxManager.GetMessageBoxStandard( $"Import from folder", $"Imported {numberOfDaysImported} {dayUnit}.", ButtonEnum.Ok, Icon.Database );
+
+						await dialog.ShowWindowDialogAsync( this.FindAncestorOfType<Window>() );
 					}
 					else
 					{
@@ -1146,7 +1196,7 @@ public partial class MainView : UserControl
 		}, DispatcherPriority.Background );
 	}
 
-	private DateTime? ImportFrom( ICpapDataLoader loader, string folder, DateTime? startDate, DateTime? endDate )
+	private DateTime? ImportFrom( ICpapDataLoader loader, string folder, DateTime? startDate, DateTime? endDate, out int daysImported )
 	{
 		var profileID      = ActiveUserProfile.UserProfileID;
 		var importSettings = ImportOptionsStore.GetCpapImportSettings( profileID );
@@ -1165,9 +1215,13 @@ public partial class MainView : UserControl
 
 			if( days == null || days.Count == 0 )
 			{
+				daysImported = 0;
+				
 				storage.Connection.Commit();
 				return null;
 			}
+
+			daysImported = days.Count;
 
 			foreach( var day in days )
 			{
