@@ -11,7 +11,6 @@
              Name="asDSLSDL">
 
     <UserControl.Resources>
-        <converters:NiceNameConverter x:Key="NiceNameConverter" />
         <converters:EventTimespanConverter x:Key="EventTimeConverter" />
     </UserControl.Resources>
     
@@ -92,7 +91,7 @@
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0"
-                                       Text="{Binding Type, Mode=OneWay, Converter={StaticResource NiceNameConverter}}" />
+                                       Text="{Binding Label}" />
                             <TextBlock Grid.Column="1" Text="{Binding IndexValue, Mode=OneWay, StringFormat={}{0:F2}}"
                                        HorizontalAlignment="Center" />
                             <TextBlock Grid.Column="2" Text="{Binding TotalCount}" HorizontalAlignment="Center" />

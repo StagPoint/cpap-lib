@@ -5,7 +5,10 @@
              xmlns:controls="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
              xmlns:viewModels1="clr-namespace:cpap_app.ViewModels"
              xmlns:views="clr-namespace:cpap_app.Views"
-             mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="900"
+             xmlns:controls1="clr-namespace:cpap_app.Controls"
+             mc:Ignorable="d" 
+             d:DesignWidth="900" 
+             d:DesignHeight="800"
              x:Class="cpap_app.Views.AppSettingsView"
              x:DataType="viewModels1:AppSettingsViewModel">
     <DockPanel LastChildFill="True">
@@ -57,11 +60,15 @@
                 </controls:SettingsExpander>
                 <controls:SettingsExpander Header="Events"
                                            Description="Set display options for reported events"
-                                           IsClickEnabled="True"
+                                           IsClickEnabled="False"
                                            IconSource="Flag"
-                                           ActionIconSource="More"
+                                           ActionIconSource="ChevronRight"
                                            Name="EventMarkerOptions"
-                                           Click="EventMarkerOptions_OnClick"/>
+                                           Loaded="EventMarkerOptions_OnLoaded">
+                    <controls:SettingsExpanderItem>
+                        <controls1:EventMarkerEditor Name="EventConfig" HorizontalAlignment="Left" Width="750" />
+                    </controls:SettingsExpanderItem>
+                </controls:SettingsExpander>
                 <controls:SettingsExpander Header="Signals"
                                            Description="Set display options for signal data"
                                            IsClickEnabled="True"

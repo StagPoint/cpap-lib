@@ -14,6 +14,8 @@ namespace cpap_app.ViewModels;
 
 public class EventMarkerConfigurationStore
 {
+	private static EventType[] UnusedEventTypes = { EventType.RecordingStarts, EventType.RecordingEnds, EventType.FalsePositive };
+	
 	public static List<EventMarkerConfiguration> GetEventMarkerConfigurations()
 	{
 		using var store = StorageService.Connect();
@@ -22,6 +24,9 @@ public class EventMarkerConfigurationStore
 		Initialize( store );
 
 		var list = store.SelectAll<EventMarkerConfiguration>().OrderBy( x => x.EventType ).ToList();
+		
+		// Remove configurations for event types that are not used by the application 
+		list.RemoveAll( x => UnusedEventTypes.Contains( x.EventType ) || x.EventType >= EventType.FalsePositive );
 
 		foreach( var config in list )
 		{
@@ -58,75 +63,13 @@ public class EventMarkerConfigurationStore
 			{
 				break;
 			}
-			
-			var eventTypeLabel      = eventType.ToName();
-			var eventMarkerType     = EventMarkerType.Flag;
-			var eventMarkerPosition = EventMarkerPosition.AtEnd;
-			var eventColor          = DataColors.GetMarkerColor( i ).ToDrawingColor();
-
-			switch( eventType )
-			{
-				case EventType.ObstructiveApnea:
-				case EventType.Hypopnea:
-				case EventType.ClearAirway:
-				case EventType.RERA:
-				case EventType.UnclassifiedApnea:
-				case EventType.CSR:
-				case EventType.FlowReduction:
-					eventMarkerType     = EventMarkerType.Flag;
-					eventMarkerPosition = EventMarkerPosition.AtEnd;
-					break;
-				case EventType.Arousal:
-					eventMarkerType     = EventMarkerType.TickBottom;
-					eventMarkerPosition = EventMarkerPosition.AtEnd;
-					break;
-				case EventType.FlowLimitation:
-				case EventType.LargeLeak:
-				case EventType.PeriodicBreathing:
-				case EventType.VariableBreathing:
-				case EventType.BreathingNotDetected:
-					eventColor          = eventColor.MultiplyAlpha( 0.5f );
-					eventMarkerType     = EventMarkerType.Span;
-					eventMarkerPosition = EventMarkerPosition.AtEnd;
-					break;
-				case EventType.VibratorySnore:
-					eventMarkerType     = EventMarkerType.TickTop;
-					eventMarkerPosition = EventMarkerPosition.AtBeginning;
-					break;
-				case EventType.Desaturation:
-					eventMarkerType     = EventMarkerType.ArrowBottom;
-					eventColor          = Color.OrangeRed;
-					eventMarkerPosition = EventMarkerPosition.InCenter;
-					break;
-				case EventType.PulseRateChange:
-					eventMarkerType     = EventMarkerType.TickBottom;
-					eventColor          = Color.Red;
-					eventMarkerPosition = EventMarkerPosition.AtBeginning;
-					break;
-				case EventType.Hypoxemia:
-				case EventType.Tachycardia:
-				case EventType.Bradycardia:
-				case EventType.PulseOximetryFault:
-					eventMarkerType     = EventMarkerType.Span;
-					eventMarkerPosition = EventMarkerPosition.AtBeginning;
-					break;
-				case EventType.RecordingStarts:
-				case EventType.RecordingEnds:
-					eventMarkerType = EventMarkerType.None;
-					break;
-				default:
-					throw new Exception( $"{nameof(EventType)} value not handled: {eventType}" );
-			}
 
 			var config = new EventMarkerConfiguration
 			{
-				EventType       = eventType,
-				EventMarkerType = eventMarkerType,
-				Label           = eventTypeLabel,
-				Color           = eventColor,
-				MarkerPosition  = eventMarkerPosition,
-				Initials        = eventType.ToInitials(),
+				EventType = eventType,
 			};
+			
+			config.ResetToDefaults();
 
 			store.Insert( config, primaryKeyValue: config.EventType );
 		}

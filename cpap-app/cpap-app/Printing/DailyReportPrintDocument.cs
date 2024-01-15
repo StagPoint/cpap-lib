@@ -282,7 +282,7 @@ public class DailyReportPrintDocument : IDocument
 
 			foreach( var summary in viewModel.Items )
 			{
-				table.Cell().PaddingLeft( 2 ).Text( NiceNames.Format( summary.Type.ToString() ) );
+				table.Cell().PaddingLeft( 2 ).Text( summary.Label );
 				table.Cell().PaddingLeft( 2 ).Text( $"{summary.IndexValue:F2}" );
 				table.Cell().PaddingLeft( 2 ).Text( $"{summary.TotalCount:N0}" );
 				table.Cell().PaddingLeft( 2 ).Text( summary.TotalTime.TotalSeconds > 0 ? $"{summary.TotalTime:hh\\:mm\\:ss}" : "" );

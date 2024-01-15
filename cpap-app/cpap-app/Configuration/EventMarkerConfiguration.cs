@@ -1,4 +1,7 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Drawing;
+
+using cpap_app.Helpers;
 
 using cpaplib;
 
@@ -31,6 +34,82 @@ public class EventMarkerConfiguration
 	public string              Initials        { get; set; } = string.Empty;
 	public Color               Color           { get; set; }
 
+	public void ResetToDefaults()
+	{
+		var eventTypeLabel      = EventType.ToName();
+		var eventMarkerType     = EventMarkerType.Flag;
+		var eventMarkerPosition = EventMarkerPosition.AtEnd;
+		var eventColor          = DataColors.GetMarkerColor( (int)EventType ).ToDrawingColor();
+
+		switch( EventType )
+		{
+			case EventType.ObstructiveApnea:
+			case EventType.Hypopnea:
+			case EventType.ClearAirway:
+			case EventType.RERA:
+			case EventType.UnclassifiedApnea:
+			case EventType.FlowReduction:
+				eventMarkerType     = EventMarkerType.Flag;
+				eventMarkerPosition = EventMarkerPosition.AtEnd;
+				break;
+			case EventType.Arousal:
+				eventMarkerType     = EventMarkerType.TickBottom;
+				eventMarkerPosition = EventMarkerPosition.AtEnd;
+				break;
+			case EventType.CSR:
+			case EventType.FlowLimitation:
+			case EventType.LargeLeak:
+			case EventType.PeriodicBreathing:
+			case EventType.VariableBreathing:
+			case EventType.BreathingNotDetected:
+				//eventColor          = eventColor.MultiplyAlpha( 0.75f );
+				eventMarkerType     = EventMarkerType.Span;
+				eventMarkerPosition = EventMarkerPosition.AtEnd;
+				break;
+			case EventType.VibratorySnore:
+				eventMarkerType     = EventMarkerType.TickTop;
+				eventMarkerPosition = EventMarkerPosition.AtBeginning;
+				break;
+			case EventType.Desaturation:
+				eventMarkerType     = EventMarkerType.ArrowBottom;
+				eventColor          = Color.OrangeRed;
+				eventMarkerPosition = EventMarkerPosition.InCenter;
+				break;
+			case EventType.PulseRateChange:
+				eventMarkerType     = EventMarkerType.TickBottom;
+				eventColor          = Color.Red;
+				eventMarkerPosition = EventMarkerPosition.AtBeginning;
+				break;
+			case EventType.Hypoxemia:
+			case EventType.Tachycardia:
+			case EventType.Bradycardia:
+				//eventColor          = eventColor.MultiplyAlpha( 0.85f );
+				eventMarkerType     = EventMarkerType.Span;
+				eventMarkerPosition = EventMarkerPosition.AtBeginning;
+				break;
+			case EventType.PulseOximetryFault:
+				eventColor          = Color.DimGray;
+				eventMarkerType     = EventMarkerType.Span;
+				eventMarkerPosition = EventMarkerPosition.AtBeginning;
+				break;
+			case EventType.RecordingStarts:
+			case EventType.RecordingEnds:
+				eventMarkerType = EventMarkerType.None;
+				break;
+			case >= cpaplib.EventType.FalsePositive:
+				eventColor = Color.Black;
+				break;
+			default:
+				throw new Exception( $"{nameof(EventType)} value not handled: {EventType}" );
+		}
+
+		Label           = eventTypeLabel;
+		EventMarkerType = eventMarkerType;
+		MarkerPosition  = eventMarkerPosition;
+		Initials        = EventType.ToInitials();
+		Color           = eventColor;
+	}
+	
 	public override string ToString()
 	{
 		return $"{EventType} ({Label}) - {Color}";

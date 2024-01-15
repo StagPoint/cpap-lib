@@ -11,7 +11,6 @@
              x:DataType="viewModels:EventSummaryViewModel">
     <UserControl.Resources>
         <converters:FormattedTimespanConverter x:Key="FormattedTimeSpan" />
-        <converters:NiceNameConverter x:Key="NiceNameConverter" />
     </UserControl.Resources>
     <ScrollViewer>
         <StackPanel>
@@ -45,7 +44,7 @@
                                 <ColumnDefinition Width="Auto" SharedSizeGroup="EventTreeView1" />
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="{Binding Type, Mode=OneWay, Converter={StaticResource NiceNameConverter}}" />
+                            <TextBlock Grid.Column="0" Text="{Binding Label}" />
                             <TextBlock Grid.Column="2" Text="{Binding Events.Count, Mode=OneWay, StringFormat={}{0} events}" Margin="16 0 0 0" />
                         </Grid>
                     </TreeDataTemplate>

@@ -152,35 +152,9 @@ public partial class AppSettingsView : UserControl
 		}
 	}
 	
-	private async void EventMarkerOptions_OnClick( object? sender, RoutedEventArgs e )
+	private void EventMarkerOptions_OnLoaded( object? sender, RoutedEventArgs e )
 	{
-		e.Handled = true;
-
-		var viewModel = new EventMarkerConfigurationViewModel();
-
-		var settingsView = new EventMarkerEditor()
-		{
-			DataContext = viewModel
-		};
-
-		var dialog = new TaskDialog()
-		{
-			Title = $"Edit Event Markers",
-			Buttons = 
-			{
-				TaskDialogButton.CancelButton,
-				new TaskDialogButton( "Save", TaskDialogStandardResult.OK ),
-			},
-			XamlRoot = (Visual)VisualRoot!,
-			Content  = settingsView,
-		};
-		
-		var dialogResult = await dialog.ShowAsync();
-
-		if( (TaskDialogStandardResult)dialogResult == TaskDialogStandardResult.OK )
-		{
-			viewModel.SaveChanges();
-		}
+		EventConfig.DataContext = new EventMarkerConfigurationViewModel();
 	}
 }
 

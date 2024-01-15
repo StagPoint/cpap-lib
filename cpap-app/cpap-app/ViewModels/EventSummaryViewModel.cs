@@ -23,6 +23,8 @@ public class EventSummaryViewModel
 	{
 		Day = day;
 
+		var eventConfigs = EventMarkerConfigurationStore.GetEventMarkerConfigurations();
+
 		// If there is no detailed Event information available (SD Card wasn't in machine, etc) then 
 		// just summarize things as best we can. 
 		if( !day.HasDetailData )
@@ -33,12 +35,18 @@ public class EventSummaryViewModel
 
 			if( day.EventSummary.ApneaIndex > float.Epsilon )
 			{
-				Items.Add( new EventTypeSummary( EventType.UnclassifiedApnea, day.EventSummary.ApneaIndex, day.TotalSleepTime ) );
+				Items.Add( new EventTypeSummary( EventType.UnclassifiedApnea, day.EventSummary.ApneaIndex, day.TotalSleepTime )
+				{
+					Label = eventConfigs.FirstOrDefault( x => x.EventType == EventType.UnclassifiedApnea )?.Label ?? EventType.UnclassifiedApnea.ToName()
+				});
 			}
 
 			if( day.EventSummary.HypopneaIndex > float.Epsilon )
 			{
-				Items.Add( new EventTypeSummary( EventType.Hypopnea, day.EventSummary.HypopneaIndex, day.TotalSleepTime ) );
+				Items.Add( new EventTypeSummary( EventType.Hypopnea, day.EventSummary.HypopneaIndex, day.TotalSleepTime ) 
+				{
+					Label = eventConfigs.FirstOrDefault( x => x.EventType == EventType.Hypopnea )?.Label ?? EventType.Hypopnea.ToName()
+				});
 			}
 
 			return;
@@ -60,7 +68,10 @@ public class EventSummaryViewModel
 		
 		foreach( var type in types )
 		{
-			var summary = new EventTypeSummary( type, totalSleepTime, events );
+			var summary = new EventTypeSummary( type, totalSleepTime, events )
+			{
+				Label = eventConfigs.FirstOrDefault( x => x.EventType == type )?.Label ?? type.ToName()
+			};
 			
 			Items.Add( summary );
 		}
@@ -73,6 +84,8 @@ public class EventSummaryViewModel
 	public EventSummaryViewModel( DailyReport day, Session session, EventType[]? eventTypeFilter = null )
 	{
 		Day = day;
+
+		var eventConfigs = EventMarkerConfigurationStore.GetEventMarkerConfigurations();
 
 		eventTypeFilter ??= EventTypes.RespiratoryDisturbance;
 
@@ -91,7 +104,10 @@ public class EventSummaryViewModel
 		
 		foreach( var type in types )
 		{
-			var summary = new EventTypeSummary( type, totalSleepTime, events );
+			var summary = new EventTypeSummary( type, totalSleepTime, events )
+			{
+				Label = eventConfigs.FirstOrDefault( x => x.EventType == type )?.Label ?? type.ToName()
+			};
 			
 			Items.Add( summary );
 		}
@@ -114,6 +130,8 @@ public class EventSummaryViewModel
 	{
 		Day = day;
 		
+		var eventConfigs = EventMarkerConfigurationStore.GetEventMarkerConfigurations();
+
 		// Calculate the total time (in hours) for each SourceType
 		var totalSleepTime = new Dictionary<SourceType, double>();
 		foreach( var session in day.Sessions )
@@ -126,7 +144,10 @@ public class EventSummaryViewModel
 		
 		foreach( var type in filter )
 		{
-			var summary = new EventTypeSummary( type, totalSleepTime, events );
+			var summary = new EventTypeSummary( type, totalSleepTime, events )
+			{
+				Label = eventConfigs.FirstOrDefault( x => x.EventType == type )?.Label ?? type.ToName()
+			};
 
 			Items.Add( summary );
 		}
@@ -139,6 +160,8 @@ public class EventSummaryViewModel
 	{
 		Day = day;
 		
+		var eventConfigs = EventMarkerConfigurationStore.GetEventMarkerConfigurations();
+
 		var events = day.Events.Where( x => filter.Contains( x.Type ) ).ToList();
 		
 		// Calculate the total time (in hours) for each SourceType
@@ -151,7 +174,10 @@ public class EventSummaryViewModel
 		
 		foreach( var type in filter )
 		{
-			var summary = new EventTypeSummary( type, totalSleepTime, events );
+			var summary = new EventTypeSummary( type, totalSleepTime, events )
+			{
+				Label = eventConfigs.FirstOrDefault( x => x.EventType == type )?.Label ?? type.ToName()
+			};
 
 			Items.Add( summary );
 		}
@@ -216,6 +242,7 @@ public class EventGroupSummary
 
 public class EventTypeSummary
 {
+	public string    Label       { get; set; }
 	public EventType Type        { get; set; }
 	public int       TotalCount  { get; set; }
 	public double    IndexValue  { get; set; }
@@ -227,6 +254,7 @@ public class EventTypeSummary
 
 	public EventTypeSummary( EventType type, double index, TimeSpan totalSleepTime )
 	{
+		Label       = type.ToName();
 		Type        = type;
 		TotalCount  = (int)Math.Ceiling( index * totalSleepTime.TotalHours );
 		IndexValue  = index;
@@ -237,7 +265,8 @@ public class EventTypeSummary
 	
 	public EventTypeSummary( EventType type, Dictionary<SourceType, double> totalSleepTime, IEnumerable<ReportedEvent> events )
 	{
-		Type = type;
+		Type  = type;
+		Label = type.ToName();
 
 		double totalSeconds   = 0;
 		double dailyTotalTime = 0;
@@ -262,6 +291,6 @@ public class EventTypeSummary
 
 	public override string ToString()
 	{
-		return $"{Type.ToName()} ({TotalCount})";
+		return $"{Label} ({TotalCount})";
 	}
 }

@@ -2,6 +2,8 @@
 
 using cpap_app.Configuration;
 
+using cpap_db;
+
 // ReSharper disable ConvertConstructorToMemberInitializers
 
 namespace cpap_app.ViewModels;
@@ -17,6 +19,19 @@ public class EventMarkerConfigurationViewModel
 
 	public void SaveChanges()
 	{
-		// TODO: Save changes to event marker configurations 
+		using var store = StorageService.Connect();
+
+		foreach( var config in Items )
+		{
+			store.Update( config, primaryKeyValue: config.EventType );
+		}
+	}
+	
+	public void ResetAll()
+	{
+		foreach( var config in Items )
+		{
+			config.ResetToDefaults();
+		}
 	}
 }

@@ -2217,16 +2217,20 @@ public partial class SignalChart : UserControl
 				switch( markerConfig.EventMarkerType )
 				{
 					case EventMarkerType.Flag:
+						var flagTop = Chart.Plot.AddMarker( markerOffset, limits.YMax, MarkerShape.verticalBar, 32, markerConfig.Color, null );
+						flagTop.MarkerLineWidth = 2f;
+						_eventMarkers.Add( flagTop );
+
 						marker = Chart.Plot.AddVerticalLine( markerOffset, color, 1.5f, LineStyle.Solid, null );
 						break;
 					case EventMarkerType.TickTop:
 						var topLine = Chart.Plot.AddMarker( markerOffset, limits.YMax, MarkerShape.verticalBar, 32, markerConfig.Color, null );
-						topLine.MarkerLineWidth = 1.5f;
+						topLine.MarkerLineWidth = 2f;
 						marker = topLine;
 						break;
 					case EventMarkerType.TickBottom:
 						var bottomLine = Chart.Plot.AddMarker( markerOffset, limits.YMin, MarkerShape.verticalBar, 32, markerConfig.Color, null );
-						bottomLine.MarkerLineWidth = 1.5f;
+						bottomLine.MarkerLineWidth = 2f;
 						marker = bottomLine;
 						break;
 					case EventMarkerType.ArrowTop:

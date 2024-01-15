@@ -1,4 +1,6 @@
-﻿using Avalonia;
+﻿using System;
+
+using Avalonia;
 using Avalonia.Media;
 using Avalonia.Styling;
 
@@ -54,13 +56,22 @@ public class DataColors
 
 	public static Color GetMarkerColor( int index )
 	{
-		var color = Color.FromUInt32( _markerColors[ index % _markerColors.Length ] );
-	
-		// var isDarkTheme = Application.Current?.ActualThemeVariant == ThemeVariant.Dark;
-		// if( isDarkTheme )
-		// {
-		// 	color = ColorTransforms.TransformBrightness( color, ColorTransforms.ColorTransformMode.Hsb, 1.1 );
-		// }
+		//var color = Color.FromUInt32( _markerColors[ index % _markerColors.Length ] );
+		
+		var isDarkTheme  = Application.Current?.ActualThemeVariant == ThemeVariant.Dark;
+		var colorPalette = _markerColors; // isDarkTheme ? DarkThemeColors : LightThemeColors;
+
+		// TODO: Marker colors look better on both themes when they are darker? Consider finding a new marker color palette. 
+		{
+			var avaloniaColor = Avalonia.Media.Color.FromUInt32( colorPalette[ index % colorPalette.Length ] );
+			var hsl           = avaloniaColor.ToHsl();
+			var brighter      = new HslColor( hsl.A, hsl.H, hsl.S, Math.Max( hsl.L * 0.75f, 0.33f ) );
+			var result        = brighter.ToRgb();
+
+			return result;
+		}
+
+		var color = Color.FromUInt32( colorPalette[ index % colorPalette.Length ] );
 	
 		return color;
 	}

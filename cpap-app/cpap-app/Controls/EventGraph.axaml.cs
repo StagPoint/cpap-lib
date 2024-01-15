@@ -18,6 +18,7 @@ using cpap_app.Configuration;
 using cpap_app.Events;
 using cpap_app.Helpers;
 using cpap_app.Styling;
+using cpap_app.ViewModels;
 
 using cpaplib;
 
@@ -97,6 +98,8 @@ public partial class EventGraph : UserControl
 	#region Private fields 
 	
 	private const double MINIMUM_TIME_WINDOW = 60;
+
+	private List<EventMarkerConfiguration> _eventMarkerConfigs = new();
 
 	private SignalChartConfiguration? _chartConfiguration;
 	private CustomChartStyle?         _chartStyle;
@@ -796,8 +799,8 @@ public partial class EventGraph : UserControl
 		for( int i = 0; i < eventTypes.Count; i++ )
 		{
 			positions[ i ] = -i;
-			labels[ i ]    = eventTypes[ i ].ToInitials();
-
+			labels[ i ]    = _eventMarkerConfigs.FirstOrDefault( x => x.EventType == eventTypes[i] )?.Initials ?? eventTypes[ i ].ToInitials();
+			
 			if( i % 2 == 0 )
 			{
 				Chart.Plot.AddVerticalSpan( -i - 0.5, -i + 0.5, alternateBackgroundColor );
@@ -892,6 +895,9 @@ public partial class EventGraph : UserControl
 	{
 		_chartInitialized = true;
 		_chartStyle       = new CustomChartStyle( ChartForeground, ChartBackground, ChartBorderColor, ChartGridLineColor );
+
+		// Retrieve event marker configurations only once 
+		_eventMarkerConfigs = EventMarkerConfigurationStore.GetEventMarkerConfigurations();
 		
 		var plot = chart.Plot;
 		
