@@ -101,7 +101,7 @@ public partial class StatisticsView : UserControl
 		group.Items.Add( CompileGroupAverages( "Average SpO2", groups, GetStatisticsValue( SignalNames.SpO2, stats => stats.Average ), value => $"{value:F0}%" ) );
 		group.Items.Add( CompileGroupAverages( "Min SpO2",     groups, GetStatisticsValue( SignalNames.SpO2, stats => stats.Minimum ), value => $"{value:F0}%" ) );
 
-		group.Items.Add( CompileGroupAverages( "Desaturation Index (ODI3)",  groups, GetEventIndex( EventType.Desaturation ),           value => $"{value:F2}" ) );
+		group.Items.Add( CompileGroupAverages( "Desaturation Index",         groups, GetEventIndex( EventType.Desaturation ),           value => $"{value:F2}" ) );
 		group.Items.Add( CompileGroupAverages( "Total Desaturations",        groups, GetEventCount( EventType.Desaturation ),           value => $"{value:N0}" ) );
 		group.Items.Add( CompileGroupAverages( "Avg. Desaturation Duration", groups, GetAverageEventDuration( EventType.Desaturation ), FormatTimespan ) );
 		group.Items.Add( CompileGroupMaximums( "Max. Desaturation Duration", groups, GetMaxEventDuration( EventType.Desaturation ), FormatTimespan ) );

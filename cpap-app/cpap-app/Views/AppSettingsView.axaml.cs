@@ -11,9 +11,8 @@ using Avalonia.Interactivity;
 using Avalonia.Platform;
 using Avalonia.VisualTree;
 
+using cpap_app.Controls;
 using cpap_app.ViewModels;
-
-using cpaplib;
 
 using FluentAvalonia.UI.Controls;
 
@@ -143,6 +142,37 @@ public partial class AppSettingsView : UserControl
 			XamlRoot = (Visual)VisualRoot!,
 			Content  = settingsView,
 			MaxWidth = 800,
+		};
+		
+		var dialogResult = await dialog.ShowAsync();
+
+		if( (TaskDialogStandardResult)dialogResult == TaskDialogStandardResult.OK )
+		{
+			viewModel.SaveChanges();
+		}
+	}
+	
+	private async void EventMarkerOptions_OnClick( object? sender, RoutedEventArgs e )
+	{
+		e.Handled = true;
+
+		var viewModel = new EventMarkerConfigurationViewModel();
+
+		var settingsView = new EventMarkerEditor()
+		{
+			DataContext = viewModel
+		};
+
+		var dialog = new TaskDialog()
+		{
+			Title = $"Edit Event Markers",
+			Buttons = 
+			{
+				TaskDialogButton.CancelButton,
+				new TaskDialogButton( "Save", TaskDialogStandardResult.OK ),
+			},
+			XamlRoot = (Visual)VisualRoot!,
+			Content  = settingsView,
 		};
 		
 		var dialogResult = await dialog.ShowAsync();

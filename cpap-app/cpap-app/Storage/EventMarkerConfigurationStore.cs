@@ -21,7 +21,17 @@ public class EventMarkerConfigurationStore
 		// TODO: Move SignalChartConfiguration initialization to application startup
 		Initialize( store );
 
-		return store.SelectAll<EventMarkerConfiguration>().OrderBy( x => x.EventType ).ToList();
+		var list = store.SelectAll<EventMarkerConfiguration>().OrderBy( x => x.EventType ).ToList();
+
+		foreach( var config in list )
+		{
+			if( string.IsNullOrEmpty( config.Initials ) )
+			{
+				config.Initials = config.EventType.ToInitials();
+			}
+		}
+
+		return list;
 	}
 
 	private static void Initialize( StorageService store )
@@ -42,8 +52,14 @@ public class EventMarkerConfigurationStore
 		var eventTypes = (EventType[])typeof( EventType ).GetEnumValues();
 		for( int i = 0; i < eventTypes.Length; i++ )
 		{
-			var eventType           = eventTypes[ i ];
-			var eventTypeLabel      = eventType.ToString();
+			var eventType = eventTypes[ i ];
+
+			if( eventType >= EventType.FalsePositive )
+			{
+				break;
+			}
+			
+			var eventTypeLabel      = eventType.ToName();
 			var eventMarkerType     = EventMarkerType.Flag;
 			var eventMarkerPosition = EventMarkerPosition.AtEnd;
 			var eventColor          = DataColors.GetMarkerColor( i ).ToDrawingColor();
@@ -109,6 +125,7 @@ public class EventMarkerConfigurationStore
 				Label           = eventTypeLabel,
 				Color           = eventColor,
 				MarkerPosition  = eventMarkerPosition,
+				Initials        = eventType.ToInitials(),
 			};
 
 			store.Insert( config, primaryKeyValue: config.EventType );

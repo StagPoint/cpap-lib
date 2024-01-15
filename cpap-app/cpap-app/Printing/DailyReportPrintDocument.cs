@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
 
@@ -57,7 +56,7 @@ public class DailyReportPrintDocument : IDocument
 				{
 					headerText.Line( $"Detail View for {Day.ReportDate.Date:D}" ).FontSize( 10 );
 					
-					if( Selection.Duration.TotalMinutes < Day.TotalSleepTime.TotalMinutes )
+					//if( Selection.Duration.TotalMinutes < Day.TotalTimeSpan.TotalMinutes )
 					{
 						var duration      = FormattedTimespanConverter.FormatTimeSpan( Selection.Duration, TimespanFormatType.Abbreviated, false );
 						var selectionText = $"Showing selection of {duration} from {Selection.Start:g} to {Selection.End:g}";
@@ -317,7 +316,7 @@ public class DailyReportPrintDocument : IDocument
 	{
 		column.Item().Text( text =>
 		{
-			text.DefaultTextStyle( x => x.FontSize( 7 ).SemiBold() );
+			text.DefaultTextStyle( x => x.FontSize( 6 ).SemiBold() );
 
 			text.Line( $"Device: {Day.MachineInfo.ProductName}" );
 			text.Line( $"Model: {Day.MachineInfo.ModelNumber}" );

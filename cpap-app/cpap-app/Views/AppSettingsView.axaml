@@ -59,7 +59,9 @@
                                            Description="Set display options for reported events"
                                            IsClickEnabled="True"
                                            IconSource="Flag"
-                                           ActionIconSource="ChevronRight" />
+                                           ActionIconSource="More"
+                                           Name="EventMarkerOptions"
+                                           Click="EventMarkerOptions_OnClick"/>
                 <controls:SettingsExpander Header="Signals"
                                            Description="Set display options for signal data"
                                            IsClickEnabled="True"
