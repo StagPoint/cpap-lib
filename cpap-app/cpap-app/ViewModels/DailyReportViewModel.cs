@@ -120,7 +120,7 @@ public class DailyReportViewModel : DailyReport, INotifyPropertyChanged
 		}
 
 		// Ensure that a notation is made about this change 
-		Notes = Notes.TrimEnd() + $"\nDeleted '{session.Source}' session starting at {session.StartTime:g} and ending at {session.EndTime}\n";
+		AppendNote( $"Deleted '{session.Source}' session starting at {session.StartTime:g} and ending at {session.EndTime}", false );
 		
 		using var db = StorageService.Connect();
 		db.SaveDailyReport( UserProfile.UserProfileID, this );
@@ -129,6 +129,20 @@ public class DailyReportViewModel : DailyReport, INotifyPropertyChanged
 		PropertyChanged?.Invoke( this, new PropertyChangedEventArgs( nameof( Sessions ) ) );
 
 		Reload();
+	}
+
+	public void AppendNote( string annotation, bool saveToDatabase = true )
+	{
+		var notes = (Notes.Trim() + "\n\n" + annotation + "\n").TrimStart();
+
+		if( saveToDatabase )
+		{
+			SaveNotes( notes );
+		}
+		else
+		{
+			Notes = notes;
+		}
 	}
 	
 	public void SaveNotes( string notesText )

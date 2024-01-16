@@ -71,11 +71,16 @@
                 </controls:SettingsExpander>
                 <controls:SettingsExpander Header="Signals"
                                            Description="Set display options for signal data"
-                                           IsClickEnabled="True"
-                                           ActionIconSource="ChevronRight">
+                                           IsClickEnabled="False"
+                                           ActionIconSource="ChevronRight"
+                                           Name="SignalConfigurations"
+                                           Loaded="SignalConfigurations_OnLoaded">
                     <controls:SettingsExpander.IconSource>
                         <controls:FontIconSource Glyph="&#xE9D9;" FontFamily="Segoe MDL2 Assets" />
                     </controls:SettingsExpander.IconSource>
+                    <controls:SettingsExpanderItem>
+                        <controls1:SignalConfigurationEditor Name="SignalConfig" HorizontalAlignment="Left" MaxWidth="1440" />
+                    </controls:SettingsExpanderItem>
                 </controls:SettingsExpander>
                 <controls:SettingsExpander Header="Profiles"
                                            Description="Add, remove, and edit user profiles"

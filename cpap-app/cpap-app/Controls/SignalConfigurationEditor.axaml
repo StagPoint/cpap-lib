@@ -6,14 +6,15 @@
              xmlns:configuration="clr-namespace:cpap_app.Configuration"
              xmlns:converters="clr-namespace:cpap_app.Converters"
              xmlns:viewModels="clr-namespace:cpap_app.ViewModels"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="700"
              x:DataType="viewModels:SignalChartConfigurationViewModel"
              x:Class="cpap_app.Controls.SignalConfigurationEditor">
     <Design.DataContext>
-        <viewModels:EventMarkerConfigurationViewModel/>
+        <viewModels:SignalChartConfigurationViewModel/>
     </Design.DataContext>
     <UserControl.Resources>
         <converters:AvaloniaColorConverter x:Key="ColorConverter" />
+        <converters:EnumToBooleanConverter x:Key="EnumToBool" />
     </UserControl.Resources>
     
     <UserControl.Styles>
@@ -21,86 +22,107 @@
     </UserControl.Styles>
 
     <StackPanel Orientation="Vertical" Grid.IsSharedSizeScope="True">
-        <Border Classes="ColumnHeader" Margin="0 0 0 8">
-            <Grid RowDefinitions="Auto">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition SharedSizeGroup="EventMarkerEditC0"/>
-                    <ColumnDefinition SharedSizeGroup="EventMarkerEditC1"/>
-                    <ColumnDefinition SharedSizeGroup="EventMarkerEditC2"/>
-                    <ColumnDefinition SharedSizeGroup="EventMarkerEditC3"/>
-                    <ColumnDefinition SharedSizeGroup="EventMarkerEditC4"/>
-                    <ColumnDefinition SharedSizeGroup="EventMarkerEditC5"/>
-                    <ColumnDefinition SharedSizeGroup="EventMarkerEditC6"/>
-                    <ColumnDefinition SharedSizeGroup="EventMarkerEditC7"/>
-                    <ColumnDefinition SharedSizeGroup="EventMarkerEditC8"/>
-                </Grid.ColumnDefinitions>
-                <TextBlock Grid.Column="0" Text="Signal" />
-                <TextBlock Grid.Column="1" Text="Label" />
-                <TextBlock Grid.Column="2" Text="Color" />
-                <TextBlock Grid.Column="3" Text="Gradient" />
-                <TextBlock Grid.Column="4" Text="Trends" />
-                <TextBlock Grid.Column="5" Text="Baseline Low" />
-                <TextBlock Grid.Column="6" Text="Baseline High" />
-                <TextBlock Grid.Column="7" Text="Min Value" />
-                <TextBlock Grid.Column="8" Text="Max Value" />
-                
-                <Rectangle Grid.Column="1" Grid.Row="0" Classes="HeaderSeparator" />
-                <Rectangle Grid.Column="2" Grid.Row="0" Classes="HeaderSeparator" />
-                <Rectangle Grid.Column="3" Grid.Row="0" Classes="HeaderSeparator" />
-                <Rectangle Grid.Column="4" Grid.Row="0" Classes="HeaderSeparator" />
-                <Rectangle Grid.Column="5" Grid.Row="0" Classes="HeaderSeparator" />
-                <Rectangle Grid.Column="6" Grid.Row="0" Classes="HeaderSeparator" />
-                <Rectangle Grid.Column="7" Grid.Row="0" Classes="HeaderSeparator" />
-                <Rectangle Grid.Column="8" Grid.Row="0" Classes="HeaderSeparator" />
-            </Grid>
-        </Border>
-        <ScrollViewer MaxHeight="400">
-            <ItemsRepeater Name="Items" ItemsSource="{Binding Items}" VerticalCacheLength="100">
-                <ItemsRepeater.Styles>
-                    <Style Selector="TextBlock">
-                        <Setter Property="VerticalAlignment" Value="Center"/>
-                        <Setter Property="Margin" Value="0 0 8 0"/>
-                    </Style>
-                    <Style Selector="TextBox">
-                        <Setter Property="VerticalAlignment" Value="Center"/>
-                        <Setter Property="Margin" Value="0 0 8 0"/>
-                    </Style>
-                    <Style Selector="ComboBox">
-                        <Setter Property="VerticalAlignment" Value="Center"/>
-                        <Setter Property="Margin" Value="0 0 8 0"/>
-                        <Setter Property="Width" Value="150"/>
-                    </Style>
-                    <Style Selector="ColorPicker">
-                        <Setter Property="VerticalAlignment" Value="Center"/>
-                        <Setter Property="Margin" Value="0 0 8 0"/>
-                    </Style>
-                    <Style Selector="Border.SelectionRect">
-                        <Setter Property="Height" Value="32" />
-                        <Setter Property="MinWidth" Value="30" />
-                    </Style>
-                </ItemsRepeater.Styles>
-                <ItemsRepeater.Layout>
-                    <StackLayout Orientation="Vertical" DisableVirtualization="True" Spacing="4" />
-                </ItemsRepeater.Layout>
-                <ItemsRepeater.ItemTemplate>
-                    <DataTemplate DataType="{x:Type configuration:SignalChartConfiguration}">
-                        <Border Classes="SelectionRect" Tag="{Binding}" >
-                            <Grid RowDefinitions="Auto" Classes="TableData">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition SharedSizeGroup="EventMarkerEditC0" />
-                                    <ColumnDefinition SharedSizeGroup="EventMarkerEditC1"/>
-                                    <ColumnDefinition SharedSizeGroup="EventMarkerEditC2"/>
-                                    <ColumnDefinition SharedSizeGroup="EventMarkerEditC3"/>
-                                    <ColumnDefinition SharedSizeGroup="EventMarkerEditC4"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="{Binding SignalName}" />
-                                <ColorPicker Grid.Column="1" Color="{Binding PlotColor, Converter={StaticResource ColorConverter}}" />
-                                <TextBox Grid.Column="3" Text="{Binding Title}" Width="250"/>
-                            </Grid>
-                        </Border>
-                    </DataTemplate>
-                </ItemsRepeater.ItemTemplate>
-            </ItemsRepeater>
+        <ScrollViewer MaxHeight="600" HorizontalScrollBarVisibility="Auto" Padding="0 0 16 16">
+            <StackPanel Orientation="Vertical" Grid.IsSharedSizeScope="True">
+                <Border Classes="ColumnHeader" Margin="0 0 0 8">
+                    <Grid RowDefinitions="Auto">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition SharedSizeGroup="SignalConfigEditC0"/>
+                            <ColumnDefinition SharedSizeGroup="SignalConfigEditC1"/>
+                            <ColumnDefinition SharedSizeGroup="SignalConfigEditC2"/>
+                            <ColumnDefinition SharedSizeGroup="SignalConfigEditC3"/>
+                            <ColumnDefinition SharedSizeGroup="SignalConfigEditC4"/>
+                            <ColumnDefinition SharedSizeGroup="SignalConfigEditC5"/>
+                            <ColumnDefinition SharedSizeGroup="SignalConfigEditC6"/>
+                            <ColumnDefinition SharedSizeGroup="SignalConfigEditC7"/>
+                            <ColumnDefinition SharedSizeGroup="SignalConfigEditC8"/>
+                            <ColumnDefinition SharedSizeGroup="SignalConfigEditC9"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Signal" />
+                        <TextBlock Grid.Column="1" Text="Label" />
+                        <TextBlock Grid.Column="2" Text="Color" />
+                        <TextBlock Grid.Column="3" Text="Gradient" />
+                        <TextBlock Grid.Column="4" Text="Trends" />
+                        <TextBlock Grid.Column="5" Text="Scaling Mode" />
+                        <TextBlock Grid.Column="6" Text="Scaling Min" />
+                        <TextBlock Grid.Column="7" Text="Scaling Max" />
+                        <TextBlock Grid.Column="8" Text="Baseline Low" />
+                        <TextBlock Grid.Column="9" Text="Baseline High" />
+                        
+                        <Rectangle Grid.Column="1" Grid.Row="0" Classes="HeaderSeparator" />
+                        <Rectangle Grid.Column="2" Grid.Row="0" Classes="HeaderSeparator" />
+                        <Rectangle Grid.Column="3" Grid.Row="0" Classes="HeaderSeparator" />
+                        <Rectangle Grid.Column="4" Grid.Row="0" Classes="HeaderSeparator" />
+                        <Rectangle Grid.Column="5" Grid.Row="0" Classes="HeaderSeparator" />
+                        <Rectangle Grid.Column="6" Grid.Row="0" Classes="HeaderSeparator" />
+                        <Rectangle Grid.Column="7" Grid.Row="0" Classes="HeaderSeparator" />
+                        <Rectangle Grid.Column="8" Grid.Row="0" Classes="HeaderSeparator" />
+                        <Rectangle Grid.Column="9" Grid.Row="0" Classes="HeaderSeparator" />
+                    </Grid>
+                </Border>
+                <ItemsRepeater Name="Items" ItemsSource="{Binding Items}" VerticalCacheLength="100">
+                    <ItemsRepeater.Layout>
+                        <StackLayout Orientation="Vertical" DisableVirtualization="True" Spacing="4" />
+                    </ItemsRepeater.Layout>
+                    <ItemsRepeater.Styles>
+                        <Style Selector="TextBlock">
+                            <Setter Property="VerticalAlignment" Value="Center"/>
+                            <Setter Property="Margin" Value="0 0 8 0"/>
+                        </Style>
+                        <Style Selector="TextBox">
+                            <Setter Property="VerticalAlignment" Value="Center"/>
+                            <Setter Property="Margin" Value="0 0 8 0"/>
+                        </Style>
+                        <Style Selector="ComboBox">
+                            <Setter Property="VerticalAlignment" Value="Center"/>
+                            <Setter Property="Margin" Value="0 0 8 0"/>
+                            <Setter Property="Width" Value="150"/>
+                        </Style>
+                        <Style Selector="ColorPicker">
+                            <Setter Property="VerticalAlignment" Value="Center"/>
+                            <Setter Property="Margin" Value="0 0 8 0"/>
+                        </Style>
+                        <Style Selector="Border.SelectionRect">
+                            <Setter Property="Height" Value="32" />
+                            <Setter Property="MinWidth" Value="30" />
+                        </Style>
+                    </ItemsRepeater.Styles>
+                    <ItemsRepeater.ItemTemplate>
+                        <DataTemplate DataType="{x:Type configuration:SignalChartConfiguration}">
+                            <Border Classes="SelectionRect" Tag="{Binding}" >
+                                <Grid RowDefinitions="Auto" Classes="TableData">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition SharedSizeGroup="SignalConfigEditC0"/>
+                                        <ColumnDefinition SharedSizeGroup="SignalConfigEditC1"/>
+                                        <ColumnDefinition SharedSizeGroup="SignalConfigEditC2"/>
+                                        <ColumnDefinition SharedSizeGroup="SignalConfigEditC3"/>
+                                        <ColumnDefinition SharedSizeGroup="SignalConfigEditC4"/>
+                                        <ColumnDefinition SharedSizeGroup="SignalConfigEditC5"/>
+                                        <ColumnDefinition SharedSizeGroup="SignalConfigEditC6"/>
+                                        <ColumnDefinition SharedSizeGroup="SignalConfigEditC7"/>
+                                        <ColumnDefinition SharedSizeGroup="SignalConfigEditC8"/>
+                                        <ColumnDefinition SharedSizeGroup="SignalConfigEditC9"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="{Binding SignalName}" />
+                                    <TextBlock Grid.Column="1" Text="{Binding Title}" />
+                                    <ColorPicker Grid.Column="2" Color="{Binding PlotColor, Converter={StaticResource ColorConverter}}" />
+                                    <ToggleSwitch Grid.Column="3" IsChecked="{Binding FillBelow}" OnContent="" OffContent=""/>
+                                    <ToggleSwitch Grid.Column="4" IsChecked="{Binding ShowInTrends}" OnContent="" OffContent=""/>
+                                    <ComboBox Grid.Column="5" Name="ScalingMode" SelectedIndex="{Binding ScalingMode}" MaxWidth="110">
+                                        <ComboBoxItem>Defaults</ComboBoxItem>
+                                        <ComboBoxItem>Auto Fit</ComboBoxItem>
+                                        <ComboBoxItem>Override</ComboBoxItem>
+                                    </ComboBox>
+                                    <NumericUpDown Grid.Column="6" Value="{Binding AxisMinValue}" IsEnabled="{Binding #ScalingMode.SelectedIndex, Converter={StaticResource EnumToBool}, ConverterParameter={x:Static configuration:AxisScalingMode.Override}}" MaxWidth="80" ShowButtonSpinner="False" Watermark="N/A" Minimum="0" />
+                                    <NumericUpDown Grid.Column="7" Value="{Binding AxisMaxValue}" IsEnabled="{Binding #ScalingMode.SelectedIndex, Converter={StaticResource EnumToBool}, ConverterParameter={x:Static configuration:AxisScalingMode.Override}}" MaxWidth="80" ShowButtonSpinner="False" Watermark="N/A" Minimum="0" />
+                                    <NumericUpDown Grid.Column="8" Value="{Binding BaselineLow}" MaxWidth="80" ShowButtonSpinner="False" Watermark="N/A" Minimum="0" />
+                                    <NumericUpDown Grid.Column="9" Value="{Binding BaselineHigh}" MaxWidth="80" ShowButtonSpinner="False" Watermark="N/A" Minimum="0" />
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsRepeater.ItemTemplate>
+                </ItemsRepeater>
+            </StackPanel>
         </ScrollViewer>
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0 8">
             <Button Name="ResetAll" ClickMode="Press" Padding="20 10" Click="ResetAll_OnClick">

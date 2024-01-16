@@ -10,7 +10,7 @@ public class EnumToBooleanConverter : IValueConverter
 {
 	public object? Convert( object? value, Type targetType, object? parameter, CultureInfo culture )
 	{
-		return value != null && parameter != null && value.GetType() == parameter.GetType() && value.Equals( parameter );
+		return value != null && parameter != null && ((int)value == (int)parameter);
 	}
 
 	public object? ConvertBack( object? value, Type targetType, object? parameter, CultureInfo culture )

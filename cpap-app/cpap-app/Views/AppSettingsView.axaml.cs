@@ -156,6 +156,11 @@ public partial class AppSettingsView : UserControl
 	{
 		EventConfig.DataContext = new EventMarkerConfigurationViewModel();
 	}
+	
+	private void SignalConfigurations_OnLoaded( object? sender, RoutedEventArgs e )
+	{
+		SignalConfigurations.DataContext = new SignalChartConfigurationViewModel();
+	}
 }
 
 public class DependencyInfoItem

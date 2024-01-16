@@ -45,6 +45,9 @@
         </Border>
         <ScrollViewer MaxHeight="400">
             <ItemsRepeater Name="Items" ItemsSource="{Binding Items}" VerticalCacheLength="100">
+                <ItemsRepeater.Layout>
+                    <StackLayout Orientation="Vertical" DisableVirtualization="True" Spacing="4" />
+                </ItemsRepeater.Layout>
                 <ItemsRepeater.Styles>
                     <Style Selector="TextBlock">
                         <Setter Property="VerticalAlignment" Value="Center"/>
@@ -68,9 +71,6 @@
                         <Setter Property="MinWidth" Value="30" />
                     </Style>
                 </ItemsRepeater.Styles>
-                <ItemsRepeater.Layout>
-                    <StackLayout Orientation="Vertical" DisableVirtualization="True" Spacing="4" />
-                </ItemsRepeater.Layout>
                 <ItemsRepeater.ItemTemplate>
                     <DataTemplate DataType="{x:Type configuration:EventMarkerConfiguration}">
                         <Border Classes="SelectionRect" Tag="{Binding}" >

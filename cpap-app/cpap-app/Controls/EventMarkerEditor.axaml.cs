@@ -14,10 +14,10 @@ public partial class EventMarkerEditor : UserControl
 	{
 		InitializeComponent();
 
-		PointerWheelChanged += ( sender, args ) =>
-		{
-			args.Handled = true;
-		};
+		// PointerWheelChanged += ( sender, args ) =>
+		// {
+		// 	args.Handled = true;
+		// };
 	}
 	
 	private async void SaveChanges_OnClick( object? sender, RoutedEventArgs e )
