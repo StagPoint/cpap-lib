@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Diagnostics;
+using System.Collections.Generic;
 using System.Linq;
 
 using Avalonia;
@@ -7,6 +7,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.VisualTree;
 
+using cpap_app.Configuration;
 using cpap_app.Events;
 using cpap_app.Helpers;
 using cpap_app.ViewModels;
@@ -27,6 +28,12 @@ public partial class DailyEventsListView : UserControl
 	
 	#endregion 
 	
+	#region Private fields
+
+	private List<EventMarkerConfiguration> _eventConfigs = new();
+	
+	#endregion
+	
 	#region Constructor 
 	
 	public DailyEventsListView()
@@ -41,6 +48,8 @@ public partial class DailyEventsListView : UserControl
 	protected override void OnLoaded( RoutedEventArgs e )
 	{
 		base.OnLoaded( e );
+
+		_eventConfigs = EventMarkerConfigurationStore.GetEventMarkerConfigurations();
 
 		if( SelectedEventType != null )
 		{
@@ -128,9 +137,11 @@ public partial class DailyEventsListView : UserControl
 		{
 			throw new InvalidOperationException();
 		}
+
+		var typeName = _eventConfigs.FirstOrDefault( x => x.EventType == evt.Type )?.Label ?? evt.Type.ToName();
 		
 		var msg = $"""
-		           Are you sure you wish to mark this {evt.Type.ToName()} event as a False Positive?
+		           Are you sure you wish to mark this {typeName} event as a False Positive?
 		           This will have the same effect as deleting the event, and will cause all event
 		           information for this day to be recalculated.
 
@@ -146,7 +157,7 @@ public partial class DailyEventsListView : UserControl
 		}
 
 		// Make sure a notation is made about this change
-		day.Notes = day.Notes.TrimEnd() + $"\nMarked {evt.Type.ToName()} event at {evt.StartTime:g} as a False Positive.\n";
+		day.Notes = day.Notes.TrimEnd() + $"\nMarked {typeName} event at {evt.StartTime:g} as a False Positive.\n";
 
 		// When an event is marked as a "false positive" instead of being deleted, we add the value of
 		// FalsePositive to the existing type in order to make the process reversible. All processes 

@@ -26,6 +26,7 @@
         <entry key="cpap-app/cpap-app/Controls/ProfileMenuItem.axaml" value="cpap-app/cpap-app.Desktop/cpap-app.Desktop.csproj" />
         <entry key="cpap-app/cpap-app/Controls/SessionsListView.axaml" value="cpap-app/cpap-app.Desktop/cpap-app.Desktop.csproj" />
         <entry key="cpap-app/cpap-app/Controls/SignalChart.axaml" value="cpap-app/cpap-app.Desktop/cpap-app.Desktop.csproj" />
+        <entry key="cpap-app/cpap-app/Controls/SignalConfigurationEditor.axaml" value="cpap-app/cpap-app.Desktop/cpap-app.Desktop.csproj" />
         <entry key="cpap-app/cpap-app/Controls/SignalSettingsMenuButton.axaml" value="cpap-app/cpap-app.Desktop/cpap-app.Desktop.csproj" />
         <entry key="cpap-app/cpap-app/Controls/SignalStatisticGraph.axaml" value="cpap-app/cpap-app.Desktop/cpap-app.Desktop.csproj" />
         <entry key="cpap-app/cpap-app/Controls/SleepStageItemView.axaml" value="cpap-app/cpap-app.Desktop/cpap-app.Desktop.csproj" />

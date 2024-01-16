@@ -1818,7 +1818,9 @@ public partial class SignalChart : UserControl
 
 		if( closestEvent != null )
 		{
-			EventTooltip.Tag = $"{closestEvent.Type.ToName()}";
+			var eventTypeName = MarkerConfiguration.FirstOrDefault( x => x.EventType == closestEvent.Type )?.Label ?? closestEvent.Type.ToName();
+			
+			EventTooltip.Tag = eventTypeName;
 			if( closestEvent.Duration.TotalSeconds > 0 )
 			{
 				EventTooltip.Tag += $" ({FormattedTimespanConverter.FormatTimeSpan( closestEvent.Duration, TimespanFormatType.Short, false )})";
@@ -2170,7 +2172,8 @@ public partial class SignalChart : UserControl
 			}
 			
 			var marker = Chart.Plot.AddRectangle( startOffset, endOffset, currentBottom, currentTop );
-			marker.Color = annotation.Color ?? Color.Yellow;
+			marker.Color       = annotation.Color ?? Color.Yellow;
+			marker.BorderColor = ((SolidColorBrush)ChartGridLineColor).Color.ToDrawingColor();
 				
 			_annotationMarkers.Add( marker );
 			Chart.Plot.MoveFirst( marker );
@@ -2192,7 +2195,6 @@ public partial class SignalChart : UserControl
 				var markerConfig = MarkerConfiguration.FirstOrDefault( x => x.EventType == eventFlag.Type );
 				if( markerConfig == null || markerConfig.EventMarkerType == EventMarkerType.None )
 				{
-					Debug.WriteLine( $"Missing event marker configuration for {eventFlag.Type}" );
 					continue;
 				}
 					

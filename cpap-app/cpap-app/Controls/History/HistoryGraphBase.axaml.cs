@@ -457,7 +457,7 @@ public partial class HistoryGraphBase : UserControl
 
 	protected void OnPointerEntered( object? sender, PointerEventArgs e )
 	{
-		Debug.WriteLine( "Pointer entered" );
+		// Stub
 	}
 
 	protected void OnPointerWheelChanged( object? sender, PointerWheelEventArgs args )

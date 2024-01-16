@@ -56,23 +56,19 @@ public class DataColors
 
 	public static Color GetMarkerColor( int index )
 	{
-		//var color = Color.FromUInt32( _markerColors[ index % _markerColors.Length ] );
-		
 		var isDarkTheme  = Application.Current?.ActualThemeVariant == ThemeVariant.Dark;
-		var colorPalette = _markerColors; // isDarkTheme ? DarkThemeColors : LightThemeColors;
+		var colorPalette = _markerColors;
 
-		// TODO: Marker colors look better on both themes when they are darker? Consider finding a new marker color palette. 
+		// TODO: Consider finding a new marker color palette. 
 		{
+			var lightness = isDarkTheme ? 1.15f : 0.75f;
+			
 			var avaloniaColor = Avalonia.Media.Color.FromUInt32( colorPalette[ index % colorPalette.Length ] );
 			var hsl           = avaloniaColor.ToHsl();
-			var brighter      = new HslColor( hsl.A, hsl.H, hsl.S, Math.Max( hsl.L * 0.75f, 0.33f ) );
+			var brighter      = new HslColor( hsl.A, hsl.H, hsl.S, Math.Max( hsl.L * lightness, 0.33f ) );
 			var result        = brighter.ToRgb();
 
 			return result;
 		}
-
-		var color = Color.FromUInt32( colorPalette[ index % colorPalette.Length ] );
-	
-		return color;
 	}
 }

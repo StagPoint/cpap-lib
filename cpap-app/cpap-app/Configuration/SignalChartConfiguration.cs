@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+
+using cpap_app.Helpers;
 
 using cpaplib;
 
@@ -115,6 +118,12 @@ public class SignalChartConfiguration : IComparable<SignalChartConfiguration>
 	public List<EventType> DisplayedEvents { get; set; } = new();
 
 	#endregion
+	
+	#region Private fields 
+	
+	private static List<string> _signalNames = typeof( SignalNames ).GetAllPublicConstantValues<string>();
+
+	#endregion 
 
 	#region IComparable<SignalChartConfiguration> interface implementation
 
@@ -133,4 +142,181 @@ public class SignalChartConfiguration : IComparable<SignalChartConfiguration>
 	}
 
 	#endregion
+	
+	public void ResetToDefaults()
+	{
+		var colorIndex = _signalNames.IndexOf( SignalName );
+		if( colorIndex < 0 )
+		{
+			colorIndex = DisplayOrder;
+		}
+		
+		var plotColor  = DataColors.GetDataColor( colorIndex );
+
+		Title     = SignalName;
+		IsPinned  = false;
+		IsVisible = (SignalName != SignalNames.EPAP && SignalName != SignalNames.MaskPressureLow);
+		FillBelow = true;
+		PlotColor = plotColor.ToDrawingColor();
+
+		switch( SignalName )
+		{
+			case SignalNames.MaskPressureLow:
+				// Do not create a configuration for this Signal
+				break;
+			
+			case SignalNames.FlowRate:
+				BaselineHigh = 0;
+				ShowInTrends = false;
+				
+				DisplayedEvents = new List<EventType>( EventTypes.Apneas );
+				DisplayedEvents.Add( EventType.RERA );
+				DisplayedEvents.Add( EventType.FlowReduction );
+				break;
+			
+			case SignalNames.Pressure:
+				SecondarySignalName = SignalNames.EPAP;
+				AxisMinValue        = 5;
+				AxisMaxValue        = 25;
+				ScalingMode         = AxisScalingMode.Override;
+				break;
+			
+			case SignalNames.MaskPressure:
+				AxisMinValue = 0;
+				AxisMaxValue = 20;
+				ScalingMode  = AxisScalingMode.Override;
+				ShowInTrends = false;
+				break;
+			
+			case SignalNames.LeakRate:
+				SecondarySignalName = SignalNames.TotalLeak;
+				ShowStepped         = true;
+				BaselineHigh        = 24;
+				BaselineLow         = 8;
+				AxisMinValue        = 0;
+				AxisMaxValue        = 40;
+				ScalingMode         = AxisScalingMode.Override;
+				DisplayedEvents = new List<EventType>()
+				{
+					EventType.LargeLeak
+				};
+				break;
+			
+			case SignalNames.TotalLeak:
+				IsVisible    = false;
+				ShowStepped  = true;
+				BaselineHigh = 24;
+				BaselineLow  = 8;
+				AxisMinValue = 0;
+				AxisMaxValue = 40;
+				ScalingMode  = AxisScalingMode.Override;
+				break;
+			
+			case SignalNames.FlowLimit:
+				ShowStepped  = true;
+				BaselineLow  = 0.25;
+				BaselineHigh = 0.5;
+				DisplayedEvents = new List<EventType>()
+				{
+					EventType.FlowLimitation
+				};
+				break;
+			
+			case SignalNames.TidalVolume:
+				BaselineHigh = 500;
+				AxisMinValue = 0;
+				AxisMaxValue = 2000;
+				ScalingMode  = AxisScalingMode.Override;
+				break;
+			
+			case SignalNames.MinuteVent:
+				SecondarySignalName = SignalNames.TargetVent;
+				BaselineHigh        = 12;
+				BaselineLow         = 4;
+				break;
+			
+			case SignalNames.RespirationRate:
+				Title        = "Resp. Rate";
+				BaselineHigh = 24;
+				BaselineLow  = 10;
+				AxisMinValue = 0;
+				AxisMaxValue = 40;
+				ScalingMode  = AxisScalingMode.Override;
+				break;
+			
+			case SignalNames.SpO2:
+				DisplayedEvents = EventTypes.OxygenSaturation.ToList();
+				BaselineLow     = 88;
+				AxisMinValue    = 80;
+				AxisMaxValue    = 100;
+				ScalingMode     = AxisScalingMode.Override;
+				break;
+			
+			case SignalNames.Pulse:
+				DisplayedEvents = EventTypes.Pulse.ToList();
+				BaselineHigh    = 100;
+				BaselineLow     = 50;
+				AxisMinValue    = 40;
+				AxisMaxValue    = 120;
+				ScalingMode     = AxisScalingMode.Override;
+				break;
+			
+			case SignalNames.Snore:
+			case SignalNames.Movement:
+				IsVisible    = false;
+				ShowStepped  = true;
+				ScalingMode  = AxisScalingMode.AutoFit;
+				ShowInTrends = false;
+				break;
+			
+			case SignalNames.AHI:
+				Title           = "AHI";
+				ShowStepped     = true;
+				ScalingMode     = AxisScalingMode.AutoFit;
+				ShowInTrends    = false;
+				IsVisible       = false;
+				DisplayedEvents = new List<EventType>( EventTypes.Apneas );
+				break;
+			
+			case SignalNames.InspirationTime:
+				Title        = "Insp. Time";
+				ScalingMode  = AxisScalingMode.Override;
+				AxisMinValue = 0;
+				AxisMaxValue = 12;
+				ShowInTrends = false;
+				break;
+			
+			case SignalNames.ExpirationTime:
+				Title        = "Exp. Time";
+				ScalingMode  = AxisScalingMode.Override;
+				AxisMinValue = 0;
+				AxisMaxValue = 10;
+				ShowInTrends = false;
+				break;
+			
+			case SignalNames.InspToExpRatio:
+				Title        = "I:E Ratio";
+				IsVisible    = false;
+				AxisMinValue = 0;
+				AxisMaxValue = 4;
+				ScalingMode  = AxisScalingMode.Override;
+				ShowInTrends = false;
+				break;
+			
+			case SignalNames.SleepStages:
+				Title        = "Sleep Stage";
+				AxisMaxValue = 0;
+				AxisMaxValue = 5;
+				InvertAxisY  = true;
+				IsVisible    = false;
+				ShowStepped  = true;
+				ShowInTrends = false;
+				break;
+			
+			case SignalNames.TargetVent:
+				ShowInTrends = false;
+				IsVisible    = false;
+				break;
+		}
+	}
 }
