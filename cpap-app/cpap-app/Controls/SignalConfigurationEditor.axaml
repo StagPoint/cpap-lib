@@ -68,10 +68,12 @@
                         <Style Selector="TextBlock">
                             <Setter Property="VerticalAlignment" Value="Center"/>
                             <Setter Property="Margin" Value="0 0 8 0"/>
+                            <Setter Property="MinWidth" Value="50"/>
                         </Style>
                         <Style Selector="TextBox">
                             <Setter Property="VerticalAlignment" Value="Center"/>
                             <Setter Property="Margin" Value="0 0 8 0"/>
+                            <Setter Property="MinWidth" Value="50"/>
                         </Style>
                         <Style Selector="ComboBox">
                             <Setter Property="VerticalAlignment" Value="Center"/>
@@ -81,10 +83,11 @@
                         <Style Selector="ColorPicker">
                             <Setter Property="VerticalAlignment" Value="Center"/>
                             <Setter Property="Margin" Value="0 0 8 0"/>
+                            <Setter Property="MinWidth" Value="50"/>
                         </Style>
                         <Style Selector="Border.SelectionRect">
                             <Setter Property="Height" Value="32" />
-                            <Setter Property="MinWidth" Value="30" />
+                            <Setter Property="MinWidth" Value="600"/>
                         </Style>
                     </ItemsRepeater.Styles>
                     <ItemsRepeater.ItemTemplate>
@@ -131,7 +134,7 @@
                     <TextBlock>Reset Defaults</TextBlock>
                 </StackPanel>
             </Button>
-            <Button Name="SaveChanges" ClickMode="Press" Padding="20 10" Click="SaveChanges_OnClick">
+            <Button Name="SaveChanges" Classes="accent" ClickMode="Press" Padding="20 10" Click="SaveChanges_OnClick">
                 <StackPanel Orientation="Horizontal">
                     <controls:SymbolIcon Symbol="Save" Margin="0 -2 10 0"/>
                     <TextBlock>Save Changes</TextBlock>

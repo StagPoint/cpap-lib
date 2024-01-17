@@ -10,6 +10,11 @@ public class ImportOptionsViewModel
 	public CpapImportSettings         CpapSettings          { get; set; } = new();
 	public PulseOximetryImportOptions PulseOximetrySettings { get; set; } = new();
 
+	public ImportOptionsViewModel() : this( UserProfileStore.GetActiveUserProfile().UserProfileID )
+	{
+		
+	}
+	
 	public ImportOptionsViewModel( int userProfileID )
 	{
 		UserProfileID         = userProfileID;

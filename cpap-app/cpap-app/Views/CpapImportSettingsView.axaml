@@ -4,7 +4,13 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:cpaplib="clr-namespace:cpaplib;assembly=cpap-lib"
              xmlns:converters="clr-namespace:cpap_app.Converters"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             xmlns:viewModels="clr-namespace:cpap_app.ViewModels"
+             xmlns:controls="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+             mc:Ignorable="d" 
+             d:DesignWidth="800" 
+             d:DesignHeight="650"
+             Width="500"
+             x:DataType="viewModels:ImportOptionsViewModel"
              x:Class="cpap_app.Views.CpapImportSettingsView">
     <Design.DataContext>
         <cpaplib:CpapImportSettings />
@@ -19,7 +25,7 @@
             <Setter Property="Margin" Value="0 2"/>
         </Style>
     </UserControl.Styles>
-    <StackPanel Orientation="Vertical" Spacing="8" Grid.IsSharedSizeScope="True" x:DataType="cpaplib:CpapImportSettings">
+    <StackPanel Orientation="Vertical" Spacing="8" Grid.IsSharedSizeScope="True" DataContext="{Binding CpapSettings}">
         <Border Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}" BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1" Padding="8 4">
             <Grid RowDefinitions="Auto, Auto" HorizontalAlignment="Left">
                 <Grid.ColumnDefinitions>
@@ -28,7 +34,7 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
                 <TextBlock Grid.Row="0" Grid.Column="0" Text="CPAP Time Adjustment" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                <StackPanel Grid.Row="0" Grid.Column="2" Orientation="Horizontal" Spacing="8" IsEnabled="{Binding #FlagLargeLeaks.IsChecked}" >
+                <StackPanel Grid.Row="0" Grid.Column="2" Orientation="Horizontal" Spacing="8" >
                     <NumericUpDown HorizontalAlignment="Left" Value="{Binding ClockTimeAdjustment, Converter={StaticResource TimespanToSeconds}}" Increment="10.0" Minimum="-3600" Maximum="3600" ShowButtonSpinner="False"/>
                     <TextBlock Text="seconds" VerticalAlignment="Center" IsEnabled="False"/>                    
                 </StackPanel>
@@ -114,5 +120,11 @@
                 </StackPanel>
             </Grid>
         </Border>
+        <Button Name="SaveChanges" Classes="accent" ClickMode="Press" HorizontalAlignment="Right" Padding="20 10" Click="SaveChanges_OnClick">
+            <StackPanel Orientation="Horizontal">
+                <controls:SymbolIcon Symbol="Save" Margin="0 -2 10 0"/>
+                <TextBlock>Save Changes</TextBlock>
+            </StackPanel>
+        </Button>
     </StackPanel>
 </UserControl>

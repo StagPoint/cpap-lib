@@ -120,38 +120,6 @@ public partial class AppSettingsView : UserControl
 		await msgBox.ShowWindowDialogAsync( this.FindAncestorOfType<Window>() );
 	}
 	
-	private async void ImportOptions_OnClick( object? sender, RoutedEventArgs e )
-	{
-		e.Handled = true;
-
-		var viewModel = new ImportOptionsViewModel( UserProfileStore.GetActiveUserProfile().UserProfileID );
-
-		var settingsView = new ImportSettingsView()
-		{
-			DataContext = viewModel
-		};
-
-		var dialog = new TaskDialog()
-		{
-			Title = $"Edit Import Settings",
-			Buttons = 
-			{
-				TaskDialogButton.CancelButton,
-				new TaskDialogButton( "Save", TaskDialogStandardResult.OK ),
-			},
-			XamlRoot = (Visual)VisualRoot!,
-			Content  = settingsView,
-			MaxWidth = 800,
-		};
-		
-		var dialogResult = await dialog.ShowAsync();
-
-		if( (TaskDialogStandardResult)dialogResult == TaskDialogStandardResult.OK )
-		{
-			viewModel.SaveChanges();
-		}
-	}
-	
 	private void EventMarkerOptions_OnLoaded( object? sender, RoutedEventArgs e )
 	{
 		EventConfig.DataContext = new EventMarkerConfigurationViewModel();
@@ -160,6 +128,18 @@ public partial class AppSettingsView : UserControl
 	private void SignalConfigurations_OnLoaded( object? sender, RoutedEventArgs e )
 	{
 		SignalConfigurations.DataContext = new SignalChartConfigurationViewModel();
+	}
+	
+	private void CpapImportOptionsContainer_OnLoaded( object? sender, RoutedEventArgs e )
+	{
+		var viewModel = new ImportOptionsViewModel( UserProfileStore.GetActiveUserProfile().UserProfileID );
+		CpapImportOptions.DataContext = viewModel;
+	}
+	
+	private void OximetryImportOptionsContainer_OnLoaded( object? sender, RoutedEventArgs e )
+	{
+		var viewModel = new ImportOptionsViewModel( UserProfileStore.GetActiveUserProfile().UserProfileID );
+		OximetryImportOptions.DataContext = viewModel;
 	}
 }
 

@@ -50,13 +50,27 @@
                     </controls:SettingsExpander.Footer>
 
                 </controls:SettingsExpander>
-                <controls:SettingsExpander Header="Import Options"
-                                           Description="Set import options for CPAP and Pulse Oximetry devices"
-                                           IsClickEnabled="True"
+                <controls:SettingsExpander Header="CPAP Import Options"
+                                           Description="Set import options for CPAP devices"
+                                           IsClickEnabled="False"
                                            IconSource="Upload"
-                                           ActionIconSource="More"
-                                           Name="ImportOptions"
-                                           Click="ImportOptions_OnClick">
+                                           ActionIconSource="ChevronRight"
+                                           Name="CpapImportOptionsContainer"
+                                           Loaded="CpapImportOptionsContainer_OnLoaded">
+                    <controls:SettingsExpanderItem>
+                        <views:CpapImportSettingsView Name="CpapImportOptions" HorizontalAlignment="Left" />
+                    </controls:SettingsExpanderItem>
+                </controls:SettingsExpander>
+                <controls:SettingsExpander Header="Pulse Oximetry Import Options"
+                                           Description="Set import options for Pulse Oximetry devices"
+                                           IsClickEnabled="False"
+                                           IconSource="Upload"
+                                           ActionIconSource="ChevronRight"
+                                           Name="OximetryImportOptionsContainer"
+                                           Loaded="OximetryImportOptionsContainer_OnLoaded">
+                    <controls:SettingsExpanderItem>
+                        <views:OximetryImportSettingsView Name="OximetryImportOptions" HorizontalAlignment="Left" />
+                    </controls:SettingsExpanderItem>
                 </controls:SettingsExpander>
                 <controls:SettingsExpander Header="Events"
                                            Description="Set display options for reported events"
@@ -66,7 +80,7 @@
                                            Name="EventMarkerOptions"
                                            Loaded="EventMarkerOptions_OnLoaded">
                     <controls:SettingsExpanderItem>
-                        <controls1:EventMarkerEditor Name="EventConfig" HorizontalAlignment="Left" Width="750" />
+                        <controls1:EventMarkerEditor Name="EventConfig" HorizontalAlignment="Left" />
                     </controls:SettingsExpanderItem>
                 </controls:SettingsExpander>
                 <controls:SettingsExpander Header="Signals"
