@@ -5,13 +5,11 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform;
 using Avalonia.VisualTree;
 
-using cpap_app.Controls;
 using cpap_app.ViewModels;
 
 using FluentAvalonia.UI.Controls;

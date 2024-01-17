@@ -104,8 +104,16 @@ public partial class DailyReportView : UserControl
 		}
 
 		var signals = StorageService.Connect().GetStoredSignalNames( ActiveUserProfile.UserProfileID );
-		TabOxygen.IsVisible = signals.Contains( SignalNames.SpO2 );
-		TabStages.IsVisible = signals.Contains( SignalNames.SleepStages );
+
+		if( !signals.Contains( SignalNames.SpO2 ) )
+		{
+			DetailTypes.Items.Remove( TabOxygen );
+		}
+
+		if( !signals.Contains( SignalNames.SleepStages ) )
+		{
+			DetailTypes.Items.Remove( TabStages );
+		}
 
 		LoadTabPage( new DailyDetailsView() { DataContext = DataContext } );
 
