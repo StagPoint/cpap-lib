@@ -69,8 +69,9 @@ public static class OximetryEventGenerator
 
 			// Don't add any PulseRateChange events when there is already a Tachycardia or Bradycardia event at 
 			// that time period. You could add it, but then the UI becomes a mess for the user to understand and 
-			// the other event types are probably more important. 
-			if( !events.Any( x => x.Type is EventType.Tachycardia or EventType.Bradycardia && ReportedEvent.TimesOverlap( x, annotation ) ) )
+			// the other event types are probably more important.
+			// TODO: Conflicted on whether Pulse Change and Pulse Rate events should be allowed to overlap
+			//if( !events.Any( x => x.Type is EventType.Tachycardia or EventType.Bradycardia && ReportedEvent.TimesOverlap( x, annotation ) ) )
 			{
 				events.Add( annotation );
 			}

@@ -25,7 +25,7 @@
             <Setter Property="BorderThickness" Value="0" />
         </Style>
     </UserControl.Styles>
-    <Grid Name="Form" ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,20,Auto,*" VerticalAlignment="Top" Margin="8">
+    <Grid Name="Form" ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,20,Auto,*" VerticalAlignment="Top" Margin="8">
         
         <TextBlock Grid.Column="0" Grid.Row="0" Text="Signal" />
         <ComboBox Grid.Column="1" Grid.Row="0" Name="cboSignalName" Width="200" SelectedValue="{Binding Signal}" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="0 0 0 4" />
@@ -40,14 +40,19 @@
             <MaskedTextBox IsEnabled="False" Name="EndTime" Width="100" Mask="00:00:00" Text="{Binding EndTime, StringFormat={}{0:hh\:mm\:ss}, Mode=OneWay}" HorizontalAlignment="Left" TextChanged="DateTime_OnTextChanged" Tag="{Binding $parent[Border]}" />
         </Border>
         
-        <TextBlock Grid.Column="0" Grid.Row="3" Text="Show Marker" />
-        <ToggleSwitch Grid.Column="1" Grid.Row="3" Name="ShowMarker" IsChecked="{Binding ShowMarker}" HorizontalAlignment="Left" Margin="0"/>
+        <TextBlock Grid.Column="0" Grid.Row="3" Text="Duration" />
+        <Border Grid.Column="1" Grid.Row="3" HorizontalAlignment="Left">
+            <TextBox Text="{Binding Duration, Mode=OneWay}" IsEnabled="False" Width="100"/>
+        </Border>
         
-        <TextBlock Grid.Column="0" Grid.Row="4" Text="Color" IsVisible="{Binding ShowMarker}" />
-        <ColorPicker Grid.Column="1" Grid.Row="4" HorizontalAlignment="Left" Color="{Binding Color, Converter={StaticResource ColorConverter}}" Width="100" IsVisible="{Binding ShowMarker}" />
+        <TextBlock Grid.Column="0" Grid.Row="4" Text="Show Marker" />
+        <ToggleSwitch Grid.Column="1" Grid.Row="4" Name="ShowMarker" IsChecked="{Binding ShowMarker}" HorizontalAlignment="Left" Margin="0"/>
         
-        <TextBlock Grid.Column="0" Grid.Row="6" Text="Notes" HorizontalAlignment="Left" Margin="0 0 0 4" />
-        <TextBox Grid.Column="0" Grid.Row="7" Grid.ColumnSpan="2" Name="Notes" MaxLength="255" Text="{Binding Notes}" HorizontalAlignment="Stretch" Height="75" TextWrapping="Wrap" AcceptsReturn="True">
+        <TextBlock Grid.Column="0" Grid.Row="5" Text="Color" IsVisible="{Binding ShowMarker}" />
+        <ColorPicker Grid.Column="1" Grid.Row="5" HorizontalAlignment="Left" Color="{Binding Color, Converter={StaticResource ColorConverter}}" Width="100" IsVisible="{Binding ShowMarker}" />
+        
+        <TextBlock Grid.Column="0" Grid.Row="7" Text="Notes" HorizontalAlignment="Left" Margin="0 0 0 4" />
+        <TextBox Grid.Column="0" Grid.Row="8" Grid.ColumnSpan="2" Name="Notes" MaxLength="255" Text="{Binding Notes}" HorizontalAlignment="Stretch" Height="75" TextWrapping="Wrap" AcceptsReturn="True">
             <TextBox.Watermark>Use this text entry field to write any notes that you'd like to have saved about the specified time period.</TextBox.Watermark>
         </TextBox>
     </Grid>

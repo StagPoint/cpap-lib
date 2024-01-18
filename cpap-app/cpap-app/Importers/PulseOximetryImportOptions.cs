@@ -20,7 +20,7 @@ public class PulseOximetryImportOptions
 
 	public double TachycardiaThreshold     { get; set; } = 100;
 	public double BradycardiaThreshold     { get; set; } = 50;
-	public double PulseRateMinimumDuration { get; set; } = 10;
+	public double PulseRateMinimumDuration { get; set; } = 8;
 
 	public double PulseChangeThreshold    { get; set; } = 10;
 	public double PulseChangeWindowLength { get; set; } = 120;

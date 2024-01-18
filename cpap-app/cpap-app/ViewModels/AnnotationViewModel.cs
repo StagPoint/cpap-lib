@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
+using cpap_app.Helpers;
+
 using cpaplib;
 
 using Color = System.Drawing.Color;
@@ -35,6 +37,11 @@ public class AnnotationViewModel : INotifyPropertyChanged
 	{
 		get => _endTime;
 		set => SetField( ref _endTime, value );
+	}
+
+	public TimeSpan Duration
+	{
+		get => (_endTime - _startTime).TrimSeconds();
 	}
 
 	public bool ShowMarker
