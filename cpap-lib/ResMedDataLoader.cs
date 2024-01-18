@@ -686,8 +686,7 @@ namespace cpaplib
 				// data stored for a given day), but if one is then add it to the list. 
 				if( day != null )
 				{
-					day.MachineInfo        =  _machineInfo;
-					day.RecordingStartTime += _importSettings.ClockTimeAdjustment;
+					day.MachineInfo = _machineInfo;
 
 					days.Add( day );
 				}
@@ -725,8 +724,8 @@ namespace cpaplib
 
 					// Mask times are stored as the number of seconds since the "day" started. Remember that
 					// the ResMed "day" starts at 12pm (noon) and continues until the next calendar day at 12pm.
-					var maskOn  = day.ReportDate.AddMinutes( maskOnSignal.Samples[ sampleIndex ] );
-					var maskOff = day.ReportDate.AddMinutes( maskOffSignal.Samples[ sampleIndex ] );
+					var maskOn  = day.ReportDate.AddMinutes( maskOnSignal.Samples[ sampleIndex ] ) + _importSettings.ClockTimeAdjustment;
+					var maskOff = day.ReportDate.AddMinutes( maskOffSignal.Samples[ sampleIndex ] ) + _importSettings.ClockTimeAdjustment;
 
 					// Discard empty sessions
 					if( maskOff.Subtract( maskOn ).TotalMinutes < 1 )

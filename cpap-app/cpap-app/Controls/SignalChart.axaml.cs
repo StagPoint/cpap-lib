@@ -1034,6 +1034,8 @@ public partial class SignalChart : UserControl
 
 	private void VisualizeTidalVolume()
 	{
+		bool first = true;
+		
 		Debug.Assert( _day != null, nameof( _day ) + " != null" );
 		foreach( var session in _day.Sessions )
 		{
@@ -1049,17 +1051,20 @@ public partial class SignalChart : UserControl
 			var graph = Chart.Plot.AddSignal(
 				tidalVolumeSignal.Samples.ToArray(),
 				tidalVolumeSignal.FrequencyInHz,
-				Color.DarkMagenta,
-				null
+				Color.Red,
+				first ? "Calc. Tidal Volume" : null
 			);
 
 			graph.OffsetX    = (tidalVolumeSignal.StartTime - _day.RecordingStartTime).TotalSeconds;
 			graph.LineStyle  = LineStyle.Solid;
 			graph.MarkerSize = 0;
+			graph.LineWidth  = 2;
 
 			Chart.RenderRequest();
 
 			_visualizations.Add( graph );
+
+			first = false;
 		}
 
 		RenderGraph( true );

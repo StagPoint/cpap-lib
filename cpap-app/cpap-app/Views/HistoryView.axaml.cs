@@ -95,6 +95,11 @@ public partial class HistoryView : UserControl
 
 		var signalNamesAndUnits = store.Query<SignalNamesAndUnits>( sql );
 
+		if( signalNamesAndUnits == null || signalNamesAndUnits.Count == 0 )
+		{
+			return;
+		}
+
 		var chartConfigs = SignalChartConfigurationStore.GetSignalConfigurations();
 		foreach( var config in chartConfigs )
 		{
