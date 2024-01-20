@@ -204,6 +204,7 @@ public partial class SignalChart : UserControl
 			return;
 		}
 
+		// TODO: Most of this stuff could be moved up a level or two in the object hierarchy, which would be better for handling multiple graph types without duplicating code.
 		switch( args.Key )
 		{
 			case Key.Left or Key.Right:

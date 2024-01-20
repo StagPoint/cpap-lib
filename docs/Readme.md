@@ -1,7 +1,6 @@
 ﻿## Home Screen
-![HomeView-Dark.jpg](Screenshots%2FHomeView-Dark.jpg)
-Importing CPAP and Pulse Oximetry Data (Click to play YouTube video):
-[![Importing CPAP and Pulse Oximetry Data](https://img.youtube.com/vi/AgufkrzgytQ/maxresdefault.jpg)](https://youtu.be/AgufkrzgytQ)
+
+[![Importing CPAP and Pulse Oximetry Data](Screenshots/Episode%201%20Thumb%20Medium.png)](https://youtu.be/mnq7BwJhQf8)
 
 ## Daily Report View
 ![DailyReportView-Light.jpg](Screenshots%2FDailyReportView-Light.jpg)
