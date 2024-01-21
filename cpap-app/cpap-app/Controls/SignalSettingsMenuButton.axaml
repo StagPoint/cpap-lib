@@ -97,14 +97,14 @@
                     
                     <Separator />
                     
-                    <MenuItem Name="mnuVisualizations" Header="Visualizations" IsEnabled="{Binding $self.ItemCount}">
+                    <MenuItem Name="mnuVisualizations" Header="DEBUG" IsVisible="False" IsEnabled="{Binding $self.ItemCount}">
                         <MenuItem.Icon>
                             <fui:SymbolIcon Symbol="Filter" />
                         </MenuItem.Icon>
                         <!-- Child menu items will be inserted here by the code-behind -->
                     </MenuItem>
                     
-                    <Separator/>
+                    <Separator Name="DebugSeparator" IsVisible="False"/>
                     
                     <MenuItem Name="ShowHelp" Header="Hotkeys and Mouse Actions" Click="ShowHelp_OnClick">
                         <MenuItem.Icon>

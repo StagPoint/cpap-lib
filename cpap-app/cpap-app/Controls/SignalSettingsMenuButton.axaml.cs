@@ -84,6 +84,11 @@ public partial class SignalSettingsMenuButton : UserControl
 	protected override void OnApplyTemplate( TemplateAppliedEventArgs e )
 	{
 		base.OnApplyTemplate( e );
+
+		#if DEBUG
+		
+		mnuVisualizations.IsVisible = true;
+		DebugSeparator.IsVisible = true;
 		
 		if( Visualizations.Count > 0 )
 		{
@@ -107,6 +112,8 @@ public partial class SignalSettingsMenuButton : UserControl
 				}
 			}
 		}
+
+		#endif
 	}
 
 	private void RaiseChangedEvent( string propertyName )

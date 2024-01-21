@@ -36,6 +36,8 @@ public class EventMarkerConfiguration
 
 	public void ResetToDefaults()
 	{
+		const float DEFAULT_SPAN_OPACITY = 0.65f;
+		
 		var eventTypeLabel      = EventType.ToName();
 		var eventMarkerType     = EventMarkerType.Flag;
 		var eventMarkerPosition = EventMarkerPosition.AtEnd;
@@ -62,7 +64,7 @@ public class EventMarkerConfiguration
 			case EventType.PeriodicBreathing:
 			case EventType.VariableBreathing:
 			case EventType.BreathingNotDetected:
-				//eventColor          = eventColor.MultiplyAlpha( 0.75f );
+				eventColor          = eventColor.MultiplyAlpha( DEFAULT_SPAN_OPACITY );
 				eventMarkerType     = EventMarkerType.Span;
 				eventMarkerPosition = EventMarkerPosition.AtEnd;
 				break;
@@ -83,12 +85,12 @@ public class EventMarkerConfiguration
 			case EventType.Hypoxemia:
 			case EventType.Tachycardia:
 			case EventType.Bradycardia:
-				//eventColor          = eventColor.MultiplyAlpha( 0.85f );
+				eventColor          = eventColor.MultiplyAlpha( DEFAULT_SPAN_OPACITY );
 				eventMarkerType     = EventMarkerType.Span;
 				eventMarkerPosition = EventMarkerPosition.AtBeginning;
 				break;
 			case EventType.PulseOximetryFault:
-				eventColor          = Color.DimGray;
+				eventColor          = Color.DimGray.MultiplyAlpha( DEFAULT_SPAN_OPACITY );
 				eventMarkerType     = EventMarkerType.Span;
 				eventMarkerPosition = EventMarkerPosition.AtBeginning;
 				break;

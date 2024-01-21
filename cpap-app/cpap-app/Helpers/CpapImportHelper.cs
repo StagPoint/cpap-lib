@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -14,7 +15,9 @@ using FluentAvalonia.UI.Controls;
 using FluentAvalonia.UI.Windowing;
 
 using MsBox.Avalonia;
+using MsBox.Avalonia.Dto;
 using MsBox.Avalonia.Enums;
+using MsBox.Avalonia.Models;
 
 namespace cpap_app.Helpers;
 
@@ -55,25 +58,39 @@ public class CpapImportHelper
 			if( loader != null )
 			{
 				var machineID = loader.LoadMachineIdentificationInfo( drivePath );
+				
+				var dialogParams = new MessageBoxCustomParams
+				{
+					ShowInCenter          = true,
+					ContentTitle          = "Import CPAP Data",
+					ContentHeader         = $"Import from {drive.Name}?",
+					ContentMessage        = $"There appears to be a CPAP data folder structure on Drive {drive.Name}\nMachine: {machineID.ProductName}, Serial #{machineID.SerialNumber}\n\nDo you want to import this data from {drive.Name}?",
+					SizeToContent         = SizeToContent.Manual,
+					WindowStartupLocation = WindowStartupLocation.CenterOwner,
+					Icon                  = Icon.Database,
+					ButtonDefinitions     = new List<ButtonDefinition>()
+					{
+						new ButtonDefinition() { Name = "Yes", IsDefault = true },	
+						new ButtonDefinition() { Name = "Browse", IsDefault = true },	
+						new ButtonDefinition() { Name = "Cancel", IsCancel = true},	
+					}
+				};
 
-				var dialog = MessageBoxManager.GetMessageBoxStandard(
-					$"Import from {drive.Name}?",
-					$"There appears to be a CPAP data folder structure on Drive {drive.Name}\nMachine: {machineID.ProductName}, Serial #{machineID.SerialNumber}\n\nDo you want to import this data from {drive.Name}?",
-					ButtonEnum.YesNoCancel,
-					Icon.Database );
-
+				var dialog = MessageBoxManager.GetMessageBoxCustom( dialogParams );
 				var result = await dialog.ShowWindowDialogAsync( owner );
 
-				if( result == ButtonResult.Cancel )
+				// Note that "Browse" will also break out of this loop, as it is assumed that only one removable
+				// drive will contain CPAP data, and I don't think it's unreasonable tp to require that condition.
+				switch( result )
 				{
-					return null;
+					case "Cancel":
+						return null;
+					case "Yes":
+						importPath = drive.RootDirectory.FullName;
+						break;
 				}
 
-				if( result == ButtonResult.Yes )
-				{
-					importPath = drive.RootDirectory.FullName;
-					break;
-				}
+				break;
 			}
 		}
 
@@ -85,10 +102,14 @@ public class CpapImportHelper
 				throw new Exception( $"Failed to get a reference to a {nameof( IStorageProvider )} instance." );
 			}
 
+			var myDocumentsFolder = Environment.GetFolderPath( Environment.SpecialFolder.MyDocuments );
+			var defaultFolder     = ApplicationSettingsStore.GetStringSetting( ApplicationSettingNames.CpapImportPath, myDocumentsFolder );
+			var startFolder       = await sp.TryGetFolderFromPathAsync( defaultFolder );
+			
 			var folder = await sp.OpenFolderPickerAsync( new FolderPickerOpenOptions
 			{
 				Title                  = "CPAP Data Import - Select the folder containing your CPAP data",
-				SuggestedStartLocation = null,
+				SuggestedStartLocation = startFolder,
 				AllowMultiple          = false
 			} );
 
@@ -98,6 +119,11 @@ public class CpapImportHelper
 			}
 
 			importPath = folder[ 0 ].Path.LocalPath;
+
+			if( Directory.Exists( importPath ) )
+			{
+				ApplicationSettingsStore.SaveStringSetting( ApplicationSettingNames.CpapImportPath, importPath );
+			}
 		}
 
 		if( !Directory.Exists( importPath ) )

@@ -12,7 +12,9 @@ namespace cpap_app.ViewModels;
 
 public static class ApplicationSettingNames
 {
-	public static readonly string PrintExportPath = "Print Export Path";
+	public static readonly string PrintExportPath    = "Print Export Path";
+	public static readonly string CpapImportPath     = "CPAP Import Path";
+	public static readonly string OximetryImportPath = "Pulse Oximetry Import Path";
 }
 
 public class ApplicationSettingsStore

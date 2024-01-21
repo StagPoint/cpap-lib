@@ -44,7 +44,7 @@
         Padding="16 8"
         Classes="DailyScoreContainer">
         <StackPanel HorizontalAlignment="Stretch">
-            <TextBlock Text="Daily Score" Theme="{DynamicResource SubtitleTextBlockStyle}" HorizontalAlignment="Center"
+            <TextBlock Text="At A Glance" Theme="{DynamicResource SubtitleTextBlockStyle}" HorizontalAlignment="Center"
                        Margin="0 0 0 8" />
             <Grid HorizontalAlignment="Center" Margin="0 0 0 12" Height="20" ColumnDefinitions="Auto,250,Auto">
                 <Button Grid.Column="0" Name="btnPrevDay" Padding="5" IsEnabled="False" VerticalAlignment="Center"

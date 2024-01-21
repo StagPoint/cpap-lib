@@ -618,11 +618,15 @@ public partial class MainView : UserControl
 			throw new Exception( $"Failed to get a reference to a {nameof( IStorageProvider )} instance." );
 		}
 
+		var myDocumentsFolder = Environment.GetFolderPath( Environment.SpecialFolder.MyDocuments );
+		var defaultFolder     = ApplicationSettingsStore.GetStringSetting( ApplicationSettingNames.OximetryImportPath, myDocumentsFolder );
+		var startFolder       = await sp.TryGetFolderFromPathAsync( defaultFolder );
+			
 		var genericFileTypeFilter = new FilePickerFileType( "Pulse Oximeter CSV File" )
 		{
 			Patterns                    = new[] { "*.csv" },
 			AppleUniformTypeIdentifiers = new[] { "public.plain-text" },
-			MimeTypes                   = new[] { "text/plain" }
+			MimeTypes                   = new[] { "text/plain" },
 		};
 
 		var fileTypeFilters = OximetryImporterRegistry.GetFileTypeFilters();
@@ -631,7 +635,7 @@ public partial class MainView : UserControl
 		var filePicker = await sp.OpenFilePickerAsync( new FilePickerOpenOptions()
 		{
 			Title                  = $"Import from Pulse Oximetry File",
-			SuggestedStartLocation = null,
+			SuggestedStartLocation = startFolder,
 			AllowMultiple          = true,
 			FileTypeFilter         = fileTypeFilters,
 		} );
@@ -639,6 +643,12 @@ public partial class MainView : UserControl
 		if( filePicker.Count == 0 )
 		{
 			return;
+		}
+
+		var importPath = Path.GetDirectoryName( filePicker[ 0 ].Path.LocalPath );
+		if( Directory.Exists( importPath ) )
+		{
+			ApplicationSettingsStore.SaveStringSetting( ApplicationSettingNames.OximetryImportPath, importPath );
 		}
 
 		List<MetaSession>  metaSessions = new List<MetaSession>();
@@ -668,6 +678,8 @@ public partial class MainView : UserControl
 		int totalSessions    = 0;
 		int mergedSessions   = 0;
 		int failedSessions   = 0;
+
+		var profileID = ActiveUserProfile.UserProfileID;
 
 		td.Opened += async ( _, _ ) =>
 		{
@@ -701,7 +713,7 @@ public partial class MainView : UserControl
 					{
 						await using var file = File.OpenRead( fileItem.Path.LocalPath );
 
-						var importOptions = ImportOptionsStore.GetPulseOximetryImportOptions( ActiveUserProfile.UserProfileID );
+						var importOptions = ImportOptionsStore.GetPulseOximetryImportOptions( profileID );
 
 						foreach( var importer in importers )
 						{
@@ -787,7 +799,7 @@ public partial class MainView : UserControl
 
 						using var db  = StorageService.Connect();
 						
-						var day = db.LoadDailyReport( ActiveUserProfile.UserProfileID, date );
+						var day = db.LoadDailyReport( profileID, date );
 						if( day == null )
 						{
 							continue;
@@ -836,7 +848,7 @@ public partial class MainView : UserControl
 							day.UpdateSignalStatistics( SignalNames.SpO2 );
 							day.UpdateSignalStatistics( SignalNames.Pulse );
 
-							db.SaveDailyReport( ActiveUserProfile.UserProfileID, day );
+							db.SaveDailyReport( profileID, day );
 
 							totalDaysUpdated += 1;
 						}
@@ -874,8 +886,6 @@ public partial class MainView : UserControl
 		{
 			showImportSummary();
 			
-			var profileID = ActiveUserProfile.UserProfileID;
-
 			switch( NavFrame.Content )
 			{
 				case DailyReportView { DataContext: DailyReport dailyReport } dailyReportView:

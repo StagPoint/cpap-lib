@@ -2249,6 +2249,7 @@ public partial class SignalChart : UserControl
 						break;
 					case EventMarkerType.Span:
 						marker = Chart.Plot.AddHorizontalSpan( startOffset, endOffset, color.MultiplyAlpha( 0.35f ) );
+						Chart.Plot.MoveFirst( marker );
 						break;
 					case EventMarkerType.None:
 						continue;
