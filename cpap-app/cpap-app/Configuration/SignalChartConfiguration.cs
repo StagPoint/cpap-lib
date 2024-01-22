@@ -203,13 +203,13 @@ public class SignalChartConfiguration : IComparable<SignalChartConfiguration>
 				break;
 			
 			case SignalNames.TotalLeak:
-				IsVisible    = false;
-				ShowStepped  = true;
+				ScalingMode  = AxisScalingMode.Override;
 				BaselineHigh = 24;
 				BaselineLow  = 8;
 				AxisMinValue = 0;
 				AxisMaxValue = 40;
-				ScalingMode  = AxisScalingMode.Override;
+				IsVisible    = false;
+				ShowStepped  = true;
 				break;
 			
 			case SignalNames.FlowLimit:
@@ -223,10 +223,10 @@ public class SignalChartConfiguration : IComparable<SignalChartConfiguration>
 				break;
 			
 			case SignalNames.TidalVolume:
+				ScalingMode  = AxisScalingMode.Override;
 				BaselineHigh = 500;
 				AxisMinValue = 0;
 				AxisMaxValue = 2000;
-				ScalingMode  = AxisScalingMode.Override;
 				break;
 			
 			case SignalNames.MinuteVent:
@@ -236,36 +236,36 @@ public class SignalChartConfiguration : IComparable<SignalChartConfiguration>
 				break;
 			
 			case SignalNames.RespirationRate:
+				ScalingMode  = AxisScalingMode.Override;
 				Title        = "Resp. Rate";
 				BaselineHigh = 24;
 				BaselineLow  = 10;
 				AxisMinValue = 0;
 				AxisMaxValue = 40;
-				ScalingMode  = AxisScalingMode.Override;
 				break;
 			
 			case SignalNames.SpO2:
+				ScalingMode     = AxisScalingMode.Override;
 				DisplayedEvents = EventTypes.OxygenSaturation.ToList();
 				BaselineLow     = 88;
 				AxisMinValue    = 80;
 				AxisMaxValue    = 100;
-				ScalingMode     = AxisScalingMode.Override;
 				break;
 			
 			case SignalNames.Pulse:
+				ScalingMode     = AxisScalingMode.Override;
 				DisplayedEvents = EventTypes.Pulse.ToList();
 				BaselineHigh    = 100;
 				BaselineLow     = 50;
 				AxisMinValue    = 40;
 				AxisMaxValue    = 120;
-				ScalingMode     = AxisScalingMode.Override;
 				break;
 			
 			case SignalNames.Snore:
 			case SignalNames.Movement:
+				ScalingMode  = AxisScalingMode.AutoFit;
 				IsVisible    = false;
 				ShowStepped  = true;
-				ScalingMode  = AxisScalingMode.AutoFit;
 				ShowInTrends = false;
 				break;
 			
@@ -284,6 +284,7 @@ public class SignalChartConfiguration : IComparable<SignalChartConfiguration>
 				AxisMinValue = 0;
 				AxisMaxValue = 12;
 				ShowInTrends = false;
+				IsVisible    = false;
 				break;
 			
 			case SignalNames.ExpirationTime:
@@ -292,15 +293,16 @@ public class SignalChartConfiguration : IComparable<SignalChartConfiguration>
 				AxisMinValue = 0;
 				AxisMaxValue = 10;
 				ShowInTrends = false;
+				IsVisible    = false;
 				break;
 			
 			case SignalNames.InspToExpRatio:
 				Title        = "I:E Ratio";
-				IsVisible    = false;
 				AxisMinValue = 0;
 				AxisMaxValue = 4;
 				ScalingMode  = AxisScalingMode.Override;
 				ShowInTrends = false;
+				IsVisible    = false;
 				break;
 			
 			case SignalNames.SleepStages:

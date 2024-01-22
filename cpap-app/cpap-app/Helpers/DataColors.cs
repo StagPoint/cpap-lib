@@ -1,6 +1,4 @@
-﻿using System;
-
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Media;
 using Avalonia.Styling;
 
@@ -12,20 +10,20 @@ public class DataColors
 	{
 		0xff1192e9, 0xff005f5d, 0xff9f1853, 0xfffa4e56, 
 		0xff6929c5, 0xff197f38, 0xff002d9d, 0xffee5398, 0xffb08600, 
-		0xff520609, 0xff009d9a, 0xff01274a, 0xff8c3702, 0xffa66efe
+		0xff520609, 0xff009d9a, 0xff01274a, 0xff8c3702, 0xffa66efe,
 	};
 
 	public static readonly uint[] DarkThemeColors = new[]
 	{
 		0xff33b1fd, 0xff41bebb, 0xffff7eb5, 0xfffa4e54,
 		0xff893ffc, 0xff6fdc8c, 0xff4689ff, 0xffd02770, 0xffd3a107,
-		0xfffff2f2, 0xff09bdb9, 0xffbbe6fe, 0xffba4e00, 0xffd4bcff
+		0xfffff2f2, 0xff09bdb9, 0xffbbe6fe, 0xffba4e00, 0xffd4bcff,
 	};
 
 	private static uint[] _markerColors = new uint[]
 	{
-		//Color.Chartreuse, Color.Orange, Color.Yellow, Color.Aqua, Color.Fuchsia, Color.BurlyWood
-			
+		0xff0fb5ae, 0xfff68511, 0xffde3d82, 0xff7e84fa, 0xff147af3, 0xff7326d3, 0xffcb5d00, 0xff008f5d, 0xff4046ca, 
+
 		0xff003f5c,
 		0xff2f4b7c,
 		0xff665191,
@@ -48,10 +46,17 @@ public class DataColors
 
 	public static Color GetDataColor( int index )
 	{
-		var isDarkTheme = Application.Current?.ActualThemeVariant == ThemeVariant.Dark;
-		var colors      = isDarkTheme ? DarkThemeColors : LightThemeColors;
+		var isDarkTheme  = Application.Current?.ActualThemeVariant == ThemeVariant.Dark;
+		var colorPalette = isDarkTheme ? DarkThemeColors : LightThemeColors;
 		
-		return Color.FromUInt32( colors[ index % colors.Length ] );
+		var lightness = isDarkTheme ? 1.05f : 0.75f;
+			
+		var avaloniaColor = Avalonia.Media.Color.FromUInt32( colorPalette[ index % colorPalette.Length ] );
+		var hsl           = avaloniaColor.ToHsl();
+		var brighter      = new HslColor( hsl.A, hsl.H, hsl.S, float.Clamp( (float)hsl.L * lightness, 0.33f, 1.0f ) );
+		var result        = brighter.ToRgb();
+
+		return result;
 	}
 
 	public static Color GetMarkerColor( int index )
@@ -65,7 +70,7 @@ public class DataColors
 			
 			var avaloniaColor = Avalonia.Media.Color.FromUInt32( colorPalette[ index % colorPalette.Length ] );
 			var hsl           = avaloniaColor.ToHsl();
-			var brighter      = new HslColor( hsl.A, hsl.H, hsl.S, Math.Max( hsl.L * lightness, 0.33f ) );
+			var brighter      = new HslColor( hsl.A, hsl.H, hsl.S, float.Clamp( (float)hsl.L * lightness, 0.33f, 1.0f ) );
 			var result        = brighter.ToRgb();
 
 			return result;

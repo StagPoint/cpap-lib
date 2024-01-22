@@ -928,6 +928,9 @@ Files not read: {failedSessions}";
 
 	private void HandleLoadDateRequest( object? sender, DateTimeRoutedEventArgs e )
 	{
+		// NOTE: If the NavView's SelectedItem is already navDailyReport, it must be cleared or it won't fire the correct events when set
+		NavView.SelectedItem = null;
+
 		// NOTE: Changing to the Daily Report tab clears the DataContext, so this *must* be done first 
 		NavView.SelectedItem = navDailyReport;
 
