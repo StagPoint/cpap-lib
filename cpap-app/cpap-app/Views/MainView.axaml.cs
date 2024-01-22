@@ -937,7 +937,12 @@ Files not read: {failedSessions}";
 		var day = LoadDailyReport( ActiveUserProfile.UserProfileID, e.DateTime );
 		if( day == null )
 		{
-			throw new NullReferenceException( $"Date could not be retrieved: {e.DateTime}" );
+			DataContext          = null;
+			NavView.SelectedItem = navHome;
+			
+			Debug.WriteLine( $"Date could not be retrieved: {e.DateTime}" );
+
+			return;
 		}
 		
 		var viewModel = new DailyReportViewModel( ActiveUserProfile, day );
@@ -1037,6 +1042,8 @@ Files not read: {failedSessions}";
 					{
 						// TODO: Because DailyReportView has its own flow for loading a DailyReport, this leaves open the possibility of bypassing things like event subscription, etc.
 						var importedDay = LoadDailyReport( profile.UserProfileID, mostRecentDay.Value );
+						Debug.Assert( importedDay != null, "Most recently imported day failed to load" );
+						
 						DataContext = importedDay;
 
 						profile.LastImport      = DateTime.Now;
@@ -1171,7 +1178,7 @@ Files not read: {failedSessions}";
 		}
 	}
 
-	private static DailyReport LoadDailyReport( int profileId, DateTime? date )
+	private static DailyReport? LoadDailyReport( int profileId, DateTime? date )
 	{
 		using var store = StorageService.Connect();
 

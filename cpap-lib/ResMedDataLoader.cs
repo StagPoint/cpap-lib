@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 using StagPoint.EDF.Net;
 // ReSharper disable CanSimplifyDictionaryTryGetValueWithGetValueOrDefault
+// ReSharper disable ReplaceSubstringWithRangeIndexer
 
 // ReSharper disable ConvertToUsingDeclaration
 
@@ -263,7 +264,8 @@ namespace cpaplib
 					var session = day.Sessions[ sessionIndex++ ];
 
 					// If the file's extracted date does not intersect with the session, then it's not relevant to that session 
-					if( session.StartTime > fileDate || session.EndTime < fileDate )
+					// NOTE: It's possible that the file time is actually off by about a minute, so a one minute fudge factor is added.
+					if( session.StartTime > fileDate.AddMinutes( 1 ) || session.EndTime < fileDate )
 					{
 						continue;
 					}

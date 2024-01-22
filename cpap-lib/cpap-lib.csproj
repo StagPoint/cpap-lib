@@ -19,16 +19,16 @@
         <RepositoryUrl>https://github.com/StagPoint/cpap-lib</RepositoryUrl>
         <RepositoryType>GitHub</RepositoryType>
         <PackageTags>CPAP sleep apnea ResMed AirSense OSA data analysis</PackageTags>
-        <PackageReleaseNotes>Fixed issue with import options where time adjustement resulted in invalid dates.</PackageReleaseNotes>
+        <PackageReleaseNotes>Fixed issue where some Signal files whose timestamp was different than the associated Session were not being imported. </PackageReleaseNotes>
         <Product>cpap-lib</Product>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <PackageIcon>cpap-sd-card-256.png</PackageIcon>
-        <Version>1.0.2</Version>
+        <Version>1.0.3</Version>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
       <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
-      <DefineConstants>TRACE IMPORT_ASYNC</DefineConstants>
+      <DefineConstants>TRACE </DefineConstants>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
