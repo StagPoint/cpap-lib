@@ -4,12 +4,15 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+
+#if IMPORT_ASYNC
 using System.Threading.Tasks;
+#endif
 
 using StagPoint.EDF.Net;
+
 // ReSharper disable CanSimplifyDictionaryTryGetValueWithGetValueOrDefault
 // ReSharper disable ReplaceSubstringWithRangeIndexer
-
 // ReSharper disable ConvertToUsingDeclaration
 
 namespace cpaplib
@@ -410,8 +413,8 @@ namespace cpaplib
 				);
 			}
 
-			// Remove all sessions that are shorter than five minutes
-			day.Sessions.RemoveAll( x => x.Duration.TotalMinutes < 5 );
+			// Remove all sessions that are shorter than the specified minimum length
+			day.Sessions.RemoveAll( x => x.Duration.TotalMinutes < _importSettings.MinimumSessionLength );
 
 			// If the day no longer has any sessions, stop processing it
 			if( day.Sessions.Count == 0 )

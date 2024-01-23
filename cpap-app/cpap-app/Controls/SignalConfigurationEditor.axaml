@@ -31,7 +31,8 @@
                             <ColumnDefinition SharedSizeGroup="SignalConfigEditC1"/>
                             <ColumnDefinition SharedSizeGroup="SignalConfigEditC2"/>
                             <ColumnDefinition SharedSizeGroup="SignalConfigEditC3"/>
-                            <ColumnDefinition SharedSizeGroup="SignalConfigEditC4"/>
+                            <!-- <ColumnDefinition SharedSizeGroup="SignalConfigEditC4"/> -->
+                            <ColumnDefinition Width="0"/>
                             <ColumnDefinition SharedSizeGroup="SignalConfigEditC5"/>
                             <ColumnDefinition SharedSizeGroup="SignalConfigEditC6"/>
                             <ColumnDefinition SharedSizeGroup="SignalConfigEditC7"/>
@@ -42,7 +43,7 @@
                         <TextBlock Grid.Column="1" Text="Label" />
                         <TextBlock Grid.Column="2" Text="Color" />
                         <TextBlock Grid.Column="3" Text="Gradient" />
-                        <TextBlock Grid.Column="4" Text="Trends" />
+                        <!-- <TextBlock Grid.Column="4" Text="Trends" /> -->
                         <TextBlock Grid.Column="5" Text="Scaling Mode" />
                         <TextBlock Grid.Column="6" Text="Scaling Min" />
                         <TextBlock Grid.Column="7" Text="Scaling Max" />
@@ -52,7 +53,7 @@
                         <Rectangle Grid.Column="1" Grid.Row="0" Classes="HeaderSeparator" />
                         <Rectangle Grid.Column="2" Grid.Row="0" Classes="HeaderSeparator" />
                         <Rectangle Grid.Column="3" Grid.Row="0" Classes="HeaderSeparator" />
-                        <Rectangle Grid.Column="4" Grid.Row="0" Classes="HeaderSeparator" />
+                        <!-- <Rectangle Grid.Column="4" Grid.Row="0" Classes="HeaderSeparator" /> -->
                         <Rectangle Grid.Column="5" Grid.Row="0" Classes="HeaderSeparator" />
                         <Rectangle Grid.Column="6" Grid.Row="0" Classes="HeaderSeparator" />
                         <Rectangle Grid.Column="7" Grid.Row="0" Classes="HeaderSeparator" />
@@ -99,7 +100,8 @@
                                         <ColumnDefinition SharedSizeGroup="SignalConfigEditC1"/>
                                         <ColumnDefinition SharedSizeGroup="SignalConfigEditC2"/>
                                         <ColumnDefinition SharedSizeGroup="SignalConfigEditC3"/>
-                                        <ColumnDefinition SharedSizeGroup="SignalConfigEditC4"/>
+                                        <!-- <ColumnDefinition SharedSizeGroup="SignalConfigEditC4"/> -->
+                                        <ColumnDefinition Width="0"/>
                                         <ColumnDefinition SharedSizeGroup="SignalConfigEditC5"/>
                                         <ColumnDefinition SharedSizeGroup="SignalConfigEditC6"/>
                                         <ColumnDefinition SharedSizeGroup="SignalConfigEditC7"/>
@@ -110,7 +112,7 @@
                                     <TextBlock Grid.Column="1" Text="{Binding Title}" />
                                     <ColorPicker Grid.Column="2" Color="{Binding PlotColor, Converter={StaticResource ColorConverter}}" />
                                     <ToggleSwitch Grid.Column="3" IsChecked="{Binding FillBelow}" OnContent="" OffContent=""/>
-                                    <ToggleSwitch Grid.Column="4" IsChecked="{Binding ShowInTrends}" OnContent="" OffContent=""/>
+                                    <!-- <ToggleSwitch Grid.Column="4" IsChecked="{Binding ShowInTrends}" OnContent="" OffContent=""/> -->
                                     <ComboBox Grid.Column="5" Name="ScalingMode" SelectedIndex="{Binding ScalingMode}" MaxWidth="110">
                                         <ComboBoxItem>Defaults</ComboBoxItem>
                                         <ComboBoxItem>Auto Fit</ComboBoxItem>

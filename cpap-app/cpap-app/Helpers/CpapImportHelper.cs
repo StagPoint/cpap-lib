@@ -5,14 +5,10 @@ using System.Threading.Tasks;
 
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
-using Avalonia.Threading;
 
 using cpap_app.ViewModels;
 
 using cpaplib;
-
-using FluentAvalonia.UI.Controls;
-using FluentAvalonia.UI.Windowing;
 
 using MsBox.Avalonia;
 using MsBox.Avalonia.Dto;

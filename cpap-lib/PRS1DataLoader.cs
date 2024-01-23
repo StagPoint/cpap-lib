@@ -5,8 +5,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 
-using cpaplib;
-
 // ReSharper disable UseIndexFromEndExpression
 // ReSharper disable BadChildStatementIndent
 // ReSharper disable ConvertToUsingDeclaration
@@ -152,7 +150,7 @@ namespace cpaplib
 				machineInfo
 			);
 
-			var days = ProcessMetaSessions( metaSessions, machineInfo );
+			var days = ProcessMetaSessions( metaSessions, machineInfo, importSettings );
 
 			return days;
 		}
@@ -161,7 +159,7 @@ namespace cpaplib
 
 		#region Private functions
 
-		private static List<DailyReport> ProcessMetaSessions( List<MetaSession> metaSessions, MachineIdentification machineInfo )
+		private static List<DailyReport> ProcessMetaSessions( List<MetaSession> metaSessions, MachineIdentification machineInfo, CpapImportSettings importSettings )
 		{
 			List<DailyReport> days = new List<DailyReport>( metaSessions.Count );
 
@@ -169,13 +167,16 @@ namespace cpaplib
 
 			foreach( var meta in metaSessions )
 			{
+				// Remove any sessions that are shorter than the specified minimum duration 
+				meta.Sessions.RemoveAll( x => x.Duration.TotalMinutes < importSettings.MinimumSessionLength );
+				
 				if( currentDay == null || currentDay.ReportDate != meta.StartTime.Date )
 				{
 					currentDay = new DailyReport
 					{
 						ReportDate         = meta.StartTime.Date,
-						RecordingStartTime = meta.StartTime,
-						RecordingEndTime   = meta.EndTime,
+						RecordingStartTime = meta.Sessions.Min( x => x.StartTime ),
+						RecordingEndTime   = meta.Sessions.Max( x => x.EndTime ),
 						MachineInfo        = machineInfo,
 					};
 
@@ -829,9 +830,11 @@ namespace cpaplib
 			public List<ReportedEvent> Events   { get; set; } = new List<ReportedEvent>();
 			public List<ValueAtTime>   Stats    { get; set; } = new List<ValueAtTime>();
 
-			public DateTime StartTime { get { return Session.StartTime; } }
+			public DateTime StartTime { get => Session.StartTime; }
 
-			public DateTime EndTime { get { return Session.EndTime; } }
+			public DateTime EndTime { get => Session.EndTime; }
+			
+			public TimeSpan Duration { get => Session.Duration; }
 
 			public override string ToString()
 			{

@@ -16,6 +16,12 @@ namespace cpaplib
 		public TimeSpan ClockTimeAdjustment { get; set; } = TimeSpan.Zero;
 
 		/// <summary>
+		/// The minimum session length (in minutes). Any imported sessions that are shorter than this
+		/// value will be discarded. 
+		/// </summary>
+		public double MinimumSessionLength { get; set; } = 0;
+
+		/// <summary>
 		/// If set to TRUE, a <see cref="EventType.LargeLeak"/> event will be generated any time the <see cref="SignalNames.LeakRate"/>
 		/// signal value exceeds the <see cref="LargeLeakThreshold"/> threshold.
 		/// </summary>
