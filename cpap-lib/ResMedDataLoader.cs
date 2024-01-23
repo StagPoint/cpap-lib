@@ -253,10 +253,12 @@ namespace cpaplib
 				}
 
 				// The file's date, extracted from the filename, will be used to search for the correct session.
-				// The date/time is incorrect for any other purpose (I think)
+				// The date/time is incorrect for any other purpose (I think).
+				// NOTE: The time adjustment needs to be added to the file timestamp to match the already-modified session timestamp
 				var fileDate = DateTime
 				               .ParseExact( baseFilename.Substring( 0, baseFilename.Length - 4 ), "yyyyMMdd_HHmmss", CultureInfo.InvariantCulture )
-				               .Trim( TimeSpan.TicksPerMinute );
+				               .Trim( TimeSpan.TicksPerMinute )
+				               .AddSeconds( _importSettings.ClockTimeAdjustment.TotalSeconds );
 
 				int sessionIndex = 0;
 				while( sessionIndex < day.Sessions.Count )

@@ -25,7 +25,7 @@ public class TimespanToSecondsConverter : IValueConverter
 	{
 		if( value == null )
 		{
-			throw new ArgumentNullException( nameof( value ) );
+			return TimeSpan.Zero;
 		}
 
 		return TimeSpan.FromSeconds( System.Convert.ToDouble( value ) );
