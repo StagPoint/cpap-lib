@@ -2,6 +2,7 @@
 using System.Globalization;
 
 using Avalonia.Data.Converters;
+// ReSharper disable ReturnTypeCanBeNotNullable
 
 namespace cpap_app.Converters;
 
