@@ -10,14 +10,34 @@ namespace cpaplib
 		/// </summary>
 		public int ID { get; set; } = -1;
 		
+		/// <summary>
+		/// Gets/Sets when this Session started
+		/// </summary>
 		public DateTime StartTime { get; set; }
+		
+		/// <summary>
+		/// Gets/Sets when this Session ended
+		/// </summary>
 		public DateTime EndTime   { get; set; }
+		
+		/// <summary>
+		/// Returns the length of the Session
+		/// </summary>
 		public TimeSpan Duration  { get => EndTime - StartTime; }
 
+		/// <summary>
+		/// Gets/Sets the source of the session (ie: ResMed AirSense 10 AutoSet, Oxylink 1250, etc.)
+		/// </summary>
 		public string Source { get; set; }
 
+		/// <summary>
+		/// Gets/Sets the type of machine, API, or process that generated this session
+		/// </summary>
 		public SourceType SourceType   { get; set; } = SourceType.CPAP;
 
+		/// <summary>
+		/// Contains the list of all <see cref="Signal"/> waveforms for this instance
+		/// </summary>
 		public List<Signal> Signals { get; set; } = new List<Signal>();
 
 		#region Public functions
@@ -98,7 +118,7 @@ namespace cpaplib
 
 		public override string ToString()
 		{
-			return $"{StartTime.ToShortDateString()}    {StartTime.ToLongTimeString()} - {EndTime.ToLongTimeString()}";
+			return $"{StartTime:d}    {StartTime:T} - {EndTime:T}";
 		}
 
 		#endregion

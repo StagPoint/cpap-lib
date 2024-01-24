@@ -971,6 +971,9 @@ Files not read: {failedSessions}";
 		Debug.Assert( owner != null, nameof( owner ) + " != null" );
 		
 		var profile = ActiveUserProfile;
+
+		// Always show the Home page when import is requested
+		NavView.SelectedItem = navHome;
 						
 		var import = await CpapImportHelper.GetImportFolder( owner );
 		if( import == null || string.IsNullOrEmpty( import.Folder ) )

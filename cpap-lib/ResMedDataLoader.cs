@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 
 using StagPoint.EDF.Net;
 
+// ReSharper disable MergeIntoLogicalPattern
 // ReSharper disable CanSimplifyDictionaryTryGetValueWithGetValueOrDefault
 // ReSharper disable ReplaceSubstringWithRangeIndexer
 // ReSharper disable ConvertToUsingDeclaration
@@ -400,6 +401,14 @@ namespace cpaplib
 
 			// Indicate whether the day has any detail data 
 			day.HasDetailData = day.Sessions.Any( x => x.Signals.Count > 0 );
+			
+			// If a day has at least one session with Signal data, then remove any sessions that do not have Signal data.
+			// This happens when a user has data for some sessions but also has a session for which there was no SD Card
+			// in the machine, such as when they take a nap without putting the card back in the machine first (personal experience).
+			if( day.HasDetailData )
+			{
+				day.Sessions.RemoveAll( x => x.Signals.Count == 0 );
+			}
 
 			foreach( var maskSession in day.Sessions )
 			{
@@ -412,9 +421,6 @@ namespace cpaplib
 					                               !x.Samples.Any( value => value >= x.MinValue )
 				);
 			}
-
-			// Remove all sessions that are shorter than the specified minimum length
-			day.Sessions.RemoveAll( x => x.Duration.TotalMinutes < _importSettings.MinimumSessionLength );
 
 			// If the day no longer has any sessions, stop processing it
 			if( day.Sessions.Count == 0 )
@@ -563,7 +569,7 @@ namespace cpaplib
 			foreach( var filename in filenames )
 			{
 				var file = EdfFile.Open( filename );
-				day.RecordingStartTime = file.Header.StartTime.Value + _importSettings.ClockTimeAdjustment;
+				var recordingStartTime = file.Header.StartTime.Value + _importSettings.ClockTimeAdjustment;
 
 				foreach( var annotationSignal in file.AnnotationSignals )
 				{
@@ -578,7 +584,7 @@ namespace cpaplib
 						}
 
 						// Try to convert the annotation text into an Enum for easier processing. 
-						var eventFlag = ReportedEvent.FromEdfAnnotation( day.RecordingStartTime, annotation );
+						var eventFlag = ReportedEvent.FromEdfAnnotation( recordingStartTime, annotation );
 
 						// We don't need the "Recording Starts" annotations either 
 						if( eventFlag.Type == EventType.RecordingStarts )
@@ -597,7 +603,7 @@ namespace cpaplib
 
 							var newEvent = new ReportedEvent
 							{
-								StartTime = day.RecordingStartTime.AddSeconds( csrStartTime ),
+								StartTime = recordingStartTime.AddSeconds( csrStartTime ),
 								Duration  = TimeSpan.FromSeconds( annotation.Onset - csrStartTime ),
 								Type      = EventType.CSR,
 							};
@@ -622,7 +628,7 @@ namespace cpaplib
 			foreach( var filename in filenames )
 			{
 				var file = EdfFile.Open( filename );
-				day.RecordingStartTime = file.Header.StartTime.Value + _importSettings.ClockTimeAdjustment;
+				var recordingStartTime = file.Header.StartTime.Value + _importSettings.ClockTimeAdjustment;
 
 				foreach( var annotationSignal in file.AnnotationSignals )
 				{
@@ -635,7 +641,7 @@ namespace cpaplib
 						}
 
 						// Try to convert the annotation text into an Enum for easier processing. 
-						var eventFlag = ReportedEvent.FromEdfAnnotation( day.RecordingStartTime, annotation );
+						var eventFlag = ReportedEvent.FromEdfAnnotation( recordingStartTime, annotation );
 
 						// ResMed does not report a time for Hypopnea in Series 10 machines (although I've read
 						// that it does in S9 machines) but their own definition states that a minimum of ten
@@ -734,8 +740,8 @@ namespace cpaplib
 					var maskOn  = day.ReportDate.AddMinutes( maskOnSignal.Samples[ sampleIndex ] ) + _importSettings.ClockTimeAdjustment;
 					var maskOff = day.ReportDate.AddMinutes( maskOffSignal.Samples[ sampleIndex ] ) + _importSettings.ClockTimeAdjustment;
 
-					// Discard empty sessions
-					if( maskOff.Subtract( maskOn ).TotalMinutes < 1 )
+					// Discard any sessions that are shorter than the specified minimum duration
+					if( maskOff.Subtract( maskOn ).TotalMinutes < _importSettings.MinimumSessionLength )
 					{
 						continue;
 					}
@@ -750,8 +756,11 @@ namespace cpaplib
 					day.Sessions.Add( session );
 				}
 
-				day.RecordingStartTime = day.Sessions.Min( x => x.StartTime );
-				day.RecordingEndTime   = day.Sessions.Max( x => x.EndTime );
+				if( day.Sessions.Count > 0 )
+				{
+					day.RecordingStartTime = day.Sessions.Min( x => x.StartTime );
+					day.RecordingEndTime   = day.Sessions.Max( x => x.EndTime );
+				}
 			}
 
 			// Remove all days that are too short to be valid or are otherwise invalid
