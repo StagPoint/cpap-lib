@@ -137,6 +137,18 @@ public partial class MainView : UserControl
 	
 	#region Base class overrides
 
+	protected override void OnPointerPressed( PointerPressedEventArgs eventArgs )
+	{
+		base.OnPointerPressed( eventArgs );
+		
+		var point = eventArgs.GetCurrentPoint( this );
+		if( point.Properties.IsXButton1Pressed && !navHome.IsSelected )
+		{
+			LoadTabPage( new HomeView() );
+			navHome.IsSelected = true;
+		}
+	}
+
 	protected override void OnPropertyChanged( AvaloniaPropertyChangedEventArgs change )
 	{
 		base.OnPropertyChanged( change );

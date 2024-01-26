@@ -172,6 +172,8 @@ namespace cpaplib
 			// pulse oximeter import, etc., and this will help to differentiate them. 
 			foreach( var day in days )
 			{
+				Debug.Assert( !day.Sessions.Any( x => x.Duration.TotalMinutes < _importSettings.MinimumSessionLength ) );
+
 				foreach( var session in day.Sessions )
 				{
 					session.Source = _machineInfo.ProductName;
@@ -349,6 +351,14 @@ namespace cpaplib
 							var startTime = header.StartTime.Value + _importSettings.ClockTimeAdjustment;
 							var endTime   = startTime.AddSeconds( header.NumberOfDataRecords * header.DurationOfDataRecord );
 
+							// Discard Signals that are shorter than the minimum Session duration. This is done as an indirect
+							// method of discarding Sessions that are shorter than the specified minimum duration, because 
+							// Session duration is tied to the duration of the Signals it contains.  
+							if( (endTime - startTime).TotalMinutes < _importSettings.MinimumSessionLength )
+							{
+								continue;
+							}
+
 							// We need to see if the session already contains a signal by this name, so we know what to do with it. 
 							if( session.GetSignalByName( signalName ) == null )
 							{
@@ -385,7 +395,7 @@ namespace cpaplib
 										StartTime = session.StartTime,
 										EndTime   = session.EndTime,
 									};
-
+									
 									AddSignalToSession( newSession, startTime, endTime, signal );
 
 									// Add the session to the DailyReport. We'll need to sort sessions afterward because of this. 
@@ -398,7 +408,7 @@ namespace cpaplib
 					break;
 				}
 			}
-
+			
 			// Indicate whether the day has any detail data 
 			day.HasDetailData = day.Sessions.Any( x => x.Signals.Count > 0 );
 			
@@ -445,6 +455,7 @@ namespace cpaplib
 						SourceType = SourceType.PulseOximetry,
 					};
 
+
 					newSession.AddSignal( oxySignal );
 					session.Signals.Remove( oxySignal );
 
@@ -454,10 +465,12 @@ namespace cpaplib
 						newSession.AddSignal( pulseSignal );
 						session.Signals.Remove( pulseSignal );
 					}
-
+					
 					day.AddSession( newSession );
 				}
 			}
+
+			Debug.Assert( !day.Sessions.Any( x => x.Duration.TotalMinutes < _importSettings.MinimumSessionLength ) );
 
 			// Sort the sessions by start time. This is only actually needed when we split a session above during
 			// signal matching, but doesn't hurt anything when no sessions are split. 
@@ -740,7 +753,10 @@ namespace cpaplib
 					var maskOn  = day.ReportDate.AddMinutes( maskOnSignal.Samples[ sampleIndex ] ) + _importSettings.ClockTimeAdjustment;
 					var maskOff = day.ReportDate.AddMinutes( maskOffSignal.Samples[ sampleIndex ] ) + _importSettings.ClockTimeAdjustment;
 
-					// Discard any sessions that are shorter than the specified minimum duration
+					// Discard any sessions that are shorter than the specified minimum duration.
+					// Note that this isn't a complete solution to short sessions: if a Session is split because the MaskOn/MaskOff
+					// times do not match the Signal files, a short Session might still be created and that will have to be 
+					// checked as well (search for "discontinuous Session" in this file for more details).
 					if( maskOff.Subtract( maskOn ).TotalMinutes < _importSettings.MinimumSessionLength )
 					{
 						continue;
