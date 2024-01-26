@@ -135,7 +135,7 @@
             </Expander>
 
             <StackPanel Orientation="Vertical" Margin="1 12" Spacing="4">
-                <Button HorizontalAlignment="Stretch" Click="ReimportCurrentDate">
+                <Button Name="Reimport" HorizontalAlignment="Stretch" Click="ReimportCurrentDate">
                     <StackPanel Orientation="Horizontal" Spacing="12" Margin="-16 0 0 0">
                         <fui:SymbolIcon Symbol="Refresh" />
                         <TextBlock Text="{Binding ReportDate, Mode=OneWay, StringFormat={}Re-Import {0:D}}" />

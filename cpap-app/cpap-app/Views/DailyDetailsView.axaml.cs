@@ -30,7 +30,10 @@ public partial class DailyDetailsView : UserControl
 
 		if( change.Property.Name == nameof( DataContext ) )
 		{
-			SummaryDataOnly.IsVisible = change.NewValue is null or DailyReport { HasDetailData: false };
+			var day = change.NewValue as DailyReport;
+
+			SummaryDataOnly.IsVisible = day == null || day.HasDetailData == false;
+			Reimport.IsVisible        = day != null && day.ReportDate >= DateTime.Today.AddDays( -30 );
 		}
 	}
 

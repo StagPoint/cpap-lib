@@ -45,13 +45,13 @@
 
                         <TextBlock Grid.Row="0" Grid.Column="0" Text="Device Time Adjustment" FontWeight="SemiBold" VerticalAlignment="Center"/>
                         <StackPanel Grid.Row="0" Grid.Column="2" Orientation="Horizontal" Spacing="8" >
-                            <NumericUpDown HorizontalAlignment="Left" Value="{Binding TimeAdjust, Converter={StaticResource NonNullable}}" Increment="10.0" Minimum="-3600" Maximum="3600" ShowButtonSpinner="False"/>
+                            <NumericUpDown HorizontalAlignment="Left" Value="{Binding TimeAdjust, Converter={StaticResource NonNullable}}" Increment="10.0" Minimum="-3600" Maximum="3600" ShowButtonSpinner="False" Watermark="0" />
                             <TextBlock Text="seconds" VerticalAlignment="Center" IsEnabled="False"/>                    
                         </StackPanel>
                         
                         <TextBlock Grid.Row="1" Grid.Column="0" Text="Oxygen Saturation Adjustment" FontWeight="SemiBold" VerticalAlignment="Center"/>
                         <StackPanel Grid.Row="1" Grid.Column="2" Orientation="Horizontal" Spacing="8" >
-                            <NumericUpDown HorizontalAlignment="Left" Value="{Binding CalibrationAdjust, Converter={StaticResource NonNullable}}" Increment="1.0" Minimum="-4" Maximum="4" ShowButtonSpinner="False"/>
+                            <NumericUpDown HorizontalAlignment="Left" Value="{Binding CalibrationAdjust, Converter={StaticResource NonNullable}}" Increment="1.0" Minimum="-4" Maximum="4" ShowButtonSpinner="False" Watermark="0" />
                             <TextBlock Text="%" VerticalAlignment="Center" IsEnabled="False"/>                    
                         </StackPanel>
                         
@@ -70,7 +70,7 @@
                             
                             <TextBlock Grid.Column="0" Grid.Row="0" Text="Ignore all events for the first" FontWeight="SemiBold" VerticalAlignment="Center" />
                             <StackPanel Grid.Row="0" Grid.Column="2" Orientation="Horizontal" Spacing="8" >
-                                <NumericUpDown HorizontalAlignment="Left" Value="{Binding EventScanDelay, Converter={StaticResource NonNullable}}" Increment="0.1" Minimum="0" Maximum="600" ShowButtonSpinner="False"/>
+                                <NumericUpDown HorizontalAlignment="Left" Value="{Binding EventScanDelay, Converter={StaticResource NonNullable}}" Increment="0.1" Minimum="0" Maximum="600" ShowButtonSpinner="False" Watermark="0" />
                                 <TextBlock Text="seconds" VerticalAlignment="Center" IsEnabled="False"/>                    
                             </StackPanel>
                         </Grid>
@@ -88,12 +88,12 @@
                             
                             <TextBlock Grid.Row="1" Grid.Column="0" Text="Flag when SaO2 is below" VerticalAlignment="Center" />
                             <StackPanel Grid.Row="1" Grid.Column="2" Orientation="Horizontal" Spacing="8">
-                                <NumericUpDown Name="HypoxemiaThreshold" HorizontalAlignment="Left" Value="{Binding HypoxemiaThreshold, Converter={StaticResource NonNullable}}" Increment="1" Minimum="80" Maximum="90" ShowButtonSpinner="False"/>
+                                <NumericUpDown Name="HypoxemiaThreshold" HorizontalAlignment="Left" Value="{Binding HypoxemiaThreshold, Converter={StaticResource NonNullable}}" Increment="1" Minimum="80" Maximum="90" ShowButtonSpinner="False" Watermark="0" />
                             </StackPanel>
                             
                             <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding #HypoxemiaThreshold.Value, StringFormat='SaO2 must be below {0}% for at least'}" VerticalAlignment="Center" />
                             <StackPanel Grid.Row="2" Grid.Column="2" Orientation="Horizontal" Spacing="8" >
-                                <NumericUpDown HorizontalAlignment="Left" Value="{Binding HypoxemiaMinimumDuration, Converter={StaticResource NonNullable}}" Increment="1" Minimum="1" Maximum="30" ShowButtonSpinner="False"/>
+                                <NumericUpDown HorizontalAlignment="Left" Value="{Binding HypoxemiaMinimumDuration, Converter={StaticResource NonNullable}}" Increment="1" Minimum="1" Maximum="30" ShowButtonSpinner="False" Watermark="0" />
                                 <TextBlock Text="seconds" VerticalAlignment="Center" IsEnabled="False"/>                    
                             </StackPanel>
                             
@@ -112,19 +112,19 @@
                             
                             <TextBlock Grid.Row="1" Grid.Column="0" Text="Flag when SaO2 falls below baseline by" VerticalAlignment="Center" />
                             <StackPanel Grid.Row="1" Grid.Column="2" Orientation="Horizontal" Spacing="8">
-                                <NumericUpDown Name="DesaturationThreshold" HorizontalAlignment="Left" Value="{Binding DesaturationThreshold, Converter={StaticResource NonNullable}}" Increment="1" Minimum="3" Maximum="8" ShowButtonSpinner="False"/>
+                                <NumericUpDown Name="DesaturationThreshold" HorizontalAlignment="Left" Value="{Binding DesaturationThreshold, Converter={StaticResource NonNullable}}" Increment="1" Minimum="3" Maximum="8" ShowButtonSpinner="False" Watermark="0" />
                                 <TextBlock Text="%" VerticalAlignment="Center" IsEnabled="False"/>                    
                             </StackPanel>
                             
                             <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding #DesaturationThreshold.Value, StringFormat='SaO2 below {0}% below baseline longer than'}" VerticalAlignment="Center" />
                             <StackPanel Grid.Row="2" Grid.Column="2" Orientation="Horizontal" Spacing="8" >
-                                <NumericUpDown HorizontalAlignment="Left" Value="{Binding DesaturationMinimumDuration, Converter={StaticResource NonNullable}}" Increment="1" Minimum="1" Maximum="30" ShowButtonSpinner="False"/>
+                                <NumericUpDown HorizontalAlignment="Left" Value="{Binding DesaturationMinimumDuration, Converter={StaticResource NonNullable}}" Increment="1" Minimum="1" Maximum="30" ShowButtonSpinner="False" Watermark="0" />
                                 <TextBlock Text="seconds" VerticalAlignment="Center" IsEnabled="False"/>                    
                             </StackPanel>
                             
                             <TextBlock Grid.Row="3" Grid.Column="0" Text="The maximum duration of event is" VerticalAlignment="Center" />
                             <StackPanel Grid.Row="3" Grid.Column="2" Orientation="Horizontal" Spacing="8" >
-                                <NumericUpDown HorizontalAlignment="Left" Value="{Binding DesaturationMaximumDuration, Converter={StaticResource NonNullable}}" Increment="1" Minimum="30" Maximum="300" ShowButtonSpinner="False"/>
+                                <NumericUpDown HorizontalAlignment="Left" Value="{Binding DesaturationMaximumDuration, Converter={StaticResource NonNullable}}" Increment="1" Minimum="30" Maximum="300" ShowButtonSpinner="False" Watermark="0" />
                                 <TextBlock Text="seconds" VerticalAlignment="Center" IsEnabled="False"/>                    
                             </StackPanel>
                             
@@ -143,19 +143,19 @@
                             
                             <TextBlock Grid.Row="1" Grid.Column="0" Text="Tachycardia Threshold" VerticalAlignment="Center" />
                             <StackPanel Grid.Row="1" Grid.Column="2" Orientation="Horizontal" Spacing="8">
-                                <NumericUpDown HorizontalAlignment="Left" Value="{Binding TachycardiaThreshold, Converter={StaticResource NonNullable}}" Increment="1" Minimum="100" Maximum="120" ShowButtonSpinner="False"/>
+                                <NumericUpDown HorizontalAlignment="Left" Value="{Binding TachycardiaThreshold, Converter={StaticResource NonNullable}}" Increment="1" Minimum="100" Maximum="120" ShowButtonSpinner="False" Watermark="0" />
                                 <TextBlock Text="bpm" VerticalAlignment="Center" IsEnabled="False"/>                    
                             </StackPanel>
                             
                             <TextBlock Grid.Row="2" Grid.Column="0" Text="Bradycardia Threshold" VerticalAlignment="Center" />
                             <StackPanel Grid.Row="2" Grid.Column="2" Orientation="Horizontal" Spacing="8">
-                                <NumericUpDown HorizontalAlignment="Left" Value="{Binding BradycardiaThreshold, Converter={StaticResource NonNullable}}" Increment="1" Minimum="40" Maximum="60" ShowButtonSpinner="False"/>
+                                <NumericUpDown HorizontalAlignment="Left" Value="{Binding BradycardiaThreshold, Converter={StaticResource NonNullable}}" Increment="1" Minimum="40" Maximum="60" ShowButtonSpinner="False" Watermark="0" />
                                 <TextBlock Text="bpm" VerticalAlignment="Center" IsEnabled="False"/>                    
                             </StackPanel>
                             
                             <TextBlock Grid.Row="3" Grid.Column="0" Text="The minimum duration of an event is" VerticalAlignment="Center" />
                             <StackPanel Grid.Row="3" Grid.Column="2" Orientation="Horizontal" Spacing="8" >
-                                <NumericUpDown HorizontalAlignment="Left" Value="{Binding PulseRateMinimumDuration, Converter={StaticResource NonNullable}}" Increment="1" Minimum="0" Maximum="30" ShowButtonSpinner="False"/>
+                                <NumericUpDown HorizontalAlignment="Left" Value="{Binding PulseRateMinimumDuration, Converter={StaticResource NonNullable}}" Increment="1" Minimum="0" Maximum="30" ShowButtonSpinner="False" Watermark="0" />
                                 <TextBlock Text="seconds" VerticalAlignment="Center" IsEnabled="False"/>                    
                             </StackPanel>
                             
@@ -174,13 +174,13 @@
                             
                             <TextBlock Grid.Row="1" Grid.Column="0" Text="Flag event when the rate changes by at least" VerticalAlignment="Center" />
                             <StackPanel Grid.Row="1" Grid.Column="2" Orientation="Horizontal" Spacing="8">
-                                <NumericUpDown HorizontalAlignment="Left" Value="{Binding PulseChangeThreshold, Converter={StaticResource NonNullable}}" Increment="1" Minimum="5" Maximum="30" ShowButtonSpinner="False"/>
+                                <NumericUpDown HorizontalAlignment="Left" Value="{Binding PulseChangeThreshold, Converter={StaticResource NonNullable}}" Increment="1" Minimum="5" Maximum="30" ShowButtonSpinner="False" Watermark="0" />
                                 <TextBlock Text="bpm" VerticalAlignment="Center" IsEnabled="False"/>                    
                             </StackPanel>
                             
                             <TextBlock Grid.Row="2" Grid.Column="0" Text="Compare the amount of change to the previous" VerticalAlignment="Center" />
                             <StackPanel Grid.Row="2" Grid.Column="2" Orientation="Horizontal" Spacing="8">
-                                <NumericUpDown HorizontalAlignment="Left" Value="{Binding PulseChangeWindowLength, Converter={StaticResource NonNullable}}" Increment="1" Minimum="30" Maximum="600" ShowButtonSpinner="False"/>
+                                <NumericUpDown HorizontalAlignment="Left" Value="{Binding PulseChangeWindowLength, Converter={StaticResource NonNullable}}" Increment="1" Minimum="30" Maximum="600" ShowButtonSpinner="False" Watermark="0" />
                                 <TextBlock Text="seconds" VerticalAlignment="Center" IsEnabled="False"/>                    
                             </StackPanel>
                         </Grid>

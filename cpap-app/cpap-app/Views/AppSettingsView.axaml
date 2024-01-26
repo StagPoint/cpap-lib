@@ -80,7 +80,7 @@
                                            Name="EventMarkerOptions"
                                            Loaded="EventMarkerOptions_OnLoaded">
                     <controls:SettingsExpanderItem>
-                        <controls1:EventMarkerEditor Name="EventConfig" HorizontalAlignment="Left" />
+                        <controls1:EventMarkerEditor Name="EventConfig" HorizontalAlignment="Left" MinHeight="400" />
                     </controls:SettingsExpanderItem>
                 </controls:SettingsExpander>
                 <controls:SettingsExpander Header="Signals"
@@ -93,7 +93,7 @@
                         <controls:FontIconSource Glyph="&#xE9D9;" FontFamily="Segoe MDL2 Assets" />
                     </controls:SettingsExpander.IconSource>
                     <controls:SettingsExpanderItem>
-                        <controls1:SignalConfigurationEditor Name="SignalConfig" HorizontalAlignment="Left" MaxWidth="1440" />
+                        <controls1:SignalConfigurationEditor Name="SignalConfig" HorizontalAlignment="Left" MaxWidth="1440" MinHeight="400" />
                     </controls:SettingsExpanderItem>
                 </controls:SettingsExpander>
                 <controls:SettingsExpander Header="Profiles"

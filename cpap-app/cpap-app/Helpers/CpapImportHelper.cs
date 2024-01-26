@@ -66,9 +66,9 @@ public class CpapImportHelper
 					Icon                  = Icon.Database,
 					ButtonDefinitions     = new List<ButtonDefinition>()
 					{
-						new ButtonDefinition() { Name = "Yes", IsDefault = true },	
-						new ButtonDefinition() { Name = "Browse", IsDefault = true },	
-						new ButtonDefinition() { Name = "Cancel", IsCancel = true},	
+						new() { Name = "Yes", IsDefault    = true },	
+						new() { Name = "Browse", IsDefault = true },	
+						new() { Name = "Cancel", IsCancel  = true},	
 					}
 				};
 
@@ -76,7 +76,7 @@ public class CpapImportHelper
 				var result = await dialog.ShowWindowDialogAsync( owner );
 
 				// Note that "Browse" will also break out of this loop, as it is assumed that only one removable
-				// drive will contain CPAP data, and I don't think it's unreasonable tp to require that condition.
+				// drive will contain CPAP data, and I don't think it's unreasonable to to require that condition.
 				switch( result )
 				{
 					case "Cancel":

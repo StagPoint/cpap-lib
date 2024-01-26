@@ -972,7 +972,8 @@ Files not read: {failedSessions}";
 		
 		var profile = ActiveUserProfile;
 
-		// Always show the Home page when import is requested
+		// Always show the Home page when import is requested. Otherwise, the user might be on the Daily Details
+		// view and Avalonia can get stuck in a layout cycle (this is a bug in Avalonia wrt ItemRepeaters and ScrollViews)
 		NavView.SelectedItem = navHome;
 						
 		var import = await CpapImportHelper.GetImportFolder( owner );
