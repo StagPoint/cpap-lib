@@ -30,7 +30,7 @@ using MsBox.Avalonia.Enums;
 
 namespace cpap_app.Views;
 
-public partial class DailyReportView : UserControl
+public partial class DailyReportView : UserControl, IPrintableView
 {
 	#region Public properties
 	
@@ -160,7 +160,7 @@ public partial class DailyReportView : UserControl
 
 	private void OnTimeSelected( object? sender, DateTimeRoutedEventArgs e )
 	{
-		Charts.SelectTimeRange( e.DateTime - TimeSpan.FromMinutes( 2 ), e.DateTime + TimeSpan.FromMinutes( 2 ) );
+		Charts.SelectTimeRange( e.DateTime - TimeSpan.FromMinutes( 1.5 ), e.DateTime + TimeSpan.FromMinutes( 1.5 ) );
 	}
 
 	private void DetailTypes_OnSelectionChanged( object? sender, SelectionChangedEventArgs e )
@@ -460,6 +460,15 @@ public partial class DailyReportView : UserControl
 	}
 
 	#endregion 
+	
+	#region Public functions 
+	
+	public void PrintDocument()
+	{
+		Charts.PrintDocument();		
+	}
+
+	#endregion
 	
 	#region Private functions 
 	

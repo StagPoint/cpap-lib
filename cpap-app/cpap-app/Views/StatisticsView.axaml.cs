@@ -25,7 +25,7 @@ using Path = System.IO.Path;
 
 namespace cpap_app.Views;
 
-public partial class StatisticsView : UserControl
+public partial class StatisticsView : UserControl, IPrintableView
 {
 	public StatisticsView()
 	{
@@ -788,7 +788,12 @@ public partial class StatisticsView : UserControl
 		process.Start();
 	}
 
-	private async void PrintToPDF( object? sender, RoutedEventArgs e )
+	public void PrintDocument()
+	{
+		PrintToPDF( this, null );
+	}
+
+	private async void PrintToPDF( object? sender, RoutedEventArgs? e )
 	{
 		if( DataContext is not TherapyStatisticsViewModel viewModel )
 		{

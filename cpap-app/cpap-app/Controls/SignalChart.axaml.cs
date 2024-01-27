@@ -2226,7 +2226,7 @@ public partial class SignalChart : UserControl
 				{
 					case EventMarkerType.Flag:
 						var flagTop = Chart.Plot.AddMarker( markerOffset, limits.YMax, MarkerShape.verticalBar, 32, markerConfig.Color, null );
-						flagTop.MarkerLineWidth = 2f;
+						flagTop.MarkerLineWidth = 3f;
 						_eventMarkers.Add( flagTop );
 
 						marker = Chart.Plot.AddVerticalLine( markerOffset, color, 1.5f, LineStyle.Solid, null );

@@ -29,7 +29,7 @@ using QuestPDF.Previewer;
 
 namespace cpap_app.Views;
 
-public partial class HistoryView : UserControl
+public partial class HistoryView : UserControl, IPrintableView
 {
 	#region Private fields
 
@@ -272,7 +272,12 @@ public partial class HistoryView : UserControl
 		}
 	}
 
-	private async void PrintToPDF( object? sender, RoutedEventArgs e )
+	public void PrintDocument()
+	{
+		PrintToPDF( this, null );
+	}
+
+	private async void PrintToPDF( object? sender, RoutedEventArgs? e )
 	{
 		var saveFilePath = await GetSaveFilename( "PDF" );
 		if( string.IsNullOrEmpty( saveFilePath ) )

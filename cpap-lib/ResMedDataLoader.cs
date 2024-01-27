@@ -172,7 +172,7 @@ namespace cpaplib
 			// pulse oximeter import, etc., and this will help to differentiate them. 
 			foreach( var day in days )
 			{
-				Debug.Assert( !day.Sessions.Any( x => x.Duration.TotalMinutes < _importSettings.MinimumSessionLength ) );
+				Debug.Assert( !day.Sessions.Any( x => Math.Ceiling( x.Duration.TotalMinutes ) < _importSettings.MinimumSessionLength ) );
 
 				foreach( var session in day.Sessions )
 				{
@@ -353,8 +353,12 @@ namespace cpaplib
 
 							// Discard Signals that are shorter than the minimum Session duration. This is done as an indirect
 							// method of discarding Sessions that are shorter than the specified minimum duration, because 
-							// Session duration is tied to the duration of the Signals it contains.  
-							if( (endTime - startTime).TotalMinutes < _importSettings.MinimumSessionLength )
+							// Session duration is tied to the duration of the Signals it contains. It is highly unlikely (as
+							// in never seen in actual practice so far) that signals within a single Session will be different
+							// enough in duration that some signals for that Session fall under the minimum while some are over
+							// the minimum, but it is technically possible. Rounding the Signal's duration to the next highest
+							// whole number of minutes should effectively eliminate that possibility in actual practice. 
+							if( Math.Ceiling( (endTime - startTime).TotalMinutes ) < _importSettings.MinimumSessionLength )
 							{
 								continue;
 							}
@@ -470,7 +474,7 @@ namespace cpaplib
 				}
 			}
 
-			Debug.Assert( !day.Sessions.Any( x => x.Duration.TotalMinutes < _importSettings.MinimumSessionLength ) );
+			Debug.Assert( !day.Sessions.Any( x => Math.Ceiling( x.Duration.TotalMinutes ) < _importSettings.MinimumSessionLength ) );
 
 			// Sort the sessions by start time. This is only actually needed when we split a session above during
 			// signal matching, but doesn't hurt anything when no sessions are split. 
@@ -757,7 +761,7 @@ namespace cpaplib
 					// Note that this isn't a complete solution to short sessions: if a Session is split because the MaskOn/MaskOff
 					// times do not match the Signal files, a short Session might still be created and that will have to be 
 					// checked as well (search for "discontinuous Session" in this file for more details).
-					if( maskOff.Subtract( maskOn ).TotalMinutes < _importSettings.MinimumSessionLength )
+					if( Math.Ceiling( maskOff.Subtract( maskOn ).TotalMinutes ) < _importSettings.MinimumSessionLength )
 					{
 						continue;
 					}

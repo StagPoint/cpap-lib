@@ -137,6 +137,44 @@ public partial class MainView : UserControl
 	
 	#region Base class overrides
 
+	protected override void OnKeyDown( KeyEventArgs e )
+	{
+		base.OnKeyDown( e );
+
+		if( e.Handled )
+		{
+			return;
+		}
+
+		if( (e.KeyModifiers & KeyModifiers.Shift) != 0 )
+		{
+			switch( e.Key )
+			{
+				case Key.F2:
+					e.Handled = true;
+					HandleImportRequestCPAP( this, new ImportRequestEventArgs( ImportCpapRequestedEvent ) );
+
+					return;
+				case Key.F7:
+					e.Handled = true;
+					HandleImportRequestOximetry( this, new ImportRequestEventArgs( ImportOximetryRequestedEvent ) );
+
+					return;
+			}
+		}
+		
+		if( (e.KeyModifiers & KeyModifiers.Control) != 0 && e.Key == Key.P )
+		{
+			if( NavFrame.Content is IPrintableView printableView )
+			{
+				e.Handled = true;
+				printableView.PrintDocument();
+
+				return;
+			}
+		}
+	}
+
 	protected override void OnPointerPressed( PointerPressedEventArgs eventArgs )
 	{
 		base.OnPointerPressed( eventArgs );
@@ -977,7 +1015,7 @@ Files not read: {failedSessions}";
 		HandleImportRequestOximetry();
 	}
 	
-	private async void HandleImportRequestCPAP( object? sender, ImportRequestEventArgs e )
+	private async void HandleImportRequestCPAP( object? sender, ImportRequestEventArgs importEventArgs )
 	{
 		var owner = this.FindAncestorOfType<Window>();
 		Debug.Assert( owner != null, nameof( owner ) + " != null" );
@@ -1038,7 +1076,7 @@ Files not read: {failedSessions}";
 		
 			await Task.Run( async () =>
 			{
-				var mostRecentDay = ImportFrom( import.Loader, import.Folder, e.StartDate, e.EndDate, out int numberOfDaysImported );
+				var mostRecentDay = ImportFrom( import.Loader, import.Folder, importEventArgs.StartDate, importEventArgs.EndDate, out int numberOfDaysImported );
 		
 				// Sounds cheesy, but showing a progress bar for even a second serves to show 
 				// the user that the work was performed. It's otherwise often too fast for them 
@@ -1088,7 +1126,7 @@ Files not read: {failedSessions}";
 
 		await td.ShowAsync();
 
-		e.OnImportComplete?.Invoke();
+		importEventArgs.OnImportComplete?.Invoke();
 	}
 
 	#endregion 

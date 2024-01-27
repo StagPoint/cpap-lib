@@ -29,7 +29,7 @@ using QuestPDF.Previewer;
 
 namespace cpap_app.Views;
 
-public partial class SignalChartContainer : UserControl
+public partial class SignalChartContainer : UserControl, IPrintableView
 {
 	private const string SETTING_EVENTFLAGS_ISVISIBLE = "EventFlags_IsVisible";
 
@@ -568,7 +568,12 @@ public partial class SignalChartContainer : UserControl
 		}
 	}
 	
-	private async void PrintToPDF( object? sender, RoutedEventArgs e )
+	public void PrintDocument()
+	{
+		PrintToPDF( this, null );
+	}
+
+	private async void PrintToPDF( object? sender, RoutedEventArgs? e )
 	{
 		if( DataContext is not DailyReport day )
 		{
