@@ -301,7 +301,10 @@ public partial class MainView : UserControl
 		// Always show the Home page when import is requested. Otherwise, the user might be on the Daily Details
 		// view and Avalonia can get stuck in a layout cycle (this is a bug in Avalonia wrt ItemRepeaters and ScrollViews)
 		NavView.SelectedItem = navHome;
-						
+		
+		// We need a reference to the Application Window in order to show modal dialog boxes  
+		var appWindow = TopLevel.GetTopLevel( this ) as AppWindow;
+
 		var clientConfig = AuthorizationConfigStore.GetConfig();
 		if( !clientConfig.IsValid )
 		{
@@ -328,15 +331,24 @@ public partial class MainView : UserControl
 
 		if( !accessTokenInfo.AccessTokenIsValid )
 		{
-			var newTokenInfo = await AuthorizationClient.RefreshAuthorizationTokenAsync( clientConfig, accessTokenInfo.RefreshToken );
-			if( newTokenInfo.AccessTokenIsValid )
+			try
 			{
-				accessTokenInfo = newTokenInfo;
-				AccessTokenStore.SaveAccessTokenInfo( accessTokenInfo );
+				var newTokenInfo = await AuthorizationClient.RefreshAuthorizationTokenAsync( clientConfig, accessTokenInfo.RefreshToken );
+				if( newTokenInfo.AccessTokenIsValid )
+				{
+					accessTokenInfo = newTokenInfo;
+					AccessTokenStore.SaveAccessTokenInfo( accessTokenInfo );
+				}
+			}
+			catch( Exception exception )
+			{
+				var msgBox = MessageBoxManager.GetMessageBoxStandard( "Import from Google Fit", $"The access token is invalid:\n {exception.Message}", ButtonEnum.Ok, Icon.Error );
+				await msgBox.ShowWindowDialogAsync( appWindow );
+
+				return;
 			}
 		}
 		
-		var appWindow = TopLevel.GetTopLevel( this ) as AppWindow;
 		appWindow?.PlatformFeatures.SetTaskBarProgressBarState( TaskBarProgressBarState.Indeterminate );
 
 		await using var iconStream = AssetLoader.Open( new Uri( $"avares://{Assembly.GetExecutingAssembly().FullName}/Assets/google_fit_icon.png" ) );

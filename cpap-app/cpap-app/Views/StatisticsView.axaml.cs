@@ -55,13 +55,11 @@ public partial class StatisticsView : UserControl, IPrintableView
 			return new TherapyStatisticsViewModel();
 		}
 
-		var byMonth = ReportMode is { SelectedIndex: 1 };
-
 		var end     = storedDates.Last();
 		var start   = DateHelper.Max( storedDates[ 0 ], end.AddYears( -1 ) );
 		var history = HistoryViewModel.GetHistory( profileID, start, end );
 
-		List<GroupedDays>? groups = (ReportMode?.SelectedIndex ?? 0) switch
+		List<GroupedDays> groups = (ReportMode?.SelectedIndex ?? 0) switch
 		{
 			0 => GroupDaysStandard( history.Days, start, end ),
 			1 => GroupDaysByWeek( history.Days, start, end ),

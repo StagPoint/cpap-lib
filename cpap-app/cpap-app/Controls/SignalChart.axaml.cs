@@ -1072,7 +1072,7 @@ public partial class SignalChart : UserControl
 		RenderGraph( true );
 	}
 
-	private async void ValidateHypopneas()
+	private void ValidateHypopneas()
 	{
 		if( _day == null || !_day.Events.Any( x => x.Type == EventType.Hypopnea ) )
 		{
@@ -1084,7 +1084,7 @@ public partial class SignalChart : UserControl
 		foreach( var signal in _signals )
 		{
 			var absFlow      = signal.Samples.Select( x => x = Math.Abs( x ) ).ToArray();
-			var filteredFlow = ButterworthFilter.Filter( absFlow, signal.FrequencyInHz, 0.5 );
+			var filteredFlow = ButterworthFilter.Filter( absFlow, signal.FrequencyInHz, 1.5 );
 			var interval     = 1.0 / signal.FrequencyInHz;
 
 			// We need to know which Session this Signal is from so that we can get the associated Flow Limits signal
@@ -1140,7 +1140,7 @@ public partial class SignalChart : UserControl
 						//var line = Chart.Plot.AddVerticalLine( eventTime, Color.Red, 1f, LineStyle.Solid, first ? "HYP" : null );
 						//_visualizations.Add( line );
 
-						var span = Chart.Plot.AddHorizontalSpan( startTime, eventTime, Color.Magenta, first ? "HYP" : null );
+						var span = Chart.Plot.AddHorizontalSpan( startTime, eventTime, Color.Magenta.MultiplyAlpha( 0.5f ), first ? "HYP" : null );
 						Chart.Plot.MoveFirst( span );
 						_visualizations.Add( span );
 					}

@@ -192,7 +192,8 @@ public partial class SignalSettingsMenuButton : UserControl
 		
 		var storedEventTypes = StorageService.Connect().GetStoredEventTypes( UserProfileStore.GetActiveUserProfile().UserProfileID );
 
-		_cachedUserEventTypes.AddRange( storedEventTypes.Where( x => !_cachedUserEventTypes.Contains( x ) ) );
+		// Add any event types that the user has encountered before (unless they are marked as False Positive)
+		_cachedUserEventTypes.AddRange( storedEventTypes.Where( x => x < EventType.FalsePositive && !_cachedUserEventTypes.Contains( x ) ) );
 
 		return _cachedUserEventTypes;
 	}
@@ -352,14 +353,14 @@ public partial class SignalSettingsMenuButton : UserControl
 	{
 		var dialog = new TaskDialog()
 		{
-			Title = $"Hot Keys and Mouse Actions",
-			Buttons = { TaskDialogButton.CloseButton },
+			Title    = "Hot Keys and Mouse Actions",
+			Buttons  = { TaskDialogButton.CloseButton },
 			XamlRoot = (Visual)VisualRoot!,
 			Content  = new SignalGraphHotkeysView(),
 			MaxWidth = 800,
 		};
 		
-		var dialogResult = await dialog.ShowAsync();
+		await dialog.ShowAsync();
 	}
 }
 
