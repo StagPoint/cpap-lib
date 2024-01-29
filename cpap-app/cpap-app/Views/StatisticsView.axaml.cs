@@ -60,7 +60,14 @@ public partial class StatisticsView : UserControl, IPrintableView
 		var end     = storedDates.Last();
 		var start   = DateHelper.Max( storedDates[ 0 ], end.AddYears( -1 ) );
 		var history = HistoryViewModel.GetHistory( profileID, start, end );
-		var groups  = byMonth ? GroupDaysByMonth( history.Days, start, end ) : GroupDaysStandard( history.Days, start, end );
+
+		List<GroupedDays>? groups = (ReportMode?.SelectedIndex ?? 0) switch
+		{
+			0 => GroupDaysStandard( history.Days, start, end ),
+			1 => GroupDaysByWeek( history.Days, start, end ),
+			2 => GroupDaysByMonth( history.Days, start, end ),
+			_ => GroupDaysStandard( history.Days, start, end )
+		};
 
 		var viewModel = new TherapyStatisticsViewModel()
 		{
@@ -616,6 +623,58 @@ public partial class StatisticsView : UserControl, IPrintableView
 		return results;
 	}
 
+	private static List<GroupedDays> GroupDaysByWeek( List<DailyReport> days, DateTime startDay, DateTime endDay )
+	{
+		var results = new List<GroupedDays>
+		{
+			new GroupedDays()
+			{
+				Label     = "Most Recent",
+				DateLabel = $"{endDay:d}",
+				StartDate = endDay.Date,
+				EndDate   = endDay.Date,
+			},
+		};
+
+		var groupStartDate = endDay.StartOfWeek();
+		results.Add( new GroupedDays()
+		{
+			Label     = "Last Week",
+			StartDate = groupStartDate,
+			EndDate   = endDay.Date,
+		} );
+
+		for( int i = 0; i < 5; i++ )
+		{
+			var groupEndDate = endDay.StartOfWeek().AddDays( -7 * i - 1 );
+			groupStartDate = groupEndDate.StartOfWeek();
+
+			if( groupStartDate < startDay )
+			{
+				break;
+			}
+
+			results.Add( new GroupedDays()
+			{
+				Label     = $"{i + 2} Weeks Ago",
+				StartDate = groupStartDate,
+				EndDate   = groupEndDate,
+			} );
+		}
+
+		foreach( var group in results )
+		{
+			if( group.EndDate > group.StartDate )
+			{
+				group.DateLabel = $"{group.StartDate:d} - {group.EndDate:d}";
+			}
+
+			group.Days.AddRange( days.Where( x => x.ReportDate.Date >= group.StartDate && x.ReportDate.Date <= group.EndDate ) );
+		}
+
+		return results;
+	}
+	
 	private static List<GroupedDays> GroupDaysStandard( List<DailyReport> days, DateTime startDay, DateTime endDay )
 	{
 		var results = new List<GroupedDays>
@@ -629,7 +688,7 @@ public partial class StatisticsView : UserControl, IPrintableView
 			},
 		};
 
-		var groupStartDate = DateHelper.Max( startDay, endDay.Date.AddDays( -6 ) );
+		var groupStartDate = endDay.StartOfWeek();
 		results.Add( new GroupedDays()
 		{
 			Label     = "Last Week",
@@ -637,7 +696,7 @@ public partial class StatisticsView : UserControl, IPrintableView
 			EndDate   = endDay.Date,
 		} );
 
-		groupStartDate = DateHelper.Max( startDay, endDay.Date.AddMonths( -1 ) );
+		groupStartDate = endDay.StartOfMonth();
 		results.Add( new GroupedDays()
 		{
 			Label     = "Last Month",
@@ -645,7 +704,7 @@ public partial class StatisticsView : UserControl, IPrintableView
 			EndDate   = endDay.Date,
 		} );
 
-		groupStartDate = DateHelper.Max( startDay, endDay.Date.AddMonths( -3 ) );
+		groupStartDate = DateHelper.Max( startDay, endDay.StartOfMonth().AddMonths( -3 ) );
 		results.Add( new GroupedDays()
 		{
 			Label     = "Last Three Months",
@@ -653,7 +712,23 @@ public partial class StatisticsView : UserControl, IPrintableView
 			EndDate   = endDay.Date,
 		} );
 
-		groupStartDate = DateHelper.Max( startDay, endDay.Date.AddYears( -1 ) );
+		groupStartDate = DateHelper.Max( startDay, endDay.StartOfMonth().AddMonths( -6 ) );
+		results.Add( new GroupedDays()
+		{
+			Label     = "Last Six Months",
+			StartDate = groupStartDate,
+			EndDate   = endDay.Date,
+		} );
+
+		groupStartDate = DateHelper.Max( startDay, endDay.StartOfMonth().AddMonths( -9 ) );
+		results.Add( new GroupedDays()
+		{
+			Label     = "Last Nine Months",
+			StartDate = groupStartDate,
+			EndDate   = endDay.Date,
+		} );
+
+		groupStartDate = DateHelper.Max( startDay, endDay.StartOfMonth().AddYears( -1 ) );
 		results.Add( new GroupedDays()
 		{
 			Label     = "Last Year",
@@ -663,7 +738,7 @@ public partial class StatisticsView : UserControl, IPrintableView
 
 		foreach( var group in results )
 		{
-			if( group.StartDate < group.EndDate )
+			if( group.EndDate > group.StartDate )
 			{
 				group.DateLabel = $"{group.StartDate:d} - {group.EndDate:d}";
 			}

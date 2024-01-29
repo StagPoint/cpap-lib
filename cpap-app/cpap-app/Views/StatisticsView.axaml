@@ -49,6 +49,7 @@
             <TextBlock Grid.Column="0" Margin="10 0 8 0">Report Mode</TextBlock>
             <ComboBox Grid.Column="1" Name="ReportMode" SelectedIndex="0" Width="175" Margin="2" SelectionChanged="ReportMode_SelectionChanged">
                 <ComboBoxItem Content="Standard"/>
+                <ComboBoxItem Content="Weekly" />
                 <ComboBoxItem Content="Monthly" />
             </ComboBox>
             <Button Name="PrintReport" Grid.Column="2" HorizontalAlignment="Right" Margin="10 0" Click="PrintReport_OnClick">

@@ -7,6 +7,17 @@ public static class DateHelper
 {
 	public static readonly DateTime UnixEpoch = DateTime.SpecifyKind( new DateTime( 1970, 1, 1 ), DateTimeKind.Utc ).ToLocalTime();
 
+	public static DateTime StartOfWeek( this DateTime dt, DayOfWeek startOfWeek = DayOfWeek.Sunday )
+	{
+		int diff = (7 + (dt.DayOfWeek - startOfWeek)) % 7;
+		return dt.AddDays( -1 * diff ).Date;
+	}
+
+	public static DateTime StartOfMonth( this DateTime dt )
+	{
+		return dt.AddDays( -1 * dt.Day + 1 ).Date;
+	}
+
 	/// <summary>
 	/// Used to "fix" DateTime values retrieved through Sqlite.Net, which are incorrectly
 	/// instantiated and don't contain the correct DateTimeKind value.

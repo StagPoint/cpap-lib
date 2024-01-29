@@ -990,6 +990,7 @@ public partial class SignalChart : UserControl
 			btnSettings.Visualizations.Add( new SignalMenuItem( "Highlight Centerline", VisualizeCenterline ) );
 			btnSettings.Visualizations.Add( new SignalMenuItem( "Mark Respirations",    VisualizeRespirations ) );
 			btnSettings.Visualizations.Add( new SignalMenuItem( "Show Noise Filter",    VisualizeNoiseFilter ) );
+			btnSettings.Visualizations.Add( new SignalMenuItem( "Validate Hypopneas",   ValidateHypopneas ) );
 		}
 		else
 		{
@@ -1068,6 +1069,93 @@ public partial class SignalChart : UserControl
 			first = false;
 		}
 
+		RenderGraph( true );
+	}
+
+	private async void ValidateHypopneas()
+	{
+		if( _day == null || !_day.Events.Any( x => x.Type == EventType.Hypopnea ) )
+		{
+			return;
+		}
+
+		var first = true;
+		
+		foreach( var signal in _signals )
+		{
+			var absFlow      = signal.Samples.Select( x => x = Math.Abs( x ) ).ToArray();
+			var filteredFlow = ButterworthFilter.Filter( absFlow, signal.FrequencyInHz, 0.5 );
+			var interval     = 1.0 / signal.FrequencyInHz;
+
+			// We need to know which Session this Signal is from so that we can get the associated Flow Limits signal
+			var session = _day.Sessions.FirstOrDefault( x => x.SourceType == SourceType.CPAP && DateHelper.RangesOverlap( signal.StartTime, signal.EndTime, x.StartTime, x.EndTime ) );
+			if( session == null )
+			{
+				continue;
+			}
+
+			// ResMed does not score a Hypopnea unless there is "at least one flow-limited breath" during the event, so 
+			// we need to have the Flow Limits Signal that matches the time frame we're currently searching
+			var flowLimits = session.Signals.FirstOrDefault( x => x.Name == SignalNames.FlowLimit );
+			if( flowLimits == null )
+			{
+				continue;
+			}
+
+			var baselineCalc = new MovingAverageCalculator( (int)(60 * signal.FrequencyInHz) );
+			var flowCalc     = new MovingAverageCalculator( (int)(10 * signal.FrequencyInHz) );
+			
+			var state         = 0;
+			var startTime     = 0.0;
+			var hasFlowLimits = false;
+			
+			for( int i = 0; i < signal.Samples.Count; i++ )
+			{
+				var sample = filteredFlow[ i ];
+				
+				baselineCalc.AddObservation( sample );
+				flowCalc.AddObservation( sample );
+
+				if( !baselineCalc.HasFullPeriod )
+				{
+					continue;
+				}
+
+				var rmsBaseline = baselineCalc.Average + baselineCalc.StandardDeviation;
+				var rmsFlow     = flowCalc.Average + flowCalc.StandardDeviation;
+				var eventTime   = i * interval + (signal.StartTime - _day.RecordingStartTime).TotalSeconds;
+
+				if( state == 0 )
+				{
+					if( rmsFlow <= rmsBaseline * 0.6 )
+					{
+						state     = 1;
+						startTime = eventTime;
+					}
+				}
+				else if( rmsFlow >= rmsBaseline * 0.85 )
+				{
+					if( hasFlowLimits && eventTime - startTime >= 10.0 )
+					{
+						//var line = Chart.Plot.AddVerticalLine( eventTime, Color.Red, 1f, LineStyle.Solid, first ? "HYP" : null );
+						//_visualizations.Add( line );
+
+						var span = Chart.Plot.AddHorizontalSpan( startTime, eventTime, Color.Magenta, first ? "HYP" : null );
+						Chart.Plot.MoveFirst( span );
+						_visualizations.Add( span );
+					}
+
+					first         = false;
+					state         = 0;
+					hasFlowLimits = false;
+				}
+				else
+				{
+					hasFlowLimits |= (flowLimits.GetValueAtTime( _day.RecordingStartTime.AddSeconds( eventTime ), false ) > 0.1);
+				}
+			}
+		}
+		
 		RenderGraph( true );
 	}
 

@@ -114,13 +114,15 @@ public class DailyReportViewModel : DailyReport, INotifyPropertyChanged
 	
 	public void DeleteSession( Session session )
 	{
+		var eventCount = Events.Count;
+		
 		if( !RemoveSession( session ) )
 		{
 			return;
 		}
 
 		// Ensure that a notation is made about this change 
-		AppendNote( $"Deleted '{session.Source}' session starting at {session.StartTime:g} and ending at {session.EndTime}", false );
+		AppendNote( $"Deleted '{session.Source}' session starting at {session.StartTime:g} and ending at {session.EndTime}. {eventCount - Events.Count} events associated with the session were deleted.", false );
 		
 		using var db = StorageService.Connect();
 		db.SaveDailyReport( UserProfile.UserProfileID, this );

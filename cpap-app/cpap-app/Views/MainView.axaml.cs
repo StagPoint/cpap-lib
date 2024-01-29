@@ -298,6 +298,10 @@ public partial class MainView : UserControl
 
 	private async void HandleImportRequestGoogleFit( object? sender, RoutedEventArgs e )
 	{
+		// Always show the Home page when import is requested. Otherwise, the user might be on the Daily Details
+		// view and Avalonia can get stuck in a layout cycle (this is a bug in Avalonia wrt ItemRepeaters and ScrollViews)
+		NavView.SelectedItem = navHome;
+						
 		var clientConfig = AuthorizationConfigStore.GetConfig();
 		if( !clientConfig.IsValid )
 		{
@@ -662,6 +666,10 @@ public partial class MainView : UserControl
 	
 	private async void HandleImportRequestOximetry()
 	{
+		// Always show the Home page when import is requested. Otherwise, the user might be on the Daily Details
+		// view and Avalonia can get stuck in a layout cycle (this is a bug in Avalonia wrt ItemRepeaters and ScrollViews)
+		NavView.SelectedItem = navHome;
+						
 		var sp = TopLevel.GetTopLevel( this )?.StorageProvider;
 		if( sp == null )
 		{
