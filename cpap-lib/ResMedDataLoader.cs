@@ -167,6 +167,9 @@ namespace cpaplib
 				ImportSessionsAndEvents( rootFolder, day );
 			}
 #endif
+			
+			// Remove all days that don't have any Sessions
+			days.RemoveAll( x => x.Sessions.Count == 0 );
 
 			// Make sure that each Session has its Source set. Sessions may be created by other processes, such as
 			// pulse oximeter import, etc., and this will help to differentiate them. 

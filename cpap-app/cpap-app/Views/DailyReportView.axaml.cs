@@ -100,7 +100,6 @@ public partial class DailyReportView : UserControl, IPrintableView
 		if( ActiveUserProfile == null )
 		{
 			return;
-			throw new NullReferenceException( $"There is no {nameof( ActiveUserProfile )} value assigned." );
 		}
 
 		var signals = StorageService.Connect().GetStoredSignalNames( ActiveUserProfile.UserProfileID );

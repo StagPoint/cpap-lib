@@ -1094,8 +1094,8 @@ public partial class SignalChart : UserControl
 				continue;
 			}
 
-			// ResMed does not score a Hypopnea unless there is "at least one flow-limited breath" during the event, so 
-			// we need to have the Flow Limits Signal that matches the time frame we're currently searching
+			// ResMed claims to not score a Hypopnea unless there is "at least one flow-limited breath" during the event,  
+			// so we need to have the Flow Limits Signal that matches the time frame we're currently searching
 			var flowLimits = session.Signals.FirstOrDefault( x => x.Name == SignalNames.FlowLimit );
 			if( flowLimits == null )
 			{
@@ -1140,7 +1140,7 @@ public partial class SignalChart : UserControl
 						//var line = Chart.Plot.AddVerticalLine( eventTime, Color.Red, 1f, LineStyle.Solid, first ? "HYP" : null );
 						//_visualizations.Add( line );
 
-						var span = Chart.Plot.AddHorizontalSpan( startTime, eventTime, Color.Magenta.MultiplyAlpha( 0.5f ), first ? "HYP" : null );
+						var span = Chart.Plot.AddHorizontalSpan( startTime, eventTime, Color.Magenta.MultiplyAlpha( 0.5f ), first ? "HYP?" : null );
 						Chart.Plot.MoveFirst( span );
 						_visualizations.Add( span );
 					}
@@ -1151,7 +1151,9 @@ public partial class SignalChart : UserControl
 				}
 				else
 				{
-					hasFlowLimits |= (flowLimits.GetValueAtTime( _day.RecordingStartTime.AddSeconds( eventTime ), false ) > 0.1);
+					// NOTE: Contrary to what they've said in published papers, I have concrete examples of ResMed scoring a 
+					// hypopnea without any flow limitation (on an AirCurve 10 machine, maybe different than an AirSense 10?). 
+					hasFlowLimits |= (flowLimits.GetValueAtTime( _day.RecordingStartTime.AddSeconds( eventTime ), false ) >= 0.01);
 				}
 			}
 		}
