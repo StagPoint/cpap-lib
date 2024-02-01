@@ -25,4 +25,22 @@ namespace cpaplib
 			return (a > b) ? a : b;
 		}
 	}
+	
+	internal static class TimeSpanExtensions
+	{
+		public static TimeSpan TrimSeconds( this TimeSpan value )
+		{
+			return TimeSpan.FromSeconds( Math.Truncate( value.TotalSeconds ) );
+		}
+	
+		public static TimeSpan RoundToNearestSecond( this TimeSpan value )
+		{
+			return TimeSpan.FromSeconds( Math.Round( value.TotalSeconds ) );
+		}
+	
+		public static TimeSpan RoundToNearestMinute( this TimeSpan value )
+		{
+			return TimeSpan.FromMinutes( Math.Round( value.TotalMinutes ) );
+		}
+	}
 }

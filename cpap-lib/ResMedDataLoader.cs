@@ -168,7 +168,9 @@ namespace cpaplib
 			}
 #endif
 			
-			// Remove all days that don't have any Sessions
+			// Remove all days that don't have any Sessions. This might happen, for instance, when all Sessions were 
+			// shorter than the ImportSessions.MinimumSessionLength value (particularly when there is a single short 
+			// Session that occurred after the "ResMed Noon day cutoff")
 			days.RemoveAll( x => x.Sessions.Count == 0 );
 
 			// Make sure that each Session has its Source set. Sessions may be created by other processes, such as

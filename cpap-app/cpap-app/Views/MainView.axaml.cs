@@ -300,8 +300,11 @@ public partial class MainView : UserControl
 	{
 		// Always show the Home page when import is requested. Otherwise, the user might be on the Daily Details
 		// view and Avalonia can get stuck in a layout cycle (this is a bug in Avalonia wrt ItemRepeaters and ScrollViews)
-		NavView.SelectedItem = navHome;
-		
+		if( !Equals( NavView.SelectedItem, navHome ) )
+		{
+			NavView.SelectedItem = navHome;
+		}
+
 		// We need a reference to the Application Window in order to show modal dialog boxes  
 		var appWindow = TopLevel.GetTopLevel( this ) as AppWindow;
 
@@ -680,7 +683,10 @@ public partial class MainView : UserControl
 	{
 		// Always show the Home page when import is requested. Otherwise, the user might be on the Daily Details
 		// view and Avalonia can get stuck in a layout cycle (this is a bug in Avalonia wrt ItemRepeaters and ScrollViews)
-		NavView.SelectedItem = navHome;
+		if( !Equals( NavView.SelectedItem, navHome ) )
+		{
+			NavView.SelectedItem = navHome;
+		}
 						
 		var sp = TopLevel.GetTopLevel( this )?.StorageProvider;
 		if( sp == null )
@@ -1044,7 +1050,10 @@ Files not read: {failedSessions}";
 
 		// Always show the Home page when import is requested. Otherwise, the user might be on the Daily Details
 		// view and Avalonia can get stuck in a layout cycle (this is a bug in Avalonia wrt ItemRepeaters and ScrollViews)
-		NavView.SelectedItem = navHome;
+		if( !Equals( NavView.SelectedItem, navHome ) )
+		{
+			NavView.SelectedItem = navHome;
+		}
 						
 		var import = await CpapImportHelper.GetImportFolder( owner );
 		if( import == null || string.IsNullOrEmpty( import.Folder ) )

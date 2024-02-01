@@ -44,7 +44,7 @@
             </ItemsRepeater.Styles>
             <ItemsRepeater.ItemTemplate>
                 <DataTemplate DataType="{x:Type cpaplib:Annotation}">
-                    <Border Classes="SelectionRect" DoubleTapped="Row_OnDoubleTapped" Tapped="Row_OnTapped" Tag="{Binding}" ToolTip.Tip="{Binding Notes}">
+                    <Border Classes="SelectionRect" DoubleTapped="Row_OnDoubleTapped" Tapped="Row_OnTapped" Tag="{Binding}" ToolTip.Tip="{Binding}">
                         <Border.ContextFlyout>
                             <MenuFlyout>
                                 <MenuItem Header="Edit" Tag="{Binding}" Click="Edit_OnTapped" />

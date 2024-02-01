@@ -42,6 +42,11 @@ namespace cpaplib
 		/// A description and any notes supplied by the user for this <see cref="Annotation"/>
 		/// </summary>
 		public string Notes { get; set; } = string.Empty;
+		
+		/// <summary>
+		/// Returns the span of time between the StartTime and EndTime values
+		/// </summary>
+		public TimeSpan Duration { get => EndTime - StartTime; }
 
 		#endregion
 
@@ -49,7 +54,12 @@ namespace cpaplib
 
 		public override string ToString()
 		{
-			return $"{StartTime:f} - {Notes}";
+			if( Duration.TotalSeconds > 0 )
+			{
+				return $"{StartTime:g} ({Duration.TrimSeconds():g}) - {Notes}";
+			}
+			
+			return $"{StartTime:g} - {Notes}";
 		}
 
 		#endregion
