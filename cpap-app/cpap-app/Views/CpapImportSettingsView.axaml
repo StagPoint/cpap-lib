@@ -6,8 +6,8 @@
              xmlns:converters="clr-namespace:cpap_app.Converters"
              xmlns:viewModels="clr-namespace:cpap_app.ViewModels"
              xmlns:controls="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
-             mc:Ignorable="d" 
-             d:DesignWidth="800" 
+             mc:Ignorable="d"
+             d:DesignWidth="800"
              d:DesignHeight="650"
              x:DataType="viewModels:ImportOptionsViewModel"
              x:Class="cpap_app.Views.CpapImportSettingsView">
@@ -22,114 +22,163 @@
     </UserControl.Resources>
     <UserControl.Styles>
         <Style Selector="Border > Grid > StackPanel">
-            <Setter Property="Margin" Value="0 2"/>
+            <Setter Property="Margin" Value="0 2" />
         </Style>
     </UserControl.Styles>
     <StackPanel Orientation="Vertical" Spacing="8" Grid.IsSharedSizeScope="True" DataContext="{Binding CpapSettings}">
-        <Border Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}" BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1" Padding="8 4">
+        <Border Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}"
+                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1" Padding="8 4">
             <Grid RowDefinitions="Auto, Auto" HorizontalAlignment="Left">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" SharedSizeGroup="ImportSettingsC0"/>
-                    <ColumnDefinition Width="{DynamicResource ColumnSpacing}"/>
-                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto" SharedSizeGroup="ImportSettingsC0" />
+                    <ColumnDefinition Width="{DynamicResource ColumnSpacing}" />
+                    <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
-                <TextBlock Grid.Row="0" Grid.Column="0" Text="CPAP Time Adjustment" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                <StackPanel Grid.Row="0" Grid.Column="2" Orientation="Horizontal" Spacing="8" >
-                    <NumericUpDown HorizontalAlignment="Left" Value="{Binding ClockTimeAdjustment, Converter={StaticResource TimespanToSeconds}}" Increment="5" Minimum="-3600" Maximum="3600" ShowButtonSpinner="False" Watermark="0" />
-                    <TextBlock Text="seconds" VerticalAlignment="Center" IsEnabled="False"/>                    
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="CPAP Time Adjustment" FontWeight="SemiBold"
+                           VerticalAlignment="Center" />
+                <StackPanel Grid.Row="0" Grid.Column="2" Orientation="Horizontal" Spacing="8">
+                    <NumericUpDown HorizontalAlignment="Left"
+                                   Value="{Binding ClockTimeAdjustment, Converter={StaticResource TimespanToSeconds}}"
+                                   Increment="5" Minimum="-3600" Maximum="3600" ShowButtonSpinner="False" Watermark="0" />
+                    <TextBlock Text="seconds" VerticalAlignment="Center" IsEnabled="False" />
                 </StackPanel>
 
-                <TextBlock Grid.Row="1" Grid.Column="0" Text="Discard sessions that are shorter than" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                <StackPanel Grid.Row="1" Grid.Column="2" Orientation="Horizontal" Spacing="8" >
-                    <NumericUpDown HorizontalAlignment="Left" Value="{Binding MinimumSessionLength, Converter={StaticResource NonNullable}}" Increment="1" Minimum="0" Maximum="60" ShowButtonSpinner="False" Watermark="0" />
-                    <TextBlock Text="minutes" VerticalAlignment="Center" IsEnabled="False"/>                    
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Discard sessions that are shorter than"
+                           FontWeight="SemiBold" VerticalAlignment="Center" />
+                <StackPanel Grid.Row="1" Grid.Column="2" Orientation="Horizontal" Spacing="8">
+                    <NumericUpDown HorizontalAlignment="Left"
+                                   Value="{Binding MinimumSessionLength, Converter={StaticResource NonNullable}}"
+                                   Increment="1" Minimum="0" Maximum="60" ShowButtonSpinner="False" Watermark="0" />
+                    <TextBlock Text="minutes" VerticalAlignment="Center" IsEnabled="False" />
                 </StackPanel>
             </Grid>
         </Border>
-        <Border Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}" BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1" Padding="8 4">
+        <Border Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}"
+                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1" Padding="8 4">
             <Grid RowDefinitions="Auto,Auto" HorizontalAlignment="Left">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" SharedSizeGroup="ImportSettingsC0"/>
-                    <ColumnDefinition Width="{DynamicResource ColumnSpacing}"/>
-                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto" SharedSizeGroup="ImportSettingsC0" />
+                    <ColumnDefinition Width="{DynamicResource ColumnSpacing}" />
+                    <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
-                
-                <TextBlock Grid.Column="0" Grid.Row="0" Text="Flag Large Leak Events" FontWeight="SemiBold" VerticalAlignment="Center" />
-                <ToggleSwitch Grid.Column="2" Grid.Row="0" Name="FlagLargeLeaks" IsChecked="{Binding FlagLargeLeaks}" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0"/>
-                
-                <TextBlock Grid.Row="1" Grid.Column="0" Text="Flag an event when Leak Rate is above" VerticalAlignment="Center" />
-                <StackPanel Grid.Row="1" Grid.Column="2" Orientation="Horizontal" Spacing="8" IsEnabled="{Binding #FlagLargeLeaks.IsChecked}" >
-                    <NumericUpDown HorizontalAlignment="Left" Value="{Binding LargeLeakThreshold, Converter={StaticResource NonNullable}}" Increment="1.0" Minimum="0" Maximum="50" ShowButtonSpinner="False" Watermark="0" />
-                    <TextBlock Text="L/min" VerticalAlignment="Center" IsEnabled="False"/>                    
+
+                <TextBlock Grid.Column="0" Grid.Row="0" Text="Flag Large Leak Events" FontWeight="SemiBold"
+                           VerticalAlignment="Center" />
+                <ToggleSwitch Grid.Column="2" Grid.Row="0" Name="FlagLargeLeaks" IsChecked="{Binding FlagLargeLeaks}"
+                              HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0" />
+
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Flag an event when Leak Rate is above"
+                           VerticalAlignment="Center" />
+                <StackPanel Grid.Row="1" Grid.Column="2" Orientation="Horizontal" Spacing="8"
+                            IsEnabled="{Binding #FlagLargeLeaks.IsChecked}">
+                    <NumericUpDown HorizontalAlignment="Left"
+                                   Value="{Binding LargeLeakThreshold, Converter={StaticResource NonNullable}}"
+                                   Increment="1.0" Minimum="0" Maximum="50" ShowButtonSpinner="False" Watermark="0" />
+                    <TextBlock Text="L/min" VerticalAlignment="Center" IsEnabled="False" />
                 </StackPanel>
-                
+
             </Grid>
         </Border>
-        <Border Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}" BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1" Padding="8 4">
+        <Border Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}"
+                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1" Padding="8 4">
             <Grid RowDefinitions="Auto,Auto,Auto" HorizontalAlignment="Left">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" SharedSizeGroup="ImportSettingsC0"/>
-                    <ColumnDefinition Width="{DynamicResource ColumnSpacing}"/>
-                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto" SharedSizeGroup="ImportSettingsC0" />
+                    <ColumnDefinition Width="{DynamicResource ColumnSpacing}" />
+                    <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
-                
-                <TextBlock Grid.Column="0" Grid.Row="0" Text="Flag Flow Limitation Events" FontWeight="SemiBold" VerticalAlignment="Center" />
-                <ToggleSwitch Grid.Column="2" Grid.Row="0" Name="FlagFlowLimitations" IsChecked="{Binding FlagFlowLimits}" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0"/>
-                
-                <TextBlock Grid.Row="1" Grid.Column="0" Text="Flag an event when Flow Limitation is above" VerticalAlignment="Center" />
-                <StackPanel Grid.Row="1" Grid.Column="2" Orientation="Horizontal" Spacing="8" IsEnabled="{Binding #FlagFlowLimitations.IsChecked}" >
-                    <NumericUpDown Name="FlowLimitThreshold" HorizontalAlignment="Left" Value="{Binding FlowLimitThreshold, Converter={StaticResource NonNullable}}" Increment="0.1" Minimum="0" Maximum="1" ShowButtonSpinner="False" Watermark="0" />
+
+                <TextBlock Grid.Column="0" Grid.Row="0" Text="Flag Flow Limitation Events" FontWeight="SemiBold"
+                           VerticalAlignment="Center" />
+                <ToggleSwitch Grid.Column="2" Grid.Row="0" Name="FlagFlowLimitations"
+                              IsChecked="{Binding FlagFlowLimits}" HorizontalAlignment="Left"
+                              VerticalAlignment="Center" Margin="0" />
+
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Flag an event when Flow Limitation is above"
+                           VerticalAlignment="Center" />
+                <StackPanel Grid.Row="1" Grid.Column="2" Orientation="Horizontal" Spacing="8"
+                            IsEnabled="{Binding #FlagFlowLimitations.IsChecked}">
+                    <NumericUpDown Name="FlowLimitThreshold" HorizontalAlignment="Left"
+                                   Value="{Binding FlowLimitThreshold, Converter={StaticResource NonNullable}}"
+                                   Increment="0.1" Minimum="0" Maximum="1" ShowButtonSpinner="False" Watermark="0" />
                 </StackPanel>
-                
-                <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding #FlowLimitThreshold.Value, StringFormat='Flow Limitation must be above {0} for'}" VerticalAlignment="Center" />
-                <StackPanel Grid.Row="2" Grid.Column="2" Orientation="Horizontal" Spacing="8" IsEnabled="{Binding #FlagFlowLimitations.IsChecked}" >
-                    <NumericUpDown HorizontalAlignment="Left" Value="{Binding FlowLimitMinimumDuration, Converter={StaticResource NonNullable}}" Increment="1" Minimum="0" Maximum="30" ShowButtonSpinner="False" Watermark="0" />
-                    <TextBlock Text="seconds" VerticalAlignment="Center" IsEnabled="False"/>                    
+
+                <TextBlock Grid.Row="2" Grid.Column="0"
+                           Text="{Binding #FlowLimitThreshold.Value, StringFormat='Flow Limitation must be above {0} for'}"
+                           VerticalAlignment="Center" />
+                <StackPanel Grid.Row="2" Grid.Column="2" Orientation="Horizontal" Spacing="8"
+                            IsEnabled="{Binding #FlagFlowLimitations.IsChecked}">
+                    <NumericUpDown HorizontalAlignment="Left"
+                                   Value="{Binding FlowLimitMinimumDuration, Converter={StaticResource NonNullable}}"
+                                   Increment="1" Minimum="0" Maximum="30" ShowButtonSpinner="False" Watermark="0" />
+                    <TextBlock Text="seconds" VerticalAlignment="Center" IsEnabled="False" />
                 </StackPanel>
-                
+
             </Grid>
         </Border>
-        <Border Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}" BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1" Padding="8 4">
+        <Border Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}"
+                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1" Padding="8 4">
             <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto" HorizontalAlignment="Left">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" SharedSizeGroup="ImportSettingsC0"/>
-                    <ColumnDefinition Width="{DynamicResource ColumnSpacing}"/>
-                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto" SharedSizeGroup="ImportSettingsC0" />
+                    <ColumnDefinition Width="{DynamicResource ColumnSpacing}" />
+                    <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <TextBlock Grid.Column="0" Grid.Row="0" Text="Flag Flow Reduction Events" FontWeight="SemiBold" VerticalAlignment="Center" />
-                <ToggleSwitch Grid.Column="2" Grid.Row="0" Name="FlagFlowReductions" IsChecked="{Binding FlagFlowReductions}" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0"/>
+                <TextBlock Grid.Column="0" Grid.Row="0" Text="Flag Flow Reduction Events" FontWeight="SemiBold"
+                           VerticalAlignment="Center" />
+                <ToggleSwitch Grid.Column="2" Grid.Row="0" Name="FlagFlowReductions"
+                              IsChecked="{Binding FlagFlowReductions}" HorizontalAlignment="Left"
+                              VerticalAlignment="Center" Margin="0" />
 
                 <!-- NOTE: Have to bind the IsEnabled properties to the ToggleSwitch control because the viewmodel isn't a proper Observable viewmodel -->
-                <TextBlock Grid.Row="1" Grid.Column="0" Text="Flag an event when Flow is reduced to less than" VerticalAlignment="Center" />
-                <StackPanel Grid.Row="1" Grid.Column="2" Orientation="Horizontal" Spacing="8" IsEnabled="{Binding #FlagFlowReductions.IsChecked}">
-                    <NumericUpDown Name="FlowReductionThreshold" HorizontalAlignment="Left" Value="{Binding FlowReductionThreshold, Converter={StaticResource PercentConverter}}" Increment="1" Minimum="10" Maximum="80" ShowButtonSpinner="False" Watermark="0" />
-                    <TextBlock Text="%" VerticalAlignment="Center" IsEnabled="False"/>                    
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Flag an event when Flow is reduced to less than"
+                           VerticalAlignment="Center" />
+                <StackPanel Grid.Row="1" Grid.Column="2" Orientation="Horizontal" Spacing="8"
+                            IsEnabled="{Binding #FlagFlowReductions.IsChecked}">
+                    <NumericUpDown Name="FlowReductionThreshold" HorizontalAlignment="Left"
+                                   Value="{Binding FlowReductionThreshold, Converter={StaticResource PercentConverter}}"
+                                   Increment="1" Minimum="10" Maximum="80" ShowButtonSpinner="False" Watermark="0" />
+                    <TextBlock Text="%" VerticalAlignment="Center" IsEnabled="False" />
                 </StackPanel>
 
-                <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding #FlowReductionThreshold.Value, StringFormat='Flow must be reduced to {0}% or less for'}" VerticalAlignment="Center" />
-                <StackPanel Grid.Row="2" Grid.Column="2" Orientation="Horizontal" Spacing="8" IsEnabled="{Binding #FlagFlowReductions.IsChecked}">
-                    <NumericUpDown HorizontalAlignment="Left" Value="{Binding FlowReductionMinimumDuration, Converter={StaticResource NonNullable}}" Increment="1" Minimum="0" Maximum="30" ShowButtonSpinner="False" Watermark="0" />
-                    <TextBlock Text="seconds" VerticalAlignment="Center" IsEnabled="False"/>                    
+                <TextBlock Grid.Row="2" Grid.Column="0"
+                           Text="{Binding #FlowReductionThreshold.Value, StringFormat='Flow must be reduced to {0}% or less for'}"
+                           VerticalAlignment="Center" />
+                <StackPanel Grid.Row="2" Grid.Column="2" Orientation="Horizontal" Spacing="8"
+                            IsEnabled="{Binding #FlagFlowReductions.IsChecked}">
+                    <NumericUpDown HorizontalAlignment="Left"
+                                   Value="{Binding FlowReductionMinimumDuration, Converter={StaticResource NonNullable}}"
+                                   Increment="1" Minimum="0" Maximum="30" ShowButtonSpinner="False" Watermark="0" />
+                    <TextBlock Text="seconds" VerticalAlignment="Center" IsEnabled="False" />
                 </StackPanel>
 
-                <TextBlock Grid.Row="3" Grid.Column="0" Text="Compare flow to the previous period of" VerticalAlignment="Center" />
-                <StackPanel Grid.Row="3" Grid.Column="2" Orientation="Horizontal" Spacing="8" IsEnabled="{Binding #FlagFlowReductions.IsChecked}">
-                    <NumericUpDown HorizontalAlignment="Left" Value="{Binding FlowReductionWindowSize, Converter={StaticResource NonNullable}}" Increment="1" Minimum="30" Maximum="600" ShowButtonSpinner="False" Watermark="0" />
-                    <TextBlock Text="seconds" VerticalAlignment="Center" IsEnabled="False"/>                    
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="Compare flow to the previous period of"
+                           VerticalAlignment="Center" />
+                <StackPanel Grid.Row="3" Grid.Column="2" Orientation="Horizontal" Spacing="8"
+                            IsEnabled="{Binding #FlagFlowReductions.IsChecked}">
+                    <NumericUpDown HorizontalAlignment="Left"
+                                   Value="{Binding FlowReductionWindowSize, Converter={StaticResource NonNullable}}"
+                                   Increment="1" Minimum="30" Maximum="600" ShowButtonSpinner="False" Watermark="0" />
+                    <TextBlock Text="seconds" VerticalAlignment="Center" IsEnabled="False" />
                 </StackPanel>
 
-                <TextBlock Grid.Row="4" Grid.Column="0" Text="Number of seconds to ignore after an arousal" VerticalAlignment="Center" />
-                <StackPanel Grid.Row="4" Grid.Column="2" Orientation="Horizontal" Spacing="8" IsEnabled="{Binding #FlagFlowReductions.IsChecked}">
-                    <NumericUpDown HorizontalAlignment="Left" Value="{Binding FlowReductionArousalDelay, Converter={StaticResource NonNullable}}" Increment="1" Minimum="10" Maximum="300" ShowButtonSpinner="False" Watermark="0" />
-                    <TextBlock Text="seconds" VerticalAlignment="Center" IsEnabled="False"/>                    
+                <TextBlock Grid.Row="4" Grid.Column="0" Text="Number of seconds to ignore after an arousal"
+                           VerticalAlignment="Center" />
+                <StackPanel Grid.Row="4" Grid.Column="2" Orientation="Horizontal" Spacing="8"
+                            IsEnabled="{Binding #FlagFlowReductions.IsChecked}">
+                    <NumericUpDown HorizontalAlignment="Left"
+                                   Value="{Binding FlowReductionArousalDelay, Converter={StaticResource NonNullable}}"
+                                   Increment="1" Minimum="10" Maximum="300" ShowButtonSpinner="False" Watermark="0" />
+                    <TextBlock Text="seconds" VerticalAlignment="Center" IsEnabled="False" />
                 </StackPanel>
             </Grid>
         </Border>
         <!-- ReSharper disable once Xaml.StyleClassNotFound -->
-        <Button Name="SaveChanges" Classes="accent" ClickMode="Press" HorizontalAlignment="Right" Padding="20 10" Click="SaveChanges_OnClick">
+        <Button Name="SaveChanges" Classes="accent" ClickMode="Press" HorizontalAlignment="Right" Padding="20 10"
+                Click="SaveChanges_OnClick">
             <StackPanel Orientation="Horizontal">
-                <controls:SymbolIcon Symbol="Save" Margin="0 -2 10 0"/>
+                <controls:SymbolIcon Symbol="Save" Margin="0 -2 10 0" />
                 <TextBlock>Save Changes</TextBlock>
             </StackPanel>
         </Button>

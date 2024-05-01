@@ -189,7 +189,9 @@ namespace cpaplib
 				}
 
 				if( item < _items[ index ] )
+				{
 					break;
+				}
 
 				_items[ parent ] = _items[ index ]; // Swap nodes
 

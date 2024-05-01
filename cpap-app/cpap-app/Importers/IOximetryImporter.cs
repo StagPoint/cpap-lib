@@ -9,11 +9,11 @@ namespace cpap_app.Importers;
 
 public interface IOximetryImporter
 {
-	public string                   FriendlyName         { get; }
-	public string                   Source               { get; }
-	public string                   FileExtension        { get; }
-	public List<FilePickerFileType> FileTypeFilters      { get; }
-	public Regex                    FilenameMatchPattern { get; }
+    public string                   FriendlyName         { get; }
+    public string                   Source               { get; }
+    public string                   FileExtension        { get; }
+    public List<FilePickerFileType> FileTypeFilters      { get; }
+    public Regex                    FilenameMatchPattern { get; }
 
-	public ImportedData? Load( string filename, Stream stream, PulseOximetryImportOptions options );
+    public ImportedData? Load( string filename, Stream stream, PulseOximetryImportOptions options );
 }
