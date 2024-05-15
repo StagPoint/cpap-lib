@@ -269,7 +269,7 @@ namespace cpaplib
                 var fileDate = DateTime
                     .ParseExact( baseFilename.Substring( 0, baseFilename.Length - 4 ), "yyyyMMdd_HHmmss", CultureInfo.InvariantCulture )
                     .Trim( TimeSpan.TicksPerMinute )
-                    .AddSeconds( _importSettings.ClockTimeAdjustment.TotalSeconds );
+                    .AdjustImportTime( _importSettings );
 
                 int sessionIndex = 0;
                 while( sessionIndex < day.Sessions.Count )
@@ -353,7 +353,7 @@ namespace cpaplib
                             // because of differences in sampling rate, so we keep track of the start time and end
                             // time of each Signal separately. Note the addition of a time adjustment, which allows
                             // the user to calibrate for "drift" of the ResMed machine's internal clock.  
-                            var startTime = header.StartTime.Value + _importSettings.ClockTimeAdjustment;
+                            var startTime = header.StartTime.Value.AdjustImportTime( _importSettings );
                             var endTime   = startTime.AddSeconds( header.NumberOfDataRecords * header.DurationOfDataRecord );
 
                             // Discard Signals that are shorter than the minimum Session duration. This is done as an indirect
@@ -591,7 +591,7 @@ namespace cpaplib
             foreach( var filename in filenames )
             {
                 var file               = EdfFile.Open( filename );
-                var recordingStartTime = file.Header.StartTime.Value + _importSettings.ClockTimeAdjustment;
+                var recordingStartTime = file.Header.StartTime.Value.AdjustImportTime( _importSettings );
 
                 foreach( var annotationSignal in file.AnnotationSignals )
                 {
@@ -650,7 +650,7 @@ namespace cpaplib
             foreach( var filename in filenames )
             {
                 var file               = EdfFile.Open( filename );
-                var recordingStartTime = file.Header.StartTime.Value + _importSettings.ClockTimeAdjustment;
+                var recordingStartTime = file.Header.StartTime.Value.AdjustImportTime( _importSettings );
 
                 foreach( var annotationSignal in file.AnnotationSignals )
                 {
@@ -759,8 +759,8 @@ namespace cpaplib
 
                     // Mask times are stored as the number of seconds since the "day" started. Remember that
                     // the ResMed "day" starts at 12pm (noon) and continues until the next calendar day at 12pm.
-                    var maskOn  = day.ReportDate.AddMinutes( maskOnSignal.Samples[ sampleIndex ] ) + _importSettings.ClockTimeAdjustment;
-                    var maskOff = day.ReportDate.AddMinutes( maskOffSignal.Samples[ sampleIndex ] ) + _importSettings.ClockTimeAdjustment;
+                    var maskOn  = day.ReportDate.AddMinutes( maskOnSignal.Samples[ sampleIndex ] ).AdjustImportTime( _importSettings );
+                    var maskOff = day.ReportDate.AddMinutes( maskOffSignal.Samples[ sampleIndex ] ).AdjustImportTime( _importSettings );
 
                     // Discard any sessions that are shorter than the specified minimum duration.
                     // Note that this isn't a complete solution to short sessions: if a Session is split because the MaskOn/MaskOff

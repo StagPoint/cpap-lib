@@ -320,7 +320,7 @@ namespace cpaplib
 					}
 
 					// Since all timestamps are based off of the header, we only need to adjust import times in one place
-					header.Timestamp += importSettings.ClockTimeAdjustment;
+					header.Timestamp = header.Timestamp.AdjustImportTime( importSettings );
 
 					var summary = chunk.ReadSummary( header );
 					summary.Machine        = machineInfo;

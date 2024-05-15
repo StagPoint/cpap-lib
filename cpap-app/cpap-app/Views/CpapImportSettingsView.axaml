@@ -28,7 +28,7 @@
     <StackPanel Orientation="Vertical" Spacing="8" Grid.IsSharedSizeScope="True" DataContext="{Binding CpapSettings}">
         <Border Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}"
                 BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1" Padding="8 4">
-            <Grid RowDefinitions="Auto, Auto" HorizontalAlignment="Left">
+            <Grid RowDefinitions="Auto, Auto, Auto" HorizontalAlignment="Left">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" SharedSizeGroup="ImportSettingsC0" />
                     <ColumnDefinition Width="{DynamicResource ColumnSpacing}" />
@@ -42,10 +42,15 @@
                                    Increment="5" Minimum="-3600" Maximum="3600" ShowButtonSpinner="False" Watermark="0" />
                     <TextBlock Text="seconds" VerticalAlignment="Center" IsEnabled="False" />
                 </StackPanel>
-
-                <TextBlock Grid.Row="1" Grid.Column="0" Text="Discard sessions that are shorter than"
+                
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Adjust for Daylight Savings Time" FontWeight="SemiBold"
+                           VerticalAlignment="Center" />
+                <ToggleSwitch Grid.Row="1" Grid.Column="2" Name="UseDaylightSavings" IsChecked="{Binding UseDaylightSavingsTime}"
+                              HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0" />
+                
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Discard sessions that are shorter than"
                            FontWeight="SemiBold" VerticalAlignment="Center" />
-                <StackPanel Grid.Row="1" Grid.Column="2" Orientation="Horizontal" Spacing="8">
+                <StackPanel Grid.Row="2" Grid.Column="2" Orientation="Horizontal" Spacing="8">
                     <NumericUpDown HorizontalAlignment="Left"
                                    Value="{Binding MinimumSessionLength, Converter={StaticResource NonNullable}}"
                                    Increment="1" Minimum="0" Maximum="60" ShowButtonSpinner="False" Watermark="0" />

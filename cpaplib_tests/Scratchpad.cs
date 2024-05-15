@@ -16,6 +16,16 @@ namespace cpaplib_tests;
 public class Scratchpad
 {
     [TestMethod]
+    public void CanDetectDaylightSavingTime()
+    {
+        var isDaylightSavings = TimeZoneInfo.Local.IsDaylightSavingTime( new DateTime( 2024, 5, 15, 14, 31, 0 ) );
+        Assert.IsTrue( isDaylightSavings );
+        
+        isDaylightSavings = TimeZoneInfo.Local.IsDaylightSavingTime( new DateTime( 2024, 2, 15, 14, 31, 0 ) );
+        Assert.IsFalse( isDaylightSavings );
+    }
+    
+    [TestMethod]
     public void CanSerializeAndDeserializeNumberDictionary()
     {
         var settingNames = GetAllPublicConstantValues<string>( typeof( SettingNames ) );
