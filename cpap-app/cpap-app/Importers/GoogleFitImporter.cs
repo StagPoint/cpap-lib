@@ -80,8 +80,8 @@ public class GoogleFitImporter
 
         foreach( var fitSession in fitSessions )
         {
-            var startTime = DateHelper.FromMillisecondsSinceEpoch( fitSession.StartTimeMillis );
-            var endTime   = DateHelper.FromMillisecondsSinceEpoch( fitSession.EndTimeMillis );
+            var startTime = DateHelper.FromMillisecondsSinceEpoch( fitSession.StartTimeMillis ).AdjustForDaylightSavings();
+            var endTime   = DateHelper.FromMillisecondsSinceEpoch( fitSession.EndTimeMillis ).AdjustForDaylightSavings();
 
             progressNotify( $"Retrieving session starting on {startTime:d} at {startTime:h:mm:ss tt}" );
 

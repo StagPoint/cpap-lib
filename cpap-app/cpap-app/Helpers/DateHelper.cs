@@ -7,6 +7,16 @@ public static class DateHelper
 {
 	public static readonly DateTime UnixEpoch = DateTime.SpecifyKind( new DateTime( 1970, 1, 1 ), DateTimeKind.Utc ).ToLocalTime();
 
+	public static DateTime AdjustForDaylightSavings( this DateTime dt )
+	{
+		if( TimeZoneInfo.Local.IsDaylightSavingTime( dt ) )
+		{
+			return dt + TimeSpan.FromHours( 1 );
+		}
+
+		return dt;
+	}
+
 	public static DateTime StartOfWeek( this DateTime dt, DayOfWeek startOfWeek = DayOfWeek.Sunday )
 	{
 		int diff = (7 + (dt.DayOfWeek - startOfWeek)) % 7;

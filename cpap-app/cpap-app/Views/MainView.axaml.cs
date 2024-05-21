@@ -387,7 +387,9 @@ public partial class MainView : UserControl
             var importStartDate = GetImportStartDate( ActiveUserProfile.UserProfileID, SourceType.HealthAPI );
             mostRecentAvailableDate = importStartDate;
 
-            var metaSessions = await GoogleFitImporter.ImportAsync( importStartDate, DateTime.Today.AddDays( 1 ), accessTokenInfo.AccessToken, progressNotify );
+            var importEndDate = DateHelper.Min( DateTime.Today.AddDays( 1 ), importStartDate.AddDays( 90 ) );
+
+            var metaSessions = await GoogleFitImporter.ImportAsync( importStartDate, importEndDate, accessTokenInfo.AccessToken, progressNotify );
             if( metaSessions == null || metaSessions.Count == 0 )
             {
                 progressDialog.Hide();
@@ -596,7 +598,7 @@ public partial class MainView : UserControl
         const string SQL = "SELECT day.ReportDate FROM day JOIN session ON session.dayID == day.ID AND session.SourceType = ? WHERE day.UserProfileID = ? ORDER BY ReportDate DESC LIMIT 1";
 
         var mostRecentImport = store.Connection.ExecuteScalar<DateTime>( SQL, sourceType, userID ).AsLocalTime();
-        mostRecentImport = DateHelper.Max( mostRecentImport, DateTime.Today.AddDays( -90 ) );
+        mostRecentImport = DateHelper.Max( mostRecentImport, DateTime.Today.AddMonths( -6 ) );
 
         return mostRecentImport;
     }
